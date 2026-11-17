@@ -1,0 +1,896 @@
+--[[ Blind Predictor — VOID + NEON + themes in settings ]]
+
+local Players = game:GetService("Players")
+local UIS = game:GetService("UserInputService")
+local TweenService = game:GetService("TweenService")
+local SoundService = game:GetService("SoundService")
+
+local LP = Players.LocalPlayer
+local PG = LP:WaitForChild("PlayerGui")
+
+pcall(function()
+	for _, g in ipairs(PG:GetChildren()) do
+		if g.Name == "BlindPredictor" then g:Destroy() end
+	end
+	if gethui then
+		for _, g in ipairs(gethui():GetChildren()) do
+			if g.Name == "BlindPredictor" then g:Destroy() end
+		end
+	end
+end)
+
+local COLORS = {
+	Red = Color3.fromRGB(235, 55, 55),
+	Orange = Color3.fromRGB(245, 145, 40),
+	Yellow = Color3.fromRGB(245, 215, 50),
+	Green = Color3.fromRGB(50, 200, 90),
+	Blue = Color3.fromRGB(50, 100, 245),
+	Purple = Color3.fromRGB(150, 60, 240),
+}
+local ORDER = {"Red", "Orange", "Yellow", "Green", "Blue", "Purple"}
+
+local THEMES = {
+	Void = {
+		bg = Color3.fromRGB(6, 4, 12),
+		panel = Color3.fromRGB(10, 6, 18),
+		card = Color3.fromRGB(16, 10, 28),
+		accent = Color3.fromRGB(140, 80, 255),
+		stroke = Color3.fromRGB(160, 100, 255),
+		text = Color3.fromRGB(235, 230, 255),
+		muted = Color3.fromRGB(130, 120, 170),
+		g1 = Color3.fromRGB(170, 110, 255),
+		g2 = Color3.fromRGB(70, 30, 160),
+		dice = Color3.fromRGB(18, 10, 32),
+	},
+	Blue = {
+		bg = Color3.fromRGB(4, 8, 16),
+		panel = Color3.fromRGB(8, 12, 24),
+		card = Color3.fromRGB(14, 20, 36),
+		accent = Color3.fromRGB(60, 150, 255),
+		stroke = Color3.fromRGB(90, 170, 255),
+		text = Color3.fromRGB(230, 240, 255),
+		muted = Color3.fromRGB(130, 150, 190),
+		g1 = Color3.fromRGB(100, 190, 255),
+		g2 = Color3.fromRGB(30, 90, 220),
+		dice = Color3.fromRGB(12, 18, 34),
+	},
+	Pink = {
+		bg = Color3.fromRGB(14, 4, 12),
+		panel = Color3.fromRGB(22, 8, 20),
+		card = Color3.fromRGB(34, 12, 30),
+		accent = Color3.fromRGB(255, 90, 180),
+		stroke = Color3.fromRGB(255, 130, 200),
+		text = Color3.fromRGB(255, 235, 250),
+		muted = Color3.fromRGB(200, 150, 185),
+		g1 = Color3.fromRGB(255, 140, 210),
+		g2 = Color3.fromRGB(200, 50, 150),
+		dice = Color3.fromRGB(28, 10, 24),
+	},
+	Gold = {
+		bg = Color3.fromRGB(12, 10, 4),
+		panel = Color3.fromRGB(20, 16, 6),
+		card = Color3.fromRGB(32, 26, 10),
+		accent = Color3.fromRGB(255, 200, 70),
+		stroke = Color3.fromRGB(255, 215, 100),
+		text = Color3.fromRGB(255, 245, 220),
+		muted = Color3.fromRGB(200, 180, 130),
+		g1 = Color3.fromRGB(255, 225, 110),
+		g2 = Color3.fromRGB(200, 140, 40),
+		dice = Color3.fromRGB(28, 22, 8),
+	},
+}
+
+local themeName = "Void"
+local theme = THEMES.Void
+local selected = {"?", "?", "?", "?"}
+local history = {}
+local mode = "v1"
+local predicting = false
+local bet = 0
+local activeSlot = nil
+
+local function corner(o, r)
+	local c = Instance.new("UICorner")
+	c.CornerRadius = UDim.new(0, r)
+	c.Parent = o
+end
+local function stroke(o, col, th, tr)
+	local s = Instance.new("UIStroke")
+	s.Color = col
+	s.Thickness = th or 1.5
+	s.Transparency = tr or 0.2
+	s.Parent = o
+	return s
+end
+local function playSound(id, vol, speed)
+	pcall(function()
+		local s = Instance.new("Sound")
+		s.SoundId = id
+		s.Volume = vol or 0.6
+		s.PlaybackSpeed = speed or 1
+		s.Parent = SoundService
+		s:Play()
+		task.delay(2, function() pcall(function() s:Destroy() end) end)
+	end)
+end
+local function playClick() playSound("rbxassetid://6895079853", 0.55, 1.05) end
+local function playPredict() playSound("rbxassetid://10066936758", 0.7, 1.1) end
+local function playPlace() playSound("rbxassetid://6895079853", 0.7, 1.25) end
+
+local gui = Instance.new("ScreenGui")
+gui.Name = "BlindPredictor"
+gui.ResetOnSpawn = false
+gui.IgnoreGuiInset = true
+gui.DisplayOrder = 320
+gui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+pcall(function() if gethui then gui.Parent = gethui() end end)
+if not gui.Parent then gui.Parent = PG end
+
+local banner = Instance.new("Frame")
+banner.Size = UDim2.new(0.7, 0, 0, 28)
+banner.Position = UDim2.new(0.15, 0, 0, 6)
+banner.BackgroundColor3 = theme.bg
+banner.BorderSizePixel = 0
+banner.Parent = gui
+corner(banner, 10)
+local bannerStroke = stroke(banner, theme.stroke, 1.4, 0.15)
+local bannerLab = Instance.new("TextLabel")
+bannerLab.Size = UDim2.new(1, 0, 1, 0)
+bannerLab.BackgroundTransparency = 1
+bannerLab.Text = "BEST PREDICTOR  ·  .gg/blindhub"
+bannerLab.Font = Enum.Font.GothamBlack
+bannerLab.TextSize = 13
+bannerLab.TextColor3 = theme.text
+bannerLab.Parent = banner
+
+local main = Instance.new("Frame")
+main.Name = "Main"
+main.Size = UDim2.fromOffset(250, 380)
+main.Position = UDim2.new(1, -266, 0.5, -190)
+main.BackgroundColor3 = theme.panel
+main.BorderSizePixel = 0
+main.Active = true
+main.ClipsDescendants = false
+main.Parent = gui
+corner(main, 16)
+local mainStroke = stroke(main, theme.stroke, 2.2, 0.05)
+
+-- neon outer aura
+local aura = Instance.new("Frame")
+aura.Size = UDim2.new(1, 14, 1, 14)
+aura.Position = UDim2.fromOffset(-7, -7)
+aura.BackgroundColor3 = theme.accent
+aura.BackgroundTransparency = 0.82
+aura.ZIndex = 0
+aura.Parent = main
+corner(aura, 20)
+
+do
+	local dragging, origin, start
+	main.InputBegan:Connect(function(i)
+		if i.UserInputType == Enum.UserInputType.MouseButton1 or i.UserInputType == Enum.UserInputType.Touch then
+			dragging = true; origin = i.Position; start = main.Position
+		end
+	end)
+	main.InputEnded:Connect(function(i)
+		if i.UserInputType == Enum.UserInputType.MouseButton1 or i.UserInputType == Enum.UserInputType.Touch then
+			dragging = false
+		end
+	end)
+	UIS.InputChanged:Connect(function(i)
+		if not dragging then return end
+		if i.UserInputType == Enum.UserInputType.MouseMovement or i.UserInputType == Enum.UserInputType.Touch then
+			local d = i.Position - origin
+			main.Position = UDim2.new(start.X.Scale, start.X.Offset + d.X, start.Y.Scale, start.Y.Offset + d.Y)
+		end
+	end)
+end
+
+local title = Instance.new("TextLabel")
+title.Size = UDim2.fromOffset(150, 24)
+title.Position = UDim2.fromOffset(12, 10)
+title.BackgroundTransparency = 1
+title.Text = "BLIND PREDICTOR"
+title.Font = Enum.Font.GothamBlack
+title.TextSize = 14
+title.TextColor3 = theme.text
+title.TextXAlignment = Enum.TextXAlignment.Left
+title.Parent = main
+
+local settingsBtn = Instance.new("TextButton")
+settingsBtn.Size = UDim2.fromOffset(28, 28)
+settingsBtn.Position = UDim2.fromOffset(184, 8)
+settingsBtn.BackgroundColor3 = theme.card
+settingsBtn.Text = "⚙"
+settingsBtn.Font = Enum.Font.GothamBold
+settingsBtn.TextSize = 14
+settingsBtn.TextColor3 = theme.text
+settingsBtn.Parent = main
+corner(settingsBtn, 8)
+local settingsStroke = stroke(settingsBtn, theme.stroke, 1.2, 0.3)
+
+local minBtn = Instance.new("TextButton")
+minBtn.Size = UDim2.fromOffset(28, 28)
+minBtn.Position = UDim2.fromOffset(216, 8)
+minBtn.BackgroundColor3 = theme.card
+minBtn.Text = "−"
+minBtn.Font = Enum.Font.GothamBold
+minBtn.TextSize = 16
+minBtn.TextColor3 = theme.text
+minBtn.Parent = main
+corner(minBtn, 8)
+local minStroke = stroke(minBtn, theme.stroke, 1.2, 0.3)
+
+local openBtn = Instance.new("TextButton")
+openBtn.Size = UDim2.fromOffset(130, 30)
+openBtn.Position = UDim2.new(1, -146, 0, 14)
+openBtn.BackgroundColor3 = theme.card
+openBtn.Text = "BLIND PREDICTOR"
+openBtn.Font = Enum.Font.GothamBlack
+openBtn.TextSize = 11
+openBtn.TextColor3 = theme.text
+openBtn.Visible = false
+openBtn.Parent = gui
+corner(openBtn, 9)
+stroke(openBtn, theme.stroke, 1.4, 0.2)
+
+minBtn.MouseButton1Click:Connect(function()
+	playClick()
+	main.Visible = false
+	openBtn.Visible = true
+end)
+openBtn.MouseButton1Click:Connect(function()
+	playClick()
+	openBtn.Visible = false
+	main.Visible = true
+end)
+
+local diceBtns, diceStrokes, diceGlows = {}, {}, {}
+local diceXs = {18, 74, 130, 186}
+
+local function setDice(i, name)
+	selected[i] = name
+	local b = diceBtns[i]
+	if not b then return end
+	if name == "?" then
+		b.BackgroundColor3 = theme.dice
+		if diceGlows[i] then
+			diceGlows[i].BackgroundColor3 = theme.accent
+			diceGlows[i].BackgroundTransparency = 0.85
+		end
+		if diceStrokes[i] then
+			diceStrokes[i].Color = Color3.fromRGB(255, 255, 255)
+			diceStrokes[i].Transparency = 0.35
+			diceStrokes[i].Thickness = 2
+		end
+	else
+		b.BackgroundColor3 = COLORS[name]
+		if diceGlows[i] then
+			diceGlows[i].BackgroundColor3 = COLORS[name]
+			diceGlows[i].BackgroundTransparency = 0.7
+		end
+		if diceStrokes[i] then
+			diceStrokes[i].Color = Color3.fromRGB(255, 255, 255)
+			diceStrokes[i].Transparency = 0.1
+			diceStrokes[i].Thickness = 2.4
+		end
+		b.Size = UDim2.fromOffset(36, 36)
+		b.Position = UDim2.fromOffset(diceXs[i] + 5, 51)
+		TweenService:Create(b, TweenInfo.new(0.2, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {
+			Size = UDim2.fromOffset(46, 46),
+			Position = UDim2.fromOffset(diceXs[i], 46),
+		}):Play()
+	end
+end
+
+for i = 1, 4 do
+	-- soft colored aura (not white)
+	local glow = Instance.new("Frame")
+	glow.Size = UDim2.fromOffset(52, 52)
+	glow.Position = UDim2.fromOffset(diceXs[i] - 3, 43)
+	glow.BackgroundColor3 = theme.accent
+	glow.BackgroundTransparency = 0.85
+	glow.ZIndex = 1
+	glow.Parent = main
+	corner(glow, 13)
+	diceGlows[i] = glow
+
+	local b = Instance.new("TextButton")
+	b.Size = UDim2.fromOffset(46, 46)
+	b.Position = UDim2.fromOffset(diceXs[i], 46)
+	b.BackgroundColor3 = theme.dice
+	b.Text = ""
+	b.ZIndex = 2
+	b.Parent = main
+	corner(b, 12)
+	-- clean white border like reference
+	local st = stroke(b, Color3.fromRGB(255, 255, 255), 2.2, 0.15)
+	diceStrokes[i] = st
+
+	local dot = Instance.new("Frame")
+	dot.Size = UDim2.fromOffset(11, 11)
+	dot.Position = UDim2.fromOffset(17.5, 17.5)
+	dot.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+	dot.ZIndex = 3
+	dot.Parent = b
+	corner(dot, 6)
+
+	diceBtns[i] = b
+	local idx = i
+	b.MouseButton1Click:Connect(function()
+		if predicting then return end
+		playClick()
+		activeSlot = idx
+		local popup = main:FindFirstChild("ColorPopup")
+		if popup then
+			popup.Visible = true
+			popup.Size = UDim2.fromOffset(20, 20)
+			popup.Position = UDim2.fromOffset(115, 150)
+			popup.BackgroundTransparency = 0.4
+			TweenService:Create(popup, TweenInfo.new(0.22, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {
+				Size = UDim2.fromOffset(210, 140),
+				Position = UDim2.fromOffset(20, 100),
+				BackgroundTransparency = 0,
+			}):Play()
+		end
+	end)
+end
+
+local popup = Instance.new("Frame")
+popup.Name = "ColorPopup"
+popup.Size = UDim2.fromOffset(210, 140)
+popup.Position = UDim2.fromOffset(20, 100)
+popup.BackgroundColor3 = theme.bg
+popup.Visible = false
+popup.ZIndex = 40
+popup.Parent = main
+corner(popup, 12)
+local popupStroke = stroke(popup, theme.stroke, 1.8, 0.1)
+
+local pTitle = Instance.new("TextLabel")
+pTitle.Size = UDim2.fromOffset(210, 22)
+pTitle.Position = UDim2.fromOffset(0, 6)
+pTitle.BackgroundTransparency = 1
+pTitle.Text = "CHOOSE A COLOR"
+pTitle.Font = Enum.Font.GothamBlack
+pTitle.TextSize = 12
+pTitle.TextColor3 = theme.text
+pTitle.ZIndex = 41
+pTitle.Parent = popup
+
+local positions = {
+	{10, 34}, {78, 34}, {146, 34},
+	{10, 84}, {78, 84}, {146, 84},
+}
+for idx, name in ipairs(ORDER) do
+	local pos = positions[idx]
+	local cell = Instance.new("TextButton")
+	cell.Size = UDim2.fromOffset(54, 42)
+	cell.Position = UDim2.fromOffset(pos[1], pos[2])
+	cell.BackgroundTransparency = 1
+	cell.Text = ""
+	cell.ZIndex = 42
+	cell.Parent = popup
+
+	local sq = Instance.new("Frame")
+	sq.Size = UDim2.fromOffset(28, 28)
+	sq.Position = UDim2.fromOffset(13, 0)
+	sq.BackgroundColor3 = COLORS[name]
+	sq.ZIndex = 43
+	sq.Parent = cell
+	corner(sq, 8)
+	stroke(sq, COLORS[name], 2.2, 0.1)
+
+	local dot = Instance.new("Frame")
+	dot.Size = UDim2.fromOffset(8, 8)
+	dot.Position = UDim2.fromOffset(10, 10)
+	dot.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+	dot.ZIndex = 44
+	dot.Parent = sq
+	corner(dot, 4)
+
+	local lab = Instance.new("TextLabel")
+	lab.Size = UDim2.fromOffset(54, 12)
+	lab.Position = UDim2.fromOffset(0, 30)
+	lab.BackgroundTransparency = 1
+	lab.Text = name
+	lab.Font = Enum.Font.GothamBold
+	lab.TextSize = 9
+	lab.TextColor3 = theme.muted
+	lab.ZIndex = 43
+	lab.Parent = cell
+
+	local n = name
+	cell.MouseButton1Click:Connect(function()
+		playPlace()
+		if activeSlot then setDice(activeSlot, n) end
+		local tw = TweenService:Create(popup, TweenInfo.new(0.15, Enum.EasingStyle.Quad, Enum.EasingDirection.In), {
+			Size = UDim2.fromOffset(20, 20),
+			Position = UDim2.fromOffset(115, 150),
+			BackgroundTransparency = 0.5,
+		})
+		tw:Play()
+		tw.Completed:Connect(function()
+			popup.Visible = false
+			popup.BackgroundTransparency = 0
+		end)
+		activeSlot = nil
+	end)
+end
+
+local predictBtn = Instance.new("TextButton")
+predictBtn.Size = UDim2.fromOffset(160, 34)
+predictBtn.Position = UDim2.fromOffset(12, 104)
+predictBtn.BackgroundColor3 = theme.accent
+predictBtn.Text = "PREDICT"
+predictBtn.Font = Enum.Font.GothamBlack
+predictBtn.TextSize = 15
+predictBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+predictBtn.ZIndex = 3
+predictBtn.Parent = main
+corner(predictBtn, 10)
+local predGrad = Instance.new("UIGradient")
+predGrad.Color = ColorSequence.new({
+	ColorSequenceKeypoint.new(0, theme.g1),
+	ColorSequenceKeypoint.new(1, theme.g2),
+})
+predGrad.Rotation = 90
+predGrad.Parent = predictBtn
+local predStroke = stroke(predictBtn, theme.stroke, 1.6, 0.15)
+
+local v1Btn = Instance.new("TextButton")
+v1Btn.Size = UDim2.fromOffset(28, 28)
+v1Btn.Position = UDim2.fromOffset(180, 107)
+v1Btn.BackgroundColor3 = theme.accent
+v1Btn.Text = "v1"
+v1Btn.Font = Enum.Font.GothamBold
+v1Btn.TextSize = 11
+v1Btn.TextColor3 = Color3.fromRGB(255, 255, 255)
+v1Btn.Parent = main
+corner(v1Btn, 8)
+
+local v2Btn = Instance.new("TextButton")
+v2Btn.Size = UDim2.fromOffset(28, 28)
+v2Btn.Position = UDim2.fromOffset(212, 107)
+v2Btn.BackgroundColor3 = theme.card
+v2Btn.Text = "v2"
+v2Btn.Font = Enum.Font.GothamBold
+v2Btn.TextSize = 11
+v2Btn.TextColor3 = theme.text
+v2Btn.Parent = main
+corner(v2Btn, 8)
+
+local function refreshMode()
+	v1Btn.BackgroundColor3 = mode == "v1" and theme.accent or theme.card
+	v2Btn.BackgroundColor3 = mode == "v2" and theme.accent or theme.card
+end
+v1Btn.MouseButton1Click:Connect(function() playClick(); mode = "v1"; refreshMode() end)
+v2Btn.MouseButton1Click:Connect(function() playClick(); mode = "v2"; refreshMode() end)
+
+local result = Instance.new("Frame")
+result.Size = UDim2.fromOffset(226, 54)
+result.Position = UDim2.fromOffset(12, 148)
+result.BackgroundColor3 = theme.card
+result.Parent = main
+corner(result, 12)
+local resultStroke = stroke(result, theme.stroke, 1.4, 0.2)
+
+local rDot = Instance.new("Frame")
+rDot.Size = UDim2.fromOffset(36, 36)
+rDot.Position = UDim2.fromOffset(10, 9)
+rDot.BackgroundColor3 = theme.dice
+rDot.Parent = result
+corner(rDot, 10)
+local rDotStroke = stroke(rDot, Color3.fromRGB(255, 255, 255), 2.8, 0.05)
+local rDotIn = Instance.new("Frame")
+rDotIn.Size = UDim2.fromOffset(10, 10)
+rDotIn.Position = UDim2.fromOffset(13, 13)
+rDotIn.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+rDotIn.Parent = rDot
+corner(rDotIn, 5)
+
+local rTag = Instance.new("TextLabel")
+rTag.Size = UDim2.fromOffset(160, 14)
+rTag.Position = UDim2.fromOffset(56, 10)
+rTag.BackgroundTransparency = 1
+rTag.Text = "PREDICTION"
+rTag.Font = Enum.Font.GothamBold
+rTag.TextSize = 10
+rTag.TextColor3 = theme.muted
+rTag.TextXAlignment = Enum.TextXAlignment.Left
+rTag.Parent = result
+
+local rName = Instance.new("TextLabel")
+rName.Size = UDim2.fromOffset(160, 22)
+rName.Position = UDim2.fromOffset(56, 24)
+rName.BackgroundTransparency = 1
+rName.Text = "-"
+rName.Font = Enum.Font.GothamBlack
+rName.TextSize = 16
+rName.TextColor3 = theme.text
+rName.TextXAlignment = Enum.TextXAlignment.Left
+rName.Parent = result
+
+local hint = Instance.new("TextLabel")
+hint.Size = UDim2.fromOffset(170, 14)
+hint.Position = UDim2.fromOffset(12, 210)
+hint.BackgroundTransparency = 1
+hint.Text = "Tap the 4 colors that rolled"
+hint.Font = Enum.Font.Gotham
+hint.TextSize = 10
+hint.TextColor3 = theme.muted
+hint.TextXAlignment = Enum.TextXAlignment.Left
+hint.Parent = main
+
+local delBtn = Instance.new("TextButton")
+delBtn.Size = UDim2.fromOffset(36, 18)
+delBtn.Position = UDim2.fromOffset(202, 208)
+delBtn.BackgroundColor3 = theme.card
+delBtn.Text = "Del"
+delBtn.Font = Enum.Font.GothamBold
+delBtn.TextSize = 10
+delBtn.TextColor3 = theme.text
+delBtn.Parent = main
+corner(delBtn, 6)
+delBtn.MouseButton1Click:Connect(function()
+	playClick()
+	for i = 1, 4 do setDice(i, "?") end
+end)
+
+local miniXs = {12, 42, 72, 102, 132, 162}
+for i, name in ipairs(ORDER) do
+	local m = Instance.new("Frame")
+	m.Size = UDim2.fromOffset(22, 22)
+	m.Position = UDim2.fromOffset(miniXs[i], 226)
+	m.BackgroundColor3 = COLORS[name]
+	m.Parent = main
+	corner(m, 6)
+	stroke(m, COLORS[name], 1.4, 0.2)
+	local d = Instance.new("Frame")
+	d.Size = UDim2.fromOffset(6, 6)
+	d.Position = UDim2.fromOffset(8, 8)
+	d.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+	d.Parent = m
+	corner(d, 3)
+end
+
+local betFrame = Instance.new("Frame")
+betFrame.Size = UDim2.fromOffset(226, 36)
+betFrame.Position = UDim2.fromOffset(12, 254)
+betFrame.BackgroundColor3 = theme.card
+betFrame.Parent = main
+corner(betFrame, 10)
+local betStroke = stroke(betFrame, theme.stroke, 1.2, 0.3)
+
+local betLabel = Instance.new("TextLabel")
+betLabel.Size = UDim2.fromOffset(226, 36)
+betLabel.BackgroundTransparency = 1
+betLabel.Text = "0"
+betLabel.Font = Enum.Font.GothamBlack
+betLabel.TextSize = 18
+betLabel.TextColor3 = theme.text
+betLabel.Parent = betFrame
+
+local function setBet(v)
+	bet = math.clamp(v, -999, 999)
+	betLabel.Text = tostring(bet)
+end
+local function makeBet(text, x, y, cb)
+	local b = Instance.new("TextButton")
+	b.Size = UDim2.fromOffset(32, 14)
+	b.Position = UDim2.fromOffset(x, y)
+	b.BackgroundTransparency = 1
+	b.Text = text
+	b.Font = Enum.Font.GothamBold
+	b.TextSize = 11
+	b.TextColor3 = theme.muted
+	b.Parent = betFrame
+	b.MouseButton1Click:Connect(function() playClick(); cb() end)
+end
+makeBet("-1", 8, 2, function() setBet(bet - 1) end)
+makeBet("-10", 6, 18, function() setBet(bet - 10) end)
+makeBet("+1", 190, 2, function() setBet(bet + 1) end)
+makeBet("+10", 184, 18, function() setBet(bet + 10) end)
+
+local histTitle = Instance.new("TextLabel")
+histTitle.Size = UDim2.fromOffset(200, 14)
+histTitle.Position = UDim2.fromOffset(12, 298)
+histTitle.BackgroundTransparency = 1
+histTitle.Text = "HISTORY (0)"
+histTitle.Font = Enum.Font.GothamBold
+histTitle.TextSize = 11
+histTitle.TextColor3 = theme.muted
+histTitle.TextXAlignment = Enum.TextXAlignment.Left
+histTitle.Parent = main
+
+local histBox = Instance.new("Frame")
+histBox.Size = UDim2.fromOffset(226, 40)
+histBox.Position = UDim2.fromOffset(12, 314)
+histBox.BackgroundColor3 = theme.card
+histBox.ClipsDescendants = true
+histBox.Parent = main
+corner(histBox, 10)
+local histStroke = stroke(histBox, theme.stroke, 1.2, 0.35)
+
+local histInner = Instance.new("Frame")
+histInner.Size = UDim2.fromOffset(218, 32)
+histInner.Position = UDim2.fromOffset(4, 4)
+histInner.BackgroundTransparency = 1
+histInner.Parent = histBox
+
+local function refreshHistory()
+	histTitle.Text = "HISTORY (" .. tostring(#history) .. ")"
+	for _, c in ipairs(histInner:GetChildren()) do
+		if c:IsA("Frame") then c:Destroy() end
+	end
+	local start = math.max(1, #history - 9)
+	local x = 0
+	for i = start, #history do
+		local name = history[i]
+		if name and COLORS[name] then
+			local f = Instance.new("Frame")
+			f.Size = UDim2.fromOffset(22, 22)
+			f.Position = UDim2.fromOffset(x, 5)
+			f.BackgroundColor3 = COLORS[name]
+			f.Parent = histInner
+			corner(f, 6)
+			local d = Instance.new("Frame")
+			d.Size = UDim2.fromOffset(6, 6)
+			d.Position = UDim2.fromOffset(8, 8)
+			d.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+			d.Parent = f
+			corner(d, 3)
+			x = x + 26
+		end
+	end
+end
+
+-- SETTINGS with themes
+local settings = Instance.new("Frame")
+settings.Size = UDim2.fromOffset(200, 150)
+settings.Position = UDim2.fromOffset(25, 90)
+settings.BackgroundColor3 = theme.bg
+settings.Visible = false
+settings.ZIndex = 55
+settings.Parent = main
+corner(settings, 12)
+local settingsPanelStroke = stroke(settings, theme.stroke, 1.8, 0.1)
+
+local sTitle = Instance.new("TextLabel")
+sTitle.Size = UDim2.fromOffset(160, 22)
+sTitle.Position = UDim2.fromOffset(10, 8)
+sTitle.BackgroundTransparency = 1
+sTitle.Text = "SETTINGS · THEME"
+sTitle.Font = Enum.Font.GothamBlack
+sTitle.TextSize = 12
+sTitle.TextColor3 = theme.text
+sTitle.TextXAlignment = Enum.TextXAlignment.Left
+sTitle.ZIndex = 56
+sTitle.Parent = settings
+
+local sClose = Instance.new("TextButton")
+sClose.Size = UDim2.fromOffset(24, 24)
+sClose.Position = UDim2.fromOffset(170, 8)
+sClose.BackgroundColor3 = theme.card
+sClose.Text = "X"
+sClose.Font = Enum.Font.GothamBold
+sClose.TextSize = 12
+sClose.TextColor3 = theme.text
+sClose.ZIndex = 56
+sClose.Parent = settings
+corner(sClose, 6)
+sClose.MouseButton1Click:Connect(function() playClick(); settings.Visible = false end)
+
+local function applyTheme(name)
+	themeName = name
+	theme = THEMES[name]
+	main.BackgroundColor3 = theme.panel
+	mainStroke.Color = theme.stroke
+	aura.BackgroundColor3 = theme.accent
+	banner.BackgroundColor3 = theme.bg
+	bannerStroke.Color = theme.stroke
+	bannerLab.TextColor3 = theme.text
+	title.TextColor3 = theme.text
+	settingsBtn.BackgroundColor3 = theme.card
+	settingsBtn.TextColor3 = theme.text
+	settingsStroke.Color = theme.stroke
+	minBtn.BackgroundColor3 = theme.card
+	minBtn.TextColor3 = theme.text
+	minStroke.Color = theme.stroke
+	openBtn.BackgroundColor3 = theme.card
+	openBtn.TextColor3 = theme.text
+	result.BackgroundColor3 = theme.card
+	resultStroke.Color = theme.stroke
+	rTag.TextColor3 = theme.muted
+	hint.TextColor3 = theme.muted
+	delBtn.BackgroundColor3 = theme.card
+	delBtn.TextColor3 = theme.text
+	betFrame.BackgroundColor3 = theme.card
+	betStroke.Color = theme.stroke
+	betLabel.TextColor3 = theme.text
+	histTitle.TextColor3 = theme.muted
+	histBox.BackgroundColor3 = theme.card
+	histStroke.Color = theme.stroke
+	predictBtn.BackgroundColor3 = theme.accent
+	predStroke.Color = theme.stroke
+	predGrad.Color = ColorSequence.new({
+		ColorSequenceKeypoint.new(0, theme.g1),
+		ColorSequenceKeypoint.new(1, theme.g2),
+	})
+	popup.BackgroundColor3 = theme.bg
+	popupStroke.Color = theme.stroke
+	settings.BackgroundColor3 = theme.bg
+	settingsPanelStroke.Color = theme.stroke
+	sTitle.TextColor3 = theme.text
+	sClose.BackgroundColor3 = theme.card
+	sClose.TextColor3 = theme.text
+	-- void dice empty slots
+	for i = 1, 4 do
+		if selected[i] == "?" then
+			setDice(i, "?")
+		end
+	end
+	if rName.Text == "-" or rName.Text == "Need 4 colors" or rName.Text == "Reading..." then
+		rName.TextColor3 = theme.text
+		rDot.BackgroundColor3 = theme.dice
+		rDotStroke.Color = theme.stroke
+	end
+	refreshMode()
+end
+
+local themeNames = {"Void", "Blue", "Pink", "Gold"}
+local themePos = {{12, 42}, {106, 42}, {12, 90}, {106, 90}}
+for i, name in ipairs(themeNames) do
+	local b = Instance.new("TextButton")
+	b.Size = UDim2.fromOffset(82, 36)
+	b.Position = UDim2.fromOffset(themePos[i][1], themePos[i][2])
+	b.BackgroundColor3 = THEMES[name].accent
+	b.Text = name
+	b.Font = Enum.Font.GothamBold
+	b.TextSize = 12
+	b.TextColor3 = Color3.fromRGB(255, 255, 255)
+	b.ZIndex = 56
+	b.Parent = settings
+	corner(b, 8)
+	stroke(b, Color3.fromRGB(255, 255, 255), 1, 0.45)
+	local n = name
+	b.MouseButton1Click:Connect(function()
+		playClick()
+		applyTheme(n)
+		settings.Visible = false
+	end)
+end
+
+settingsBtn.MouseButton1Click:Connect(function()
+	playClick()
+	settings.Visible = not settings.Visible
+	popup.Visible = false
+end)
+
+local footer = Instance.new("TextLabel")
+footer.Size = UDim2.fromOffset(230, 12)
+footer.Position = UDim2.fromOffset(10, 360)
+footer.BackgroundTransparency = 1
+footer.Text = "v2.9 · VOID NEON · #Zephyx"
+footer.Font = Enum.Font.Gotham
+footer.TextSize = 9
+footer.TextColor3 = theme.muted
+footer.Parent = main
+
+local function predictColor()
+	for i = 1, 4 do
+		if selected[i] == "?" then return nil end
+	end
+	local freq = {}
+	for _, n in ipairs(ORDER) do freq[n] = 0 end
+	for _, n in ipairs(selected) do freq[n] = freq[n] + 1.4 end
+	local hStart = math.max(1, #history - 20)
+	for i = hStart, #history do
+		local n = history[i]
+		if freq[n] then freq[n] = freq[n] + (1 + (i - hStart) / 20) end
+	end
+	local trans = {}
+	for _, n in ipairs(ORDER) do trans[n] = {} end
+	for i = hStart, #history - 1 do
+		local a, b = history[i], history[i + 1]
+		if a and b and trans[a] then trans[a][b] = (trans[a][b] or 0) + 1 end
+	end
+	for i = 1, 3 do
+		local a, b = selected[i], selected[i + 1]
+		if a ~= "?" and b ~= "?" and trans[a] then trans[a][b] = (trans[a][b] or 0) + 1.5 end
+	end
+	local last = selected[4]
+	local scores = {}
+	for _, n in ipairs(ORDER) do
+		local s = -freq[n] * 0.85
+		if trans[last] and trans[last][n] then s = s + trans[last][n] * 1.6 end
+		if n == last then
+			if selected[3] == last and selected[2] == last then s = s + 0.3 else s = s - 1.4 end
+		end
+		if selected[3] == selected[4] and n ~= last then s = s + 1.25 end
+		if selected[1] == selected[3] and selected[2] == selected[4] and n == selected[1] then s = s + 1.1 end
+		if mode == "v2" then
+			s = s + (n ~= last and 0.7 or -0.9)
+			if trans[last] and trans[last][n] then s = s + trans[last][n] * 0.8 end
+		else
+			s = s - freq[n] * 0.25
+		end
+		s = s + (math.random() - 0.5) * 0.35
+		scores[n] = s
+	end
+	local best, bestS = ORDER[1], -1e9
+	for _, n in ipairs(ORDER) do
+		if scores[n] > bestS then bestS = scores[n]; best = n end
+	end
+	return best
+end
+
+predictBtn.MouseButton1Click:Connect(function()
+	if predicting then return end
+	playPredict()
+	popup.Visible = false
+	local color = predictColor()
+	if not color then
+		rName.Text = "Need 4 colors"
+		rName.TextColor3 = Color3.fromRGB(255, 120, 130)
+		return
+	end
+	predicting = true
+	predictBtn.Text = "..."
+	rName.Text = "Reading..."
+	rName.TextColor3 = theme.muted
+	task.spawn(function()
+		for _ = 1, 8 do
+			local r = ORDER[math.random(1, #ORDER)]
+			rDot.BackgroundColor3 = COLORS[r]
+			task.wait(0.03)
+		end
+		rDot.BackgroundColor3 = COLORS[color]
+		rName.Text = color
+		rName.TextColor3 = COLORS[color]
+		rDot.Size = UDim2.fromOffset(28, 28)
+		rDot.Position = UDim2.fromOffset(14, 13)
+		TweenService:Create(rDot, TweenInfo.new(0.2, Enum.EasingStyle.Back), {
+			Size = UDim2.fromOffset(36, 36),
+			Position = UDim2.fromOffset(10, 9),
+		}):Play()
+		table.insert(history, color)
+		refreshHistory()
+		for i = 1, 4 do setDice(i, "?") end
+		predictBtn.Text = "PREDICT"
+		predicting = false
+	end)
+end)
+
+-- neon pulse
+task.spawn(function()
+	while main.Parent do
+		local t = tick()
+		local pulse = 0.5 + 0.5 * math.sin(t * 2.6)
+		mainStroke.Transparency = 0.03 + 0.18 * pulse
+		mainStroke.Color = Color3.fromRGB(
+			theme.stroke.R * 255,
+			theme.stroke.G * 255,
+			theme.stroke.B * 255
+		)
+		aura.BackgroundTransparency = 0.78 + 0.12 * pulse
+		aura.BackgroundColor3 = theme.accent
+		predStroke.Transparency = 0.1 + 0.2 * pulse
+		for i = 1, 4 do
+			local p2 = 0.5 + 0.5 * math.sin(t * 3.0 + i * 0.8)
+			local filled = selected[i] and selected[i] ~= "?"
+			if diceGlows[i] then
+				diceGlows[i].BackgroundTransparency = (filled and 0.65 or 0.82) + 0.12 * p2
+			end
+			if diceStrokes[i] then
+				-- keep white border clean like reference
+				diceStrokes[i].Color = Color3.fromRGB(255, 255, 255)
+				diceStrokes[i].Transparency = (filled and 0.08 or 0.3) + 0.08 * p2
+				diceStrokes[i].Thickness = filled and 2.4 or 2
+			end
+		end
+		task.wait(0.04)
+	end
+end)
+
+print("[Blind Predictor] VOID NEON ready")

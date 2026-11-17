@@ -1,0 +1,1416 @@
+-- This File Has Clean by Prince Bot | .gg/freesource
+local cloneref = cloneref or function(o) return o end
+local Players = cloneref(game:GetService("Players"))
+local UserInputService = cloneref(game:GetService("UserInputService"))
+local TweenService = cloneref(game:GetService("TweenService"))
+local RunService = cloneref(game:GetService("RunService"))
+
+local LocalPlayer = Players.LocalPlayer
+local PlayerGui = LocalPlayer:WaitForChild("PlayerGui")
+
+if PlayerGui:FindFirstChild("Galaxy Anti Bat") then
+    PlayerGui:FindFirstChild("Galaxy Anti Bat"):Destroy()
+end
+
+local G = {}
+
+G.GalaxyAntiBat = Instance.new("ScreenGui")
+G.GalaxyAntiBat.Name = "Galaxy Anti Bat"
+G.GalaxyAntiBat.ResetOnSpawn = false
+G.GalaxyAntiBat.DisplayOrder = 10
+G.GalaxyAntiBat.IgnoreGuiInset = true
+G.GalaxyAntiBat.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+G.GalaxyAntiBat.ScreenInsets = Enum.ScreenInsets.DeviceSafeInsets
+
+G.Main = Instance.new("Frame")
+G.Main.Name = "Main"
+G.Main.Active = true
+G.Main.BackgroundColor3 = Color3.fromRGB(10, 5, 22)
+G.Main.BorderSizePixel = 0
+G.Main.ClipsDescendants = true
+G.Main.Position = UDim2.new(0.5, -150, 0.5, -125)
+G.Main.Size = UDim2.new(0, 300, 0, 250)
+G.Main.Parent = G.GalaxyAntiBat
+
+G.UICorner = Instance.new("UICorner")
+G.UICorner.CornerRadius = UDim.new(0, 18)
+G.UICorner.Parent = G.Main
+
+G.UIStroke = Instance.new("UIStroke")
+G.UIStroke.Color = Color3.fromRGB(115, 65, 255)
+G.UIStroke.Thickness = 1.5
+G.UIStroke.Transparency = 0.45
+G.UIStroke.Parent = G.Main
+
+G.GalaxyBackground = Instance.new("Frame")
+G.GalaxyBackground.Name = "GalaxyBackground"
+G.GalaxyBackground.BackgroundColor3 = Color3.fromRGB(24, 10, 48)
+G.GalaxyBackground.BorderSizePixel = 0
+G.GalaxyBackground.ClipsDescendants = true
+G.GalaxyBackground.Size = UDim2.new(1, 0, 1, 0)
+G.GalaxyBackground.ZIndex = 0
+G.GalaxyBackground.Parent = G.Main
+
+G.UICorner_2 = Instance.new("UICorner")
+G.UICorner_2.CornerRadius = UDim.new(0, 18)
+G.UICorner_2.Parent = G.GalaxyBackground
+
+G.UIGradient = Instance.new("UIGradient")
+G.UIGradient.Color = ColorSequence.new({
+    ColorSequenceKeypoint.new(0, Color3.fromRGB(80, 25, 145)),
+    ColorSequenceKeypoint.new(0.35, Color3.fromRGB(45, 15, 95)),
+    ColorSequenceKeypoint.new(0.65, Color3.fromRGB(105, 40, 185)),
+    ColorSequenceKeypoint.new(1, Color3.fromRGB(24, 7, 55))
+})
+G.UIGradient.Rotation = 135
+G.UIGradient.Parent = G.GalaxyBackground
+
+G.Frame = Instance.new("Frame")
+G.Frame.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+G.Frame.BackgroundTransparency = 0.63
+G.Frame.BorderSizePixel = 0
+G.Frame.Position = UDim2.new(0.13965715, 0, 0.86527318, 0)
+G.Frame.Size = UDim2.new(0, 1, 0, 1)
+G.Frame.Parent = G.GalaxyBackground
+
+G.UICorner_3 = Instance.new("UICorner")
+G.UICorner_3.CornerRadius = UDim.new(1, 0)
+G.UICorner_3.Parent = G.Frame
+
+G.Frame_2 = Instance.new("Frame")
+G.Frame_2.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+G.Frame_2.BackgroundTransparency = 0.83
+G.Frame_2.BorderSizePixel = 0
+G.Frame_2.Position = UDim2.new(0.6619429, 0, 0.38277066, 0)
+G.Frame_2.Size = UDim2.new(0, 2, 0, 2)
+G.Frame_2.Parent = G.GalaxyBackground
+
+G.UICorner_4 = Instance.new("UICorner")
+G.UICorner_4.CornerRadius = UDim.new(1, 0)
+G.UICorner_4.Parent = G.Frame_2
+
+G.Frame_3 = Instance.new("Frame")
+G.Frame_3.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+G.Frame_3.BackgroundTransparency = 0.61
+G.Frame_3.BorderSizePixel = 0
+G.Frame_3.Position = UDim2.new(0.28084782, 0, 0.85442185, 0)
+G.Frame_3.Size = UDim2.new(0, 3, 0, 3)
+G.Frame_3.Parent = G.GalaxyBackground
+
+G.UICorner_5 = Instance.new("UICorner")
+G.UICorner_5.CornerRadius = UDim.new(1, 0)
+G.UICorner_5.Parent = G.Frame_3
+
+G.Frame_4 = Instance.new("Frame")
+G.Frame_4.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+G.Frame_4.BackgroundTransparency = 0.69
+G.Frame_4.BorderSizePixel = 0
+G.Frame_4.Position = UDim2.new(0.44642746, 0, 0.65626985, 0)
+G.Frame_4.Size = UDim2.new(0, 2, 0, 2)
+G.Frame_4.Parent = G.GalaxyBackground
+
+G.UICorner_6 = Instance.new("UICorner")
+G.UICorner_6.CornerRadius = UDim.new(1, 0)
+G.UICorner_6.Parent = G.Frame_4
+
+G.Frame_5 = Instance.new("Frame")
+G.Frame_5.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+G.Frame_5.BackgroundTransparency = 0.82
+G.Frame_5.BorderSizePixel = 0
+G.Frame_5.Position = UDim2.new(0.66807497, 0, 0.20938085, 0)
+G.Frame_5.Size = UDim2.new(0, 1, 0, 1)
+G.Frame_5.Parent = G.GalaxyBackground
+
+G.UICorner_7 = Instance.new("UICorner")
+G.UICorner_7.CornerRadius = UDim.new(1, 0)
+G.UICorner_7.Parent = G.Frame_5
+
+G.Frame_6 = Instance.new("Frame")
+G.Frame_6.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+G.Frame_6.BackgroundTransparency = 0.58
+G.Frame_6.BorderSizePixel = 0
+G.Frame_6.Position = UDim2.new(0.53352106, 0, 0.67878133, 0)
+G.Frame_6.Size = UDim2.new(0, 1, 0, 1)
+G.Frame_6.Parent = G.GalaxyBackground
+
+G.UICorner_8 = Instance.new("UICorner")
+G.UICorner_8.CornerRadius = UDim.new(1, 0)
+G.UICorner_8.Parent = G.Frame_6
+
+G.Frame_7 = Instance.new("Frame")
+G.Frame_7.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+G.Frame_7.BackgroundTransparency = 0.47
+G.Frame_7.BorderSizePixel = 0
+G.Frame_7.Position = UDim2.new(0.63539118, 0, 0.01488001, 0)
+G.Frame_7.Size = UDim2.new(0, 3, 0, 3)
+G.Frame_7.Parent = G.GalaxyBackground
+
+G.UICorner_9 = Instance.new("UICorner")
+G.UICorner_9.CornerRadius = UDim.new(1, 0)
+G.UICorner_9.Parent = G.Frame_7
+
+G.Frame_8 = Instance.new("Frame")
+G.Frame_8.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+G.Frame_8.BackgroundTransparency = 0.72
+G.Frame_8.BorderSizePixel = 0
+G.Frame_8.Position = UDim2.new(0.66963881, 0, 0.7387839, 0)
+G.Frame_8.Size = UDim2.new(0, 1, 0, 1)
+G.Frame_8.Parent = G.GalaxyBackground
+
+G.UICorner_10 = Instance.new("UICorner")
+G.UICorner_10.CornerRadius = UDim.new(1, 0)
+G.UICorner_10.Parent = G.Frame_8
+
+G.Frame_9 = Instance.new("Frame")
+G.Frame_9.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+G.Frame_9.BackgroundTransparency = 0.57
+G.Frame_9.BorderSizePixel = 0
+G.Frame_9.Position = UDim2.new(0.7290405, 0, 0.65678197, 0)
+G.Frame_9.Size = UDim2.new(0, 1, 0, 1)
+G.Frame_9.Parent = G.GalaxyBackground
+
+G.UICorner_11 = Instance.new("UICorner")
+G.UICorner_11.CornerRadius = UDim.new(1, 0)
+G.UICorner_11.Parent = G.Frame_9
+
+G.Frame_10 = Instance.new("Frame")
+G.Frame_10.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+G.Frame_10.BackgroundTransparency = 0.56
+G.Frame_10.BorderSizePixel = 0
+G.Frame_10.Position = UDim2.new(0.54991102, 0, 0.61808884, 0)
+G.Frame_10.Size = UDim2.new(0, 3, 0, 3)
+G.Frame_10.Parent = G.GalaxyBackground
+
+G.UICorner_12 = Instance.new("UICorner")
+G.UICorner_12.CornerRadius = UDim.new(1, 0)
+G.UICorner_12.Parent = G.Frame_10
+
+G.Frame_11 = Instance.new("Frame")
+G.Frame_11.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+G.Frame_11.BackgroundTransparency = 0.67
+G.Frame_11.BorderSizePixel = 0
+G.Frame_11.Position = UDim2.new(0.33630657, 0, 0.3914769, 0)
+G.Frame_11.Size = UDim2.new(0, 1, 0, 1)
+G.Frame_11.Parent = G.GalaxyBackground
+
+G.UICorner_13 = Instance.new("UICorner")
+G.UICorner_13.CornerRadius = UDim.new(1, 0)
+G.UICorner_13.Parent = G.Frame_11
+
+G.Frame_12 = Instance.new("Frame")
+G.Frame_12.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+G.Frame_12.BackgroundTransparency = 0.54
+G.Frame_12.BorderSizePixel = 0
+G.Frame_12.Position = UDim2.new(0.73868507, 0, 0.32765618, 0)
+G.Frame_12.Size = UDim2.new(0, 2, 0, 2)
+G.Frame_12.Parent = G.GalaxyBackground
+
+G.UICorner_14 = Instance.new("UICorner")
+G.UICorner_14.CornerRadius = UDim.new(1, 0)
+G.UICorner_14.Parent = G.Frame_12
+
+G.Frame_13 = Instance.new("Frame")
+G.Frame_13.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+G.Frame_13.BackgroundTransparency = 0.67
+G.Frame_13.BorderSizePixel = 0
+G.Frame_13.Position = UDim2.new(0.09009996, 0, 0.49736199, 0)
+G.Frame_13.Size = UDim2.new(0, 3, 0, 3)
+G.Frame_13.Parent = G.GalaxyBackground
+
+G.UICorner_15 = Instance.new("UICorner")
+G.UICorner_15.CornerRadius = UDim.new(1, 0)
+G.UICorner_15.Parent = G.Frame_13
+
+G.Frame_14 = Instance.new("Frame")
+G.Frame_14.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+G.Frame_14.BackgroundTransparency = 0.8
+G.Frame_14.BorderSizePixel = 0
+G.Frame_14.Position = UDim2.new(0.23656423, 0, 0.64013481, 0)
+G.Frame_14.Size = UDim2.new(0, 2, 0, 2)
+G.Frame_14.Parent = G.GalaxyBackground
+
+G.UICorner_16 = Instance.new("UICorner")
+G.UICorner_16.CornerRadius = UDim.new(1, 0)
+G.UICorner_16.Parent = G.Frame_14
+
+G.Frame_15 = Instance.new("Frame")
+G.Frame_15.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+G.Frame_15.BackgroundTransparency = 0.39
+G.Frame_15.BorderSizePixel = 0
+G.Frame_15.Position = UDim2.new(0.53505248, 0, 0.08613601, 0)
+G.Frame_15.Size = UDim2.new(0, 1, 0, 1)
+G.Frame_15.Parent = G.GalaxyBackground
+
+G.UICorner_17 = Instance.new("UICorner")
+G.UICorner_17.CornerRadius = UDim.new(1, 0)
+G.UICorner_17.Parent = G.Frame_15
+
+G.Frame_16 = Instance.new("Frame")
+G.Frame_16.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+G.Frame_16.BackgroundTransparency = 0.5
+G.Frame_16.BorderSizePixel = 0
+G.Frame_16.Position = UDim2.new(0.95022917, 0, 0.26655921, 0)
+G.Frame_16.Size = UDim2.new(0, 1, 0, 1)
+G.Frame_16.Parent = G.GalaxyBackground
+
+G.UICorner_18 = Instance.new("UICorner")
+G.UICorner_18.CornerRadius = UDim.new(1, 0)
+G.UICorner_18.Parent = G.Frame_16
+
+G.Frame_17 = Instance.new("Frame")
+G.Frame_17.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+G.Frame_17.BackgroundTransparency = 0.61
+G.Frame_17.BorderSizePixel = 0
+G.Frame_17.Position = UDim2.new(0.71633577, 0, 0.58846414, 0)
+G.Frame_17.Size = UDim2.new(0, 1, 0, 1)
+G.Frame_17.Parent = G.GalaxyBackground
+
+G.UICorner_19 = Instance.new("UICorner")
+G.UICorner_19.CornerRadius = UDim.new(1, 0)
+G.UICorner_19.Parent = G.Frame_17
+
+G.Frame_18 = Instance.new("Frame")
+G.Frame_18.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+G.Frame_18.BackgroundTransparency = 0.64
+G.Frame_18.BorderSizePixel = 0
+G.Frame_18.Position = UDim2.new(0.13129215, 0, 0.68261588, 0)
+G.Frame_18.Size = UDim2.new(0, 1, 0, 1)
+G.Frame_18.Parent = G.GalaxyBackground
+
+G.UICorner_20 = Instance.new("UICorner")
+G.UICorner_20.CornerRadius = UDim.new(1, 0)
+G.UICorner_20.Parent = G.Frame_18
+
+G.Frame_19 = Instance.new("Frame")
+G.Frame_19.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+G.Frame_19.BackgroundTransparency = 0.63
+G.Frame_19.BorderSizePixel = 0
+G.Frame_19.Position = UDim2.new(0.0219561, 0, 0.88934755, 0)
+G.Frame_19.Size = UDim2.new(0, 3, 0, 3)
+G.Frame_19.Parent = G.GalaxyBackground
+
+G.UICorner_21 = Instance.new("UICorner")
+G.UICorner_21.CornerRadius = UDim.new(1, 0)
+G.UICorner_21.Parent = G.Frame_19
+
+G.Frame_20 = Instance.new("Frame")
+G.Frame_20.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+G.Frame_20.BackgroundTransparency = 0.7
+G.Frame_20.BorderSizePixel = 0
+G.Frame_20.Position = UDim2.new(0.71538603, 0, 0.60522163, 0)
+G.Frame_20.Size = UDim2.new(0, 3, 0, 3)
+G.Frame_20.Parent = G.GalaxyBackground
+
+G.UICorner_22 = Instance.new("UICorner")
+G.UICorner_22.CornerRadius = UDim.new(1, 0)
+G.UICorner_22.Parent = G.Frame_20
+
+G.Frame_21 = Instance.new("Frame")
+G.Frame_21.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+G.Frame_21.BackgroundTransparency = 0.32
+G.Frame_21.BorderSizePixel = 0
+G.Frame_21.Position = UDim2.new(0.55472904, 0, 0.1985441, 0)
+G.Frame_21.Size = UDim2.new(0, 2, 0, 2)
+G.Frame_21.Parent = G.GalaxyBackground
+
+G.UICorner_23 = Instance.new("UICorner")
+G.UICorner_23.CornerRadius = UDim.new(1, 0)
+G.UICorner_23.Parent = G.Frame_21
+
+G.Frame_22 = Instance.new("Frame")
+G.Frame_22.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+G.Frame_22.BackgroundTransparency = 0.81
+G.Frame_22.BorderSizePixel = 0
+G.Frame_22.Position = UDim2.new(0.52194011, 0, 0.95990378, 0)
+G.Frame_22.Size = UDim2.new(0, 2, 0, 2)
+G.Frame_22.Parent = G.GalaxyBackground
+
+G.UICorner_24 = Instance.new("UICorner")
+G.UICorner_24.CornerRadius = UDim.new(1, 0)
+G.UICorner_24.Parent = G.Frame_22
+
+G.Frame_23 = Instance.new("Frame")
+G.Frame_23.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+G.Frame_23.BackgroundTransparency = 0.65
+G.Frame_23.BorderSizePixel = 0
+G.Frame_23.Position = UDim2.new(0.48607469, 0, 0.2259324, 0)
+G.Frame_23.Size = UDim2.new(0, 3, 0, 3)
+G.Frame_23.Parent = G.GalaxyBackground
+
+G.UICorner_25 = Instance.new("UICorner")
+G.UICorner_25.CornerRadius = UDim.new(1, 0)
+G.UICorner_25.Parent = G.Frame_23
+
+G.Frame_24 = Instance.new("Frame")
+G.Frame_24.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+G.Frame_24.BackgroundTransparency = 0.45
+G.Frame_24.BorderSizePixel = 0
+G.Frame_24.Position = UDim2.new(0.41260076, 0, 0.67715842, 0)
+G.Frame_24.Size = UDim2.new(0, 3, 0, 3)
+G.Frame_24.Parent = G.GalaxyBackground
+
+G.UICorner_26 = Instance.new("UICorner")
+G.UICorner_26.CornerRadius = UDim.new(1, 0)
+G.UICorner_26.Parent = G.Frame_24
+
+G.Frame_25 = Instance.new("Frame")
+G.Frame_25.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+G.Frame_25.BackgroundTransparency = 0.48
+G.Frame_25.BorderSizePixel = 0
+G.Frame_25.Position = UDim2.new(0.27359456, 0, 0.75038153, 0)
+G.Frame_25.Size = UDim2.new(0, 2, 0, 2)
+G.Frame_25.Parent = G.GalaxyBackground
+
+G.UICorner_27 = Instance.new("UICorner")
+G.UICorner_27.CornerRadius = UDim.new(1, 0)
+G.UICorner_27.Parent = G.Frame_25
+
+G.Frame_26 = Instance.new("Frame")
+G.Frame_26.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+G.Frame_26.BackgroundTransparency = 0.57
+G.Frame_26.BorderSizePixel = 0
+G.Frame_26.Position = UDim2.new(0.78601998, 0, 0.91234434, 0)
+G.Frame_26.Size = UDim2.new(0, 2, 0, 2)
+G.Frame_26.Parent = G.GalaxyBackground
+
+G.UICorner_28 = Instance.new("UICorner")
+G.UICorner_28.CornerRadius = UDim.new(1, 0)
+G.UICorner_28.Parent = G.Frame_26
+
+G.Frame_27 = Instance.new("Frame")
+G.Frame_27.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+G.Frame_27.BackgroundTransparency = 0.52
+G.Frame_27.BorderSizePixel = 0
+G.Frame_27.Position = UDim2.new(0.60276014, 0, 0.51406658, 0)
+G.Frame_27.Size = UDim2.new(0, 3, 0, 3)
+G.Frame_27.Parent = G.GalaxyBackground
+
+G.UICorner_29 = Instance.new("UICorner")
+G.UICorner_29.CornerRadius = UDim.new(1, 0)
+G.UICorner_29.Parent = G.Frame_27
+
+G.Frame_28 = Instance.new("Frame")
+G.Frame_28.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+G.Frame_28.BackgroundTransparency = 0.3
+G.Frame_28.BorderSizePixel = 0
+G.Frame_28.Position = UDim2.new(0.56223124, 0, 0.20519255, 0)
+G.Frame_28.Size = UDim2.new(0, 2, 0, 2)
+G.Frame_28.Parent = G.GalaxyBackground
+
+G.UICorner_30 = Instance.new("UICorner")
+G.UICorner_30.CornerRadius = UDim.new(1, 0)
+G.UICorner_30.Parent = G.Frame_28
+
+G.Frame_29 = Instance.new("Frame")
+G.Frame_29.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+G.Frame_29.BackgroundTransparency = 0.79
+G.Frame_29.BorderSizePixel = 0
+G.Frame_29.Position = UDim2.new(0.44941872, 0, 0.84769028, 0)
+G.Frame_29.Size = UDim2.new(0, 2, 0, 2)
+G.Frame_29.Parent = G.GalaxyBackground
+
+G.UICorner_31 = Instance.new("UICorner")
+G.UICorner_31.CornerRadius = UDim.new(1, 0)
+G.UICorner_31.Parent = G.Frame_29
+
+G.Frame_30 = Instance.new("Frame")
+G.Frame_30.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+G.Frame_30.BackgroundTransparency = 0.38
+G.Frame_30.BorderSizePixel = 0
+G.Frame_30.Position = UDim2.new(0.94719923, 0, 0.32476234, 0)
+G.Frame_30.Size = UDim2.new(0, 1, 0, 1)
+G.Frame_30.Parent = G.GalaxyBackground
+
+G.UICorner_32 = Instance.new("UICorner")
+G.UICorner_32.CornerRadius = UDim.new(1, 0)
+G.UICorner_32.Parent = G.Frame_30
+
+G.Frame_31 = Instance.new("Frame")
+G.Frame_31.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+G.Frame_31.BackgroundTransparency = 0.57
+G.Frame_31.BorderSizePixel = 0
+G.Frame_31.Position = UDim2.new(0.60534686, 0, 0.15481423, 0)
+G.Frame_31.Size = UDim2.new(0, 2, 0, 2)
+G.Frame_31.Parent = G.GalaxyBackground
+
+G.UICorner_33 = Instance.new("UICorner")
+G.UICorner_33.CornerRadius = UDim.new(1, 0)
+G.UICorner_33.Parent = G.Frame_31
+
+G.Frame_32 = Instance.new("Frame")
+G.Frame_32.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+G.Frame_32.BackgroundTransparency = 0.45
+G.Frame_32.BorderSizePixel = 0
+G.Frame_32.Position = UDim2.new(0.88525814, 0, 0.52925563, 0)
+G.Frame_32.Size = UDim2.new(0, 1, 0, 1)
+G.Frame_32.Parent = G.GalaxyBackground
+
+G.UICorner_34 = Instance.new("UICorner")
+G.UICorner_34.CornerRadius = UDim.new(1, 0)
+G.UICorner_34.Parent = G.Frame_32
+
+G.Frame_33 = Instance.new("Frame")
+G.Frame_33.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+G.Frame_33.BackgroundTransparency = 0.37
+G.Frame_33.BorderSizePixel = 0
+G.Frame_33.Position = UDim2.new(0.00743924, 0, 0.83082032, 0)
+G.Frame_33.Size = UDim2.new(0, 1, 0, 1)
+G.Frame_33.Parent = G.GalaxyBackground
+
+G.UICorner_35 = Instance.new("UICorner")
+G.UICorner_35.CornerRadius = UDim.new(1, 0)
+G.UICorner_35.Parent = G.Frame_33
+
+G.Frame_34 = Instance.new("Frame")
+G.Frame_34.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+G.Frame_34.BackgroundTransparency = 0.51
+G.Frame_34.BorderSizePixel = 0
+G.Frame_34.Position = UDim2.new(0.91650951, 0, 0.33167148, 0)
+G.Frame_34.Size = UDim2.new(0, 3, 0, 3)
+G.Frame_34.Parent = G.GalaxyBackground
+
+G.UICorner_36 = Instance.new("UICorner")
+G.UICorner_36.CornerRadius = UDim.new(1, 0)
+G.UICorner_36.Parent = G.Frame_34
+
+G.Frame_35 = Instance.new("Frame")
+G.Frame_35.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+G.Frame_35.BackgroundTransparency = 0.55
+G.Frame_35.BorderSizePixel = 0
+G.Frame_35.Position = UDim2.new(0.58819687, 0, 0.17528461, 0)
+G.Frame_35.Size = UDim2.new(0, 2, 0, 2)
+G.Frame_35.Parent = G.GalaxyBackground
+
+G.UICorner_37 = Instance.new("UICorner")
+G.UICorner_37.CornerRadius = UDim.new(1, 0)
+G.UICorner_37.Parent = G.Frame_35
+
+G.Frame_36 = Instance.new("Frame")
+G.Frame_36.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+G.Frame_36.BackgroundTransparency = 0.64
+G.Frame_36.BorderSizePixel = 0
+G.Frame_36.Position = UDim2.new(0.8640933, 0, 0.12242173, 0)
+G.Frame_36.Size = UDim2.new(0, 2, 0, 2)
+G.Frame_36.Parent = G.GalaxyBackground
+
+G.UICorner_38 = Instance.new("UICorner")
+G.UICorner_38.CornerRadius = UDim.new(1, 0)
+G.UICorner_38.Parent = G.Frame_36
+
+G.Frame_37 = Instance.new("Frame")
+G.Frame_37.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+G.Frame_37.BackgroundTransparency = 0.84
+G.Frame_37.BorderSizePixel = 0
+G.Frame_37.Position = UDim2.new(0.73588073, 0, 0.38679937, 0)
+G.Frame_37.Size = UDim2.new(0, 1, 0, 1)
+G.Frame_37.Parent = G.GalaxyBackground
+
+G.UICorner_39 = Instance.new("UICorner")
+G.UICorner_39.CornerRadius = UDim.new(1, 0)
+G.UICorner_39.Parent = G.Frame_37
+
+G.Frame_38 = Instance.new("Frame")
+G.Frame_38.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+G.Frame_38.BackgroundTransparency = 0.55
+G.Frame_38.BorderSizePixel = 0
+G.Frame_38.Position = UDim2.new(0.15002787, 0, 0.66585875, 0)
+G.Frame_38.Size = UDim2.new(0, 1, 0, 1)
+G.Frame_38.Parent = G.GalaxyBackground
+
+G.UICorner_40 = Instance.new("UICorner")
+G.UICorner_40.CornerRadius = UDim.new(1, 0)
+G.UICorner_40.Parent = G.Frame_38
+
+G.Frame_39 = Instance.new("Frame")
+G.Frame_39.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+G.Frame_39.BackgroundTransparency = 0.58
+G.Frame_39.BorderSizePixel = 0
+G.Frame_39.Position = UDim2.new(0.86243427, 0, 0.93421257, 0)
+G.Frame_39.Size = UDim2.new(0, 3, 0, 3)
+G.Frame_39.Parent = G.GalaxyBackground
+
+G.UICorner_41 = Instance.new("UICorner")
+G.UICorner_41.CornerRadius = UDim.new(1, 0)
+G.UICorner_41.Parent = G.Frame_39
+
+G.Frame_40 = Instance.new("Frame")
+G.Frame_40.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+G.Frame_40.BackgroundTransparency = 0.4
+G.Frame_40.BorderSizePixel = 0
+G.Frame_40.Position = UDim2.new(0.928195, 0, 0.97461784, 0)
+G.Frame_40.Size = UDim2.new(0, 3, 0, 3)
+G.Frame_40.Parent = G.GalaxyBackground
+
+G.UICorner_42 = Instance.new("UICorner")
+G.UICorner_42.CornerRadius = UDim.new(1, 0)
+G.UICorner_42.Parent = G.Frame_40
+
+G.Frame_41 = Instance.new("Frame")
+G.Frame_41.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+G.Frame_41.BackgroundTransparency = 0.47
+G.Frame_41.BorderSizePixel = 0
+G.Frame_41.Position = UDim2.new(0.81318951, 0, 0.36930928, 0)
+G.Frame_41.Size = UDim2.new(0, 1, 0, 1)
+G.Frame_41.Parent = G.GalaxyBackground
+
+G.UICorner_43 = Instance.new("UICorner")
+G.UICorner_43.CornerRadius = UDim.new(1, 0)
+G.UICorner_43.Parent = G.Frame_41
+
+G.Frame_42 = Instance.new("Frame")
+G.Frame_42.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+G.Frame_42.BackgroundTransparency = 0.53
+G.Frame_42.BorderSizePixel = 0
+G.Frame_42.Position = UDim2.new(0.68942863, 0, 0.66337097, 0)
+G.Frame_42.Size = UDim2.new(0, 2, 0, 2)
+G.Frame_42.Parent = G.GalaxyBackground
+
+G.UICorner_44 = Instance.new("UICorner")
+G.UICorner_44.CornerRadius = UDim.new(1, 0)
+G.UICorner_44.Parent = G.Frame_42
+
+G.Frame_43 = Instance.new("Frame")
+G.Frame_43.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+G.Frame_43.BackgroundTransparency = 0.6
+G.Frame_43.BorderSizePixel = 0
+G.Frame_43.Position = UDim2.new(0.29454902, 0, 0.83437139, 0)
+G.Frame_43.Size = UDim2.new(0, 3, 0, 3)
+G.Frame_43.Parent = G.GalaxyBackground
+
+G.UICorner_45 = Instance.new("UICorner")
+G.UICorner_45.CornerRadius = UDim.new(1, 0)
+G.UICorner_45.Parent = G.Frame_43
+
+G.Frame_44 = Instance.new("Frame")
+G.Frame_44.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+G.Frame_44.BackgroundTransparency = 0.57
+G.Frame_44.BorderSizePixel = 0
+G.Frame_44.Position = UDim2.new(0.30717233, 0, 0.28560197, 0)
+G.Frame_44.Size = UDim2.new(0, 3, 0, 3)
+G.Frame_44.Parent = G.GalaxyBackground
+
+G.UICorner_46 = Instance.new("UICorner")
+G.UICorner_46.CornerRadius = UDim.new(1, 0)
+G.UICorner_46.Parent = G.Frame_44
+
+G.Frame_45 = Instance.new("Frame")
+G.Frame_45.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+G.Frame_45.BackgroundTransparency = 0.72
+G.Frame_45.BorderSizePixel = 0
+G.Frame_45.Position = UDim2.new(0.46817636, 0, 0.20051648, 0)
+G.Frame_45.Size = UDim2.new(0, 3, 0, 3)
+G.Frame_45.Parent = G.GalaxyBackground
+
+G.UICorner_47 = Instance.new("UICorner")
+G.UICorner_47.CornerRadius = UDim.new(1, 0)
+G.UICorner_47.Parent = G.Frame_45
+
+G.Frame_46 = Instance.new("Frame")
+G.Frame_46.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+G.Frame_46.BackgroundTransparency = 0.8
+G.Frame_46.BorderSizePixel = 0
+G.Frame_46.Position = UDim2.new(0.15028431, 0, 0.97011888, 0)
+G.Frame_46.Size = UDim2.new(0, 2, 0, 2)
+G.Frame_46.Parent = G.GalaxyBackground
+
+G.UICorner_48 = Instance.new("UICorner")
+G.UICorner_48.CornerRadius = UDim.new(1, 0)
+G.UICorner_48.Parent = G.Frame_46
+
+G.Frame_47 = Instance.new("Frame")
+G.Frame_47.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+G.Frame_47.BackgroundTransparency = 0.45
+G.Frame_47.BorderSizePixel = 0
+G.Frame_47.Position = UDim2.new(0.73181611, 0, 0.67864305, 0)
+G.Frame_47.Size = UDim2.new(0, 3, 0, 3)
+G.Frame_47.Parent = G.GalaxyBackground
+
+G.UICorner_49 = Instance.new("UICorner")
+G.UICorner_49.CornerRadius = UDim.new(1, 0)
+G.UICorner_49.Parent = G.Frame_47
+
+G.Frame_48 = Instance.new("Frame")
+G.Frame_48.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+G.Frame_48.BackgroundTransparency = 0.32
+G.Frame_48.BorderSizePixel = 0
+G.Frame_48.Position = UDim2.new(0.66318768, 0, 0.01822754, 0)
+G.Frame_48.Size = UDim2.new(0, 2, 0, 2)
+G.Frame_48.Parent = G.GalaxyBackground
+
+G.UICorner_50 = Instance.new("UICorner")
+G.UICorner_50.CornerRadius = UDim.new(1, 0)
+G.UICorner_50.Parent = G.Frame_48
+
+G.Frame_49 = Instance.new("Frame")
+G.Frame_49.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+G.Frame_49.BackgroundTransparency = 0.72
+G.Frame_49.BorderSizePixel = 0
+G.Frame_49.Position = UDim2.new(0.60527986, 0, 0.90588886, 0)
+G.Frame_49.Size = UDim2.new(0, 1, 0, 1)
+G.Frame_49.Parent = G.GalaxyBackground
+
+G.UICorner_51 = Instance.new("UICorner")
+G.UICorner_51.CornerRadius = UDim.new(1, 0)
+G.UICorner_51.Parent = G.Frame_49
+
+G.Frame_50 = Instance.new("Frame")
+G.Frame_50.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+G.Frame_50.BackgroundTransparency = 0.39
+G.Frame_50.BorderSizePixel = 0
+G.Frame_50.Position = UDim2.new(0.57878894, 0, 0.42997521, 0)
+G.Frame_50.Size = UDim2.new(0, 1, 0, 1)
+G.Frame_50.Parent = G.GalaxyBackground
+
+G.UICorner_52 = Instance.new("UICorner")
+G.UICorner_52.CornerRadius = UDim.new(1, 0)
+G.UICorner_52.Parent = G.Frame_50
+
+G.Frame_51 = Instance.new("Frame")
+G.Frame_51.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+G.Frame_51.BackgroundTransparency = 0.34
+G.Frame_51.BorderSizePixel = 0
+G.Frame_51.Position = UDim2.new(0.3785632, 0, 0.63005865, 0)
+G.Frame_51.Size = UDim2.new(0, 3, 0, 3)
+G.Frame_51.Parent = G.GalaxyBackground
+
+G.UICorner_53 = Instance.new("UICorner")
+G.UICorner_53.CornerRadius = UDim.new(1, 0)
+G.UICorner_53.Parent = G.Frame_51
+
+G.Frame_52 = Instance.new("Frame")
+G.Frame_52.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+G.Frame_52.BackgroundTransparency = 0.82
+G.Frame_52.BorderSizePixel = 0
+G.Frame_52.Position = UDim2.new(0.80486292, 0, 0.84000504, 0)
+G.Frame_52.Size = UDim2.new(0, 1, 0, 1)
+G.Frame_52.Parent = G.GalaxyBackground
+
+G.UICorner_54 = Instance.new("UICorner")
+G.UICorner_54.CornerRadius = UDim.new(1, 0)
+G.UICorner_54.Parent = G.Frame_52
+
+G.Frame_53 = Instance.new("Frame")
+G.Frame_53.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+G.Frame_53.BackgroundTransparency = 0.67
+G.Frame_53.BorderSizePixel = 0
+G.Frame_53.Position = UDim2.new(0.87578237, 0, 0.26464731, 0)
+G.Frame_53.Size = UDim2.new(0, 2, 0, 2)
+G.Frame_53.Parent = G.GalaxyBackground
+
+G.UICorner_55 = Instance.new("UICorner")
+G.UICorner_55.CornerRadius = UDim.new(1, 0)
+G.UICorner_55.Parent = G.Frame_53
+
+G.Frame_54 = Instance.new("Frame")
+G.Frame_54.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+G.Frame_54.BackgroundTransparency = 0.57
+G.Frame_54.BorderSizePixel = 0
+G.Frame_54.Position = UDim2.new(0.56365651, 0, 0.29667318, 0)
+G.Frame_54.Size = UDim2.new(0, 2, 0, 2)
+G.Frame_54.Parent = G.GalaxyBackground
+
+G.UICorner_56 = Instance.new("UICorner")
+G.UICorner_56.CornerRadius = UDim.new(1, 0)
+G.UICorner_56.Parent = G.Frame_54
+
+G.Frame_55 = Instance.new("Frame")
+G.Frame_55.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+G.Frame_55.BackgroundTransparency = 0.82
+G.Frame_55.BorderSizePixel = 0
+G.Frame_55.Position = UDim2.new(0.25418088, 0, 0.89726931, 0)
+G.Frame_55.Size = UDim2.new(0, 1, 0, 1)
+G.Frame_55.Parent = G.GalaxyBackground
+
+G.UICorner_57 = Instance.new("UICorner")
+G.UICorner_57.CornerRadius = UDim.new(1, 0)
+G.UICorner_57.Parent = G.Frame_55
+
+G.Frame_56 = Instance.new("Frame")
+G.Frame_56.BackgroundColor3 = Color3.fromRGB(150, 70, 240)
+G.Frame_56.BackgroundTransparency = 0.85
+G.Frame_56.BorderSizePixel = 0
+G.Frame_56.Position = UDim2.new(0.1196827, 0, 0.01709719, 0)
+G.Frame_56.Size = UDim2.new(0, 112, 0, 112)
+G.Frame_56.ZIndex = 0
+G.Frame_56.Parent = G.GalaxyBackground
+
+G.UICorner_58 = Instance.new("UICorner")
+G.UICorner_58.CornerRadius = UDim.new(1, 0)
+G.UICorner_58.Parent = G.Frame_56
+
+G.Frame_57 = Instance.new("Frame")
+G.Frame_57.BackgroundColor3 = Color3.fromRGB(150, 70, 240)
+G.Frame_57.BackgroundTransparency = 0.85
+G.Frame_57.BorderSizePixel = 0
+G.Frame_57.Position = UDim2.new(0.19905162, 0, 0.51714635, 0)
+G.Frame_57.Size = UDim2.new(0, 141, 0, 141)
+G.Frame_57.ZIndex = 0
+G.Frame_57.Parent = G.GalaxyBackground
+
+G.UICorner_59 = Instance.new("UICorner")
+G.UICorner_59.CornerRadius = UDim.new(1, 0)
+G.UICorner_59.Parent = G.Frame_57
+
+G.Frame_58 = Instance.new("Frame")
+G.Frame_58.BackgroundColor3 = Color3.fromRGB(150, 70, 240)
+G.Frame_58.BackgroundTransparency = 0.85
+G.Frame_58.BorderSizePixel = 0
+G.Frame_58.Position = UDim2.new(0.74978387, 0, 0.13554557, 0)
+G.Frame_58.Size = UDim2.new(0, 123, 0, 123)
+G.Frame_58.ZIndex = 0
+G.Frame_58.Parent = G.GalaxyBackground
+
+G.UICorner_60 = Instance.new("UICorner")
+G.UICorner_60.CornerRadius = UDim.new(1, 0)
+G.UICorner_60.Parent = G.Frame_58
+
+G.Frame_59 = Instance.new("Frame")
+G.Frame_59.Active = true
+G.Frame_59.BackgroundTransparency = 1
+G.Frame_59.Size = UDim2.new(1, 0, 0, 62)
+G.Frame_59.ZIndex = 5
+G.Frame_59.Parent = G.Main
+
+G.TextLabel = Instance.new("TextLabel")
+G.TextLabel.BackgroundTransparency = 1
+G.TextLabel.Position = UDim2.new(0, 18, 0, 5)
+G.TextLabel.Size = UDim2.new(1, -100, 0, 28)
+G.TextLabel.ZIndex = 5
+G.TextLabel.FontFace = Font.new("rbxasset://fonts/families/GothamSSm.json", Enum.FontWeight.Heavy, Enum.FontStyle.Normal)
+G.TextLabel.Text = "Galaxy Anti Bat"
+G.TextLabel.TextColor3 = Color3.fromRGB(245, 240, 255)
+G.TextLabel.TextSize = 24
+G.TextLabel.TextXAlignment = Enum.TextXAlignment.Left
+G.TextLabel.TextYAlignment = Enum.TextYAlignment.Top
+G.TextLabel.Parent = G.Frame_59
+
+G.UIGradient_2 = Instance.new("UIGradient")
+G.UIGradient_2.Color = ColorSequence.new({
+    ColorSequenceKeypoint.new(0, Color3.fromRGB(255, 255, 255)),
+    ColorSequenceKeypoint.new(1, Color3.fromRGB(190, 120, 255))
+})
+G.UIGradient_2.Parent = G.TextLabel
+
+G.UIStroke_2 = Instance.new("UIStroke")
+G.UIStroke_2.Color = Color3.fromRGB(115, 65, 255)
+G.UIStroke_2.Transparency = 0.55
+G.UIStroke_2.Parent = G.TextLabel
+
+G.TextLabel_2 = Instance.new("TextLabel")
+G.TextLabel_2.AnchorPoint = Vector2.new(0, 1)
+G.TextLabel_2.BackgroundTransparency = 1
+G.TextLabel_2.Position = UDim2.new(0, 18, 1, -6)
+G.TextLabel_2.Size = UDim2.new(1, -100, 0, 14)
+G.TextLabel_2.ZIndex = 5
+G.TextLabel_2.FontFace = Font.new("rbxasset://fonts/families/GothamSSm.json", Enum.FontWeight.Bold, Enum.FontStyle.Normal)
+G.TextLabel_2.Text = "discord.gg/galaxyhub"
+G.TextLabel_2.TextColor3 = Color3.fromRGB(212, 188, 245)
+G.TextLabel_2.TextSize = 12
+G.TextLabel_2.TextXAlignment = Enum.TextXAlignment.Left
+G.TextLabel_2.TextYAlignment = Enum.TextYAlignment.Bottom
+G.TextLabel_2.Parent = G.Frame_59
+
+G.TextButton = Instance.new("TextButton")
+G.TextButton.AnchorPoint = Vector2.new(1, 0.5)
+G.TextButton.BackgroundColor3 = Color3.fromRGB(30, 15, 56)
+G.TextButton.BackgroundTransparency = 0.3
+G.TextButton.Position = UDim2.new(1, -14, 0.5, 0)
+G.TextButton.Size = UDim2.new(0, 26, 0, 26)
+G.TextButton.ZIndex = 5
+G.TextButton.FontFace = Font.new("rbxasset://fonts/families/GothamSSm.json", Enum.FontWeight.Heavy, Enum.FontStyle.Normal)
+G.TextButton.Text = "-"
+G.TextButton.TextColor3 = Color3.fromRGB(245, 240, 255)
+G.TextButton.TextSize = 16
+G.TextButton.Parent = G.Frame_59
+
+G.UICorner_61 = Instance.new("UICorner")
+G.UICorner_61.Parent = G.TextButton
+
+G.UIStroke_3 = Instance.new("UIStroke")
+G.UIStroke_3.Color = Color3.fromRGB(115, 65, 255)
+G.UIStroke_3.Transparency = 0.5
+G.UIStroke_3.Parent = G.TextButton
+
+G.Frame_60 = Instance.new("Frame")
+G.Frame_60.BackgroundTransparency = 1
+G.Frame_60.ClipsDescendants = true
+G.Frame_60.Position = UDim2.new(0, 0, 0, 62)
+G.Frame_60.Size = UDim2.new(1, 0, 1, -62)
+G.Frame_60.ZIndex = 2
+G.Frame_60.Parent = G.Main
+
+G.Frame_61 = Instance.new("Frame")
+G.Frame_61.BackgroundColor3 = Color3.fromRGB(30, 15, 56)
+G.Frame_61.BackgroundTransparency = 0.35
+G.Frame_61.Position = UDim2.new(0, 12, 0, 6)
+G.Frame_61.Size = UDim2.new(0, 132, 0, 26)
+G.Frame_61.ZIndex = 4
+G.Frame_61.Parent = G.Frame_60
+
+G.UICorner_62 = Instance.new("UICorner")
+G.UICorner_62.CornerRadius = UDim.new(1, 0)
+G.UICorner_62.Parent = G.Frame_61
+
+G.UIStroke_4 = Instance.new("UIStroke")
+G.UIStroke_4.Color = Color3.fromRGB(140, 255, 200)
+G.UIStroke_4.Transparency = 0.3
+G.UIStroke_4.Parent = G.Frame_61
+
+G.Frame_62 = Instance.new("Frame")
+G.Frame_62.BackgroundColor3 = Color3.fromRGB(140, 255, 200)
+G.Frame_62.BackgroundTransparency = 0.04
+G.Frame_62.BorderSizePixel = 0
+G.Frame_62.Position = UDim2.new(0, 10, 0.5, -4)
+G.Frame_62.Size = UDim2.new(0, 8, 0, 8)
+G.Frame_62.ZIndex = 6
+G.Frame_62.Parent = G.Frame_61
+
+G.TextLabel_3 = Instance.new("TextLabel")
+G.TextLabel_3.BackgroundTransparency = 1
+G.TextLabel_3.Position = UDim2.new(0, 26, 0, 0)
+G.TextLabel_3.Size = UDim2.new(1, -30, 1, 0)
+G.TextLabel_3.ZIndex = 6
+G.TextLabel_3.FontFace = Font.new("rbxasset://fonts/families/GothamSSm.json", Enum.FontWeight.Heavy, Enum.FontStyle.Normal)
+G.TextLabel_3.Text = "ACTIVE"
+G.TextLabel_3.TextColor3 = Color3.fromRGB(140, 255, 200)
+G.TextLabel_3.TextSize = 11
+G.TextLabel_3.TextXAlignment = Enum.TextXAlignment.Left
+G.TextLabel_3.Parent = G.Frame_61
+
+G.Keybind = Instance.new("TextButton")
+G.Keybind.Name = "Keybind"
+G.Keybind.AnchorPoint = Vector2.new(1, 0)
+G.Keybind.BackgroundColor3 = Color3.fromRGB(45, 22, 82)
+G.Keybind.BackgroundTransparency = 0.25
+G.Keybind.Position = UDim2.new(1, -12, 0, 6)
+G.Keybind.Size = UDim2.new(0, 48, 0, 26)
+G.Keybind.ZIndex = 6
+G.Keybind.FontFace = Font.new("rbxasset://fonts/families/GothamSSm.json", Enum.FontWeight.Heavy, Enum.FontStyle.Normal)
+G.Keybind.Text = "V"
+G.Keybind.TextColor3 = Color3.fromRGB(245, 240, 255)
+G.Keybind.TextSize = 12
+G.Keybind.Parent = G.Frame_60
+
+G.UICorner_64 = Instance.new("UICorner")
+G.UICorner_64.Parent = G.Keybind
+
+G.UIStroke_5 = Instance.new("UIStroke")
+G.UIStroke_5.Color = Color3.fromRGB(115, 65, 255)
+G.UIStroke_5.Transparency = 0.5
+G.UIStroke_5.Parent = G.Keybind
+
+G.Frame_63 = Instance.new("Frame")
+G.Frame_63.BackgroundColor3 = Color3.fromRGB(30, 15, 56)
+G.Frame_63.BackgroundTransparency = 0.25
+G.Frame_63.Position = UDim2.new(0, 12, 0, 40)
+G.Frame_63.Size = UDim2.new(1, -24, 0, 42)
+G.Frame_63.ZIndex = 4
+G.Frame_63.Parent = G.Frame_60
+
+G.UICorner_65 = Instance.new("UICorner")
+G.UICorner_65.CornerRadius = UDim.new(0, 12)
+G.UICorner_65.Parent = G.Frame_63
+
+G.Frame_64 = Instance.new("Frame")
+G.Frame_64.BackgroundColor3 = Color3.fromRGB(190, 120, 255)
+G.Frame_64.BorderSizePixel = 0
+G.Frame_64.Position = UDim2.new(0, 10, 0.5, -10)
+G.Frame_64.Size = UDim2.new(0, 4, 0, 20)
+G.Frame_64.ZIndex = 5
+G.Frame_64.Parent = G.Frame_63
+
+G.UICorner_66 = Instance.new("UICorner")
+G.UICorner_66.CornerRadius = UDim.new(1, 0)
+G.UICorner_66.Parent = G.Frame_64
+
+G.UIGradient_3 = Instance.new("UIGradient")
+G.UIGradient_3.Color = ColorSequence.new({
+    ColorSequenceKeypoint.new(0, Color3.fromRGB(190, 120, 255)),
+    ColorSequenceKeypoint.new(1, Color3.fromRGB(115, 65, 255))
+})
+G.UIGradient_3.Rotation = 90
+G.UIGradient_3.Parent = G.Frame_64
+
+G.TextLabel_4 = Instance.new("TextLabel")
+G.TextLabel_4.BackgroundTransparency = 1
+G.TextLabel_4.Position = UDim2.new(0, 24, 0.5, -9)
+G.TextLabel_4.Size = UDim2.new(0, 150, 0, 18)
+G.TextLabel_4.ZIndex = 6
+G.TextLabel_4.FontFace = Font.new("rbxasset://fonts/families/GothamSSm.json", Enum.FontWeight.Heavy, Enum.FontStyle.Normal)
+G.TextLabel_4.Text = "Anti Bat"
+G.TextLabel_4.TextColor3 = Color3.fromRGB(245, 240, 255)
+G.TextLabel_4.TextSize = 14
+G.TextLabel_4.TextXAlignment = Enum.TextXAlignment.Left
+G.TextLabel_4.Parent = G.Frame_63
+
+G.Frame_65 = Instance.new("Frame")
+G.Frame_65.BackgroundColor3 = Color3.fromRGB(190, 120, 255)
+G.Frame_65.BorderSizePixel = 0
+G.Frame_65.Position = UDim2.new(1, -58, 0.5, -11)
+G.Frame_65.Size = UDim2.new(0, 44, 0, 22)
+G.Frame_65.ZIndex = 6
+G.Frame_65.Parent = G.Frame_63
+
+G.UICorner_67 = Instance.new("UICorner")
+G.UICorner_67.CornerRadius = UDim.new(1, 0)
+G.UICorner_67.Parent = G.Frame_65
+
+G.UIGradient_4 = Instance.new("UIGradient")
+G.UIGradient_4.Color = ColorSequence.new({
+    ColorSequenceKeypoint.new(0, Color3.fromRGB(190, 120, 255)),
+    ColorSequenceKeypoint.new(1, Color3.fromRGB(115, 65, 255))
+})
+G.UIGradient_4.Parent = G.Frame_65
+
+G.Frame_66 = Instance.new("Frame")
+G.Frame_66.BackgroundColor3 = Color3.fromRGB(245, 240, 255)
+G.Frame_66.BorderSizePixel = 0
+G.Frame_66.Position = UDim2.new(1, -19, 0.5, -8)
+G.Frame_66.Size = UDim2.new(0, 16, 0, 16)
+G.Frame_66.ZIndex = 7
+G.Frame_66.Parent = G.Frame_65
+
+G.UICorner_68 = Instance.new("UICorner")
+G.UICorner_68.CornerRadius = UDim.new(1, 0)
+G.UICorner_68.Parent = G.Frame_66
+
+G.TextButton_2 = Instance.new("TextButton")
+G.TextButton_2.BackgroundTransparency = 1
+G.TextButton_2.Position = UDim2.new(1, -65, 0, 0)
+G.TextButton_2.Size = UDim2.new(0, 50, 0, 42)
+G.TextButton_2.ZIndex = 10
+G.TextButton_2.Text = ""
+G.TextButton_2.Parent = G.Frame_63
+
+G.Frame_67 = Instance.new("Frame")
+G.Frame_67.BackgroundColor3 = Color3.fromRGB(30, 15, 56)
+G.Frame_67.BackgroundTransparency = 0.25
+G.Frame_67.Position = UDim2.new(0, 12, 0, 84)
+G.Frame_67.Size = UDim2.new(1, -24, 0, 42)
+G.Frame_67.ZIndex = 4
+G.Frame_67.Parent = G.Frame_60
+
+G.UICorner_69 = Instance.new("UICorner")
+G.UICorner_69.CornerRadius = UDim.new(1, 0)
+G.UICorner_69.Parent = G.Frame_67
+
+G.Frame_68 = Instance.new("Frame")
+G.Frame_68.BackgroundColor3 = Color3.fromRGB(190, 120, 255)
+G.Frame_68.BorderSizePixel = 0
+G.Frame_68.Position = UDim2.new(0, 10, 0.5, -10)
+G.Frame_68.Size = UDim2.new(0, 4, 0, 20)
+G.Frame_68.ZIndex = 5
+G.Frame_68.Parent = G.Frame_67
+
+G.UICorner_70 = Instance.new("UICorner")
+G.UICorner_70.CornerRadius = UDim.new(1, 0)
+G.UICorner_70.Parent = G.Frame_68
+
+G.UIGradient_5 = Instance.new("UIGradient")
+G.UIGradient_5.Color = ColorSequence.new({
+    ColorSequenceKeypoint.new(0, Color3.fromRGB(190, 120, 255)),
+    ColorSequenceKeypoint.new(1, Color3.fromRGB(115, 65, 255))
+})
+G.UIGradient_5.Rotation = 90
+G.UIGradient_5.Parent = G.Frame_68
+
+G.TextLabel_5 = Instance.new("TextLabel")
+G.TextLabel_5.BackgroundTransparency = 1
+G.TextLabel_5.Position = UDim2.new(0, 24, 0.5, -9)
+G.TextLabel_5.Size = UDim2.new(0, 150, 0, 18)
+G.TextLabel_5.ZIndex = 6
+G.TextLabel_5.FontFace = Font.new("rbxasset://fonts/families/GothamSSm.json", Enum.FontWeight.Heavy, Enum.FontStyle.Normal)
+G.TextLabel_5.Text = "Inf Jump"
+G.TextLabel_5.TextColor3 = Color3.fromRGB(245, 240, 255)
+G.TextLabel_5.TextSize = 14
+G.TextLabel_5.TextXAlignment = Enum.TextXAlignment.Left
+G.TextLabel_5.Parent = G.Frame_67
+
+G.Frame_69 = Instance.new("Frame")
+G.Frame_69.BackgroundColor3 = Color3.fromRGB(190, 120, 255)
+G.Frame_69.BorderSizePixel = 0
+G.Frame_69.Position = UDim2.new(1, -58, 0.5, -11)
+G.Frame_69.Size = UDim2.new(0, 44, 0, 22)
+G.Frame_69.ZIndex = 6
+G.Frame_69.Parent = G.Frame_67
+
+G.UICorner_71 = Instance.new("UICorner")
+G.UICorner_71.CornerRadius = UDim.new(1, 0)
+G.UICorner_71.Parent = G.Frame_69
+
+G.UIGradient_6 = Instance.new("UIGradient")
+G.UIGradient_6.Color = ColorSequence.new({
+    ColorSequenceKeypoint.new(0, Color3.fromRGB(190, 120, 255)),
+    ColorSequenceKeypoint.new(1, Color3.fromRGB(115, 65, 255))
+})
+G.UIGradient_6.Parent = G.Frame_69
+
+G.Frame_70 = Instance.new("Frame")
+G.Frame_70.BackgroundColor3 = Color3.fromRGB(245, 240, 255)
+G.Frame_70.BorderSizePixel = 0
+G.Frame_70.Position = UDim2.new(1, -19, 0.5, -8)
+G.Frame_70.Size = UDim2.new(0, 16, 0, 16)
+G.Frame_70.ZIndex = 7
+G.Frame_70.Parent = G.Frame_69
+
+G.UICorner_72 = Instance.new("UICorner")
+G.UICorner_72.CornerRadius = UDim.new(1, 0)
+G.UICorner_72.Parent = G.Frame_70
+
+G.TextButton_3 = Instance.new("TextButton")
+G.TextButton_3.BackgroundTransparency = 1
+G.TextButton_3.Position = UDim2.new(1, -65, 0, 0)
+G.TextButton_3.Size = UDim2.new(0, 50, 0, 42)
+G.TextButton_3.ZIndex = 10
+G.TextButton_3.Text = ""
+G.TextButton_3.Parent = G.Frame_67
+
+G.Frame_71 = Instance.new("Frame")
+G.Frame_71.BackgroundColor3 = Color3.fromRGB(30, 15, 56)
+G.Frame_71.BackgroundTransparency = 0.25
+G.Frame_71.Position = UDim2.new(0, 12, 0, 130)
+G.Frame_71.Size = UDim2.new(1, -24, 0, 42)
+G.Frame_71.ZIndex = 4
+G.Frame_71.Parent = G.Frame_60
+
+G.UICorner_73 = Instance.new("UICorner")
+G.UICorner_73.CornerRadius = UDim.new(1, 0)
+G.UICorner_73.Parent = G.Frame_71
+
+G.Frame_72 = Instance.new("Frame")
+G.Frame_72.BackgroundColor3 = Color3.fromRGB(190, 120, 255)
+G.Frame_72.BorderSizePixel = 0
+G.Frame_72.Position = UDim2.new(0, 10, 0.5, -10)
+G.Frame_72.Size = UDim2.new(0, 4, 0, 20)
+G.Frame_72.ZIndex = 5
+G.Frame_72.Parent = G.Frame_71
+
+G.UICorner_74 = Instance.new("UICorner")
+G.UICorner_74.CornerRadius = UDim.new(1, 0)
+G.UICorner_74.Parent = G.Frame_72
+
+G.UIGradient_7 = Instance.new("UIGradient")
+G.UIGradient_7.Color = ColorSequence.new({
+    ColorSequenceKeypoint.new(0, Color3.fromRGB(190, 120, 255)),
+    ColorSequenceKeypoint.new(1, Color3.fromRGB(115, 65, 255))
+})
+G.UIGradient_7.Rotation = 90
+G.UIGradient_7.Parent = G.Frame_72
+
+G.TextLabel_6 = Instance.new("TextLabel")
+G.TextLabel_6.BackgroundTransparency = 1
+G.TextLabel_6.Position = UDim2.new(0, 24, 0.5, -9)
+G.TextLabel_6.Size = UDim2.new(0, 48, 0, 18)
+G.TextLabel_6.ZIndex = 6
+G.TextLabel_6.FontFace = Font.new("rbxasset://fonts/families/GothamSSm.json", Enum.FontWeight.Heavy, Enum.FontStyle.Normal)
+G.TextLabel_6.Text = "Power"
+G.TextLabel_6.TextColor3 = Color3.fromRGB(245, 240, 255)
+G.TextLabel_6.TextSize = 14
+G.TextLabel_6.TextXAlignment = Enum.TextXAlignment.Left
+G.TextLabel_6.Parent = G.Frame_71
+
+G.Frame_73 = Instance.new("Frame")
+G.Frame_73.BackgroundColor3 = Color3.fromRGB(50, 30, 80)
+G.Frame_73.BorderSizePixel = 0
+G.Frame_73.Position = UDim2.new(0, 76, 0.5, -3)
+G.Frame_73.Size = UDim2.new(1, -135, 0, 6)
+G.Frame_73.ZIndex = 6
+G.Frame_73.Parent = G.Frame_71
+
+G.UICorner_75 = Instance.new("UICorner")
+G.UICorner_75.CornerRadius = UDim.new(1, 0)
+G.UICorner_75.Parent = G.Frame_73
+
+G.Frame_74 = Instance.new("Frame")
+G.Frame_74.BackgroundColor3 = Color3.fromRGB(190, 120, 255)
+G.Frame_74.BorderSizePixel = 0
+G.Frame_74.Size = UDim2.new(1, 0, 1, 0)
+G.Frame_74.ZIndex = 7
+G.Frame_74.Parent = G.Frame_73
+
+G.UICorner_76 = Instance.new("UICorner")
+G.UICorner_76.CornerRadius = UDim.new(1, 0)
+G.UICorner_76.Parent = G.Frame_74
+
+G.UIGradient_8 = Instance.new("UIGradient")
+G.UIGradient_8.Color = ColorSequence.new({
+    ColorSequenceKeypoint.new(0, Color3.fromRGB(190, 120, 255)),
+    ColorSequenceKeypoint.new(1, Color3.fromRGB(115, 65, 255))
+})
+G.UIGradient_8.Parent = G.Frame_74
+
+G.Frame_75 = Instance.new("Frame")
+G.Frame_75.AnchorPoint = Vector2.new(0.5, 0.5)
+G.Frame_75.BackgroundColor3 = Color3.fromRGB(245, 240, 255)
+G.Frame_75.BorderSizePixel = 0
+G.Frame_75.Position = UDim2.new(1, 0, 0.5, 0)
+G.Frame_75.Size = UDim2.new(0, 14, 0, 14)
+G.Frame_75.ZIndex = 8
+G.Frame_75.Parent = G.Frame_73
+
+G.UICorner_77 = Instance.new("UICorner")
+G.UICorner_77.CornerRadius = UDim.new(1, 0)
+G.UICorner_77.Parent = G.Frame_75
+
+G.UIStroke_6 = Instance.new("UIStroke")
+G.UIStroke_6.Color = Color3.fromRGB(115, 65, 255)
+G.UIStroke_6.Transparency = 0.2
+G.UIStroke_6.Parent = G.Frame_75
+
+G.TextLabel_7 = Instance.new("TextLabel")
+G.TextLabel_7.AnchorPoint = Vector2.new(1, 0.5)
+G.TextLabel_7.BackgroundTransparency = 1
+G.TextLabel_7.Position = UDim2.new(1, -8, 0.5, 0)
+G.TextLabel_7.Size = UDim2.new(0, 40, 0, 20)
+G.TextLabel_7.ZIndex = 6
+G.TextLabel_7.FontFace = Font.new("rbxasset://fonts/families/GothamSSm.json", Enum.FontWeight.Heavy, Enum.FontStyle.Normal)
+G.TextLabel_7.Text = "100%"
+G.TextLabel_7.TextColor3 = Color3.fromRGB(245, 240, 255)
+G.TextLabel_7.TextSize = 11
+G.TextLabel_7.TextXAlignment = Enum.TextXAlignment.Right
+G.TextLabel_7.Parent = G.Frame_71
+
+G.TextButton_4 = Instance.new("TextButton")
+G.TextButton_4.BackgroundTransparency = 1
+G.TextButton_4.Position = UDim2.new(0, 72, 0, 0)
+G.TextButton_4.Size = UDim2.new(1, -72, 1, 0)
+G.TextButton_4.ZIndex = 10
+G.TextButton_4.Text = ""
+G.TextButton_4.Parent = G.Frame_71
+
+G.GalaxyAntiBat.Parent = PlayerGui
+
+local dragging = false
+local dragInput = nil
+local dragStart = nil
+local startPos = nil
+
+G.Frame_59.InputBegan:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+        dragging = true
+        dragStart = input.Position
+        startPos = G.Main.Position
+
+        input.Changed:Connect(function()
+            if input.UserInputState == Enum.UserInputState.End then
+                dragging = false
+            end
+        end)
+    end
+end)
+
+G.Frame_59.InputChanged:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch then
+        dragInput = input
+    end
+end)
+
+UserInputService.InputChanged:Connect(function(input)
+    if input == dragInput and dragging then
+        local delta = input.Position - dragStart
+        G.Main.Position = UDim2.new(
+            startPos.X.Scale,
+            startPos.X.Offset + delta.X,
+            startPos.Y.Scale,
+            startPos.Y.Offset + delta.Y
+        )
+    end
+end)
+
+local isMinimized = false
+G.TextButton.MouseButton1Click:Connect(function()
+    isMinimized = not isMinimized
+    if isMinimized then
+        G.Frame_60.Visible = false
+        G.Main.Size = UDim2.new(0, 300, 0, 62)
+        G.TextButton.Text = "+"
+    else
+        G.Frame_60.Visible = true
+        G.Main.Size = UDim2.new(0, 300, 0, 250)
+        G.TextButton.Text = "-"
+    end
+end)
+
+local antiBatEnabled = true
+local antiBatConn = nil
+local currentPower = 300000
+
+local function updateAntiBatVisual(state)
+    if state then
+        TweenService:Create(G.Frame_65, TweenInfo.new(0.18), {BackgroundColor3 = Color3.fromRGB(190, 120, 255)}):Play()
+        TweenService:Create(G.Frame_66, TweenInfo.new(0.18), {Position = UDim2.new(1, -19, 0.5, -8)}):Play()
+        G.TextLabel_3.Text = "ACTIVE"
+        G.TextLabel_3.TextColor3 = Color3.fromRGB(140, 255, 200)
+        G.Frame_62.BackgroundColor3 = Color3.fromRGB(140, 255, 200)
+    else
+        TweenService:Create(G.Frame_65, TweenInfo.new(0.18), {BackgroundColor3 = Color3.fromRGB(50, 30, 80)}):Play()
+        TweenService:Create(G.Frame_66, TweenInfo.new(0.18), {Position = UDim2.new(0, 3, 0.5, -8)}):Play()
+        G.TextLabel_3.Text = "INACTIVE"
+        G.TextLabel_3.TextColor3 = Color3.fromRGB(255, 80, 100)
+        G.Frame_62.BackgroundColor3 = Color3.fromRGB(255, 80, 100)
+    end
+end
+
+local function setAntiBat(state)
+    antiBatEnabled = state
+    updateAntiBatVisual(antiBatEnabled)
+    if antiBatConn then
+        antiBatConn:Disconnect()
+        antiBatConn = nil
+    end
+    if antiBatEnabled then
+        antiBatConn = RunService.Heartbeat:Connect(function()
+            if not antiBatEnabled then return end
+            local char = LocalPlayer.Character
+            local root = char and char:FindFirstChild("HumanoidRootPart")
+            if not root or not root.Parent then return end
+
+            local vel = root.AssemblyLinearVelocity
+            local flat = Vector3.new(vel.X, 0, vel.Z)
+
+            root.AssemblyLinearVelocity = Vector3.new(currentPower, vel.Y, currentPower)
+            RunService.RenderStepped:Wait()
+            if root and root.Parent then
+                local y2 = root.AssemblyLinearVelocity.Y
+                root.AssemblyLinearVelocity = Vector3.new(flat.X, y2, flat.Z)
+            end
+        end)
+    end
+end
+
+G.TextButton_2.MouseButton1Click:Connect(function()
+    setAntiBat(not antiBatEnabled)
+end)
+
+local InfiniteJump = {
+    enabled = true,
+    jumpPower = 55,
+    minVelocity = 35,
+    fallClamp = -120,
+    jumpConn = nil,
+    heartbeatConn = nil
+}
+
+local function applyJump(root)
+    if not root then return end
+    pcall(function()
+        root.AssemblyLinearVelocity = Vector3.new(root.AssemblyLinearVelocity.X, InfiniteJump.jumpPower, root.AssemblyLinearVelocity.Z)
+    end)
+end
+
+local function onJumpRequest()
+    if not InfiniteJump.enabled then return end
+    local char = LocalPlayer.Character
+    if not char then return end
+    local root = char:FindFirstChild("HumanoidRootPart")
+    if root then applyJump(root) end
+end
+
+local function onHeartbeat()
+    if not InfiniteJump.enabled then return end
+    local char = LocalPlayer.Character
+    if not char then return end
+    local root = char:FindFirstChild("HumanoidRootPart")
+    if not root then return end
+    local hum = char:FindFirstChildOfClass("Humanoid")
+    if not hum then return end
+    local jumpHeld = UserInputService:IsKeyDown(Enum.KeyCode.Space) or (hum.Jump == true)
+    if jumpHeld and root.AssemblyLinearVelocity.Y < InfiniteJump.minVelocity then
+        applyJump(root)
+    end
+    if root.AssemblyLinearVelocity.Y < InfiniteJump.fallClamp then
+        root.AssemblyLinearVelocity = Vector3.new(root.AssemblyLinearVelocity.X, InfiniteJump.fallClamp, root.AssemblyLinearVelocity.Z)
+    end
+end
+
+local function connectJumpEvents()
+    if InfiniteJump.jumpConn then InfiniteJump.jumpConn:Disconnect() end
+    if InfiniteJump.heartbeatConn then InfiniteJump.heartbeatConn:Disconnect() end
+    InfiniteJump.jumpConn = UserInputService.JumpRequest:Connect(onJumpRequest)
+    InfiniteJump.heartbeatConn = RunService.Heartbeat:Connect(onHeartbeat)
+end
+
+local function setInfJump(state)
+    InfiniteJump.enabled = state
+    if InfiniteJump.enabled then
+        TweenService:Create(G.Frame_69, TweenInfo.new(0.18), {BackgroundColor3 = Color3.fromRGB(190, 120, 255)}):Play()
+        TweenService:Create(G.Frame_70, TweenInfo.new(0.18), {Position = UDim2.new(1, -19, 0.5, -8)}):Play()
+        connectJumpEvents()
+    else
+        TweenService:Create(G.Frame_69, TweenInfo.new(0.18), {BackgroundColor3 = Color3.fromRGB(50, 30, 80)}):Play()
+        TweenService:Create(G.Frame_70, TweenInfo.new(0.18), {Position = UDim2.new(0, 3, 0.5, -8)}):Play()
+        if InfiniteJump.jumpConn then InfiniteJump.jumpConn:Disconnect(); InfiniteJump.jumpConn = nil end
+        if InfiniteJump.heartbeatConn then InfiniteJump.heartbeatConn:Disconnect(); InfiniteJump.heartbeatConn = nil end
+    end
+end
+
+G.TextButton_3.MouseButton1Click:Connect(function()
+    setInfJump(not InfiniteJump.enabled)
+end)
+
+local sliderActive = false
+local function updatePowerFromInput(input)
+    local trackAbsPos = G.Frame_73.AbsolutePosition
+    local trackAbsSize = G.Frame_73.AbsoluteSize
+    local pct = math.clamp((input.Position.X - trackAbsPos.X) / trackAbsSize.X, 0, 1)
+    currentPower = math.floor(pct * 300000)
+    G.Frame_74.Size = UDim2.new(pct, 0, 1, 0)
+    G.Frame_75.Position = UDim2.new(pct, 0, 0.5, 0)
+    G.TextLabel_7.Text = tostring(math.floor(pct * 100)) .. "%"
+end
+
+G.TextButton_4.InputBegan:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+        sliderActive = true
+        updatePowerFromInput(input)
+    end
+end)
+
+UserInputService.InputEnded:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+        sliderActive = false
+    end
+end)
+
+UserInputService.InputChanged:Connect(function(input)
+    if sliderActive and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then
+        updatePowerFromInput(input)
+    end
+end)
+
+local currentKey = Enum.KeyCode.V
+local listeningForKey = false
+
+G.Keybind.MouseButton1Click:Connect(function()
+    if listeningForKey then return end
+    listeningForKey = true
+    G.Keybind.Text = "..."
+end)
+
+UserInputService.InputBegan:Connect(function(input, gpe)
+    if listeningForKey and input.UserInputType == Enum.UserInputType.Keyboard then
+        currentKey = input.KeyCode
+        G.Keybind.Text = input.KeyCode.Name
+        listeningForKey = false
+        return
+    end
+
+    if not gpe and input.UserInputType == Enum.UserInputType.Keyboard and input.KeyCode == currentKey then
+        setAntiBat(not antiBatEnabled)
+    end
+end)
+
+LocalPlayer.CharacterAdded:Connect(function()
+    task.wait(0.3)
+    if antiBatEnabled then
+        setAntiBat(true)
+    end
+    if InfiniteJump.enabled then
+        connectJumpEvents()
+    end
+end)
+
+setAntiBat(true)
+setInfJump(true)
+
+return G.GalaxyAntiBat

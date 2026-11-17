@@ -1,0 +1,779 @@
+--[[
+CalciumAntiBat (ScreenGui)
+Grabbed by Xavi GUI Copier v1.0.0 on 2026-11-08 23:21:19
+Discord: https://discord.gg/QhWDwSHvK
+90 instances
+]]
+
+-- CalciumAntiBat (ScreenGui)
+local CalciumAntiBat = Instance.new("ScreenGui")
+CalciumAntiBat.Name = "CalciumAntiBat"
+CalciumAntiBat.ResetOnSpawn = false
+CalciumAntiBat.DisplayOrder = 950
+CalciumAntiBat.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+
+-- Shutdown (BindableEvent)
+local Shutdown = Instance.new("BindableEvent")
+Shutdown.Name = "Shutdown"
+Shutdown.Parent = CalciumAntiBat
+
+-- Panel (Frame)
+local Panel = Instance.new("Frame")
+Panel.Name = "Panel"
+Panel.AnchorPoint = Vector2.new(0.5, 0.5)
+Panel.BackgroundTransparency = 1
+Panel.BorderSizePixel = 0
+Panel.ClipsDescendants = true
+Panel.Position = UDim2.new(0, 177, 0, 182)
+Panel.Size = UDim2.new(0, 340, 0, 400)
+Panel.Parent = CalciumAntiBat
+
+-- UICorner (UICorner)
+local UICorner = Instance.new("UICorner")
+UICorner.CornerRadius = UDim.new(0, 16)
+UICorner.Parent = Panel
+
+-- UIStroke (UIStroke)
+local UIStroke = Instance.new("UIStroke")
+UIStroke.Color = Color3.fromRGB(109, 225, 240)
+UIStroke.Thickness = 1.3999999761581421
+UIStroke.Transparency = 0.20000000298023224
+UIStroke.Parent = Panel
+
+-- UIScale (UIScale)
+local UIScale = Instance.new("UIScale")
+UIScale.Scale = 0.9100000262260437
+UIScale.Parent = Panel
+
+-- BackgroundImage (ImageLabel)
+local BackgroundImage = Instance.new("ImageLabel")
+BackgroundImage.Name = "BackgroundImage"
+BackgroundImage.BackgroundTransparency = 1
+BackgroundImage.Size = UDim2.new(1, 0, 1, 0)
+BackgroundImage.ZIndex = 0
+BackgroundImage.Image = "rbxassetid://135747238063934"
+BackgroundImage.ImageTransparency = 0.05000000074505806
+BackgroundImage.ScaleType = Enum.ScaleType.Crop
+BackgroundImage.Parent = Panel
+
+-- UICorner_2 (UICorner)
+local UICorner_2 = Instance.new("UICorner")
+UICorner_2.CornerRadius = UDim.new(0, 16)
+UICorner_2.Parent = BackgroundImage
+
+-- Frame (Frame)
+local Frame = Instance.new("Frame")
+Frame.BackgroundColor3 = Color3.fromRGB(12, 16, 28)
+Frame.BackgroundTransparency = 0.55000001192092896
+Frame.BorderSizePixel = 0
+Frame.Size = UDim2.new(1, 0, 1, 0)
+Frame.ZIndex = 0
+Frame.Parent = Panel
+
+-- UICorner_3 (UICorner)
+local UICorner_3 = Instance.new("UICorner")
+UICorner_3.CornerRadius = UDim.new(0, 16)
+UICorner_3.Parent = Frame
+
+-- DragHeader (TextButton)
+local DragHeader = Instance.new("TextButton")
+DragHeader.Name = "DragHeader"
+DragHeader.BackgroundTransparency = 1
+DragHeader.Size = UDim2.new(1, -52, 0, 62)
+DragHeader.ZIndex = 5
+DragHeader.AutoButtonColor = false
+DragHeader.Text = ""
+DragHeader.Parent = Panel
+
+-- CalciumMark (Frame)
+local CalciumMark = Instance.new("Frame")
+CalciumMark.Name = "CalciumMark"
+CalciumMark.BackgroundColor3 = Color3.fromRGB(18, 23, 38)
+CalciumMark.BorderSizePixel = 0
+CalciumMark.ClipsDescendants = true
+CalciumMark.Position = UDim2.new(0, 12, 0, 12)
+CalciumMark.Size = UDim2.new(0, 38, 0, 38)
+CalciumMark.ZIndex = 2
+CalciumMark.Parent = Panel
+
+-- UICorner_4 (UICorner)
+local UICorner_4 = Instance.new("UICorner")
+UICorner_4.CornerRadius = UDim.new(0, 10)
+UICorner_4.Parent = CalciumMark
+
+-- UIStroke_2 (UIStroke)
+local UIStroke_2 = Instance.new("UIStroke")
+UIStroke_2.Color = Color3.fromRGB(109, 225, 240)
+UIStroke_2.Thickness = 1.2000000476837158
+UIStroke_2.Transparency = 0.15000000596046448
+UIStroke_2.Parent = CalciumMark
+
+-- ImageLabel (ImageLabel)
+local ImageLabel = Instance.new("ImageLabel")
+ImageLabel.BackgroundTransparency = 1
+ImageLabel.Position = UDim2.new(0, 4, 0, 4)
+ImageLabel.Size = UDim2.new(0, 30, 0, 30)
+ImageLabel.ZIndex = 3
+ImageLabel.Image = "rbxthumb://type=Asset&id=70415023524885&w=150&h=150"
+ImageLabel.ScaleType = Enum.ScaleType.Fit
+ImageLabel.Parent = CalciumMark
+
+-- TextLabel (TextLabel)
+local TextLabel = Instance.new("TextLabel")
+TextLabel.BackgroundTransparency = 1
+TextLabel.Position = UDim2.new(0, 58, 0, 11)
+TextLabel.Size = UDim2.new(0, 210, 0, 25)
+TextLabel.FontFace = Font.new("rbxasset://fonts/families/GothamSSm.json", Enum.FontWeight.Heavy, Enum.FontStyle.Normal)
+TextLabel.Text = "CALCIUM"
+TextLabel.TextColor3 = Color3.fromRGB(245, 248, 255)
+TextLabel.TextSize = 20
+TextLabel.TextTruncate = Enum.TextTruncate.AtEnd
+TextLabel.TextXAlignment = Enum.TextXAlignment.Left
+TextLabel.Parent = Panel
+
+-- TextLabel_2 (TextLabel)
+local TextLabel_2 = Instance.new("TextLabel")
+TextLabel_2.BackgroundTransparency = 1
+TextLabel_2.Position = UDim2.new(0, 59, 0, 35)
+TextLabel_2.Size = UDim2.new(0, 180, 0, 16)
+TextLabel_2.FontFace = Font.new("rbxasset://fonts/families/GothamSSm.json", Enum.FontWeight.Bold, Enum.FontStyle.Normal)
+TextLabel_2.Text = "ANTI BAT"
+TextLabel_2.TextColor3 = Color3.fromRGB(145, 157, 180)
+TextLabel_2.TextSize = 10
+TextLabel_2.TextTruncate = Enum.TextTruncate.AtEnd
+TextLabel_2.TextXAlignment = Enum.TextXAlignment.Left
+TextLabel_2.Parent = Panel
+
+-- Frame_2 (Frame)
+local Frame_2 = Instance.new("Frame")
+Frame_2.BackgroundColor3 = Color3.fromRGB(87, 101, 123)
+Frame_2.BorderSizePixel = 0
+Frame_2.Position = UDim2.new(1, -42, 0, 26)
+Frame_2.Size = UDim2.new(0, 8, 0, 8)
+Frame_2.ZIndex = 4
+Frame_2.Parent = Panel
+
+-- UICorner_5 (UICorner)
+local UICorner_5 = Instance.new("UICorner")
+UICorner_5.CornerRadius = UDim.new(0, 4)
+UICorner_5.Parent = Frame_2
+
+-- MinimizeButton (TextButton)
+local MinimizeButton = Instance.new("TextButton")
+MinimizeButton.Name = "MinimizeButton"
+MinimizeButton.BackgroundColor3 = Color3.fromRGB(18, 23, 38)
+MinimizeButton.BackgroundTransparency = 0.10000000149011612
+MinimizeButton.BorderSizePixel = 0
+MinimizeButton.Position = UDim2.new(1, -30, 0, 10)
+MinimizeButton.Size = UDim2.new(0, 28, 0, 28)
+MinimizeButton.ZIndex = 6
+MinimizeButton.AutoButtonColor = false
+MinimizeButton.FontFace = Font.new("rbxasset://fonts/families/GothamSSm.json", Enum.FontWeight.Medium, Enum.FontStyle.Normal)
+MinimizeButton.Text = "−"
+MinimizeButton.TextColor3 = Color3.fromRGB(109, 225, 240)
+MinimizeButton.TextSize = 23
+MinimizeButton.Parent = Panel
+
+-- UICorner_6 (UICorner)
+local UICorner_6 = Instance.new("UICorner")
+UICorner_6.Parent = MinimizeButton
+
+-- HeaderLine (Frame)
+local HeaderLine = Instance.new("Frame")
+HeaderLine.Name = "HeaderLine"
+HeaderLine.BackgroundColor3 = Color3.fromRGB(54, 72, 108)
+HeaderLine.BackgroundTransparency = 0.25
+HeaderLine.BorderSizePixel = 0
+HeaderLine.Position = UDim2.new(0, 12, 0, 58)
+HeaderLine.Size = UDim2.new(1, -24, 0, 1)
+HeaderLine.Parent = Panel
+
+-- Content (ScrollingFrame)
+local Content = Instance.new("ScrollingFrame")
+Content.Name = "Content"
+Content.BackgroundTransparency = 1
+Content.BorderSizePixel = 0
+Content.Position = UDim2.new(0, 8, 0, 67)
+Content.Size = UDim2.new(1, -16, 1, -74)
+Content.AutomaticCanvasSize = Enum.AutomaticSize.Y
+Content.CanvasSize = UDim2.new(0, 0, 0, 0)
+Content.ScrollBarImageColor3 = Color3.fromRGB(109, 225, 240)
+Content.ScrollBarThickness = 3
+Content.ScrollingDirection = Enum.ScrollingDirection.Y
+Content.Parent = Panel
+
+-- UIListLayout (UIListLayout)
+local UIListLayout = Instance.new("UIListLayout")
+UIListLayout.Padding = UDim.new(0, 6)
+UIListLayout.SortOrder = Enum.SortOrder.LayoutOrder
+UIListLayout.Parent = Content
+
+-- TextLabel_3 (TextLabel)
+local TextLabel_3 = Instance.new("TextLabel")
+TextLabel_3.BackgroundTransparency = 1
+TextLabel_3.LayoutOrder = 1
+TextLabel_3.Position = UDim2.new(0, 6, 0, 0)
+TextLabel_3.Size = UDim2.new(0, 300, 0, 18)
+TextLabel_3.FontFace = Font.new("rbxasset://fonts/families/GothamSSm.json", Enum.FontWeight.Heavy, Enum.FontStyle.Normal)
+TextLabel_3.Text = "PROTECTION"
+TextLabel_3.TextColor3 = Color3.fromRGB(109, 225, 240)
+TextLabel_3.TextSize = 10
+TextLabel_3.TextTruncate = Enum.TextTruncate.AtEnd
+TextLabel_3.TextXAlignment = Enum.TextXAlignment.Left
+TextLabel_3.Parent = Content
+
+-- AntiBatCard (Frame)
+local AntiBatCard = Instance.new("Frame")
+AntiBatCard.Name = "AntiBatCard"
+AntiBatCard.BackgroundColor3 = Color3.fromRGB(12, 16, 28)
+AntiBatCard.BackgroundTransparency = 0.40000000596046448
+AntiBatCard.BorderSizePixel = 0
+AntiBatCard.ClipsDescendants = true
+AntiBatCard.LayoutOrder = 2
+AntiBatCard.Size = UDim2.new(1, -4, 0, 96)
+AntiBatCard.Parent = Content
+
+-- UICorner_7 (UICorner)
+local UICorner_7 = Instance.new("UICorner")
+UICorner_7.CornerRadius = UDim.new(0, 11)
+UICorner_7.Parent = AntiBatCard
+
+-- UIStroke_3 (UIStroke)
+local UIStroke_3 = Instance.new("UIStroke")
+UIStroke_3.Color = Color3.fromRGB(54, 72, 108)
+UIStroke_3.Transparency = 0.5
+UIStroke_3.Parent = AntiBatCard
+
+-- TextLabel_4 (TextLabel)
+local TextLabel_4 = Instance.new("TextLabel")
+TextLabel_4.BackgroundTransparency = 1
+TextLabel_4.Position = UDim2.new(0, 14, 0, 10)
+TextLabel_4.Size = UDim2.new(0, 200, 0, 22)
+TextLabel_4.FontFace = Font.new("rbxasset://fonts/families/GothamSSm.json", Enum.FontWeight.Heavy, Enum.FontStyle.Normal)
+TextLabel_4.Text = "ANTI BAT"
+TextLabel_4.TextColor3 = Color3.fromRGB(245, 248, 255)
+TextLabel_4.TextSize = 15
+TextLabel_4.TextTruncate = Enum.TextTruncate.AtEnd
+TextLabel_4.TextXAlignment = Enum.TextXAlignment.Left
+TextLabel_4.Parent = AntiBatCard
+
+-- TextLabel_5 (TextLabel)
+local TextLabel_5 = Instance.new("TextLabel")
+TextLabel_5.BackgroundTransparency = 1
+TextLabel_5.Position = UDim2.new(0, 14, 0, 34)
+TextLabel_5.Size = UDim2.new(0, 200, 0, 14)
+TextLabel_5.FontFace = Font.new("rbxasset://fonts/families/GothamSSm.json", Enum.FontWeight.Bold, Enum.FontStyle.Normal)
+TextLabel_5.Text = "DISABLED"
+TextLabel_5.TextColor3 = Color3.fromRGB(145, 157, 180)
+TextLabel_5.TextSize = 10
+TextLabel_5.TextTruncate = Enum.TextTruncate.AtEnd
+TextLabel_5.TextXAlignment = Enum.TextXAlignment.Left
+TextLabel_5.Parent = AntiBatCard
+
+-- AntiBatToggle (TextButton)
+local AntiBatToggle = Instance.new("TextButton")
+AntiBatToggle.Name = "AntiBatToggle"
+AntiBatToggle.BackgroundTransparency = 1
+AntiBatToggle.Position = UDim2.new(1, -96, 0.5, -24)
+AntiBatToggle.Size = UDim2.new(0, 84, 0, 48)
+AntiBatToggle.AutoButtonColor = false
+AntiBatToggle.Text = ""
+AntiBatToggle.Parent = AntiBatCard
+
+-- Frame_3 (Frame)
+local Frame_3 = Instance.new("Frame")
+Frame_3.BackgroundColor3 = Color3.fromRGB(65, 68, 81)
+Frame_3.BorderSizePixel = 0
+Frame_3.Size = UDim2.new(0, 84, 0, 48)
+Frame_3.Parent = AntiBatToggle
+
+-- UICorner_8 (UICorner)
+local UICorner_8 = Instance.new("UICorner")
+UICorner_8.CornerRadius = UDim.new(0, 24)
+UICorner_8.Parent = Frame_3
+
+-- Frame_4 (Frame)
+local Frame_4 = Instance.new("Frame")
+Frame_4.BackgroundColor3 = Color3.fromRGB(109, 225, 240)
+Frame_4.BackgroundTransparency = 1
+Frame_4.BorderSizePixel = 0
+Frame_4.Size = UDim2.new(1, 0, 1, 0)
+Frame_4.Parent = Frame_3
+
+-- UICorner_9 (UICorner)
+local UICorner_9 = Instance.new("UICorner")
+UICorner_9.CornerRadius = UDim.new(0, 24)
+UICorner_9.Parent = Frame_4
+
+-- Frame_5 (Frame)
+local Frame_5 = Instance.new("Frame")
+Frame_5.BackgroundColor3 = Color3.fromRGB(245, 248, 255)
+Frame_5.BorderSizePixel = 0
+Frame_5.Position = UDim2.new(0, 5, 0, 5)
+Frame_5.Size = UDim2.new(0, 38, 0, 38)
+Frame_5.Parent = Frame_3
+
+-- UICorner_10 (UICorner)
+local UICorner_10 = Instance.new("UICorner")
+UICorner_10.CornerRadius = UDim.new(0, 19)
+UICorner_10.Parent = Frame_5
+
+-- Frame_6 (Frame)
+local Frame_6 = Instance.new("Frame")
+Frame_6.AnchorPoint = Vector2.new(0.5, 0.5)
+Frame_6.BackgroundColor3 = Color3.fromRGB(49, 56, 73)
+Frame_6.BorderSizePixel = 0
+Frame_6.Position = UDim2.new(0.5, 0, 0.5, 0)
+Frame_6.Size = UDim2.new(0, 10, 0, 10)
+Frame_6.Parent = Frame_5
+
+-- UICorner_11 (UICorner)
+local UICorner_11 = Instance.new("UICorner")
+UICorner_11.CornerRadius = UDim.new(0, 5)
+UICorner_11.Parent = Frame_6
+
+-- TextLabel_6 (TextLabel)
+local TextLabel_6 = Instance.new("TextLabel")
+TextLabel_6.BackgroundTransparency = 1
+TextLabel_6.LayoutOrder = 3
+TextLabel_6.Position = UDim2.new(0, 6, 0, 0)
+TextLabel_6.Size = UDim2.new(0, 300, 0, 18)
+TextLabel_6.FontFace = Font.new("rbxasset://fonts/families/GothamSSm.json", Enum.FontWeight.Heavy, Enum.FontStyle.Normal)
+TextLabel_6.Text = "MOVEMENT"
+TextLabel_6.TextColor3 = Color3.fromRGB(109, 225, 240)
+TextLabel_6.TextSize = 10
+TextLabel_6.TextTruncate = Enum.TextTruncate.AtEnd
+TextLabel_6.TextXAlignment = Enum.TextXAlignment.Left
+TextLabel_6.Parent = Content
+
+-- InfiniteJumpCard (Frame)
+local InfiniteJumpCard = Instance.new("Frame")
+InfiniteJumpCard.Name = "InfiniteJumpCard"
+InfiniteJumpCard.BackgroundColor3 = Color3.fromRGB(12, 16, 28)
+InfiniteJumpCard.BackgroundTransparency = 0.40000000596046448
+InfiniteJumpCard.BorderSizePixel = 0
+InfiniteJumpCard.ClipsDescendants = true
+InfiniteJumpCard.LayoutOrder = 4
+InfiniteJumpCard.Size = UDim2.new(1, -4, 0, 58)
+InfiniteJumpCard.Parent = Content
+
+-- UICorner_12 (UICorner)
+local UICorner_12 = Instance.new("UICorner")
+UICorner_12.CornerRadius = UDim.new(0, 11)
+UICorner_12.Parent = InfiniteJumpCard
+
+-- UIStroke_4 (UIStroke)
+local UIStroke_4 = Instance.new("UIStroke")
+UIStroke_4.Color = Color3.fromRGB(54, 72, 108)
+UIStroke_4.Transparency = 0.5
+UIStroke_4.Parent = InfiniteJumpCard
+
+-- TextLabel_7 (TextLabel)
+local TextLabel_7 = Instance.new("TextLabel")
+TextLabel_7.BackgroundTransparency = 1
+TextLabel_7.Position = UDim2.new(0, 13, 0, 8)
+TextLabel_7.Size = UDim2.new(0, 190, 0, 18)
+TextLabel_7.FontFace = Font.new("rbxasset://fonts/families/GothamSSm.json", Enum.FontWeight.Heavy, Enum.FontStyle.Normal)
+TextLabel_7.Text = "INFINITE JUMP"
+TextLabel_7.TextColor3 = Color3.fromRGB(245, 248, 255)
+TextLabel_7.TextSize = 12
+TextLabel_7.TextTruncate = Enum.TextTruncate.AtEnd
+TextLabel_7.TextXAlignment = Enum.TextXAlignment.Left
+TextLabel_7.Parent = InfiniteJumpCard
+
+-- TextLabel_8 (TextLabel)
+local TextLabel_8 = Instance.new("TextLabel")
+TextLabel_8.BackgroundTransparency = 1
+TextLabel_8.Position = UDim2.new(0, 13, 0, 31)
+TextLabel_8.Size = UDim2.new(0, 180, 0, 14)
+TextLabel_8.FontFace = Font.new("rbxasset://fonts/families/GothamSSm.json", Enum.FontWeight.Bold, Enum.FontStyle.Normal)
+TextLabel_8.Text = "DISABLED"
+TextLabel_8.TextColor3 = Color3.fromRGB(145, 157, 180)
+TextLabel_8.TextSize = 9
+TextLabel_8.TextTruncate = Enum.TextTruncate.AtEnd
+TextLabel_8.TextXAlignment = Enum.TextXAlignment.Left
+TextLabel_8.Parent = InfiniteJumpCard
+
+-- InfiniteJumpToggle (TextButton)
+local InfiniteJumpToggle = Instance.new("TextButton")
+InfiniteJumpToggle.Name = "InfiniteJumpToggle"
+InfiniteJumpToggle.BackgroundTransparency = 1
+InfiniteJumpToggle.Position = UDim2.new(1, -70, 0.5, -15)
+InfiniteJumpToggle.Size = UDim2.new(0, 58, 0, 30)
+InfiniteJumpToggle.AutoButtonColor = false
+InfiniteJumpToggle.Text = ""
+InfiniteJumpToggle.Parent = InfiniteJumpCard
+
+-- Frame_7 (Frame)
+local Frame_7 = Instance.new("Frame")
+Frame_7.BackgroundColor3 = Color3.fromRGB(65, 68, 81)
+Frame_7.BorderSizePixel = 0
+Frame_7.Position = UDim2.new(0, 5, 0, 3)
+Frame_7.Size = UDim2.new(0, 48, 0, 24)
+Frame_7.Parent = InfiniteJumpToggle
+
+-- UICorner_13 (UICorner)
+local UICorner_13 = Instance.new("UICorner")
+UICorner_13.CornerRadius = UDim.new(0, 12)
+UICorner_13.Parent = Frame_7
+
+-- Frame_8 (Frame)
+local Frame_8 = Instance.new("Frame")
+Frame_8.BackgroundColor3 = Color3.fromRGB(109, 225, 240)
+Frame_8.BackgroundTransparency = 1
+Frame_8.BorderSizePixel = 0
+Frame_8.Size = UDim2.new(1, 0, 1, 0)
+Frame_8.Parent = Frame_7
+
+-- UICorner_14 (UICorner)
+local UICorner_14 = Instance.new("UICorner")
+UICorner_14.CornerRadius = UDim.new(0, 12)
+UICorner_14.Parent = Frame_8
+
+-- Frame_9 (Frame)
+local Frame_9 = Instance.new("Frame")
+Frame_9.BackgroundColor3 = Color3.fromRGB(245, 248, 255)
+Frame_9.BorderSizePixel = 0
+Frame_9.Position = UDim2.new(0, 3, 0, 3)
+Frame_9.Size = UDim2.new(0, 18, 0, 18)
+Frame_9.Parent = Frame_7
+
+-- UICorner_15 (UICorner)
+local UICorner_15 = Instance.new("UICorner")
+UICorner_15.CornerRadius = UDim.new(0, 9)
+UICorner_15.Parent = Frame_9
+
+-- TextLabel_9 (TextLabel)
+local TextLabel_9 = Instance.new("TextLabel")
+TextLabel_9.BackgroundTransparency = 1
+TextLabel_9.LayoutOrder = 5
+TextLabel_9.Position = UDim2.new(0, 6, 0, 0)
+TextLabel_9.Size = UDim2.new(0, 300, 0, 18)
+TextLabel_9.FontFace = Font.new("rbxasset://fonts/families/GothamSSm.json", Enum.FontWeight.Heavy, Enum.FontStyle.Normal)
+TextLabel_9.Text = "KEYBINDS"
+TextLabel_9.TextColor3 = Color3.fromRGB(109, 225, 240)
+TextLabel_9.TextSize = 10
+TextLabel_9.TextTruncate = Enum.TextTruncate.AtEnd
+TextLabel_9.TextXAlignment = Enum.TextXAlignment.Left
+TextLabel_9.Parent = Content
+
+-- KeybindsCard (Frame)
+local KeybindsCard = Instance.new("Frame")
+KeybindsCard.Name = "KeybindsCard"
+KeybindsCard.BackgroundColor3 = Color3.fromRGB(12, 16, 28)
+KeybindsCard.BackgroundTransparency = 0.40000000596046448
+KeybindsCard.BorderSizePixel = 0
+KeybindsCard.ClipsDescendants = true
+KeybindsCard.LayoutOrder = 6
+KeybindsCard.Size = UDim2.new(1, -4, 0, 138)
+KeybindsCard.Parent = Content
+
+-- UICorner_16 (UICorner)
+local UICorner_16 = Instance.new("UICorner")
+UICorner_16.CornerRadius = UDim.new(0, 11)
+UICorner_16.Parent = KeybindsCard
+
+-- UIStroke_5 (UIStroke)
+local UIStroke_5 = Instance.new("UIStroke")
+UIStroke_5.Color = Color3.fromRGB(54, 72, 108)
+UIStroke_5.Transparency = 0.5
+UIStroke_5.Parent = KeybindsCard
+
+-- TextLabel_10 (TextLabel)
+local TextLabel_10 = Instance.new("TextLabel")
+TextLabel_10.BackgroundTransparency = 1
+TextLabel_10.Position = UDim2.new(0, 13, 0, 7)
+TextLabel_10.Size = UDim2.new(0, 120, 0, 15)
+TextLabel_10.FontFace = Font.new("rbxasset://fonts/families/GothamSSm.json", Enum.FontWeight.Heavy, Enum.FontStyle.Normal)
+TextLabel_10.Text = "HOTKEYS"
+TextLabel_10.TextColor3 = Color3.fromRGB(109, 225, 240)
+TextLabel_10.TextSize = 10
+TextLabel_10.TextTruncate = Enum.TextTruncate.AtEnd
+TextLabel_10.TextXAlignment = Enum.TextXAlignment.Left
+TextLabel_10.Parent = KeybindsCard
+
+-- TextLabel_11 (TextLabel)
+local TextLabel_11 = Instance.new("TextLabel")
+TextLabel_11.BackgroundTransparency = 1
+TextLabel_11.Position = UDim2.new(0, 13, 0, 35)
+TextLabel_11.Size = UDim2.new(0, 110, 0, 16)
+TextLabel_11.FontFace = Font.new("rbxasset://fonts/families/GothamSSm.json", Enum.FontWeight.Bold, Enum.FontStyle.Normal)
+TextLabel_11.Text = "UI TOGGLE"
+TextLabel_11.TextColor3 = Color3.fromRGB(245, 248, 255)
+TextLabel_11.TextSize = 10
+TextLabel_11.TextTruncate = Enum.TextTruncate.AtEnd
+TextLabel_11.TextXAlignment = Enum.TextXAlignment.Left
+TextLabel_11.Parent = KeybindsCard
+
+-- TextButton (TextButton)
+local TextButton = Instance.new("TextButton")
+TextButton.BackgroundColor3 = Color3.fromRGB(18, 23, 38)
+TextButton.Position = UDim2.new(0, 125, 0, 26)
+TextButton.Size = UDim2.new(1, -138, 0, 30)
+TextButton.AutoButtonColor = false
+TextButton.FontFace = Font.new("rbxasset://fonts/families/GothamSSm.json", Enum.FontWeight.Bold, Enum.FontStyle.Normal)
+TextButton.Text = "[RightShift]"
+TextButton.TextColor3 = Color3.fromRGB(245, 248, 255)
+TextButton.TextSize = 10
+TextButton.Parent = KeybindsCard
+
+-- UICorner_17 (UICorner)
+local UICorner_17 = Instance.new("UICorner")
+UICorner_17.CornerRadius = UDim.new(0, 7)
+UICorner_17.Parent = TextButton
+
+-- UIStroke_6 (UIStroke)
+local UIStroke_6 = Instance.new("UIStroke")
+UIStroke_6.Color = Color3.fromRGB(54, 72, 108)
+UIStroke_6.Transparency = 0.40000000596046448
+UIStroke_6.Parent = TextButton
+
+-- TextLabel_12 (TextLabel)
+local TextLabel_12 = Instance.new("TextLabel")
+TextLabel_12.BackgroundTransparency = 1
+TextLabel_12.Position = UDim2.new(0, 13, 0, 69)
+TextLabel_12.Size = UDim2.new(0, 110, 0, 16)
+TextLabel_12.FontFace = Font.new("rbxasset://fonts/families/GothamSSm.json", Enum.FontWeight.Bold, Enum.FontStyle.Normal)
+TextLabel_12.Text = "ANTI BAT"
+TextLabel_12.TextColor3 = Color3.fromRGB(245, 248, 255)
+TextLabel_12.TextSize = 10
+TextLabel_12.TextTruncate = Enum.TextTruncate.AtEnd
+TextLabel_12.TextXAlignment = Enum.TextXAlignment.Left
+TextLabel_12.Parent = KeybindsCard
+
+-- TextButton_2 (TextButton)
+local TextButton_2 = Instance.new("TextButton")
+TextButton_2.BackgroundColor3 = Color3.fromRGB(18, 23, 38)
+TextButton_2.Position = UDim2.new(0, 125, 0, 60)
+TextButton_2.Size = UDim2.new(1, -138, 0, 30)
+TextButton_2.AutoButtonColor = false
+TextButton_2.FontFace = Font.new("rbxasset://fonts/families/GothamSSm.json", Enum.FontWeight.Bold, Enum.FontStyle.Normal)
+TextButton_2.Text = "[RightControl]"
+TextButton_2.TextColor3 = Color3.fromRGB(245, 248, 255)
+TextButton_2.TextSize = 10
+TextButton_2.Parent = KeybindsCard
+
+-- UICorner_18 (UICorner)
+local UICorner_18 = Instance.new("UICorner")
+UICorner_18.CornerRadius = UDim.new(0, 7)
+UICorner_18.Parent = TextButton_2
+
+-- UIStroke_7 (UIStroke)
+local UIStroke_7 = Instance.new("UIStroke")
+UIStroke_7.Color = Color3.fromRGB(54, 72, 108)
+UIStroke_7.Transparency = 0.40000000596046448
+UIStroke_7.Parent = TextButton_2
+
+-- TextLabel_13 (TextLabel)
+local TextLabel_13 = Instance.new("TextLabel")
+TextLabel_13.BackgroundTransparency = 1
+TextLabel_13.Position = UDim2.new(0, 13, 0, 103)
+TextLabel_13.Size = UDim2.new(0, 110, 0, 16)
+TextLabel_13.FontFace = Font.new("rbxasset://fonts/families/GothamSSm.json", Enum.FontWeight.Bold, Enum.FontStyle.Normal)
+TextLabel_13.Text = "INF. JUMP"
+TextLabel_13.TextColor3 = Color3.fromRGB(245, 248, 255)
+TextLabel_13.TextSize = 10
+TextLabel_13.TextTruncate = Enum.TextTruncate.AtEnd
+TextLabel_13.TextXAlignment = Enum.TextXAlignment.Left
+TextLabel_13.Parent = KeybindsCard
+
+-- TextButton_3 (TextButton)
+local TextButton_3 = Instance.new("TextButton")
+TextButton_3.BackgroundColor3 = Color3.fromRGB(18, 23, 38)
+TextButton_3.Position = UDim2.new(0, 125, 0, 94)
+TextButton_3.Size = UDim2.new(1, -138, 0, 30)
+TextButton_3.AutoButtonColor = false
+TextButton_3.FontFace = Font.new("rbxasset://fonts/families/GothamSSm.json", Enum.FontWeight.Bold, Enum.FontStyle.Normal)
+TextButton_3.Text = "[RightAlt]"
+TextButton_3.TextColor3 = Color3.fromRGB(245, 248, 255)
+TextButton_3.TextSize = 10
+TextButton_3.Parent = KeybindsCard
+
+-- UICorner_19 (UICorner)
+local UICorner_19 = Instance.new("UICorner")
+UICorner_19.CornerRadius = UDim.new(0, 7)
+UICorner_19.Parent = TextButton_3
+
+-- UIStroke_8 (UIStroke)
+local UIStroke_8 = Instance.new("UIStroke")
+UIStroke_8.Color = Color3.fromRGB(54, 72, 108)
+UIStroke_8.Transparency = 0.40000000596046448
+UIStroke_8.Parent = TextButton_3
+
+-- ScaleCard (Frame)
+local ScaleCard = Instance.new("Frame")
+ScaleCard.Name = "ScaleCard"
+ScaleCard.BackgroundColor3 = Color3.fromRGB(12, 16, 28)
+ScaleCard.BackgroundTransparency = 0.40000000596046448
+ScaleCard.BorderSizePixel = 0
+ScaleCard.ClipsDescendants = true
+ScaleCard.LayoutOrder = 7
+ScaleCard.Size = UDim2.new(1, -4, 0, 50)
+ScaleCard.Parent = Content
+
+-- UICorner_20 (UICorner)
+local UICorner_20 = Instance.new("UICorner")
+UICorner_20.CornerRadius = UDim.new(0, 11)
+UICorner_20.Parent = ScaleCard
+
+-- UIStroke_9 (UIStroke)
+local UIStroke_9 = Instance.new("UIStroke")
+UIStroke_9.Color = Color3.fromRGB(54, 72, 108)
+UIStroke_9.Transparency = 0.5
+UIStroke_9.Parent = ScaleCard
+
+-- TextLabel_14 (TextLabel)
+local TextLabel_14 = Instance.new("TextLabel")
+TextLabel_14.BackgroundTransparency = 1
+TextLabel_14.Position = UDim2.new(0, 12, 0, 17)
+TextLabel_14.Size = UDim2.new(0, 70, 0, 16)
+TextLabel_14.FontFace = Font.new("rbxasset://fonts/families/GothamSSm.json", Enum.FontWeight.Heavy, Enum.FontStyle.Normal)
+TextLabel_14.Text = "UI SCALE"
+TextLabel_14.TextColor3 = Color3.fromRGB(145, 157, 180)
+TextLabel_14.TextSize = 9
+TextLabel_14.TextTruncate = Enum.TextTruncate.AtEnd
+TextLabel_14.TextXAlignment = Enum.TextXAlignment.Left
+TextLabel_14.Parent = ScaleCard
+
+-- Frame_10 (Frame)
+local Frame_10 = Instance.new("Frame")
+Frame_10.BackgroundColor3 = Color3.fromRGB(42, 50, 68)
+Frame_10.BorderSizePixel = 0
+Frame_10.Position = UDim2.new(0, 86, 0, 23)
+Frame_10.Size = UDim2.new(1, -145, 0, 4)
+Frame_10.Parent = ScaleCard
+
+-- UICorner_21 (UICorner)
+local UICorner_21 = Instance.new("UICorner")
+UICorner_21.CornerRadius = UDim.new(0, 2)
+UICorner_21.Parent = Frame_10
+
+-- Frame_11 (Frame)
+local Frame_11 = Instance.new("Frame")
+Frame_11.BackgroundColor3 = Color3.fromRGB(109, 225, 240)
+Frame_11.BorderSizePixel = 0
+Frame_11.Size = UDim2.new(0.5, 0, 1, 0)
+Frame_11.Parent = Frame_10
+
+-- UICorner_22 (UICorner)
+local UICorner_22 = Instance.new("UICorner")
+UICorner_22.CornerRadius = UDim.new(0, 2)
+UICorner_22.Parent = Frame_11
+
+-- Frame_12 (Frame)
+local Frame_12 = Instance.new("Frame")
+Frame_12.AnchorPoint = Vector2.new(0.5, 0.5)
+Frame_12.BackgroundColor3 = Color3.fromRGB(245, 248, 255)
+Frame_12.BorderSizePixel = 0
+Frame_12.Position = UDim2.new(0.5, 0, 0.5, 0)
+Frame_12.Size = UDim2.new(0, 13, 0, 13)
+Frame_12.Parent = Frame_10
+
+-- UICorner_23 (UICorner)
+local UICorner_23 = Instance.new("UICorner")
+UICorner_23.CornerRadius = UDim.new(0, 7)
+UICorner_23.Parent = Frame_12
+
+-- TextLabel_15 (TextLabel)
+local TextLabel_15 = Instance.new("TextLabel")
+TextLabel_15.BackgroundTransparency = 1
+TextLabel_15.Position = UDim2.new(1, -52, 0, 17)
+TextLabel_15.Size = UDim2.new(0, 44, 0, 16)
+TextLabel_15.FontFace = Font.new("rbxasset://fonts/families/GothamSSm.json", Enum.FontWeight.Bold, Enum.FontStyle.Normal)
+TextLabel_15.Text = "100%"
+TextLabel_15.TextColor3 = Color3.fromRGB(245, 248, 255)
+TextLabel_15.TextSize = 10
+TextLabel_15.TextTruncate = Enum.TextTruncate.AtEnd
+TextLabel_15.TextXAlignment = Enum.TextXAlignment.Right
+TextLabel_15.Parent = ScaleCard
+
+-- ThemesCard (Frame)
+local ThemesCard = Instance.new("Frame")
+ThemesCard.Name = "ThemesCard"
+ThemesCard.BackgroundColor3 = Color3.fromRGB(12, 16, 28)
+ThemesCard.BackgroundTransparency = 0.40000000596046448
+ThemesCard.BorderSizePixel = 0
+ThemesCard.ClipsDescendants = true
+ThemesCard.LayoutOrder = 8
+ThemesCard.Size = UDim2.new(1, -4, 0, 70)
+ThemesCard.Parent = Content
+
+-- UICorner_24 (UICorner)
+local UICorner_24 = Instance.new("UICorner")
+UICorner_24.CornerRadius = UDim.new(0, 11)
+UICorner_24.Parent = ThemesCard
+
+-- UIStroke_10 (UIStroke)
+local UIStroke_10 = Instance.new("UIStroke")
+UIStroke_10.Color = Color3.fromRGB(54, 72, 108)
+UIStroke_10.Transparency = 0.5
+UIStroke_10.Parent = ThemesCard
+
+-- TextLabel_16 (TextLabel)
+local TextLabel_16 = Instance.new("TextLabel")
+TextLabel_16.BackgroundTransparency = 1
+TextLabel_16.Position = UDim2.new(0, 12, 0, 7)
+TextLabel_16.Size = UDim2.new(0, 120, 0, 16)
+TextLabel_16.FontFace = Font.new("rbxasset://fonts/families/GothamSSm.json", Enum.FontWeight.Bold, Enum.FontStyle.Normal)
+TextLabel_16.Text = "THEME"
+TextLabel_16.TextColor3 = Color3.fromRGB(109, 225, 240)
+TextLabel_16.TextSize = 10
+TextLabel_16.TextTruncate = Enum.TextTruncate.AtEnd
+TextLabel_16.TextXAlignment = Enum.TextXAlignment.Left
+TextLabel_16.Parent = ThemesCard
+
+-- TextButton_4 (TextButton)
+local TextButton_4 = Instance.new("TextButton")
+TextButton_4.BackgroundColor3 = Color3.fromRGB(109, 225, 240)
+TextButton_4.BorderSizePixel = 0
+TextButton_4.Position = UDim2.new(0, 8, 0, 31)
+TextButton_4.Size = UDim2.new(0.3333333432674408, -12, 0, 28)
+TextButton_4.AutoButtonColor = false
+TextButton_4.FontFace = Font.new("rbxasset://fonts/families/GothamSSm.json", Enum.FontWeight.Bold, Enum.FontStyle.Normal)
+TextButton_4.Text = "CYAN"
+TextButton_4.TextColor3 = Color3.fromRGB(12, 16, 28)
+TextButton_4.TextSize = 10
+TextButton_4.Parent = ThemesCard
+
+-- UICorner_25 (UICorner)
+local UICorner_25 = Instance.new("UICorner")
+UICorner_25.Parent = TextButton_4
+
+-- TextButton_5 (TextButton)
+local TextButton_5 = Instance.new("TextButton")
+TextButton_5.BackgroundColor3 = Color3.fromRGB(18, 23, 38)
+TextButton_5.BorderSizePixel = 0
+TextButton_5.Position = UDim2.new(0.3333333432674408, 8, 0, 31)
+TextButton_5.Size = UDim2.new(0.3333333432674408, -12, 0, 28)
+TextButton_5.AutoButtonColor = false
+TextButton_5.FontFace = Font.new("rbxasset://fonts/families/GothamSSm.json", Enum.FontWeight.Bold, Enum.FontStyle.Normal)
+TextButton_5.Text = "ICE"
+TextButton_5.TextColor3 = Color3.fromRGB(245, 248, 255)
+TextButton_5.TextSize = 10
+TextButton_5.Parent = ThemesCard
+
+-- UICorner_26 (UICorner)
+local UICorner_26 = Instance.new("UICorner")
+UICorner_26.Parent = TextButton_5
+
+-- TextButton_6 (TextButton)
+local TextButton_6 = Instance.new("TextButton")
+TextButton_6.BackgroundColor3 = Color3.fromRGB(18, 23, 38)
+TextButton_6.BorderSizePixel = 0
+TextButton_6.Position = UDim2.new(0.66666668653488159, 8, 0, 31)
+TextButton_6.Size = UDim2.new(0.3333333432674408, -12, 0, 28)
+TextButton_6.AutoButtonColor = false
+TextButton_6.FontFace = Font.new("rbxasset://fonts/families/GothamSSm.json", Enum.FontWeight.Bold, Enum.FontStyle.Normal)
+TextButton_6.Text = "SOLAR"
+TextButton_6.TextColor3 = Color3.fromRGB(245, 248, 255)
+TextButton_6.TextSize = 10
+TextButton_6.Parent = ThemesCard
+
+-- UICorner_27 (UICorner)
+local UICorner_27 = Instance.new("UICorner")
+UICorner_27.Parent = TextButton_6
+
+-- mount
+CalciumAntiBat.Parent = game:GetService("Players").LocalPlayer:WaitForChild("PlayerGui")
+
+return CalciumAntiBat

@@ -1,0 +1,116 @@
+local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
+local UserInputService = game:GetService("UserInputService")
+
+local localPlayer = Players.LocalPlayer
+local toggleKey = Enum.KeyCode.R
+local isRebindingKey = false
+local isSpinning = false
+local spinSpeed = 15
+local cyan = Color3.fromRGB(0, 255, 255)
+
+local existingGui = localPlayer.PlayerGui:FindFirstChild("SynapseSpinner")
+if existingGui then
+    existingGui:Destroy()
+end
+
+local screenGui = Instance.new("ScreenGui")
+screenGui.Name = "SynapseSpinner"
+screenGui.ResetOnSpawn = false
+screenGui.Parent = localPlayer:WaitForChild("PlayerGui")
+
+local mainFrame = Instance.new("Frame")
+mainFrame.Parent = screenGui
+mainFrame.Size = UDim2.new(0, 220, 0, 205)
+mainFrame.Position = UDim2.new(0.05, 0, 0.4, 0)
+mainFrame.BackgroundColor3 = Color3.fromRGB(20, 25, 30)
+mainFrame.Active = true
+mainFrame.Draggable = true
+
+Instance.new("UICorner", mainFrame).CornerRadius = UDim.new(0, 10)
+
+local border = Instance.new("UIStroke")
+border.Parent = mainFrame
+border.Color = cyan
+border.Thickness = 2.5
+
+local titleLabel = Instance.new("TextLabel")
+titleLabel.Parent = mainFrame
+titleLabel.Size = UDim2.new(1, 0, 0, 40)
+titleLabel.BackgroundTransparency = 1
+titleLabel.Text = "🩵 SYNAPSE SPINNER"
+titleLabel.TextColor3 = cyan
+titleLabel.Font = Enum.Font.GothamBold
+titleLabel.TextSize = 18
+
+local function createControl(className, yPosition, backgroundColor)
+    local control = Instance.new(className)
+    control.Parent = mainFrame
+    control.Size = UDim2.new(1, -20, 0, 40)
+    control.Position = UDim2.new(0, 10, 0, yPosition)
+    control.BackgroundColor3 = backgroundColor
+    control.TextColor3 = Color3.fromRGB(255, 255, 255)
+    control.Font = Enum.Font.GothamBold
+    control.TextSize = 15
+    Instance.new("UICorner", control).CornerRadius = UDim.new(0, 7)
+    return control
+end
+
+local spinButton = createControl("TextButton", 45, Color3.fromRGB(180, 50, 50))
+spinButton.Text = "Spin: OFF"
+
+local speedInput = createControl("TextBox", 95, Color3.fromRGB(40, 45, 50))
+speedInput.Text = "Speed: 15"
+speedInput.ClearTextOnFocus = false
+
+local keyBindButton = createControl("TextButton", 145, Color3.fromRGB(40, 45, 50))
+keyBindButton.Text = "Bind: R"
+
+local function toggleSpin()
+    isSpinning = not isSpinning
+    spinButton.Text = isSpinning and "Spin: ON" or "Spin: OFF"
+    spinButton.BackgroundColor3 = isSpinning and cyan or Color3.fromRGB(180, 50, 50)
+    spinButton.TextColor3 = isSpinning and Color3.fromRGB(0, 0, 0)
+        or Color3.fromRGB(255, 255, 255)
+end
+
+spinButton.MouseButton1Click:Connect(toggleSpin)
+
+keyBindButton.MouseButton1Click:Connect(function()
+    isRebindingKey = true
+    keyBindButton.Text = "Press Any Key..."
+    keyBindButton.BackgroundColor3 = Color3.fromRGB(200, 140, 40)
+end)
+
+UserInputService.InputBegan:Connect(function(input, gameProcessed)
+    if isRebindingKey then
+        if input.KeyCode ~= Enum.KeyCode.Unknown
+            and input.KeyCode ~= Enum.KeyCode.Thumbstick1
+            and input.KeyCode ~= Enum.KeyCode.Thumbstick2 then
+
+            toggleKey = input.KeyCode
+            isRebindingKey = false
+            keyBindButton.Text = "Bind: " .. toggleKey.Name
+            keyBindButton.BackgroundColor3 = Color3.fromRGB(40, 45, 50)
+        end
+        return
+    end
+
+    if not gameProcessed and input.KeyCode == toggleKey then
+        toggleSpin()
+    end
+end)
+
+speedInput.FocusLost:Connect(function()
+    spinSpeed = tonumber(speedInput.Text:match("[%d%.]+")) or spinSpeed
+    speedInput.Text = "Speed: " .. spinSpeed
+end)
+
+RunService.RenderStepped:Connect(function()
+    if isSpinning and localPlayer.Character then
+        local rootPart = localPlayer.Character:FindFirstChild("HumanoidRootPart")
+        if rootPart then
+            rootPart.CFrame *= CFrame.Angles(0, math.rad(spinSpeed), 0)
+        end
+    end
+end)

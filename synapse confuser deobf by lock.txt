@@ -1,0 +1,1014 @@
+
+local Players          = game:GetService("Players")
+local RunService       = game:GetService("RunService")
+local UserInputService = game:GetService("UserInputService")
+local GuiService       = game:GetService("CoreGui")
+local HttpService      = game:GetService("HttpService")
+local TweenService     = game:GetService("TweenService")
+
+local LP     = Players.LocalPlayer
+local plrGui = LP:WaitForChild("PlayerGui")
+
+local CONFIG_FILE = "synapseConfuserConfig.json"
+
+local COLORS = {
+    bg        = Color3.fromRGB(7, 20, 29),
+    bgDark    = Color3.fromRGB(5, 15, 23),
+    frame     = Color3.fromRGB(12, 38, 49),
+    stroke    = Color3.fromRGB(100, 235, 255),
+    text      = Color3.fromRGB(255, 255, 255),
+    textDim   = Color3.fromRGB(180, 180, 190),
+    buttonBg  = Color3.fromRGB(18, 64, 78),
+    toggleOn  = Color3.fromRGB(90, 235, 245),
+    toggleOff = Color3.fromRGB(42, 78, 88),
+}
+
+local State = {
+    activeEngine = "V1",
+    on           = false,
+    autoNormal   = false,
+    v1Speed      = 25,
+    v2Speed      = 25,
+    v3Speed      = 25,
+    lockGui      = false,
+    antiDie      = false,
+    guiPos       = {XScale = 0.5, XOffset = -115, YScale = 0.5, YOffset = -65},
+}
+
+local toggleKey = Enum.KeyCode.X
+
+local function saveConfig()
+    pcall(function()
+        if writefile then
+            writefile(CONFIG_FILE, HttpService:JSONEncode({
+                toggleKey    = toggleKey.Name,
+                activeEngine = State.activeEngine,
+                v1Speed      = State.v1Speed,
+                v2Speed      = State.v2Speed,
+                v3Speed      = State.v3Speed,
+                autoNormal   = State.autoNormal,
+                lockGui      = State.lockGui,
+                antiDie      = State.antiDie,
+                guiPos       = State.guiPos,
+            }))
+        end
+    end)
+end
+
+local function loadConfig()
+    if not (isfile and isfile(CONFIG_FILE)) then return end
+    local ok, cfg = pcall(function() return HttpService:JSONDecode(readfile(CONFIG_FILE)) end)
+    if not ok or type(cfg) ~= "table" then return end
+    if cfg.toggleKey and Enum.KeyCode[cfg.toggleKey] then toggleKey = Enum.KeyCode[cfg.toggleKey] end
+    if cfg.activeEngine == "V1" or cfg.activeEngine == "V2" or cfg.activeEngine == "V3" then State.activeEngine = cfg.activeEngine end
+    if cfg.v1Speed then State.v1Speed = math.max(0, tonumber(cfg.v1Speed) or 25) end
+    if cfg.v2Speed then State.v2Speed = math.max(0, tonumber(cfg.v2Speed) or 25) end
+    if cfg.v3Speed then State.v3Speed = math.max(0, tonumber(cfg.v3Speed) or 25) end
+    if cfg.autoNormal ~= nil then State.autoNormal = cfg.autoNormal end
+    if cfg.lockGui    ~= nil then State.lockGui    = cfg.lockGui end
+    if cfg.antiDie    ~= nil then State.antiDie    = cfg.antiDie end
+    if cfg.guiPos and type(cfg.guiPos) == "table" then State.guiPos = cfg.guiPos end
+end
+loadConfig()
+
+local Refs = { char = nil, root = nil, hum = nil }
+local function refreshRefs()
+    local c = LP.Character
+    if not c then Refs.char, Refs.root, Refs.hum = nil, nil, nil; return false end
+    local r = c:FindFirstChild("HumanoidRootPart")
+    local h = c:FindFirstChildOfClass("Humanoid")
+    if not r or not h then Refs.char, Refs.root, Refs.hum = nil, nil, nil; return false end
+    Refs.char, Refs.root, Refs.hum = c, r, h
+    return true
+end
+LP.CharacterAdded:Connect(function()
+    Refs.char, Refs.root, Refs.hum = nil, nil, nil
+    task.wait(0.5); refreshRefs()
+end)
+refreshRefs()
+
+local function attachPlatform(char)
+    if not char then return end
+    if char:FindFirstChild("synapseSpinPlatform") then return end
+    local root = char:FindFirstChild("HumanoidRootPart")
+    if not root then return end
+    local plat = Instance.new("Part")
+    plat.Name = "synapseSpinPlatform"
+    plat.Size = Vector3.new(4, 0.5, 4)
+    plat.Transparency = 1
+    plat.CanCollide = true
+    plat.Anchored = false
+    plat.Massless = true
+    plat.CanQuery = false
+    plat.CanTouch = false
+    plat.Parent = char
+    plat.CFrame = root.CFrame * CFrame.new(0, -3, 0)
+    local weld = Instance.new("WeldConstraint")
+    weld.Part0 = root
+    weld.Part1 = plat
+    weld.Parent = plat
+end
+
+local function detachPlatform(char)
+    if not char then return end
+    local plat = char:FindFirstChild("synapseSpinPlatform")
+    if plat then plat:Destroy() end
+end
+
+-- ============================================================
+-- ANTI-VOID
+-- ============================================================
+local AntiVoid = { lastSafePos = nil, conn = nil }
+do
+    local lastCheck = 0
+    AntiVoid.conn = RunService.Heartbeat:Connect(function()
+        local char = LP.Character
+        if not char then return end
+        local root = char:FindFirstChild("HumanoidRootPart")
+        local hum  = char:FindFirstChildOfClass("Humanoid")
+        if not root or not hum then return end
+        local now = os.clock()
+        if now - lastCheck > 0.25 then
+            lastCheck = now
+            if root.Position.Y > -25 and hum.FloorMaterial ~= Enum.Material.Air then
+                AntiVoid.lastSafePos = root.Position + Vector3.new(0, 5, 0)
+            end
+        end
+        if root.Position.Y < -50 then
+            if AntiVoid.lastSafePos then
+                root.CFrame = CFrame.new(AntiVoid.lastSafePos)
+                root.AssemblyLinearVelocity = Vector3.zero
+            else
+                local spawn = workspace:FindFirstChildOfClass("SpawnLocation")
+                if spawn then
+                    root.CFrame = spawn.CFrame + Vector3.new(0, 5, 0)
+                    root.AssemblyLinearVelocity = Vector3.zero
+                end
+            end
+        end
+    end)
+end
+
+-- ============================================================
+-- V1: no platform
+-- ============================================================
+local Spin1 = { enabled = false, conn = nil, angle = 0 }
+local function startSpin1()
+    if Spin1.conn then return end
+    Spin1.angle = 0
+    refreshRefs()
+    local hum = Refs.hum
+    if hum then pcall(function() hum.AutoRotate = false end) end
+    Spin1.conn = RunService.Heartbeat:Connect(function(dt)
+        if not Spin1.enabled then return end
+        local root = Refs.root
+        if not root or not root.Parent then
+            if not refreshRefs() then return end
+            root = Refs.root
+            if not root then return end
+            local h = Refs.hum
+            if h then pcall(function() h.AutoRotate = false end) end
+        end
+        Spin1.angle = (Spin1.angle + State.v1Speed * dt * 60) % 360
+        local pos = root.CFrame.Position
+        local vel = root.AssemblyLinearVelocity
+        root.CFrame = CFrame.new(pos) * CFrame.Angles(0, math.rad(Spin1.angle), 0)
+        root.AssemblyLinearVelocity = vel
+        root.AssemblyAngularVelocity = Vector3.zero
+    end)
+end
+local function stopSpin1()
+    if Spin1.conn then Spin1.conn:Disconnect(); Spin1.conn = nil end
+    local hum = Refs.hum
+    if hum then pcall(function() hum.AutoRotate = true end) end
+    local root = Refs.root
+    if root then pcall(function() root.AssemblyAngularVelocity = Vector3.zero end) end
+    detachPlatform(LP.Character)
+end
+local function setV1(on)
+    Spin1.enabled = on
+    if on then startSpin1() else stopSpin1() end
+end
+
+-- ============================================================
+-- V2: platform
+-- ============================================================
+local Spin2 = { enabled = false, conn = nil, yAngle = 0, xAngle = 0 }
+local function startSpin2()
+    if Spin2.conn then return end
+    Spin2.yAngle = 0; Spin2.xAngle = 0
+    attachPlatform(LP.Character)
+    Spin2.conn = RunService.Heartbeat:Connect(function(dt)
+        if not Spin2.enabled then return end
+        local char = LP.Character
+        if not char then return end
+        local root = char:FindFirstChild("HumanoidRootPart")
+        if not root then return end
+        attachPlatform(char)
+        local hum = char:FindFirstChildOfClass("Humanoid")
+        if hum then pcall(function() hum.AutoRotate = false end) end
+        Spin2.yAngle = (Spin2.yAngle + State.v2Speed * dt * 60) % 360
+        Spin2.xAngle = (Spin2.xAngle + State.v2Speed * dt * 60) % 360
+        local pos = root.CFrame.Position
+        local vel = root.AssemblyLinearVelocity
+        root.CFrame = CFrame.new(pos)
+            * CFrame.Angles(0, math.rad(Spin2.yAngle), 0)
+            * CFrame.Angles(math.rad(Spin2.xAngle), 0, 0)
+        root.AssemblyLinearVelocity = vel
+        root.AssemblyAngularVelocity = Vector3.zero
+    end)
+end
+local function stopSpin2()
+    if Spin2.conn then Spin2.conn:Disconnect(); Spin2.conn = nil end
+    local char = LP.Character
+    if char then
+        local hum = char:FindFirstChildOfClass("Humanoid")
+        if hum then pcall(function() hum.AutoRotate = true end) end
+        local root = char:FindFirstChild("HumanoidRootPart")
+        if root then pcall(function() root.AssemblyAngularVelocity = Vector3.zero end) end
+        detachPlatform(char)
+    end
+end
+local function setV2(on)
+    Spin2.enabled = on
+    if on then startSpin2() else stopSpin2() end
+end
+
+-- ============================================================
+-- V3: platform
+-- ============================================================
+local Spin3 = { enabled = false, conn = nil, angle = 0 }
+local function startSpin3()
+    if Spin3.conn then return end
+    Spin3.angle = 0
+    attachPlatform(LP.Character)
+    Spin3.conn = RunService.Heartbeat:Connect(function(dt)
+        if not Spin3.enabled then return end
+        local char = LP.Character
+        if not char then return end
+        local root = char:FindFirstChild("HumanoidRootPart")
+        if not root then return end
+        attachPlatform(char)
+        local hum = char:FindFirstChildOfClass("Humanoid")
+        if hum then pcall(function() hum.AutoRotate = false end) end
+        Spin3.angle = (Spin3.angle + State.v3Speed * dt * 60) % 360
+        local pos = root.CFrame.Position
+        local vel = root.AssemblyLinearVelocity
+        root.CFrame = CFrame.new(pos) * CFrame.Angles(math.rad(Spin3.angle), 0, 0)
+        root.AssemblyLinearVelocity = vel
+        root.AssemblyAngularVelocity = Vector3.zero
+    end)
+end
+local function stopSpin3()
+    if Spin3.conn then Spin3.conn:Disconnect(); Spin3.conn = nil end
+    local char = LP.Character
+    if char then
+        local hum = char:FindFirstChildOfClass("Humanoid")
+        if hum then pcall(function() hum.AutoRotate = true end) end
+        local root = char:FindFirstChild("HumanoidRootPart")
+        if root then pcall(function() root.AssemblyAngularVelocity = Vector3.zero end) end
+        detachPlatform(char)
+    end
+end
+local function setV3(on)
+    Spin3.enabled = on
+    if on then startSpin3() else stopSpin3() end
+end
+
+local function stopAllEngines()
+    if Spin1.enabled then setV1(false) end
+    if Spin2.enabled then setV2(false) end
+    if Spin3.enabled then setV3(false) end
+end
+
+local function setEngine(on)
+    State.on = on
+    -- Stop every version first, then enable only the selected version.
+    stopAllEngines()
+    if on then
+        if State.activeEngine == "V1" then
+            setV1(true)
+        elseif State.activeEngine == "V2" then
+            setV2(true)
+        elseif State.activeEngine == "V3" then
+            setV3(true)
+        end
+    else
+        detachPlatform(LP.Character)
+    end
+    if updateUI then updateUI() end
+end
+
+-- Auto Enable (same pattern as before, just no hitbox companion)
+RunService.Heartbeat:Connect(function()
+    if not State.autoNormal then return end
+    local hum
+    if State.activeEngine == "V1" then
+        hum = Refs.hum
+        if not hum or not hum.Parent then refreshRefs(); hum = Refs.hum end
+    else
+        local char = LP.Character
+        if char then hum = char:FindFirstChildOfClass("Humanoid") end
+    end
+    if not hum then return end
+    local hasBrainrot = hum.WalkSpeed < 25
+    if hasBrainrot and not State.on then setEngine(true)
+    elseif (not hasBrainrot) and State.on then setEngine(false) end
+end)
+
+-- ============================================================
+-- ANTI DIE
+-- ============================================================
+local AntiDie = { conns = {}, hum = nil, char = nil, started = false }
+local function onAntiDieHealthChanged(newHealth)
+    if not State.antiDie then return end
+    local hum = AntiDie.hum
+    if not hum or not hum.Parent then return end
+    if newHealth <= 0 then hum.Health = hum.MaxHealth end
+end
+local function bindAntiDieToCharacter(char)
+    if not char then return end
+    AntiDie.char = char
+    local hum = char:WaitForChild("Humanoid", 5)
+    if not hum then return end
+    AntiDie.hum = hum
+    table.insert(AntiDie.conns, hum.HealthChanged:Connect(onAntiDieHealthChanged))
+end
+local function startAntiDie()
+    if AntiDie.started then return end
+    AntiDie.started = true
+    bindAntiDieToCharacter(LP.Character)
+    table.insert(AntiDie.conns, LP.CharacterAdded:Connect(function(newChar) bindAntiDieToCharacter(newChar) end))
+end
+local function stopAntiDie()
+    for _, c in ipairs(AntiDie.conns) do pcall(function() c:Disconnect() end) end
+    AntiDie.conns = {}
+    AntiDie.started = false
+    AntiDie.hum = nil
+    AntiDie.char = nil
+end
+local function setAntiDie(on)
+    State.antiDie = on
+    if on then startAntiDie() else stopAntiDie() end
+end
+
+
+-- Discord tag floating above the character's torso.
+local function attachDiscordTag(char)
+    if not char then return end
+    local torso = char:FindFirstChild("UpperTorso") or char:FindFirstChild("Torso") or char:WaitForChild("HumanoidRootPart", 5)
+    if not torso then return end
+    local oldTag = char:FindFirstChild("SynapseDiscordTag")
+    if oldTag then oldTag:Destroy() end
+
+    local tagGui = Instance.new("BillboardGui")
+    tagGui.Name = "SynapseDiscordTag"
+    tagGui.Adornee = torso
+    tagGui.Size = UDim2.fromOffset(190, 38)
+    tagGui.StudsOffset = Vector3.new(0, 1.65, 0)
+    tagGui.AlwaysOnTop = true
+    tagGui.MaxDistance = 250
+    tagGui.Parent = char
+
+    local tag = Instance.new("TextLabel")
+    tag.Size = UDim2.fromScale(1, 1)
+    tag.BackgroundTransparency = 1
+    tag.Text = ".gg/synapsehub"
+    tag.TextColor3 = Color3.fromRGB(150, 248, 255)
+    tag.TextStrokeColor3 = Color3.fromRGB(3, 28, 38)
+    tag.TextStrokeTransparency = 0.15
+    tag.Font = Enum.Font.GothamBold
+    tag.TextScaled = true
+    tag.Parent = tagGui
+end
+
+if LP.Character then task.spawn(attachDiscordTag, LP.Character) end
+LP.CharacterAdded:Connect(function(char)
+    task.wait(0.75)
+    attachDiscordTag(char)
+end)
+
+-- ============================================================
+-- GUI
+-- ============================================================
+for _, name in pairs({"synapseBypass","synapseConfuser","synapseAntiDie"}) do
+    local old = GuiService:FindFirstChild(name); if old then old:Destroy() end
+    local pg = LP:FindFirstChild("PlayerGui")
+    if pg then local o = pg:FindFirstChild(name); if o then o:Destroy() end end
+end
+
+local screenGui = Instance.new("ScreenGui")
+screenGui.Name = "synapseConfuser"
+screenGui.Parent = GuiService
+screenGui.ResetOnSpawn = false
+screenGui.IgnoreGuiInset = true
+
+local mainFrame = Instance.new("Frame")
+mainFrame.Size = UDim2.new(0, 290, 0, 168)
+mainFrame.Position = UDim2.new(State.guiPos.XScale, State.guiPos.XOffset, State.guiPos.YScale, State.guiPos.YOffset)
+mainFrame.BackgroundColor3 = COLORS.bg
+mainFrame.ClipsDescendants = true
+mainFrame.Parent = screenGui
+Instance.new("UICorner", mainFrame).CornerRadius = UDim.new(0, 24)
+
+local borderStroke = Instance.new("UIStroke")
+borderStroke.Thickness = 2.5
+borderStroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
+borderStroke.Parent = mainFrame
+
+local borderGradient = Instance.new("UIGradient")
+borderGradient.Color = ColorSequence.new({
+    ColorSequenceKeypoint.new(0, Color3.fromRGB(125, 245, 255)),
+    ColorSequenceKeypoint.new(0.3, Color3.fromRGB(20, 95, 115)),
+    ColorSequenceKeypoint.new(0.7, Color3.fromRGB(210, 255, 255)),
+    ColorSequenceKeypoint.new(1, Color3.fromRGB(125, 245, 255)),
+})
+borderGradient.Parent = borderStroke
+TweenService:Create(borderGradient, TweenInfo.new(1.15, Enum.EasingStyle.Linear, Enum.EasingDirection.InOut, -1), {Rotation = 360}):Play()
+
+-- New visual layer: custom background image with a dark glass overlay.
+local backgroundImage = Instance.new("ImageLabel")
+backgroundImage.Name = "CustomBackground"
+backgroundImage.Size = UDim2.fromScale(1, 1)
+backgroundImage.BackgroundTransparency = 1
+backgroundImage.Image = "rbxassetid://118968229670128"
+backgroundImage.ScaleType = Enum.ScaleType.Crop
+backgroundImage.ImageTransparency = 0.12
+backgroundImage.ZIndex = 1
+backgroundImage.Parent = mainFrame
+
+local backgroundTint = Instance.new("Frame")
+backgroundTint.Name = "BackgroundTint"
+backgroundTint.Size = UDim2.fromScale(1, 1)
+backgroundTint.BackgroundColor3 = Color3.fromRGB(5, 20, 28)
+backgroundTint.BackgroundTransparency = 0.28
+backgroundTint.BorderSizePixel = 0
+backgroundTint.ZIndex = 1
+backgroundTint.Parent = mainFrame
+Instance.new("UICorner", backgroundTint).CornerRadius = UDim.new(0, 24)
+
+-- Fast roaming cyan light that travels around the panel perimeter.
+local roamingLight = Instance.new("Frame")
+roamingLight.Name = "RoamingCyanLight"
+roamingLight.Size = UDim2.fromOffset(13, 13)
+roamingLight.BackgroundColor3 = Color3.fromRGB(145, 250, 255)
+roamingLight.BorderSizePixel = 0
+roamingLight.ZIndex = 30
+roamingLight.Parent = mainFrame
+Instance.new("UICorner", roamingLight).CornerRadius = UDim.new(1, 0)
+local lightGlow = Instance.new("UIStroke", roamingLight)
+lightGlow.Color = Color3.fromRGB(95, 235, 255)
+lightGlow.Thickness = 3
+lightGlow.Transparency = 0.12
+
+task.spawn(function()
+    while mainFrame and mainFrame.Parent do
+        local w, h = mainFrame.AbsoluteSize.X, mainFrame.AbsoluteSize.Y
+        local points = {
+            UDim2.fromOffset(8, 2),
+            UDim2.fromOffset(math.max(8, w - 21), 2),
+            UDim2.fromOffset(math.max(8, w - 21), math.max(8, h - 21)),
+            UDim2.fromOffset(2, math.max(8, h - 21)),
+            UDim2.fromOffset(8, 2)
+        }
+        for _, pos in ipairs(points) do
+            if not mainFrame.Parent then break end
+            local tw = TweenService:Create(roamingLight, TweenInfo.new(0.42, Enum.EasingStyle.Linear), {Position = pos})
+            tw:Play()
+            tw.Completed:Wait()
+        end
+        task.wait()
+    end
+end)
+
+local topBar = Instance.new("Frame")
+topBar.Size = UDim2.new(1, 0, 0, 40)
+topBar.BackgroundColor3 = COLORS.bgDark
+topBar.BackgroundTransparency = 0.12
+topBar.BorderSizePixel = 0
+topBar.Parent = mainFrame
+Instance.new("UICorner", topBar).CornerRadius = UDim.new(0, 22)
+
+local titleLabel = Instance.new("TextLabel")
+titleLabel.Size = UDim2.new(0, 130, 1, 0)
+titleLabel.Position = UDim2.new(0.04, 0, 0, 0)
+titleLabel.BackgroundTransparency = 1
+titleLabel.Text = "SYNAPSE HUB  •  CONFUSER"
+titleLabel.TextColor3 = COLORS.text
+titleLabel.Font = Enum.Font.GothamBold
+titleLabel.TextSize = 12
+titleLabel.TextXAlignment = Enum.TextXAlignment.Left
+titleLabel.ZIndex = 2
+titleLabel.Parent = topBar
+
+local rightButtonContainer = Instance.new("Frame")
+rightButtonContainer.Size = UDim2.new(0, 72, 0, 26)
+rightButtonContainer.Position = UDim2.new(0.96, 0, 0.5, -13)
+rightButtonContainer.AnchorPoint = Vector2.new(1, 0)
+rightButtonContainer.BackgroundTransparency = 1
+rightButtonContainer.Parent = topBar
+
+local lockBtn = Instance.new("TextButton")
+lockBtn.Size = UDim2.new(0, 20, 0, 20)
+lockBtn.Position = UDim2.new(0, 0, 0.5, -10)
+lockBtn.BackgroundColor3 = COLORS.buttonBg
+lockBtn.BackgroundTransparency = 0.1
+lockBtn.Text = State.lockGui and "🔒" or "🔓"
+lockBtn.TextColor3 = COLORS.text
+lockBtn.Font = Enum.Font.GothamBold
+lockBtn.TextSize = 10
+lockBtn.ZIndex = 3
+lockBtn.Parent = rightButtonContainer
+Instance.new("UICorner", lockBtn).CornerRadius = UDim.new(0, 5)
+
+local minimizeBtn = Instance.new("TextButton")
+minimizeBtn.Name = "MinimizeButton"
+minimizeBtn.Size = UDim2.fromOffset(20, 20)
+minimizeBtn.Position = UDim2.new(0, 24, 0.5, -10)
+minimizeBtn.BackgroundColor3 = COLORS.buttonBg
+minimizeBtn.BackgroundTransparency = 0.1
+minimizeBtn.Text = "−"
+minimizeBtn.TextColor3 = COLORS.text
+minimizeBtn.Font = Enum.Font.GothamBold
+minimizeBtn.TextSize = 16
+minimizeBtn.ZIndex = 3
+minimizeBtn.Parent = rightButtonContainer
+Instance.new("UICorner", minimizeBtn).CornerRadius = UDim.new(0, 5)
+
+local maximizeBtn = Instance.new("TextButton")
+maximizeBtn.Name = "MaximizeButton"
+maximizeBtn.Size = UDim2.fromOffset(20, 20)
+maximizeBtn.Position = UDim2.new(0, 48, 0.5, -10)
+maximizeBtn.BackgroundColor3 = COLORS.buttonBg
+maximizeBtn.BackgroundTransparency = 0.1
+maximizeBtn.Text = "+"
+maximizeBtn.TextColor3 = COLORS.text
+maximizeBtn.Font = Enum.Font.GothamBold
+maximizeBtn.TextSize = 15
+maximizeBtn.ZIndex = 3
+maximizeBtn.Visible = false
+maximizeBtn.Parent = rightButtonContainer
+Instance.new("UICorner", maximizeBtn).CornerRadius = UDim.new(0, 5)
+
+local body = Instance.new("Frame")
+body.Size = UDim2.new(1, 0, 1, -40)
+body.Position = UDim2.new(0, 0, 0, 40)
+body.BackgroundTransparency = 1
+body.Parent = mainFrame
+
+local activateBtn = Instance.new("TextButton")
+activateBtn.Size = UDim2.new(0.92, 0, 0, 30)
+activateBtn.Position = UDim2.new(0.04, 0, 0, 6)
+activateBtn.BackgroundColor3 = COLORS.buttonBg
+activateBtn.BackgroundTransparency = 0.15
+activateBtn.Text = "ACTIVATE"
+activateBtn.TextColor3 = COLORS.text
+activateBtn.Font = Enum.Font.GothamBold
+activateBtn.TextSize = 10
+activateBtn.ZIndex = 2
+activateBtn.Parent = body
+Instance.new("UICorner", activateBtn).CornerRadius = UDim.new(0, 6)
+
+local keybindBtnBody = Instance.new("TextButton")
+keybindBtnBody.Size = UDim2.new(0.92, 0, 0, 22)
+keybindBtnBody.Position = UDim2.new(0.04, 0, 0, 42)
+keybindBtnBody.BackgroundColor3 = COLORS.buttonBg
+keybindBtnBody.BackgroundTransparency = 0.1
+keybindBtnBody.Text = "Keybind: " .. toggleKey.Name
+keybindBtnBody.TextColor3 = COLORS.text
+keybindBtnBody.Font = Enum.Font.GothamBold
+keybindBtnBody.TextSize = 9
+keybindBtnBody.ZIndex = 3
+keybindBtnBody.Parent = body
+Instance.new("UICorner", keybindBtnBody).CornerRadius = UDim.new(0, 5)
+
+local settingsBtn = Instance.new("TextButton")
+settingsBtn.Size = UDim2.new(0, 26, 0, 22)
+settingsBtn.Position = UDim2.new(1, -30, 1, -30)
+settingsBtn.BackgroundColor3 = COLORS.buttonBg
+settingsBtn.BackgroundTransparency = 0.1
+settingsBtn.Text = "⚙️"
+settingsBtn.TextColor3 = COLORS.text
+settingsBtn.Font = Enum.Font.GothamBold
+settingsBtn.TextSize = 12
+settingsBtn.ZIndex = 10
+settingsBtn.Parent = mainFrame
+Instance.new("UICorner", settingsBtn).CornerRadius = UDim.new(0, 6)
+
+-- Settings panel (shorter — one row fewer than before)
+local SET_W, SET_H = 310, 350
+local settingsFrame = Instance.new("Frame")
+settingsFrame.Name = "SettingsPanel"
+settingsFrame.Size = UDim2.new(0, SET_W, 0, SET_H)
+settingsFrame.Position = UDim2.new(0.5, -SET_W/2, 0.5, -SET_H/2)
+settingsFrame.BackgroundColor3 = COLORS.bg
+settingsFrame.BorderSizePixel = 0
+settingsFrame.ClipsDescendants = true
+settingsFrame.Visible = false
+settingsFrame.ZIndex = 20
+settingsFrame.Parent = screenGui
+Instance.new("UICorner", settingsFrame).CornerRadius = UDim.new(0, 24)
+
+local expandedMainSize = mainFrame.Size
+local minimizedMainSize = UDim2.new(0, 290, 0, 82)
+local isMinimized = false
+
+local function setMinimized(minimized)
+    isMinimized = minimized
+    if minimized then
+        settingsFrame.Visible = false
+        mainFrame.Size = minimizedMainSize
+        keybindBtnBody.Visible = false
+        settingsBtn.Visible = false
+        minimizeBtn.Visible = false
+        maximizeBtn.Visible = true
+        -- Keep ACTIVATE visible in compact mode.
+        activateBtn.Visible = true
+    else
+        mainFrame.Size = expandedMainSize
+        keybindBtnBody.Visible = true
+        settingsBtn.Visible = true
+        minimizeBtn.Visible = true
+        maximizeBtn.Visible = false
+        activateBtn.Visible = true
+    end
+end
+
+minimizeBtn.MouseButton1Click:Connect(function()
+    setMinimized(true)
+end)
+
+maximizeBtn.MouseButton1Click:Connect(function()
+    setMinimized(false)
+end)
+
+local settingsBg = Instance.new("ImageLabel")
+settingsBg.Name = "SettingsBackground"
+settingsBg.Size = UDim2.fromScale(1, 1)
+settingsBg.BackgroundTransparency = 1
+settingsBg.Image = "rbxassetid://118968229670128"
+settingsBg.ScaleType = Enum.ScaleType.Crop
+settingsBg.ImageTransparency = 0.38
+settingsBg.ZIndex = 19
+settingsBg.Parent = settingsFrame
+local settingsTint = Instance.new("Frame")
+settingsTint.Size = UDim2.fromScale(1, 1)
+settingsTint.BackgroundColor3 = Color3.fromRGB(5, 20, 28)
+settingsTint.BackgroundTransparency = 0.18
+settingsTint.BorderSizePixel = 0
+settingsTint.ZIndex = 19
+settingsTint.Parent = settingsFrame
+Instance.new("UICorner", settingsTint).CornerRadius = UDim.new(0, 24)
+
+local setStroke = Instance.new("UIStroke", settingsFrame)
+setStroke.Color = COLORS.stroke
+setStroke.Thickness = 2.5
+
+local setHeader = Instance.new("Frame", settingsFrame)
+setHeader.Size = UDim2.new(1, 0, 0, 38)
+setHeader.BackgroundColor3 = COLORS.bgDark
+setHeader.BorderSizePixel = 0
+setHeader.ZIndex = 21
+Instance.new("UICorner", setHeader).CornerRadius = UDim.new(0, 20)
+
+local setTitle = Instance.new("TextLabel", setHeader)
+setTitle.Size = UDim2.new(1, -40, 1, 0)
+setTitle.Position = UDim2.new(0, 10, 0, 0)
+setTitle.BackgroundTransparency = 1
+setTitle.Text = "SETTINGS"
+setTitle.TextColor3 = COLORS.text
+setTitle.Font = Enum.Font.GothamBold
+setTitle.TextSize = 11
+setTitle.TextXAlignment = Enum.TextXAlignment.Left
+setTitle.ZIndex = 22
+
+local setCloseBtn = Instance.new("TextButton", setHeader)
+setCloseBtn.Size = UDim2.new(0, 22, 0, 22)
+setCloseBtn.Position = UDim2.new(1, -26, 0.5, -11)
+setCloseBtn.BackgroundColor3 = COLORS.buttonBg
+setCloseBtn.BorderSizePixel = 0
+setCloseBtn.Text = "X"
+setCloseBtn.TextColor3 = COLORS.text
+setCloseBtn.Font = Enum.Font.GothamBold
+setCloseBtn.TextSize = 11
+setCloseBtn.ZIndex = 22
+Instance.new("UICorner", setCloseBtn).CornerRadius = UDim.new(0, 6)
+
+local engSect = Instance.new("TextLabel", settingsFrame)
+engSect.Size = UDim2.new(1, -16, 0, 16)
+engSect.Position = UDim2.new(0, 8, 0, 36)
+engSect.BackgroundTransparency = 1
+engSect.Text = "ENGINE (choose one)"
+engSect.TextColor3 = COLORS.textDim
+engSect.Font = Enum.Font.GothamBold
+engSect.TextSize = 9
+engSect.TextXAlignment = Enum.TextXAlignment.Left
+engSect.ZIndex = 21
+
+local v1Select = Instance.new("TextButton", settingsFrame)
+v1Select.Size = UDim2.new(0.30, 0, 0, 34)
+v1Select.Position = UDim2.new(0.04, 0, 0, 56)
+v1Select.BackgroundColor3 = State.activeEngine == "V1" and COLORS.toggleOn or COLORS.toggleOff
+v1Select.Text = "V1"
+v1Select.TextColor3 = COLORS.text
+v1Select.Font = Enum.Font.GothamBold
+v1Select.TextSize = 12
+v1Select.ZIndex = 21
+Instance.new("UICorner", v1Select).CornerRadius = UDim.new(0, 8)
+
+local v2Select = Instance.new("TextButton", settingsFrame)
+v2Select.Size = UDim2.new(0.30, 0, 0, 34)
+v2Select.Position = UDim2.new(0.35, 0, 0, 56)
+v2Select.BackgroundColor3 = State.activeEngine == "V2" and COLORS.toggleOn or COLORS.toggleOff
+v2Select.Text = "V2"
+v2Select.TextColor3 = COLORS.text
+v2Select.Font = Enum.Font.GothamBold
+v2Select.TextSize = 12
+v2Select.ZIndex = 21
+Instance.new("UICorner", v2Select).CornerRadius = UDim.new(0, 8)
+
+local v3Select = Instance.new("TextButton", settingsFrame)
+v3Select.Size = UDim2.new(0.30, 0, 0, 34)
+v3Select.Position = UDim2.new(0.66, 0, 0, 56)
+v3Select.BackgroundColor3 = State.activeEngine == "V3" and COLORS.toggleOn or COLORS.toggleOff
+v3Select.Text = "V3"
+v3Select.TextColor3 = COLORS.text
+v3Select.Font = Enum.Font.GothamBold
+v3Select.TextSize = 12
+v3Select.ZIndex = 21
+Instance.new("UICorner", v3Select).CornerRadius = UDim.new(0, 8)
+
+-- Confuser auto enable
+local autoRow = Instance.new("Frame", settingsFrame)
+autoRow.Size = UDim2.new(1, -16, 0, 32)
+autoRow.Position = UDim2.new(0, 8, 0, 100)
+autoRow.BackgroundColor3 = COLORS.frame
+autoRow.BorderSizePixel = 0
+autoRow.ZIndex = 21
+Instance.new("UICorner", autoRow).CornerRadius = UDim.new(0, 8)
+
+local autoLbl = Instance.new("TextLabel", autoRow)
+autoLbl.Size = UDim2.new(0.7, 0, 1, 0)
+autoLbl.Position = UDim2.new(0, 10, 0, 0)
+autoLbl.BackgroundTransparency = 1
+autoLbl.Text = "Auto Enable"
+autoLbl.TextColor3 = COLORS.text
+autoLbl.Font = Enum.Font.GothamBold
+autoLbl.TextSize = 10
+autoLbl.TextXAlignment = Enum.TextXAlignment.Left
+autoLbl.ZIndex = 22
+
+local autoSettBtn = Instance.new("TextButton", autoRow)
+autoSettBtn.Size = UDim2.new(0, 50, 0, 22)
+autoSettBtn.Position = UDim2.new(1, -58, 0.5, -11)
+autoSettBtn.BackgroundColor3 = State.autoNormal and COLORS.toggleOn or COLORS.toggleOff
+autoSettBtn.BorderSizePixel = 0
+autoSettBtn.Text = State.autoNormal and "ON" or "OFF"
+autoSettBtn.TextColor3 = COLORS.text
+autoSettBtn.Font = Enum.Font.GothamBold
+autoSettBtn.TextSize = 10
+autoSettBtn.ZIndex = 22
+Instance.new("UICorner", autoSettBtn).CornerRadius = UDim.new(0, 6)
+
+autoSettBtn.MouseButton1Click:Connect(function()
+    State.autoNormal = not State.autoNormal
+    autoSettBtn.BackgroundColor3 = State.autoNormal and COLORS.toggleOn or COLORS.toggleOff
+    autoSettBtn.Text = State.autoNormal and "ON" or "OFF"
+    saveConfig()
+end)
+
+-- SPEED
+local spdLbl = Instance.new("TextLabel", settingsFrame)
+spdLbl.Size = UDim2.new(1, -16, 0, 16)
+spdLbl.Position = UDim2.new(0, 8, 0, 140)
+spdLbl.BackgroundTransparency = 1
+spdLbl.Text = "Speed"
+spdLbl.TextColor3 = COLORS.textDim
+spdLbl.Font = Enum.Font.GothamBold
+spdLbl.TextSize = 9
+spdLbl.TextXAlignment = Enum.TextXAlignment.Left
+spdLbl.ZIndex = 21
+
+local speedBox = Instance.new("TextBox", settingsFrame)
+speedBox.Size = UDim2.new(1, -16, 0, 30)
+speedBox.Position = UDim2.new(0, 8, 0, 160)
+speedBox.BackgroundColor3 = COLORS.frame
+speedBox.BorderSizePixel = 0
+speedBox.Text = tostring(State.activeEngine == "V1" and State.v1Speed or (State.activeEngine == "V2" and State.v2Speed or State.v3Speed))
+speedBox.TextColor3 = COLORS.text
+speedBox.Font = Enum.Font.GothamBold
+speedBox.TextSize = 12
+speedBox.ClearTextOnFocus = false
+speedBox.ZIndex = 21
+Instance.new("UICorner", speedBox).CornerRadius = UDim.new(0, 8)
+
+-- ANTI DIE
+local antiDieRow = Instance.new("Frame", settingsFrame)
+antiDieRow.Size = UDim2.new(1, -16, 0, 32)
+antiDieRow.Position = UDim2.new(0, 8, 0, 200)
+antiDieRow.BackgroundColor3 = COLORS.frame
+antiDieRow.BorderSizePixel = 0
+antiDieRow.ZIndex = 21
+Instance.new("UICorner", antiDieRow).CornerRadius = UDim.new(0, 8)
+
+local antiDieLbl = Instance.new("TextLabel", antiDieRow)
+antiDieLbl.Size = UDim2.new(0.6, 0, 1, 0)
+antiDieLbl.Position = UDim2.new(0, 10, 0, 0)
+antiDieLbl.BackgroundTransparency = 1
+antiDieLbl.Text = "Anti Die"
+antiDieLbl.TextColor3 = COLORS.text
+antiDieLbl.Font = Enum.Font.GothamBold
+antiDieLbl.TextSize = 10
+antiDieLbl.TextXAlignment = Enum.TextXAlignment.Left
+antiDieLbl.ZIndex = 22
+
+local antiDieBtn = Instance.new("TextButton", antiDieRow)
+antiDieBtn.Size = UDim2.new(0, 50, 0, 22)
+antiDieBtn.Position = UDim2.new(1, -58, 0.5, -11)
+antiDieBtn.BackgroundColor3 = State.antiDie and COLORS.toggleOn or COLORS.toggleOff
+antiDieBtn.BorderSizePixel = 0
+antiDieBtn.Text = State.antiDie and "ON" or "OFF"
+antiDieBtn.TextColor3 = COLORS.text
+antiDieBtn.Font = Enum.Font.GothamBold
+antiDieBtn.TextSize = 10
+antiDieBtn.ZIndex = 22
+Instance.new("UICorner", antiDieBtn).CornerRadius = UDim.new(0, 6)
+
+antiDieBtn.MouseButton1Click:Connect(function()
+    setAntiDie(not State.antiDie)
+    antiDieBtn.BackgroundColor3 = State.antiDie and COLORS.toggleOn or COLORS.toggleOff
+    antiDieBtn.Text = State.antiDie and "ON" or "OFF"
+    saveConfig()
+end)
+
+-- UI
+function updateUI()
+    if State.on then
+        activateBtn.Text = "ON (" .. State.activeEngine .. ")"
+        activateBtn.TextColor3 = COLORS.toggleOn
+    else
+        activateBtn.Text = "ACTIVATE"
+        activateBtn.TextColor3 = COLORS.text
+    end
+    v1Select.BackgroundColor3 = State.activeEngine == "V1" and COLORS.toggleOn or COLORS.toggleOff
+    v2Select.BackgroundColor3 = State.activeEngine == "V2" and COLORS.toggleOn or COLORS.toggleOff
+    v3Select.BackgroundColor3 = State.activeEngine == "V3" and COLORS.toggleOn or COLORS.toggleOff
+    autoSettBtn.BackgroundColor3 = State.autoNormal and COLORS.toggleOn or COLORS.toggleOff
+    autoSettBtn.Text = State.autoNormal and "ON" or "OFF"
+    lockBtn.Text = State.lockGui and "🔒" or "🔓"
+    minimizeBtn.Visible = not isMinimized
+    maximizeBtn.Visible = isMinimized
+    activateBtn.Visible = true
+    antiDieBtn.BackgroundColor3 = State.antiDie and COLORS.toggleOn or COLORS.toggleOff
+    antiDieBtn.Text = State.antiDie and "ON" or "OFF"
+    keybindBtnBody.Text = "Keybind: " .. toggleKey.Name
+end
+
+local function currentSpeed()
+    if State.activeEngine == "V1" then return State.v1Speed
+    elseif State.activeEngine == "V2" then return State.v2Speed
+    else return State.v3Speed end
+end
+
+local function setCurrentSpeed(n)
+    if State.activeEngine == "V1" then State.v1Speed = n
+    elseif State.activeEngine == "V2" then State.v2Speed = n
+    else State.v3Speed = n end
+end
+
+-- Keybind listen
+local listeningForKey = false
+local listenConn = nil
+local function beginKeybindListen(displayBtn)
+    if listeningForKey then
+        listeningForKey = false
+        if listenConn then listenConn:Disconnect(); listenConn = nil end
+        displayBtn.Text = "Keybind: " .. toggleKey.Name
+        return
+    end
+    listeningForKey = true
+    displayBtn.Text = "..."
+    listenConn = UserInputService.InputBegan:Connect(function(input, gp)
+        if gp or not listeningForKey then return end
+        local ut = input.UserInputType
+        if ut ~= Enum.UserInputType.Keyboard
+           and ut ~= Enum.UserInputType.Gamepad1
+           and ut ~= Enum.UserInputType.Gamepad2 then
+            return
+        end
+        local newKey = input.KeyCode
+        if newKey == Enum.KeyCode.Unknown then return end
+        if newKey == Enum.KeyCode.Escape then
+            listeningForKey = false
+            displayBtn.Text = "Keybind: " .. toggleKey.Name
+            if listenConn then listenConn:Disconnect(); listenConn = nil end
+            return
+        end
+        toggleKey = newKey
+        displayBtn.Text = "Keybind: " .. newKey.Name
+        listeningForKey = false
+        if listenConn then listenConn:Disconnect(); listenConn = nil end
+        saveConfig()
+    end)
+end
+
+keybindBtnBody.MouseButton1Click:Connect(function()
+    beginKeybindListen(keybindBtnBody)
+end)
+
+-- Buttons
+activateBtn.MouseButton1Click:Connect(function()
+    setEngine(not State.on)
+    saveConfig()
+end)
+
+v1Select.MouseButton1Click:Connect(function()
+    State.activeEngine = "V1"
+    speedBox.Text = tostring(State.v1Speed)
+    if State.on then stopAllEngines(); setV1(true) end
+    updateUI(); saveConfig()
+end)
+v2Select.MouseButton1Click:Connect(function()
+    State.activeEngine = "V2"
+    speedBox.Text = tostring(State.v2Speed)
+    if State.on then stopAllEngines(); setV2(true) end
+    updateUI(); saveConfig()
+end)
+v3Select.MouseButton1Click:Connect(function()
+    State.activeEngine = "V3"
+    speedBox.Text = tostring(State.v3Speed)
+    if State.on then stopAllEngines(); setV3(true) end
+    updateUI(); saveConfig()
+end)
+
+speedBox.FocusLost:Connect(function()
+    local n = tonumber(speedBox.Text)
+    if not n then speedBox.Text = tostring(currentSpeed()); return end
+    n = math.max(0, n)
+    setCurrentSpeed(n)
+    speedBox.Text = tostring(n)
+    saveConfig()
+end)
+
+lockBtn.MouseButton1Click:Connect(function()
+    State.lockGui = not State.lockGui
+    updateUI(); saveConfig()
+end)
+
+settingsBtn.MouseButton1Click:Connect(function()
+    settingsFrame.Visible = not settingsFrame.Visible
+    speedBox.Text = tostring(currentSpeed())
+    updateUI()
+end)
+setCloseBtn.MouseButton1Click:Connect(function()
+    settingsFrame.Visible = false
+end)
+
+-- Global keybind
+UserInputService.InputBegan:Connect(function(input, gp)
+    if gp or listeningForKey then return end
+    local ut = input.UserInputType
+    if ut ~= Enum.UserInputType.Keyboard
+       and ut ~= Enum.UserInputType.Gamepad1
+       and ut ~= Enum.UserInputType.Gamepad2 then
+        return
+    end
+    if input.KeyCode == toggleKey then
+        setEngine(not State.on)
+        saveConfig()
+    end
+end)
+
+-- Drag
+local isDragging = false
+local dragInput, mousePos, framePos
+mainFrame.InputBegan:Connect(function(input, gameProcessed)
+    if gameProcessed then return end
+    if (input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch) and not State.lockGui then
+        isDragging = true
+        mousePos = input.Position
+        framePos = mainFrame.Position
+        input.Changed:Connect(function()
+            if input.UserInputState == Enum.UserInputState.End then
+                isDragging = false
+                local pos = mainFrame.Position
+                State.guiPos = {XScale = pos.X.Scale, XOffset = pos.X.Offset, YScale = pos.Y.Scale, YOffset = pos.Y.Offset}
+                saveConfig()
+            end
+        end)
+    end
+end)
+mainFrame.InputChanged:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch then
+        dragInput = input
+    end
+end)
+UserInputService.InputChanged:Connect(function(input)
+    if input == dragInput and isDragging then
+        local delta = input.Position - mousePos
+        mainFrame.Position = UDim2.new(framePos.X.Scale, framePos.X.Offset + delta.X, framePos.Y.Scale, framePos.Y.Offset + delta.Y)
+    end
+end)
+
+updateUI()
+if State.antiDie then setAntiDie(true) end

