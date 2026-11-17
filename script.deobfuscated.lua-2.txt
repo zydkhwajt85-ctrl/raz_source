@@ -1,0 +1,2719 @@
+local val = request
+local val2 = val
+
+if not val then
+  local httpRequest
+  httpRequest = http_request
+
+  local val3
+  val3 = httpRequest
+
+  if not httpRequest then
+
+    local val4
+    val4 = http and http.request
+
+    local val5
+    val5 = val4
+
+    if not val4 then
+
+      val5 = syn and syn.request
+    end
+
+    val3 = val5
+  end
+
+  val2 = val3
+end
+
+local val6 = val2
+
+local helper, helper2, helper3, decodeBase64, helper4, val7, safeCall, fetchData, safeCall2, safeCall3, safeCall4, helper5, iterate, helper6, helper7, waitLoop, val8, safeCall5, safeCall6, helper8, helper9, waitLoop2, helper10, helper11, val9, val10, band, bxor, bnot, rshift, lshift, rrotate, byte, char, sub, rep, concat, val11, helper12, val12, decodeBase642, safeCall7, starterGui, marketplaceService, tweenService, players, httpService, rbxAnalyticsService, getClientId, safeCall8, val13, val14, val15, val16, name, val17, val18, val19, val20, val21, val22, val23, val24, val25, val26, val27, val28, val29, val30, val31, iterate2, helper13, val32, helper14, gradientOverlay, uiGradient, discordButton, icon, closeButton, tutorialText, keyInputContainer, uiStroke, uiStroke2, keyInput, statusLabel, helpLabel, loadingDots, buttonContainer, premiumRow, uiStroke3, val33, val34, val35
+
+if not val6 then
+  warn("[NEOX AUTH] Critical Error: HTTP request functionality not available")
+  return
+else
+
+  local val36
+  val36 = getgenv and getgenv()
+
+  local g
+  g = val36
+
+  if not val36 then
+
+    g = _G or {}
+  end
+
+  val9 = g
+
+  if val9.__NEOX_LOADER_ACTIVE then
+    return
+  else
+    val9.__NEOX_LOADER_ACTIVE = true
+
+    val10 = {
+      HUB_NAME = "NEOX HUB", BASE_URL = "https://neoxsoftworks.eu", ICON_ID = "rbxthumb://type=Asset&id=80622869023191&w=150&h=150", GAMELIST_URL = "https://raw.githubusercontent.com/tylerdurden223/papi/main/GameList", KEY_FILE = "neoxkey.txt", HTTP_ATTEMPTS = 3, HARD_TIMEOUT = 600, ANIMATION_SPEED = 0.25, STRICT_ENVIRONMENT = false, NOTIFICATION_DURATION = { LOADING = 3, ERROR = 4, SUCCESS = 4 }, }
+
+    band = bit32.band
+    bxor = bit32.bxor
+    bnot = bit32.bnot
+    rshift = bit32.rshift
+    lshift = bit32.lshift
+    rrotate = bit32.rrotate
+    byte = string.byte
+    char = string.char
+    sub = string.sub
+    rep = string.rep
+    concat = table.concat
+
+    function helper(val37, val38)
+      local v93 = val38
+      local v94 = val37
+      local val39 = rshift(val37, 16)
+      local val40 = band(val37, 65535)
+      local val41 = rshift(val38, 16)
+      local val42 = band(val38, 65535)
+      return band(val40 * val42 + (band(val40 * val41 + val39 * val42, 65535)) * 65536, 4294967295)
+    end
+
+    function helper2(val43)
+      local val44 = 3144134277
+      local val45 = 1779033703
+      local v101 = val43
+      local val46 = 1013904242
+      local val47 = 528734635
+      local val48 = 2773480762
+      local val49 = 2600822924
+      local val50 = 1541459225
+      local val51 = 1359893119
+      local val52 = #val43
+      local val53 = val52 * 8
+
+      local val54 = val43 .. "\128" .. (rep("\0", (55 - val52) % 64)) .. "\0\0\0\0" .. (char(
+        (band((rshift(val53, 24)), 255)), (band((rshift(val53, 16)), 255)), (band((rshift(val53, 8)), 255)), band(val53, 255)
+      ))
+
+      local val55 = {}
+      local val56 = #val54
+
+      for i = 1, val56, 64 do
+        for j = 0, 15 do
+          local val57
+          val57 = i + j * 4
+
+          local val58
+          val58 = { byte(val54, val57, val57 + 3) }
+
+          val55[j + 1] = (lshift(val58[1], 24)) + (lshift(val58[2], 16)) + (lshift(val58[3], 8))
+            + val58[4]
+        end
+
+        for k = 17, 64 do
+          local val59
+          val59 = val55[k - 15]
+
+          local val60
+          val60 = val55[k - 2]
+
+          val55[k] = band(val55[k - 16]
+            + (bxor((rrotate(val59, 7)), (rrotate(val59, 18)), rshift(val59, 3))) + val55[k - 7]
+            + (bxor((rrotate(val60, 17)), (rrotate(val60, 19)), rshift(val60, 10))), 4294967295)
+        end
+
+        local val61
+        val61 = val45
+
+        local val62
+        val62 = val44
+
+        local val63
+        val63 = val46
+
+        local val64
+        val64 = val49
+
+        local val65
+        val65 = val47
+
+        local val66
+        val66 = val50
+
+        local val67
+        val67 = val48
+
+        local val68
+        val68 = val51
+
+        for m = 1, 64 do
+          local val69
+
+          val69 = band(val66 + (bxor((rrotate(val68, 6)), (rrotate(val68, 11)), rrotate(val68, 25)))
+            + (bxor((band(val68, val64)), band((bnot(val68)), val65))) + val11[m] + val55[m], 4294967295)
+
+          local val70
+          val70 = rrotate(val61, 2)
+
+          local val71
+          val71 = bxor(val70, (rrotate(val61, 13)), rrotate(val61, 22))
+
+          local val72
+          val72 = band(val61, val62)
+
+          local val73
+          val73 = band(val71 + (bxor(val72, (band(val61, val63)), band(val62, val63))), 4294967295)
+
+          val66 = val65
+
+          local val74
+          val74 = val64
+
+          val64 = val68
+          val65 = val74
+
+          local val75
+          val75 = val63
+
+          val68 = band(val67 + val69, 4294967295)
+          val63 = val62
+          val67 = val75
+          val62 = val61
+          val61 = band(val69 + val73, 4294967295)
+        end
+
+        val45 = band(val45 + val61, 4294967295)
+        val44 = band(val44 + val62, 4294967295)
+        val46 = band(val46 + val63, 4294967295)
+        val48 = band(val48 + val67, 4294967295)
+        val51 = band(val51 + val68, 4294967295)
+        val49 = band(val49 + val64, 4294967295)
+        val47 = band(val47 + val65, 4294967295)
+        val50 = band(val50 + val66, 4294967295)
+      end
+
+      local val76 = {}
+      local val77 = { val45, val44, val46, val48, val51, val49, val47, val50 }
+
+      for n = 1, 8 do
+        local val78
+        val78 = val77[n]
+
+        val76[n] = char(
+          (band((rshift(val78, 24)), 255)), (band((rshift(val78, 16)), 255)), (band((rshift(val78, 8)), 255)), band(val78, 255)
+        )
+      end
+
+      return concat(val76)
+    end
+
+    val11 = {
+      1116352408, 1899447441, 3049323471, 3921009573, 961987163, 1508970993, 2453635748, 2870763221, 3624381080, 310598401, 607225278, 1426881987, 1925078388, 2162078206, 2614888103, 3248222580, 3835390401, 4022224774, 264347078, 604807628, 770255983, 1249150122, 1555081692, 1996064986, 2554220882, 2821834349, 2952996808, 3210313671, 3336571891, 3584528711, 113926993, 338241895, 666307205, 773529912, 1294757372, 1396182291, 1695183700, 1986661051, 2177026350, 2456956037, 2730485921, 2820302411, 3259730800, 3345764771, 3516065817, 3600352804, 4094571909, 275423344, 430227734, 506948616, 659060556, 883997877, 958139571, 1322822218, 1537002063, 1747873779, 1955562222, 2024104815, 2227730452, 2361852424, 2428436474, 2756734187, 3204031479, 3329325298, }
+
+    local val79
+    val79 = helper2
+
+    local val80
+    val80 = helper
+
+    function helper12(val81)
+      local v140 = val81
+      local val82 = #val81
+      local val83 = 2166136261
+
+      for i6 = 1, val82 do
+
+        val83 = helper((bxor(val83, byte(val81, i6))), 16777619)
+      end
+
+      return string.format("%08x", val83)
+    end
+
+    val12 = {}
+
+    for i7 = 1, #"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/" do
+      val12[(byte("ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/", i7))] = i7
+        - 1
+    end
+
+    function helper3(val84, val85, val86)
+      local v144 = val86
+      local v145 = val84
+      local v146 = val85
+      local val87 = {}
+
+      for i8 = 0, 255 do
+        val87[i8] = i8
+      end
+
+      local val88 = #val85
+      local val89 = 0
+
+      for i9 = 0, 255 do
+        val89 = band(val89 + val87[i9] + (byte(val85, i9 % val88 + 1)), 255)
+
+        local val90
+        val90 = val87[i9]
+
+        val87[i9] = val87[val89]
+        val87[val89] = val90
+      end
+
+      local v151 = val86
+      local val91 = 0
+      local val92 = 0
+
+      for i10 = 1, val86 do
+        val92 = band(val92 + 1, 255)
+        val91 = band(val91 + val87[val92], 255)
+
+        local val93
+        val93 = val87[val92]
+
+        val87[val92] = val87[val91]
+        val87[val91] = val93
+      end
+
+      local val94 = {}
+      local count = 0
+      local val95 = #val84
+      local val96 = {}
+      local val97 = 0
+
+      for i11 = 1, val95 do
+        val92 = band(val92 + 1, 255)
+        val91 = band(val91 + val87[val92], 255)
+
+        local val98
+        val98 = val87[val92]
+
+        val87[val92] = val87[val91]
+        val87[val91] = val98
+
+        val97 = val97 + 1
+        val96[val97] = char(bxor((byte(val84, i11)), val87[(band(val87[val92] + val87[val91], 255))]))
+
+        if val97 >= 4096 then
+          count = count + 1
+          val94[count] = concat(val96)
+          val96 = {}
+          val97 = 0
+
+          if count % 12 == 0 then
+            task.wait()
+          end
+        end
+      end
+
+      if val97 > 0 then
+        local val99
+        val99 = count + 1
+        val94[val99] = concat(val96)
+      end
+
+      return concat(val94)
+    end
+
+    function decodeBase64(val100)
+      local v161 = val100
+
+      if (type(val100)) ~= "string" then
+        return nil
+      else
+        local decoded
+        decoded = string.gsub(val100, "%s", "")
+
+        if #decoded % 2 ~= 0 then
+          return nil
+        else
+          local val101
+          val101 = {}
+
+          local val102
+          val102 = 0
+
+          for i12 = 1, #decoded, 2 do
+            local numVal
+            numVal = tonumber((sub(decoded, i12, i12 + 1)), 16)
+
+            if not numVal then
+              return nil
+            else
+              val102 = val102 + 1
+              val101[val102] = char(numVal)
+            end
+          end
+
+          return concat(val101)
+        end
+      end
+    end
+
+    function decodeBase642(val103)
+      local decoded2 = string.gsub(val103, "[^A-Za-z0-9%+/=]", "")
+      local val104 = {}
+      local count2 = 0
+      local val105 = #decoded2
+      local val106 = 0
+      local val107 = 0
+
+      for i13 = 1, val105 do
+        local val108
+        val108 = byte(decoded2, i13)
+
+        if val108 == 61 then
+          break
+        else
+          local val109
+          val109 = val12[val108]
+
+          if val109 then
+            val106 = val106 * 64 + val109
+            val107 = val107 + 6
+
+            if val107 >= 8 then
+              val107 = val107 - 8
+
+              local floorVal
+              floorVal = math.floor(val106 / 2 ^ val107)
+
+              val106 = val106 - floorVal * 2 ^ val107
+              count2 = count2 + 1
+              val104[count2] = char(floorVal)
+            end
+          end
+
+          if i13 % 60000 == 0 then
+            task.wait()
+          end
+        end
+      end
+
+      return concat(val104)
+    end
+
+    local val110
+    val110 = helper3
+
+    function helper4(val111, val112)
+      local v175 = val111
+      local v176 = val112
+      local val113 = math.min(#val111, #val112)
+      local val114 = {}
+
+      for i14 = 1, val113 do
+        val114[i14] = char(bxor((byte(val111, i14)), byte(val112, i14)))
+      end
+
+      return concat(val114)
+    end
+
+    local val115
+    val115 = decodeBase64
+
+    local val116
+    val116 = helper4
+
+    function safeCall7(val117, val118)
+      local v181 = val118
+      local val119, success = pcall(game.GetService, game, val117)
+
+      if val119 and success then
+        return success
+      else
+        return val118
+      end
+    end
+
+    starterGui = (safeCall7("StarterGui"))
+    marketplaceService = (safeCall7("MarketplaceService"))
+    tweenService = (safeCall7("TweenService"))
+
+    local runService
+    runService = safeCall7("RunService")
+
+    players = (safeCall7("Players"))
+    httpService = (safeCall7("HttpService"))
+    rbxAnalyticsService = (safeCall7("RbxAnalyticsService"))
+
+    local userInputService
+    userInputService = safeCall7("UserInputService")
+
+    getClientId = nil
+
+    pcall(function()
+      local v185 = rbxAnalyticsService
+      getClientId = (rbxAnalyticsService:GetClientId())
+      return
+    end)
+
+    if not getClientId or getClientId == "" then
+      val9.__NEOX_LOADER_ACTIVE = nil
+      warn("[NEOX AUTH] Critical Error: Failed to retrieve hardware identifier")
+      return
+    else
+      local val120
+
+      do
+        function safeCall8(val121, val122)
+          local val123 = val121
+          local val124 = val122
+
+          local success2 = { pcall(function() return Enum[val123][val124] end) }
+          local val125 = success2[2]
+
+          if success2[1] then
+            return val125
+          else
+            return nil
+          end
+        end
+
+        local 
+
+        local function helper15(val126, val127)
+          local v190 = val127
+          local val128 = safeCall8("Font", val126)
+          local val129 = val128
+
+          if not val128 then
+
+            val129 = (safeCall8("Font", val127)) or safeCall8("Font", "SourceSans")
+          end
+
+          return val129
+        end
+
+        val120 = {
+          Bold = (helper15("GothamBold", "SourceSansBold")), Regular = (helper15("Gotham", "SourceSans")), Medium = (helper15("GothamMedium", "SourceSansSemibold")), Mono = (helper15("Code", "SourceSans")), }
+
+        task.spawn(function()
+          pcall(function()
+            return val6({
+              Url = val10.BASE_URL .. "/api/increment-count", Method = "POST", Timeout = 5, })
+          end)
+
+          return
+        end)
+
+        val13 = {
+          Panel = (Color3.fromRGB(15, 16, 20)), Edge = (Color3.fromRGB(35, 38, 46)), Rule = (Color3.fromRGB(26, 28, 35)), Track = (Color3.fromRGB(32, 35, 43)), Tile = (Color3.fromRGB(23, 25, 31)), Primary = (Color3.fromRGB(238, 241, 246)), Secondary = (Color3.fromRGB(134, 141, 156)), Muted = (Color3.fromRGB(64, 69, 81)), Neutral = (Color3.fromRGB(232, 236, 242)), Error = (Color3.fromRGB(240, 92, 92)), Success = (Color3.fromRGB(92, 208, 138)), }
+
+        val14 = {
+          PRIMARY = (Color3.fromRGB(121, 56, 234)), PRIMARY_HOVER = (Color3.fromRGB(141, 76, 254)), SECONDARY = (Color3.fromRGB(50, 34, 76)), SECONDARY_HOVER = (Color3.fromRGB(70, 54, 96)), BACKGROUND = (Color3.fromRGB(26, 17, 47)), INPUT_BG = (Color3.fromRGB(21, 15, 42)), BORDER = (Color3.fromRGB(59, 42, 89)), SUCCESS = (Color3.fromRGB(50, 200, 100)), ERROR = (Color3.fromRGB(255, 100, 100)), WARNING = (Color3.fromRGB(255, 150, 50)), INFO = (Color3.fromRGB(180, 180, 190)), TEXT = (Color3.fromRGB(255, 255, 255)), TEXT_SECONDARY = (Color3.fromRGB(123, 101, 188)), DISCORD = (Color3.fromRGB(140, 116, 213)), HEADER_LINE = (Color3.fromRGB(27, 42, 53)), PREMIUM = (Color3.fromRGB(255, 200, 50)), PREMIUM_HOVER = (Color3.fromRGB(255, 220, 80)), }
+
+        function safeCall(val130, val131, val132)
+          local v196 = val130
+          local v197 = val131
+          local v198 = val132
+
+          if not val130 or not tweenService then
+            return
+          else
+            pcall(function()
+              local v199 = tweenService
+
+              ;(tweenService:Create(val130, val131, val132)):Play()
+              return
+            end)
+
+            return
+          end
+        end
+
+        local 
+      end
+
+      local function createElement(val133, val134)
+        local v200 = val134
+        local val135, success3 = pcall(Instance.new, val133)
+
+        local parent
+
+        if not val135 or not success3 then
+          return nil
+        else
+          parent = val134.Parent
+          val134.Parent = nil
+
+          for key, value in pairs(val134) do
+            local val136 = key
+            local val137 = value
+
+            pcall(function()
+              success3[val136] = val137
+              return
+            end)
+          end
+
+          if parent then
+            pcall(function()
+              success3.Parent = parent
+              return
+            end)
+          end
+
+          return success3
+        end
+      end
+
+      do
+        local val138
+        val138 = safeCall
+
+        function safeCall2(val139, val140, val141)
+          local v208 = val139
+          local v209 = val140
+          local v210 = val141
+
+          if not val139 then
+            return
+          else
+            pcall(function()
+              val139[val140] = val141
+              return
+            end)
+
+            return
+          end
+        end
+
+        function fetchData(val142)
+          local v211 = val142
+          local httpATTEMPTS = val10.HTTP_ATTEMPTS
+
+          for i15 = 1, httpATTEMPTS do
+            local success4, val143
+
+            val143, success4 = pcall(function()
+
+              return game:HttpGet(val142, true)
+            end)
+
+            local val144
+            val144 = val143
+
+            if val143 then
+
+              val144 = (type(success4)) == "string" and #success4 > 0
+            end
+
+            if val144 then
+              return success4
+            else
+              local success5, val145
+              val145, success5 = pcall(function() return val6({ Url = val142, Method = "GET" }) end)
+
+              if val145 and (type(success5)) == "table" then
+
+                local body
+                body = success5.Body or success5.body
+
+                local val146
+                val146 = body
+
+                if (type(body)) == "string" and #body > 0 then
+                  return body
+                else
+                  ::L6694698::
+
+                  if i15 < val10.HTTP_ATTEMPTS then
+                    task.wait(0.5 * i15)
+                  end
+                end
+              else
+                goto L6694698
+              end
+            end
+          end
+
+          return nil
+        end
+
+        local val147
+        val147 = safeCall2
+
+        local val148
+        val148 = fetchData
+
+        local 
+      end
+
+      local function safeCall9(val149)
+        local v226 = val149
+
+        pcall(function()
+
+          if syn and syn.protect_gui then
+            syn.protect_gui(val149)
+          else
+            if protect_gui then
+              protect_gui(val149)
+            end
+          end
+
+          return
+        end)
+
+        local val150 = {}
+
+        if gethui then
+          table.insert(val150, function() return gethui() end)
+        end
+
+        table.insert(val150, function() return safeCall7("CoreGui") end)
+
+        table.insert(val150, function()
+          local v231 = players
+          local localPlayer = players and players.LocalPlayer
+          local v232 = localPlayer
+          local v233 = localPlayer
+
+          return localPlayer and localPlayer:FindFirstChildOfClass("PlayerGui")
+        end)
+
+        for index, value2 in ipairs(val150) do
+          local val151
+          local success6
+          val151, success6 = pcall(value2)
+
+          if val151 and success6 then
+
+            if (pcall(function()
+              val149.Parent = success6
+              return
+            end)) and val149.Parent then
+              return true
+            else
+              ::L7654056::
+            end
+          else
+            goto L7654056
+          end
+        end
+
+        return false
+      end
+
+      do
+
+        val7 = loadstring or load
+
+        local val152
+        val152 = val7
+
+        function safeCall3(val153, val154, val155)
+          local v237 = val153
+          local v238 = val154
+          local v239 = val155
+
+          if not starterGui then
+            return
+          else
+            pcall(function()
+              local v240 = starterGui
+
+              starterGui:SetCore("SendNotification", {
+                Title = val153, Text = val154, Duration = val155 or 3, Icon = val10.ICON_ID, })
+
+              return
+            end)
+
+            return
+          end
+        end
+
+        function safeCall4(val156)
+          local v241 = val156
+local val157, val158
+
+          if (type(val156)) ~= "function" then
+            return false
+          else
+            if iscclosure then
+              local success7
+              success7 = { pcall(iscclosure, val156) }
+
+              local val159
+              val159 = success7[2]
+
+              if success7[1] then
+                return val159 == true
+              else
+                ::L8160880::
+
+                if is_synapse_function then
+                  local success8, val160
+                  val160, success8 = pcall(is_synapse_function, val156)
+
+                  if val160 and success8 == true then
+                    return true
+                  else
+                    ::L2651902::
+                    val157 = debug
+                    val158 = val157
+
+                    if val157 and debug.info then
+                      local success9, val161
+                      val161, success9 = pcall(debug.info, val156, "s")
+
+                      if val161 and (type(success9)) == "string" then
+
+                        return success9 == "[C]" or success9 == ""
+                      else
+                        ::L12113676::
+                        return true
+                      end
+                    else
+                      goto L12113676
+                    end
+                  end
+                else
+                  goto L2651902
+                end
+              end
+            else
+              goto L8160880
+            end
+          end
+        end
+
+        local 
+
+        local function safeCall10(val162, val163)
+          local v254 = val162
+          local v255 = val163
+
+          local val164 = (type(val162)) ~= "string" or not val7
+
+          if val164 then
+            return false, "no compiler available"
+          else
+            local success10
+            success10 = { pcall(val7, val162, val163) }
+
+            local val165
+            val165 = success10[2]
+
+            if not success10[1] then
+              return false, "compile crashed: " .. (tostring(val165))
+            else
+              if (type(val165)) ~= "function" then
+                return false, "syntax error: " .. (tostring(val165))
+              else
+                local success11
+                success11 = { pcall(val165) }
+
+                local val166
+                val166 = success11[2]
+
+                if not success11[1] then
+                  return false, "runtime error: " .. (tostring(val166))
+                else
+                  return true, nil
+                end
+              end
+            end
+          end
+        end
+
+        local val167
+        val167 = safeCall3
+
+        local val168
+        val168 = safeCall4
+
+        val15 = {}
+        val16 = false
+        local 
+
+        local function helper16(val169, val170)
+          local v263 = val169
+          local v264 = val170
+
+          if val170 == nil then
+            return
+          else
+            if not (safeCall4(val170)) then
+              val15[val169] = "hooked"
+              val16 = true
+            end
+
+            return
+          end
+        end
+
+        helper16("request", val6)
+        helper16("loadstring", val7)
+        helper16("writefile", writefile)
+        helper16("readfile", readfile)
+        helper16("isfile", isfile)
+        helper16("setclipboard", setclipboard)
+        helper16("httpget", game.HttpGet)
+
+        name = "this game"
+
+        pcall(function()
+          local v265 = marketplaceService
+          local getProductInfo = marketplaceService:GetProductInfo(0)
+          local val171 = getProductInfo
+
+          if getProductInfo then
+
+            val171 = (type(getProductInfo.Name)) == "string" and #getProductInfo.Name > 0
+          end
+
+          if val171 then
+            name = getProductInfo.Name
+          end
+
+          return
+        end)
+
+        if val16 then
+          task.spawn(function()
+            pcall(function()
+              local v269 = httpService
+
+              val6({
+                Url = val10.BASE_URL .. "/api/report-tamper", Method = "POST", Headers = { ["Content-Type"] = "application/json" }, Body = (httpService:JSONEncode({
+                  hwid = getClientId, game_name = name, flags = val15, })), })
+
+              return
+            end)
+
+            return
+          end)
+        end
+
+        val17 = (createElement("ScreenGui", {
+          Name = "NX_" .. (tostring(math.random(100000, 999999))), IgnoreGuiInset = true, ScreenInsets = (safeCall8("ScreenInsets", "DeviceSafeInsets")), ResetOnSpawn = false, ZIndexBehavior = (safeCall8("ZIndexBehavior", "Sibling")), DisplayOrder = 999999, }))
+
+        if not val17 then
+          val9.__NEOX_LOADER_ACTIVE = nil
+          warn("[NEOX] Unable to create interface")
+          return
+        else
+          if not (safeCall9(val17)) then
+            pcall(function()
+              local v270 = val17
+              val17:Destroy()
+              return
+            end)
+
+            val9.__NEOX_LOADER_ACTIVE = nil
+            warn("[NEOX] Unable to mount interface")
+            return
+          else
+            local val172, val173
+
+            do
+              val18 = (createElement("Frame", {
+                Name = "Panel", AnchorPoint = (Vector2.new(0.5, 0.5)), BackgroundColor3 = val13.Panel, BackgroundTransparency = 1, BorderSizePixel = 0, ClipsDescendants = true, Position = (UDim2.new(0.5, 0, 0.5, 14)), Size = (UDim2.new(0, 460, 0, 190)), Parent = val17, }))
+
+              val19 = (createElement("UIScale", { Scale = 1, Parent = val18 }))
+              createElement("UICorner", { CornerRadius = (UDim.new(0, 14)), Parent = val18 })
+
+              local val174
+              val174 = val13
+
+              local edge
+              edge = val13.Edge
+
+              local val175
+              val175 = safeCall8
+
+              local applyStrokeMode
+              applyStrokeMode = safeCall8("ApplyStrokeMode", "Border")
+
+              local val176
+              val176 = val18
+
+              createElement("UIStroke", {
+                Color = edge, Thickness = 1, Transparency = 1, ApplyStrokeMode = applyStrokeMode, Parent = val18, })
+            end
+
+            do
+
+              local color
+              color = Color3.fromRGB(255, 255, 255)
+
+              local udim
+              udim = UDim2.new(1, 0, 1, 0)
+
+              local val177
+              val177 = val18
+
+              createElement("ImageLabel", {
+                Name = "Texture", BackgroundTransparency = 1, BorderSizePixel = 0, Image = "http://www.roblox.com/asset/?id=91961368561481", ImageColor3 = color, ImageTransparency = 1, Size = udim, ZIndex = 1, Parent = val18, })
+            end
+
+            do
+              do
+                do
+                  do
+                    do
+                      do
+                        do
+                          do
+                            do
+                              do
+                                do
+                                  do
+                                    do
+                                      val172 = createElement("ImageLabel", {
+                                        Name = "Tile", BackgroundColor3 = val13.Tile, BackgroundTransparency = 1, BorderSizePixel = 0, Image = val10.ICON_ID, ImageTransparency = 1, Position = (UDim2.new(0, 26, 0, 24)), Size = (UDim2.new(0, 40, 0, 40)), ZIndex = 3, Parent = val18, })
+
+                                      createElement("UICorner", {
+                                        CornerRadius = (UDim.new(0, 10)), Parent = val172, })
+
+                                      local val178
+                                      val178 = val13
+
+                                      createElement("UIStroke", {
+                                        Color = val13.Edge, Thickness = 1, Transparency = 1, Parent = val172, })
+
+                                      local bold
+                                      bold = val120.Bold
+
+                                      local val179
+                                      val179 = val13
+
+                                      local primary
+                                      primary = val13.Primary
+
+                                      local val180
+                                      val180 = safeCall8
+
+                                      local textXAlignment
+                                      textXAlignment = safeCall8("TextXAlignment", "Left")
+
+                                      local udim2
+                                      udim2 = UDim2.new(0, 78, 0, 25)
+
+                                      local udim3
+                                      udim3 = UDim2.new(0, 260, 0, 18)
+
+                                      local val181
+                                      val181 = val18
+
+                                      createElement("TextLabel", {
+                                        Name = "Title", BackgroundTransparency = 1, BorderSizePixel = 0, Font = bold, Text = "NEOX HUB", TextColor3 = primary, TextSize = 17, TextTransparency = 1, TextXAlignment = textXAlignment, Position = udim2, Size = udim3, ZIndex = 3, Parent = val18, })
+                                    end
+                                  end
+                                end
+                              end
+                            end
+                          end
+                        end
+                      end
+                    end
+                  end
+                end
+              end
+            end
+
+            do
+              local regular
+              regular = val120.Regular
+
+              local val182
+              val182 = val13
+
+              local secondary
+              secondary = val13.Secondary
+
+              local val183
+              val183 = safeCall8
+
+              local textXAlignment2
+              textXAlignment2 = safeCall8("TextXAlignment", "Left")
+
+              local udim4
+              udim4 = UDim2.new(0, 78, 0, 45)
+
+              local udim5
+              udim5 = UDim2.new(0, 300, 0, 16)
+
+              local val184
+              val184 = val18
+
+              createElement("TextLabel", {
+                Name = "Tagline", BackgroundTransparency = 1, BorderSizePixel = 0, Font = regular, Text = "Shaping the future of scripting", TextColor3 = secondary, TextSize = 11, TextTransparency = 1, TextXAlignment = textXAlignment2, Position = udim4, Size = udim5, ZIndex = 3, Parent = val18, })
+            end
+
+            do
+              local val185
+              val185 = val13
+
+              local rule
+              rule = val13.Rule
+
+              local udim6
+              udim6 = UDim2.new(0, 0, 0, 88)
+
+              local udim7
+              udim7 = UDim2.new(1, 0, 0, 1)
+
+              local val186
+              val186 = val18
+
+              createElement("Frame", {
+                Name = "Rule", BackgroundColor3 = rule, BackgroundTransparency = 1, BorderSizePixel = 0, Position = udim6, Size = udim7, ZIndex = 3, Parent = val18, })
+            end
+
+            do
+              val20 = (createElement("Frame", {
+                Name = "Dot", BackgroundColor3 = val13.Neutral, BackgroundTransparency = 1, BorderSizePixel = 0, Position = (UDim2.new(0, 26, 0, 114)), Size = (UDim2.new(0, 5, 0, 5)), ZIndex = 3, Parent = val18, }))
+
+              createElement("UICorner", { CornerRadius = (UDim.new(1, 0)), Parent = val20 })
+
+              val21 = (createElement("TextLabel", {
+                Name = "Status", BackgroundTransparency = 1, BorderSizePixel = 0, Font = val120.Regular, Text = "Initializing", TextColor3 = val13.Secondary, TextSize = 12, TextTransparency = 1, TextTruncate = (safeCall8("TextTruncate", "AtEnd")), TextXAlignment = (safeCall8("TextXAlignment", "Left")), Position = (UDim2.new(0, 40, 0, 107)), Size = (UDim2.new(1, -120, 0, 18)), ZIndex = 3, Parent = val18, }))
+
+              val22 = (createElement("TextLabel", {
+                Name = "Percent", AnchorPoint = (Vector2.new(1, 0)), BackgroundTransparency = 1, BorderSizePixel = 0, Font = val120.Mono, Text = "00", TextColor3 = val13.Primary, TextSize = 12, TextTransparency = 1, TextXAlignment = (safeCall8("TextXAlignment", "Right")), Position = (UDim2.new(1, -26, 0, 107)), Size = (UDim2.new(0, 60, 0, 18)), ZIndex = 3, Parent = val18, }))
+
+              val173 = createElement("Frame", {
+                Name = "Track", BackgroundColor3 = val13.Track, BackgroundTransparency = 1, BorderSizePixel = 0, ClipsDescendants = true, Position = (UDim2.new(0, 26, 0, 138)), Size = (UDim2.new(1, -52, 0, 2)), ZIndex = 3, Parent = val18, })
+
+              createElement("UICorner", { CornerRadius = (UDim.new(1, 0)), Parent = val173 })
+
+              val23 = (createElement("Frame", {
+                Name = "Fill", BackgroundColor3 = val13.Neutral, BackgroundTransparency = 1, BorderSizePixel = 0, Size = (UDim2.new(0, 0, 1, 0)), ZIndex = 4, Parent = val173, }))
+
+              createElement("UICorner", { CornerRadius = (UDim.new(1, 0)), Parent = val23 })
+
+              val24 = (createElement("UIGradient", {
+                Transparency = (NumberSequence.new({
+                  (NumberSequenceKeypoint.new(0, 0.35)), (NumberSequenceKeypoint.new(0.45, 0)), (NumberSequenceKeypoint.new(0.55, 0)), NumberSequenceKeypoint.new(1, 0.35), })), Offset = (Vector2.new(-1, 0)), Parent = val23, }))
+
+              local medium
+              medium = val120.Medium
+
+              local val187
+              val187 = val13
+
+              local muted
+              muted = val13.Muted
+
+              local val188
+              val188 = safeCall8
+
+              local textXAlignment3
+              textXAlignment3 = safeCall8("TextXAlignment", "Center")
+
+              local udim8
+              udim8 = UDim2.new(0, 26, 0, 156)
+
+              local udim9
+              udim9 = UDim2.new(1, -52, 0, 12)
+
+              local val189
+              val189 = val18
+
+              createElement("TextLabel", {
+                Name = "Footer", BackgroundTransparency = 1, BorderSizePixel = 0, Font = medium, Text = "N E O X   S O F T W O R K S", TextColor3 = muted, TextSize = 9, TextTransparency = 1, TextXAlignment = textXAlignment3, Position = udim8, Size = udim9, ZIndex = 3, Parent = val18, })
+            end
+
+            do
+              val25 = {}
+              local 
+
+              local function helper17(val192, val190, val191, val193)
+                local v289 = val190
+                local v290 = val193
+                local v291 = val191
+                local v292 = val192
+
+                if val192 then
+                  table.insert(val25, {
+                    Object = val192, Property = val190, Shown = val191, Order = val193, })
+                end
+
+                return
+              end
+
+              helper17(val18, "BackgroundTransparency", 0, 0)
+              helper17(val172, "BackgroundTransparency", 0, 1)
+              helper17(val172, "ImageTransparency", 0, 1)
+              helper17(val20, "BackgroundTransparency", 0, 4)
+              helper17(val21, "TextTransparency", 0, 4)
+              helper17(val22, "TextTransparency", 0, 4)
+              helper17(val173, "BackgroundTransparency", 0, 5)
+              helper17(val23, "BackgroundTransparency", 0, 5)
+
+              function helper5()
+
+                if not val19 then
+                  return
+                else
+
+                  local currentCamera
+                  currentCamera = workspace and workspace.CurrentCamera
+
+                  local val194
+                  val194 = currentCamera
+
+                  local viewportSize
+                  viewportSize = currentCamera and currentCamera.ViewportSize
+
+                  local val195
+                  val195 = viewportSize
+
+                  local vector
+                  vector = viewportSize or Vector2.new(1280, 720)
+
+                  if vector.X <= 0 or vector.Y <= 0 then
+                    return
+                  else
+                    local val196
+                    val196 = math.min(vector.X / 520, vector.Y / 300)
+
+                    val19.Scale = math.clamp(val196, 0.5, 1)
+                    return
+                  end
+                end
+              end
+            end
+
+            do
+              val26 = false
+              val27 = false
+              val28 = 0
+              val29 = 0
+              val30 = {}
+
+              local val197
+              val197 = helper5
+
+              pcall(helper5)
+
+              pcall(function()
+                local currentCamera2 = workspace.CurrentCamera
+
+                if currentCamera2 then
+                  local viewportSize2
+                  viewportSize2 = currentCamera2:GetPropertyChangedSignal("ViewportSize")
+                  table.insert(val30, viewportSize2:Connect(helper5))
+                end
+
+                local currentCamera3 = workspace:GetPropertyChangedSignal("CurrentCamera")
+
+                table.insert(val30, currentCamera3:Connect(function()
+                  pcall(helper5)
+                  return
+                end))
+
+                return
+              end)
+
+              function iterate()
+                if val27 then
+                  return
+                else
+                  val27 = true
+                  val26 = true
+
+                  for index2, value3 in ipairs(val30) do
+                  end
+
+                  pcall(function()
+                    local v301 = val17
+                    val17:Destroy()
+                    return
+                  end)
+
+                  if val31 then
+                    pcall(function()
+
+                      val31:Destroy()
+                      return
+                    end)
+                  end
+
+                  val9.__NEOX_LOADER_ACTIVE = nil
+                  return
+                end
+              end
+
+              val31 = nil
+
+              local val198
+              val198 = iterate
+            end
+
+            do
+              task.delay(val10.HARD_TIMEOUT, iterate)
+
+              function helper6(val199)
+                val29 = (math.clamp(val199, 0, 100))
+                return
+              end
+
+              function helper7(val200)
+                local v303 = val200
+                local val201 = val26
+                local val202 = val201
+
+                if not val201 then
+
+                  val202 = not val21 or val21.Text == val200
+                end
+
+                if val202 then
+                  return
+                else
+                  safeCall(val21, (TweenInfo.new(0.12)), { TextTransparency = 1 })
+
+                  task.delay(0.13, function()
+                    if val26 then
+                      return
+                    else
+                      safeCall2(val21, "Text", val200)
+                      safeCall(val21, (TweenInfo.new(0.2)), { TextTransparency = 0 })
+                      return
+                    end
+                  end)
+
+                  return
+                end
+              end
+
+              function iterate2(val203)
+                local v308 = val203
+
+                for index3, value4 in ipairs(val25) do
+                  local val204
+                  val204 = {}
+
+                  local property
+                  property = value4.Property
+
+                  local shown
+                  shown = val203 and value4.Shown
+
+                  local val205
+                  val205 = property
+
+                  val204[property] = shown or 1
+
+                  local new
+                  new = TweenInfo.new
+
+                  local val206
+                  val206 = val203 and 0.4 or 0.28
+
+                  local quart
+                  quart = Enum.EasingStyle.Quart
+
+                  local out
+                  out = Enum.EasingDirection.Out
+
+                  local val207
+                  val207 = new(val206, quart, out, 0, false, val203 and value4.Order * 0.045 or 0)
+
+                  safeCall(value4.Object, val207, val204)
+                end
+
+                return
+              end
+
+              function helper13(val208)
+                local v316 = val208
+
+                safeCall(val23, (TweenInfo.new(0.3)), { BackgroundColor3 = val208 })
+                safeCall(val20, (TweenInfo.new(0.3)), { BackgroundColor3 = val208 })
+
+                return
+              end
+
+              local val209
+              val209 = helper7
+
+              local val210
+              val210 = helper6
+
+              task.spawn(function()
+
+                while true do
+                  local val211
+                  val211 = not val26
+
+                  local parent2
+                  parent2 = val211
+
+                  if val211 then
+                    local val212
+                    val212 = val24
+
+                    parent2 = val24 and val24.Parent
+                  end
+
+                  if parent2 then
+                    safeCall2(val24, "Offset", Vector2.new(-1, 0))
+
+                    safeCall(
+                      val24, (TweenInfo.new(1.6, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut)), { Offset = (Vector2.new(1, 0)) }
+                    )
+
+                    task.wait(2.4)
+                  else
+                    break
+                  end
+                end
+
+                return
+              end)
+
+              local renderStepped
+              renderStepped = runService
+
+              if runService then
+
+                renderStepped = runService.RenderStepped or runService.Heartbeat
+              end
+
+              val32 = renderStepped
+            end
+
+            do
+              local val213
+              val213 = nil
+
+              if val32 then
+                local success12, val214
+
+                val214, success12 = pcall(function()
+                  local v325 = val32
+
+                  return val32:Connect(function(p44)
+                    local v326 = p44
+
+                    if val27 then
+                      return
+                    else
+                      val28 = val28 + (val29 - val28) * (math.min((p44 or 0.016) * 7, 1))
+
+                      if (math.abs(val29 - val28)) < 0.15 then
+                        val28 = val29
+                      end
+
+                      safeCall2(val23, "Size", UDim2.new(val28 / 100, 0, 1, 0))
+                      safeCall2(val22, "Text", string.format("%02d", math.floor(val28 + 0.5)))
+
+                      return
+                    end
+                  end)
+                end)
+
+                if val214 and success12 then
+                  val213 = success12
+                  table.insert(val30, success12)
+                end
+              end
+
+              if not val213 then
+                task.spawn(function()
+                  while not val27 do
+                    val28 = val28 + (val29 - val28) * 0.2
+
+                    if (math.abs(val29 - val28)) < 0.15 then
+                      val28 = val29
+                    end
+
+                    safeCall2(val23, "Size", UDim2.new(val28 / 100, 0, 1, 0))
+                    safeCall2(val22, "Text", string.format("%02d", math.floor(val28 + 0.5)))
+
+                    task.wait(0.03)
+                  end
+
+                  return
+                end)
+              end
+
+              function waitLoop()
+                if val26 then
+                  return
+                else
+                  val26 = true
+                  iterate2(false)
+
+                  safeCall(
+                    val18, (TweenInfo.new(0.35, Enum.EasingStyle.Quart, Enum.EasingDirection.In)), { Position = (UDim2.new(0.5, 0, 0.5, 10)) }
+                  )
+
+                  task.wait(0.45)
+
+                  pcall(function()
+                    local v327 = val17
+                    val17:Destroy()
+                    return
+                  end)
+
+                  return
+                end
+              end
+
+              local val215
+              val215 = waitLoop
+
+              local 
+
+              local function waitLoop3(val216)
+                local v329 = val216
+                helper13(val13.Error)
+                helper7(val216)
+                helper6(100)
+                task.wait(2)
+                waitLoop()
+                iterate()
+                safeCall3(val10.HUB_NAME .. " - ERROR", val216, val10.NOTIFICATION_DURATION.ERROR)
+                return
+              end
+
+              helper7("Initializing NEOX HUB")
+              helper6(10)
+
+              local val217
+              val217 = fetchData(val10.GAMELIST_URL)
+
+              if not val217 then
+                waitLoop3("Unable to reach the server")
+                return
+              else
+                helper7("Loading game database")
+                helper6(32)
+
+                if not (safeCall10(val217, "=NEOXGAMELIST")) then
+                  waitLoop3("Game database failed to load")
+                  return
+                else
+                  helper7("Verifying compatibility")
+                  helper6(54)
+
+                  local games
+                  games = getgenv and (getgenv()).Games
+
+                  local games2
+                  games2 = games
+
+                  if not games then
+
+                    games2 = val9.Games or _G.Games
+                  end
+
+                  val8 = (type(games2)) == "table" and games2[0] or nil
+
+                  local val218
+                  val218 = val8
+
+                  if (type(val8)) ~= "string" or #val8 == 0 then
+                    helper13(val13.Error)
+                    helper7("Unsupported game: " .. name)
+                    helper6(100)
+                    task.wait(2.2)
+                    helper7("Request this game on our Discord")
+                    task.wait(2.8)
+                    waitLoop()
+                    iterate()
+
+                    safeCall3(
+                      val10.HUB_NAME .. " - INFO", "You Can Request Script For This Game On Our Discord Server", val10.NOTIFICATION_DURATION.ERROR
+                    )
+
+                    return
+                  else
+                    helper7(name)
+                    helper6(70)
+                    task.wait(0.7)
+                    helper7("Waiting for authentication")
+                    helper6(75)
+                    task.wait(0.4)
+                    waitLoop()
+
+                    val31 = (createElement("ScreenGui", {
+                      Name = "NXK_" .. (tostring(math.random(100000, 999999))), IgnoreGuiInset = true, ResetOnSpawn = false, ZIndexBehavior = (safeCall8("ZIndexBehavior", "Sibling")), DisplayOrder = 999999, }))
+
+                    if not val31 or not (safeCall9(val31)) then
+                      iterate()
+                      warn("[NEOX] Unable to mount authentication interface")
+                      return
+                    else
+                      local mainFrame, header, getKeyButton, verifyButton, buyButton
+
+                      function helper14(val219, val220)
+                        local v332 = tweenService
+
+                        return tweenService:Create(val219, (TweenInfo.new(
+                          val10.ANIMATION_SPEED, Enum.EasingStyle.Quad, Enum.EasingDirection.Out
+                        )), val220)
+                      end
+
+                      mainFrame = Instance.new("Frame")
+                      mainFrame.Name = "MainFrame"
+                      mainFrame.Size = UDim2.new(0, 370, 0, 235)
+                      mainFrame.Position = UDim2.new(0.5, 0, 0.5, 0)
+                      mainFrame.AnchorPoint = Vector2.new(0.5, 0.5)
+                      mainFrame.BackgroundColor3 = val14.BACKGROUND
+                      mainFrame.BorderSizePixel = 0
+                      mainFrame.Active = true
+                      mainFrame.Draggable = true
+                      mainFrame.ClipsDescendants = true
+
+                      do
+                        mainFrame.Parent = val31
+
+                        local uiCorner
+                        uiCorner = Instance.new("UICorner")
+                        uiCorner.CornerRadius = UDim.new(0, 10)
+                        uiCorner.Parent = mainFrame
+
+                        gradientOverlay = (Instance.new("Frame"))
+                        gradientOverlay.Name = "GradientOverlay"
+                        gradientOverlay.Size = UDim2.new(1, 0, 1, 0)
+                        gradientOverlay.BackgroundTransparency = 0.95
+                        gradientOverlay.BorderSizePixel = 0
+                        gradientOverlay.ZIndex = 0
+                        gradientOverlay.Parent = mainFrame
+                      end
+
+                      do
+                        uiGradient = (Instance.new("UIGradient"))
+                        uiGradient.Rotation = 45
+
+                        uiGradient.Color = ColorSequence.new({
+                          (ColorSequenceKeypoint.new(0, Color3.fromRGB(121, 56, 234))), ColorSequenceKeypoint.new(1, Color3.fromRGB(50, 34, 76)), })
+
+                        uiGradient.Parent = gradientOverlay
+
+                        local uiCorner2
+                        uiCorner2 = Instance.new("UICorner")
+                        uiCorner2.CornerRadius = UDim.new(0, 10)
+                        uiCorner2.Parent = gradientOverlay
+
+                        task.spawn(function()
+
+                          while gradientOverlay.Parent do
+
+                            ;(helper14(uiGradient, { Rotation = uiGradient.Rotation + 360 })):Play()
+                            task.wait(10)
+                          end
+
+                          return
+                        end)
+
+                        header = Instance.new("Frame")
+                        header.Name = "Header"
+                      end
+
+                      do
+                        header.Size = UDim2.new(1, 0, 0, 35)
+                        header.BackgroundTransparency = 1
+                        header.BorderSizePixel = 0
+                        header.ZIndex = 2
+                        header.Parent = mainFrame
+
+                        local separator
+                        separator = Instance.new("Frame")
+                        separator.Name = "Separator"
+                        separator.Size = UDim2.new(1, 0, 0, 1)
+                        separator.Position = UDim2.new(0, 0, 1, 0)
+                        separator.BackgroundColor3 = val14.HEADER_LINE
+                        separator.BorderSizePixel = 0
+                        separator.Parent = header
+                      end
+
+                      do
+                        local title
+                        title = Instance.new("TextLabel")
+                        title.Name = "Title"
+                        title.Size = UDim2.new(0, 100, 1, 0)
+                        title.Position = UDim2.new(0, 15, 0, 0)
+                        title.BackgroundTransparency = 1
+                        title.Text = "NEOX HUB"
+                        title.TextColor3 = val14.TEXT
+                        title.TextSize = 18
+                        title.Font = val120.Bold
+                        title.TextXAlignment = Enum.TextXAlignment.Left
+                        title.Parent = header
+                      end
+
+                      discordButton = (Instance.new("TextButton"))
+                      discordButton.Name = "DiscordButton"
+                      discordButton.Size = UDim2.new(0, 50, 0, 20)
+                      discordButton.Position = UDim2.new(1, -60, 0.5, 0)
+                      discordButton.AnchorPoint = Vector2.new(1, 0.5)
+                      discordButton.BackgroundTransparency = 1
+                      discordButton.Text = "Discord"
+                      discordButton.TextSize = 13
+                      discordButton.TextColor3 = val14.DISCORD
+                      discordButton.Font = val120.Bold
+                      discordButton.AutoButtonColor = false
+                      discordButton.Parent = header
+
+                      icon = (Instance.new("ImageLabel"))
+                      icon.Name = "Icon"
+                      icon.Size = UDim2.new(0, 14, 0, 14)
+                      icon.Position = UDim2.new(1, 2, 0.5, 0)
+                      icon.AnchorPoint = Vector2.new(0, 0.5)
+                      icon.BackgroundTransparency = 1
+                      icon.Image = "rbxassetid://10734943193"
+                      icon.ImageColor3 = val14.DISCORD
+                      icon.Parent = discordButton
+
+                      closeButton = (Instance.new("TextButton"))
+                      closeButton.Name = "CloseButton"
+                      closeButton.Size = UDim2.new(0, 25, 0, 25)
+                      closeButton.Position = UDim2.new(1, -7, 0.5, 0)
+                      closeButton.AnchorPoint = Vector2.new(1, 0.5)
+                      closeButton.BackgroundTransparency = 1
+                      closeButton.Text = "X"
+                      closeButton.TextSize = 18
+                      closeButton.TextColor3 = val14.TEXT
+                      closeButton.Font = val120.Bold
+                      closeButton.AutoButtonColor = false
+                      closeButton.Parent = header
+
+                      tutorialText = (Instance.new("TextLabel"))
+                      tutorialText.Name = "TutorialText"
+                      tutorialText.Size = UDim2.new(0.9, 0, 0, 40)
+                      tutorialText.Position = UDim2.new(0.5, 0, 0, 45)
+                      tutorialText.AnchorPoint = Vector2.new(0.5, 0)
+                      tutorialText.BackgroundTransparency = 1
+                      tutorialText.Text = "Get a new key by clicking 'Get Key' It Only Takes (10 Sec) To Generate Key. Press Enter or click Verify to authenticate. Join Discord for support."
+                      tutorialText.TextColor3 = val14.TEXT_SECONDARY
+                      tutorialText.TextSize = 12
+                      tutorialText.Font = val120.Regular
+                      tutorialText.TextWrapped = true
+                      tutorialText.TextXAlignment = Enum.TextXAlignment.Left
+                      tutorialText.ZIndex = 2
+                      tutorialText.Parent = mainFrame
+
+                      keyInputContainer = (Instance.new("Frame"))
+                      keyInputContainer.Name = "KeyInputContainer"
+                      keyInputContainer.Size = UDim2.new(0.9, 0, 0, 35)
+                      keyInputContainer.Position = UDim2.new(0.5, 0, 0, 95)
+                      keyInputContainer.AnchorPoint = Vector2.new(0.5, 0)
+                      keyInputContainer.BackgroundColor3 = val14.INPUT_BG
+                      keyInputContainer.BorderSizePixel = 0
+                      keyInputContainer.ZIndex = 2
+                      keyInputContainer.Parent = mainFrame
+
+                      uiStroke = (Instance.new("UIStroke"))
+                      uiStroke.Thickness = 1
+                      uiStroke.Color = val14.BORDER
+                      uiStroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
+
+                      do
+                        uiStroke.Parent = keyInputContainer
+
+                        local uiCorner3
+                        uiCorner3 = Instance.new("UICorner")
+                        uiCorner3.CornerRadius = UDim.new(0, 6)
+                        uiCorner3.Parent = keyInputContainer
+
+                        uiStroke2 = (Instance.new("UIStroke"))
+                        uiStroke2.Thickness = 0
+                        uiStroke2.Color = val14.PRIMARY
+                        uiStroke2.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
+                        uiStroke2.Transparency = 1
+                        uiStroke2.Parent = keyInputContainer
+
+                        keyInput = (Instance.new("TextBox"))
+                      end
+
+                      keyInput.Name = "KeyInput"
+                      keyInput.Size = UDim2.new(1, -20, 1, 0)
+                      keyInput.Position = UDim2.new(0, 10, 0, 0)
+                      keyInput.BackgroundTransparency = 1
+                      keyInput.PlaceholderText = "Enter Your Key (Press Enter to Verify)"
+                      keyInput.PlaceholderColor3 = Color3.fromRGB(100, 100, 110)
+                      keyInput.Text = ""
+                      keyInput.TextSize = 14
+                      keyInput.TextColor3 = val14.TEXT
+                      keyInput.Font = val120.Regular
+                      keyInput.ClearTextOnFocus = false
+                      keyInput.TextXAlignment = Enum.TextXAlignment.Left
+                      keyInput.ZIndex = 3
+                      keyInput.Parent = keyInputContainer
+
+                      keyInput.Focused:Connect(function()
+                        local tween = helper14(uiStroke2, { Thickness = 2, Transparency = 0.5 })
+                        tween:Play()
+
+                        ;(helper14(uiStroke, { Transparency = 0.3 })):Play()
+                        return
+                      end)
+
+                      keyInput.FocusLost:Connect(function()
+                        local tween2 = helper14(uiStroke2, { Thickness = 0, Transparency = 1 })
+                        tween2:Play()
+
+                        ;(helper14(uiStroke, { Transparency = 0 })):Play()
+                        return
+                      end)
+
+                      statusLabel = (Instance.new("TextLabel"))
+                      statusLabel.Name = "StatusLabel"
+                      statusLabel.Size = UDim2.new(0.9, 0, 0, 40)
+                      statusLabel.Position = UDim2.new(0.5, 0, 0.55, 0)
+                      statusLabel.AnchorPoint = Vector2.new(0.5, 0.5)
+                      statusLabel.BackgroundTransparency = 1
+                      statusLabel.Text = ""
+                      statusLabel.TextColor3 = val14.INFO
+                      statusLabel.TextSize = 13
+                      statusLabel.Font = val120.Medium
+                      statusLabel.TextWrapped = true
+                      statusLabel.ZIndex = 2
+                      statusLabel.Parent = mainFrame
+
+                      helpLabel = (Instance.new("TextLabel"))
+                      helpLabel.Name = "HelpLabel"
+                      helpLabel.Size = UDim2.new(0.9, 0, 0, 30)
+                      helpLabel.Position = UDim2.new(0.5, 0, 0.7, 0)
+                      helpLabel.AnchorPoint = Vector2.new(0.5, 0.5)
+                      helpLabel.BackgroundTransparency = 1
+                      helpLabel.Text = ""
+                      helpLabel.TextColor3 = val14.TEXT_SECONDARY
+                      helpLabel.TextSize = 11
+                      helpLabel.Font = val120.Regular
+                      helpLabel.TextWrapped = true
+                      helpLabel.ZIndex = 2
+                      helpLabel.Visible = false
+                      helpLabel.Parent = mainFrame
+
+                      loadingDots = (Instance.new("TextLabel"))
+                      loadingDots.Name = "LoadingDots"
+                      loadingDots.Size = UDim2.new(0, 30, 0, 20)
+                      loadingDots.Position = UDim2.new(0.5, 0, 0.65, 0)
+                      loadingDots.AnchorPoint = Vector2.new(0.5, 0.5)
+                      loadingDots.BackgroundTransparency = 1
+                      loadingDots.Text = ""
+                      loadingDots.TextColor3 = val14.PRIMARY
+                      loadingDots.TextSize = 20
+                      loadingDots.Font = val120.Bold
+                      loadingDots.ZIndex = 2
+                      loadingDots.Visible = false
+                      loadingDots.Parent = mainFrame
+
+                      buttonContainer = (Instance.new("Frame"))
+                      buttonContainer.Name = "ButtonContainer"
+                      buttonContainer.Size = UDim2.new(0.9, 0, 0, 30)
+                      buttonContainer.Position = UDim2.new(0.5, 0, 1, -50)
+                      buttonContainer.AnchorPoint = Vector2.new(0.5, 1)
+                      buttonContainer.BackgroundTransparency = 1
+                      buttonContainer.ZIndex = 2
+                      buttonContainer.Parent = mainFrame
+
+                      getKeyButton = Instance.new("TextButton")
+                      getKeyButton.Name = "GetKeyButton"
+                      getKeyButton.Size = UDim2.new(0.48, 0, 1, 0)
+                      getKeyButton.Position = UDim2.new(0, 0, 0, 0)
+                      getKeyButton.BackgroundColor3 = val14.PRIMARY
+
+                      do
+                        getKeyButton.Text = "Get Key"
+                        getKeyButton.TextSize = 13
+                        getKeyButton.TextColor3 = val14.TEXT
+                        getKeyButton.Font = val120.Bold
+                        getKeyButton.AutoButtonColor = false
+                        getKeyButton.ZIndex = 3
+                        getKeyButton.Parent = buttonContainer
+
+                        local uiCorner4
+                        uiCorner4 = Instance.new("UICorner")
+                        uiCorner4.CornerRadius = UDim.new(0, 7)
+                        uiCorner4.Parent = getKeyButton
+                      end
+
+                      verifyButton = Instance.new("TextButton")
+                      verifyButton.Name = "VerifyButton"
+                      verifyButton.Size = UDim2.new(0.48, 0, 1, 0)
+                      verifyButton.Position = UDim2.new(1, 0, 0, 0)
+                      verifyButton.AnchorPoint = Vector2.new(1, 0)
+                      verifyButton.BackgroundColor3 = val14.SECONDARY
+                      verifyButton.Text = "Verify"
+                      verifyButton.TextSize = 13
+                      verifyButton.TextColor3 = val14.TEXT
+                      verifyButton.Font = val120.Bold
+                      verifyButton.AutoButtonColor = false
+                      verifyButton.ZIndex = 3
+
+                      do
+                        verifyButton.Parent = buttonContainer
+
+                        local uiCorner5
+                        uiCorner5 = Instance.new("UICorner")
+                        uiCorner5.CornerRadius = UDim.new(0, 7)
+                        uiCorner5.Parent = verifyButton
+
+                        premiumRow = (Instance.new("Frame"))
+                        premiumRow.Name = "PremiumRow"
+                        premiumRow.Size = UDim2.new(0.9, 0, 0, 26)
+                        premiumRow.Position = UDim2.new(0.5, 0, 1, -15)
+                        premiumRow.AnchorPoint = Vector2.new(0.5, 1)
+                        premiumRow.BackgroundColor3 = Color3.fromRGB(30, 20, 55)
+                        premiumRow.BorderSizePixel = 0
+                      end
+
+                      do
+                        premiumRow.ZIndex = 2
+                        premiumRow.Parent = mainFrame
+
+                        local uiCorner6
+                        uiCorner6 = Instance.new("UICorner")
+                        uiCorner6.CornerRadius = UDim.new(0, 7)
+                        uiCorner6.Parent = premiumRow
+
+                        uiStroke3 = (Instance.new("UIStroke"))
+                        uiStroke3.Thickness = 1
+                        uiStroke3.Color = val14.PREMIUM
+                        uiStroke3.Transparency = 0.55
+                        uiStroke3.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
+                        uiStroke3.Parent = premiumRow
+                      end
+
+                      do
+                        task.spawn(function()
+
+                          while premiumRow.Parent do
+
+                            ;(helper14(uiStroke3, { Transparency = 0.1 })):Play()
+                            task.wait(1)
+
+                            ;(helper14(uiStroke3, { Transparency = 0.6 })):Play()
+                            task.wait(1)
+                          end
+
+                          return
+                        end)
+
+                        local premiumLabel
+                        premiumLabel = Instance.new("TextLabel")
+                        premiumLabel.Name = "PremiumLabel"
+                        premiumLabel.Size = UDim2.new(1, -80, 1, 0)
+                        premiumLabel.Position = UDim2.new(0, 10, 0, 0)
+                        premiumLabel.BackgroundTransparency = 1
+                        premiumLabel.Text = "Tired of key system? Buy Premium"
+                        premiumLabel.TextColor3 = val14.PREMIUM
+                        premiumLabel.TextSize = 12
+                        premiumLabel.Font = val120.Medium
+                        premiumLabel.TextXAlignment = Enum.TextXAlignment.Left
+                        premiumLabel.TextYAlignment = Enum.TextYAlignment.Center
+                        premiumLabel.ZIndex = 3
+                        premiumLabel.Parent = premiumRow
+                      end
+
+                      buyButton = Instance.new("TextButton")
+                      buyButton.Name = "BuyButton"
+                      buyButton.Size = UDim2.new(0, 70, 1, -6)
+                      buyButton.Position = UDim2.new(1, -3, 0.5, 0)
+                      buyButton.AnchorPoint = Vector2.new(1, 0.5)
+                      buyButton.BackgroundColor3 = val14.PREMIUM
+                      buyButton.Text = "Buy Now"
+                      buyButton.TextSize = 12
+                      buyButton.TextColor3 = Color3.fromRGB(20, 10, 40)
+                      buyButton.Font = val120.Bold
+                      buyButton.AutoButtonColor = false
+
+                      do
+                        buyButton.ZIndex = 4
+                        buyButton.Parent = premiumRow
+
+                        local uiCorner7
+                        uiCorner7 = Instance.new("UICorner")
+                        uiCorner7.CornerRadius = UDim.new(0, 5)
+                        uiCorner7.Parent = buyButton
+
+                        local 
+
+                        local function helper18(val222, val221, val223)
+                          local v340 = val222
+                          local v341 = val221
+                          local v342 = val223
+                          local mouseEnter = val222.MouseEnter
+
+                          mouseEnter:Connect(function()
+
+                            ;(helper14(val222, { BackgroundColor3 = val223 })):Play()
+                            return
+                          end)
+
+                          val222.MouseLeave:Connect(function()
+
+                            ;(helper14(val222, { BackgroundColor3 = val221 })):Play()
+                            return
+                          end)
+
+                          return
+                        end
+
+                        helper18(getKeyButton, val14.PRIMARY, val14.PRIMARY_HOVER)
+                        helper18(verifyButton, val14.SECONDARY, val14.SECONDARY_HOVER)
+                        helper18(buyButton, val14.PREMIUM, val14.PREMIUM_HOVER)
+
+                      end
+
+                      do
+                        closeButton.MouseEnter:Connect(function()
+
+                          ;(helper14(closeButton, { TextColor3 = val14.ERROR, Rotation = 90 })):Play()
+                          return
+                        end)
+
+                        closeButton.MouseLeave:Connect(function()
+
+                          ;(helper14(closeButton, { TextColor3 = val14.TEXT, Rotation = 0 })):Play()
+                          return
+                        end)
+
+                        discordButton.MouseEnter:Connect(function()
+                          local tween3 = helper14(discordButton, {
+                            TextColor3 = (Color3.fromRGB(160, 136, 233)), })
+
+                          tween3:Play()
+
+                          ;(helper14(icon, { ImageColor3 = (Color3.fromRGB(160, 136, 233)) })):Play()
+                          return
+                        end)
+
+                        local mouseLeave
+                        mouseLeave = discordButton.MouseLeave
+
+                        function safeCall5()
+
+                          local val224, success13 = pcall(function()
+                            return val6({
+                              Url = val10.BASE_URL .. "/api/get-nonce", Method = "GET", Headers = { ["Content-Type"] = "application/json" }, })
+                          end)
+
+                          local val225 = not val224
+                          local val226 = val225
+
+                          if not val225 then
+
+                            val226 = not success13 or not success13.Body
+                          end
+
+                          if val226 then
+                            return nil, "Connection error. Please try again. (NX-0007)"
+                          else
+                            local val227
+
+                            val227 = {
+                              pcall(function()
+                                local v355 = httpService
+                                return httpService:JSONDecode(success13.Body)
+                              end), }
+
+                            local element
+                            element = val227[2]
+
+                            local val228
+                            val228 = not val227[1]
+
+                            local val229
+                            val229 = val228
+
+                            if not val228 then
+
+                              val229 = not element or not element.nonce
+                            end
+
+                            if val229 then
+                              return nil, "Connection error. Please try again. (NX-0008)"
+                            else
+                              return element.nonce, nil
+                            end
+                          end
+                        end
+
+                        mouseLeave:Connect(function()
+                          local tween4 = helper14(discordButton, { TextColor3 = val14.DISCORD })
+                          tween4:Play()
+
+                          ;(helper14(icon, { ImageColor3 = val14.DISCORD })):Play()
+                          return
+                        end)
+
+                        function helper10(val230)
+                          local v361 = val230
+                          keyInput.Visible = val230
+                          tutorialText.Visible = val230
+                          buttonContainer.Visible = val230
+                          keyInputContainer.Visible = val230
+                          premiumRow.Visible = val230
+                          return
+                        end
+
+                        function safeCall6(val231)
+                          local v362 = val231
+
+                          return pcall(function()
+                            if writefile then
+                              writefile(val10.KEY_FILE, val231)
+                            end
+
+                            return
+                          end)
+                        end
+
+                        function helper8(val232, val233, val234, val235, val236)
+                          local v363 = val232
+                          local v364 = val235
+                          local v365 = val233
+                          local v366 = val234
+                          local v367 = val236
+                          statusLabel.Text = val232
+                          local v369 = statusLabel
+
+                          statusLabel.TextColor3 = val233 or val14.INFO
+                          loadingDots.Visible = val235 or false
+
+                          if val236 then
+                            helpLabel.Text = val236
+                            helpLabel.Visible = true
+                          else
+                            helpLabel.Visible = false
+                          end
+
+                          if val235 then
+                            task.spawn(function()
+                              local val237 = 0
+
+                              while loadingDots.Visible do
+                                val237 = val237 % 3 + 1
+                                loadingDots.Text = rep(".", val237)
+                                task.wait(0.5)
+                              end
+
+                              return
+                            end)
+                          end
+
+                          if val234 then
+                            task.spawn(function()
+                              task.wait(val234)
+                              statusLabel.Text = ""
+                              loadingDots.Visible = false
+                              helpLabel.Visible = false
+                              return
+                            end)
+                          end
+
+                          return
+                        end
+                      end
+
+                      do
+                        local val238
+                        val238 = helper10
+
+                        local val239
+                        val239 = helper8
+
+                        local val240
+                        val240 = safeCall6
+
+                        local val241
+                        val241 = safeCall5
+
+                        local 
+                      end
+
+                      local function safeCall11()
+                        local val242 = pcall
+
+                        local val243, val244 = val242(function()
+                          local val245 = readfile
+                          local val246 = val245
+
+                          if val245 then
+
+                            val246 = isfile and isfile(val10.KEY_FILE)
+                          end
+
+                          if val246 then
+                            return readfile(val10.KEY_FILE)
+                          else
+                            return nil
+                          end
+                        end)
+
+                        return val243 and val244 or nil
+                      end
+
+                      do
+                        val33 = false
+
+                        function helper11(val247)
+                          local v383 = val247
+                          local val248 = val247 == ""
+                          local s = val248
+
+                          if not val248 then
+                            local val249
+                            val249 = val247
+                            s = val247:match("^%s*$")
+                          end
+
+                          local val250, success14
+
+                          if s then
+                            helper8("Key field is empty", val14.WARNING, 2)
+                            return nil
+                          else
+                            helper8("Connecting...", val14.INFO, nil, true)
+                            task.wait(0.5)
+                            local val251
+                            val250, val251 = safeCall5()
+
+                            if not val250 then
+                              helper8(
+                                "Connection error. Please try again. (NX-0001)", val14.ERROR, 3, false, "Help: Check your internet connection, disable VPN if using one, and try again."
+                              )
+
+                              return nil
+                            else
+                              helper8("Connecting...", val14.INFO, nil, true)
+                              task.wait(0.5)
+
+                              local val252
+
+                              val252, success14 = pcall(function()
+                                local v394 = httpService
+
+                                return val6({
+                                  Url = val10.BASE_URL .. "/api/validate-key", Method = "POST", Headers = { ["Content-Type"] = "application/json" }, Body = (httpService:JSONEncode({
+                                    key = val247, hwid = getClientId, nonce = val250, game_name = name, script_id = "", })), })
+                              end)
+
+                              if not val252 then
+                                helper8(
+                                  "Connection error. Please try again. (NX-0002)", val14.ERROR, 3, false, "Help: Please check your internet connection and try again."
+                                )
+
+                                return nil
+                              else
+                                if not success14 then
+                                  helper8(
+                                    "Connection error. Please try again. (NX-0003)", val14.ERROR, 3, false, "Help: Server might be down or your internet is slow. Try again later."
+                                  )
+
+                                  return nil
+                                else
+                                  helper8("Verifying key...", val14.INFO, nil, true)
+                                  task.wait(0.3)
+
+                                  if not success14.Body then
+                                    helper8(
+                                      "Connection error. Please try again. (NX-0004)", val14.ERROR, 3, false, "Help: Please check your internet connection and try again."
+                                    )
+
+                                    return nil
+                                  else
+                                    local val253
+
+                                    val253 = {
+                                      pcall(function()
+                                        local v396 = httpService
+                                        return httpService:JSONDecode(success14.Body)
+                                      end), }
+
+                                    local element2
+                                    element2 = val253[2]
+
+                                    if not val253[1] or (type(element2)) ~= "table" then
+                                      helper8(
+                                        "Connection error. Please try again. (NX-0005)", val14.ERROR, 3, false, "Help: Please check your internet connection and try again."
+                                      )
+
+                                      return nil
+                                    else
+                                      if not element2.valid then
+                                        if element2.reason then
+                                          local strVal
+                                          strVal = string.lower(tostring(element2.reason))
+
+                                          if (string.find(strVal, "nonce")) then
+                                            helper8(
+                                              "Verification failed. Please try again. (NX-0006)", val14.ERROR, 3, false, "Help: Please disable any VPN and try again."
+                                            )
+                                          else
+                                            if (string.find(strVal, "hwid blacklist")) then
+                                              helper8(
+                                                "Your HWID Is Blocked (contact us)", val14.ERROR, 3, false, "Help: Contact support in Discord for assistance."
+                                              )
+                                            else
+                                              local findResult
+                                              findResult = string.find(strVal, "hwid")
+
+                                              local val254
+                                              val254 = findResult
+
+                                              if findResult or string.find(strVal, "hardware") then
+                                                helper8(
+                                                  "Key bound to another HWID", val14.ERROR, 3, false, "Help: This key is already used on different device. Get a new key."
+                                                )
+                                              else
+                                                helper8("Key validation failed: "
+                                                  .. (tostring(element2.reason)), val14.ERROR, 3, false, "Help: Check if key is correct and not expired. Get a new key if needed.")
+                                              end
+                                            end
+                                          end
+                                        else
+                                          helper8(
+                                            "Key is invalid or expired", val14.ERROR, 3, false, "Help: Key might be expired or incorrect. Get a new key from our website."
+                                          )
+                                        end
+
+                                        return nil
+                                      else
+
+                                        if (type(element2.unlock)) ~= "string" or #element2.unlock ~= 64 then
+                                          helper8(
+                                            "Session could not be verified. (NX-1000)", val14.ERROR, 4, false, "Help: Please close other scripts, rejoin the game and try again."
+                                          )
+
+                                          return nil
+                                        else
+                                          return {
+                                            unlock = element2.unlock, nonce = val250, key = val247, }
+                                        end
+                                      end
+                                    end
+                                  end
+                                end
+                              end
+                            end
+                          end
+                        end
+
+                        function helper9(val255)
+                          local v401 = val255
+                          local val256 = decodeBase64(val255.unlock)
+
+                          local val257 = not val256 or #val256 ~= 32
+
+                          if val257 then
+                            return false, "Session error. Please try again. (NX-1001)"
+                          else
+                            local val258
+
+                            val258 = helper4(
+                              val256, (helper2(val255.nonce .. "|" .. getClientId .. "|" .. val255.key))
+                            )
+
+                            if #val258 ~= 32 then
+                              return false, "Session error. Please try again. (NX-1002)"
+                            else
+                              helper8("Loading NEOX HUB...", val14.INFO, nil, true)
+
+                              local val259
+                              val259 = fetchData(val8)
+
+                              if not val259 or #val259 < 32 then
+                                return false, "Connection error. Please check your internet. (NX-2001)"
+                              else
+                                helper8("Loading NEOX HUB...", val14.INFO, nil, true)
+
+                                local findResult2
+                                findResult2 = string.find(val259, "NX7F2A", 1, true)
+
+                                if findResult2 then
+                                  local findResult3
+                                  findResult3 = string.find(val259, "NX7F2A", findResult2 + #"NX7F2A", true)
+
+                                  if findResult3 then
+                                    val259 = sub(val259, findResult2 + #"NX7F2A", findResult3 - 1)
+                                  else
+                                  end
+                                else
+                                end
+
+                                local val260
+                                val260 = decodeBase642(val259)
+
+                                if not val260 or #val260 < 24 then
+                                  return false, "Failed to load. Please rejoin and try again. (NX-2002)"
+                                else
+                                  local val261
+                                  val261 = helper3(val260, val258, 768)
+
+                                  local val262
+                                  val262 = (sub(val261, 1, 7)) ~= "NEOXP1|"
+
+                                  local val263
+                                  val263 = val262
+
+                                  if val262 or (sub(val261, 16, 16)) ~= "|" then
+                                    return false, "Failed to load. Please rejoin and try again. (NX-3001)"
+                                  else
+                                    local val264
+                                    val264 = sub(val261, 8, 15)
+
+                                    local val265
+                                    val265 = sub(val261, 17)
+
+                                    if #val265 < 16 then
+                                      return false, "Failed to load. Please rejoin and try again. (NX-3002)"
+                                    else
+                                      if (helper12(val265)) ~= val264 then
+                                        return false, "Failed to load. Please rejoin and try again. (NX-3003)"
+                                      else
+                                        helper8("Loading NEOX HUB...", val14.SUCCESS, nil, true)
+
+                                        local success15
+                                        success15 = { pcall(val7, val265) }
+
+                                        local val266
+                                        val266 = success15[2]
+
+                                        if not success15[1] then
+                                          return false, "Script error. Please contact support. (NX-4001)"
+                                        else
+                                          if (type(val266)) ~= "function" then
+                                            return false, "Script error. Please contact support. (NX-4002)"
+                                          else
+                                            local success16
+                                            success16 = { pcall(val266) }
+
+                                            local val267
+                                            val267 = success16[2]
+
+                                            if not success16[1] then
+                                              return false, "Script error. Please contact support. (NX-4003)"
+                                            else
+                                              local val268
+                                              val268 = 0
+
+                                              while true do
+
+                                                if (type(val267)) == "function" and val268 < 5 then
+                                                  local success17
+                                                  success17 = { pcall(val267) }
+
+                                                  val268 = val268 + 1
+
+                                                  local val269
+                                                  val269 = success17[2]
+
+                                                  if not success17[1] then
+                                                    return false, "Script error. Please contact support. (NX-4004)"
+                                                  else
+                                                    val267 = val269
+                                                  end
+                                                else
+                                                  break
+                                                end
+                                              end
+
+                                              return true, nil
+                                            end
+                                          end
+                                        end
+                                      end
+                                    end
+                                  end
+                                end
+                              end
+                            end
+                          end
+                        end
+
+                        local val270
+                        val270 = helper11
+
+                        local val271
+                        val271 = helper9
+
+                        local 
+
+                        function waitLoop2()
+                          local val272, val273, val274, val275, val276
+
+                          if val33 then
+                            return
+                          else
+                            local text
+                            text = keyInput.Text
+
+                            val33 = true
+                            helper10(false)
+                            helper8("Verifying key...", val14.INFO, nil, true)
+                            task.wait(1)
+
+                            local val277
+                            val277 = helper11(text)
+
+                            if val277 then
+                              helper8("Key verified", val14.SUCCESS, 1)
+                              task.wait(1)
+
+                              local val278
+                              val278 = writefile
+
+                              local val279
+                              val279 = val278
+
+                              if val278 and safeCall6(text) then
+                                helper8("Key saved", val14.SUCCESS, 1)
+                                task.wait(1)
+                              end
+
+                              local val280
+                              val280 = { val34(val277) }
+
+                              local val281
+                              val281 = val280[2]
+
+                              if val280[1] then
+                                iterate()
+                                return
+                              else
+                                val272 = val281
+                                val273 = helper8
+
+                                helper8(
+                                  val281 or "Failed to load. Please try again. (NX-5000)", val14.ERROR, 5, false, "Help: Please rejoin the game and try again. Contact support if this continues."
+                                )
+
+                                val274 = safeCall3
+                                val275 = val10.HUB_NAME .. " - ERROR"
+                                val276 = val281
+
+                                safeCall3(
+                                  val275, val281 or "Failed to load script", val10.NOTIFICATION_DURATION.ERROR
+                                )
+
+                                val33 = false
+                                task.wait(5)
+                                helper10(true)
+                                ::L5817738::
+                                return
+                              end
+                            else
+                              val33 = false
+                              task.wait(3)
+                              helper10(true)
+                              goto L5817738
+                            end
+                          end
+                        end
+
+                        val34 = function(p60)
+                          local val282, val283, success18 = pcall(helper9, p60)
+                          local v442 = success18
+                          local v443 = val283
+
+                          if not val282 then
+                            return false, "Failed to load. Please rejoin and try again. (NX-5001)"
+                          else
+                            return val283, success18
+                          end
+                        end
+
+                        local val284
+                        val284 = waitLoop2
+                      end
+
+                      closeButton.MouseButton1Click:Connect(function()
+                        iterate()
+                        return
+                      end)
+
+                      getKeyButton.MouseButton1Click:Connect(function()
+                        if val33 then
+                          return
+                        else
+                          helper10(false)
+
+                          if setclipboard then
+                            setclipboard("https://neoxsoftworks.eu/key.html")
+                            helper8("Key link copied to clipboard", val14.PRIMARY, 2)
+                          else
+                            helper8("Clipboard not supported on this executor", val14.WARNING, 3)
+                          end
+
+                          task.wait(2)
+                          helper10(true)
+                          return
+                        end
+                      end)
+
+                      discordButton.MouseButton1Click:Connect(function()
+                        if val33 then
+                          return
+                        else
+                          helper10(false)
+
+                          if setclipboard then
+                            setclipboard("https://neoxsoftworks.eu/discord")
+                            helper8("Discord invite copied to clipboard", val14.DISCORD, 2)
+                          else
+                            helper8("Clipboard not supported on this executor", val14.WARNING, 3)
+                          end
+
+                          task.wait(2)
+                          helper10(true)
+                          return
+                        end
+                      end)
+
+                      buyButton.MouseButton1Click:Connect(function()
+                        if val33 then
+                          return
+                        else
+                          helper10(false)
+
+                          if setclipboard then
+                            setclipboard("https://neoxsoftworks.eu/getneox.html")
+                            helper8("Premium link copied to clipboard", val14.PREMIUM, 3)
+                          else
+                            helper8("Clipboard not supported on this executor", val14.WARNING, 3)
+                          end
+
+                          task.wait(3)
+                          helper10(true)
+                          return
+                        end
+                      end)
+
+                      verifyButton.MouseButton1Click:Connect(function()
+                        waitLoop2()
+                        return
+                      end)
+
+                      keyInput.FocusLost:Connect(function(p61)
+                        local v445 = p61
+
+                        if p61 and not val33 then
+                          waitLoop2()
+                        end
+
+                        return
+                      end)
+
+                      if userInputService then
+
+                        userInputService.InputBegan:Connect(function(input, p62)
+                          local v446 = input
+
+                          if p62 then
+                            return
+                          else
+
+                            if input.KeyCode == Enum.KeyCode.Return
+                              or input.KeyCode == Enum.KeyCode.KeypadEnter then
+                              local val285
+                              val285 = val31
+
+                              local parent3
+                              parent3 = val285
+
+                              if val285 then
+
+                                parent3 = val31.Parent and not val33
+                              end
+
+                              if parent3 then
+                                waitLoop2()
+                              end
+                            end
+
+                            return
+                          end
+                        end)
+                      end
+
+                      if val16 and val10.STRICT_ENVIRONMENT then
+                        helper10(false)
+                        val33 = true
+
+                        helper8(
+                          "This environment is not supported. (NX-0100)", val14.ERROR, nil, false, "Help: Please close all other scripts, rejoin the game and run NEOX HUB on its own."
+                        )
+
+                        return
+                      else
+                        if val16 then
+                          helper8(
+                            "Environment warning (NX-0101)", val14.WARNING, 5, false, "Help: Please close other scripts if verification fails."
+                          )
+                        end
+
+                        val35 = (safeCall11())
+
+                        local val286
+                        val286 = val35
+
+                        if val35 and val35 ~= "" then
+                          helper10(false)
+                          val33 = true
+
+                          task.spawn(function()
+                            helper8("Verifying key...", val14.INFO, nil, true)
+                            task.wait(0.5)
+                            local val287 = helper11(val35)
+                            local val288, val289, val290
+
+                            if val287 then
+                              local val291
+                              val291 = { val34(val287) }
+
+                              local val292
+                              val292 = val291[2]
+
+                              if val291[1] then
+                                iterate()
+                                return
+                              else
+                                val288 = helper8
+
+                                val289 = val292
+                                val289 = val292 or "Failed to load. Please try again. (NX-5000)"
+
+                                val290 = helper8
+
+                                helper8(
+                                  val289, val14.ERROR, 5, false, "Help: Please rejoin the game and try again. Contact support if this continues."
+                                )
+
+                                task.wait(5)
+                                val33 = false
+                                helper10(true)
+                                ::L14039982::
+                                return
+                              end
+                            else
+                              helper8(
+                                "Saved key expired. Enter new key.", val14.WARNING, 2, false, "Help: Your saved key is no longer valid. Get a new key from our website."
+                              )
+
+                              tutorialText.Text = "Saved key expired. Please enter a new key. Press Enter or click Verify to authenticate."
+                              tutorialText.TextColor3 = val14.WARNING
+
+                              keyInput.Text = ""
+                              task.wait(2)
+                              val33 = false
+                              helper10(true)
+                              goto L14039982
+                            end
+                          end)
+                        end
+
+                        return
+                      end
+                    end
+                  end
+                end
+              end
+            end
+          end
+        end
+      end
+    end
+  end
+end

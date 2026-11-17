@@ -1,0 +1,542 @@
+if not game:IsLoaded() then
+    game.Loaded:Wait()
+end
+local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local Workspace = game:GetService("Workspace")
+local LocalPlayer = Players.LocalPlayer
+local PlayerGui = LocalPlayer:WaitForChild("PlayerGui")
+local Packages = ReplicatedStorage:WaitForChild("Packages", 10)
+local Datas = ReplicatedStorage:WaitForChild("Datas", 10)
+local Shared = ReplicatedStorage:WaitForChild("Shared", 10)
+local Utils = ReplicatedStorage:WaitForChild("Utils", 10)
+if not Packages or not Datas or not Shared or not Utils then
+    warn("[BestBrainrotViewer] Missing replicated modules")
+    return
+end
+local Synchronizer = require(Packages:WaitForChild("Synchronizer"))
+local AnimalsData = require(Datas:WaitForChild("Animals"))
+local AnimalsShared = require(Shared:WaitForChild("Animals"))
+local NumberUtils = require(Utils:WaitForChild("NumberUtils"))
+local TraitsData = nil
+pcall(function()
+    TraitsData = require(Datas:WaitForChild("Traits"))
+end)
+local CONFIG = {
+    GuiName = "BestBrainrotViewerOnly",
+    ScanInterval = 0.8,
+    ExcludeMyBase = true,
+    Width = 220,
+    Height = 198,
+    Position = UDim2.new(1, -45, 0, 8),
+    AnchorPoint = Vector2.new(1, 0),
+}
+local MutationColors = {
+    Lava = Color3.fromRGB(255, 165, 0),
+    Bloodrot = Color3.fromRGB(255, 0, 0),
+    Candy = Color3.fromRGB(255, 105, 180),
+    Gold = Color3.fromRGB(255, 215, 0),
+    Diamond = Color3.fromRGB(0, 191, 255),
+    Radioactive = Color3.fromRGB(0, 255, 0),
+    Galaxy = Color3.fromRGB(180, 120, 255),
+    Divine = Color3.fromRGB(255, 250, 200),
+    Cyber = Color3.fromRGB(0, 255, 255),
+    Cursed = Color3.fromRGB(100, 0, 0),
+    Rainbow = "rainbow_rich",
+    ["Yin Yang"] = Color3.fromRGB(220, 220, 220),
+    YinYang = Color3.fromRGB(220, 220, 220),
+    Yinyang = Color3.fromRGB(220, 220, 220),
+}
+local oldGui = PlayerGui:FindFirstChild(CONFIG.GuiName)
+if oldGui then
+    oldGui:Destroy()
+end
+local gui = Instance.new("ScreenGui")
+gui.Name = CONFIG.GuiName
+gui.ResetOnSpawn = false
+gui.DisplayOrder = 99
+gui.Parent = PlayerGui
+local win = Instance.new("Frame")
+win.Size = UDim2.new(0, CONFIG.Width, 0, CONFIG.Height)
+win.AnchorPoint = CONFIG.AnchorPoint
+win.Position = CONFIG.Position
+win.BackgroundColor3 = Color3.fromRGB(8, 8, 8)
+win.BackgroundTransparency = 0.25
+win.BorderSizePixel = 0
+win.Active = true
+win.Parent = gui
+Instance.new("UICorner", win).CornerRadius = UDim.new(0, 8)
+local viewport = Instance.new("ViewportFrame")
+viewport.Size = UDim2.new(1, -12, 0, 130)
+viewport.Position = UDim2.new(0, 6, 0, 4)
+viewport.BackgroundTransparency = 1
+viewport.BorderSizePixel = 0
+viewport.LightDirection = Vector3.new(-1, -1, -1)
+viewport.Ambient = Color3.fromRGB(180, 180, 200)
+viewport.Parent = win
+local camera = Instance.new("Camera")
+camera.FieldOfView = 50
+camera.Parent = viewport
+viewport.CurrentCamera = camera
+local infoRow = Instance.new("Frame")
+infoRow.Size = UDim2.new(1, -10, 0, 20)
+infoRow.Position = UDim2.new(0, 5, 0, 138)
+infoRow.BackgroundTransparency = 1
+infoRow.Parent = win
+local mutationLabel = Instance.new("TextLabel")
+mutationLabel.Size = UDim2.new(0, 0, 1, 0)
+mutationLabel.Position = UDim2.new(0, 0, 0, 0)
+mutationLabel.BackgroundTransparency = 1
+mutationLabel.AutomaticSize = Enum.AutomaticSize.X
+mutationLabel.Font = Enum.Font.GothamBold
+mutationLabel.TextSize = 14
+mutationLabel.TextColor3 = Color3.fromRGB(120, 120, 135)
+mutationLabel.TextXAlignment = Enum.TextXAlignment.Left
+mutationLabel.Text = ""
+mutationLabel.Parent = infoRow
+local nameLabel = Instance.new("TextLabel")
+nameLabel.Size = UDim2.new(0, 0, 1, 0)
+nameLabel.Position = UDim2.new(0, 0, 0, 0)
+nameLabel.BackgroundTransparency = 1
+nameLabel.AutomaticSize = Enum.AutomaticSize.X
+nameLabel.Font = Enum.Font.GothamBold
+nameLabel.TextSize = 14
+nameLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+nameLabel.TextXAlignment = Enum.TextXAlignment.Left
+nameLabel.Text = ""
+nameLabel.Parent = infoRow
+local genLabel = Instance.new("TextLabel")
+genLabel.Size = UDim2.new(0, 0, 1, 0)
+genLabel.Position = UDim2.new(0, 0, 0, 0)
+genLabel.BackgroundTransparency = 1
+genLabel.AutomaticSize = Enum.AutomaticSize.X
+genLabel.Font = Enum.Font.GothamBold
+genLabel.TextSize = 14
+genLabel.TextColor3 = Color3.fromRGB(85, 255, 85)
+genLabel.TextXAlignment = Enum.TextXAlignment.Left
+genLabel.Text = ""
+genLabel.Parent = infoRow
+local traitRow = Instance.new("Frame")
+traitRow.Size = UDim2.new(1, -10, 0, 28)
+traitRow.Position = UDim2.new(0, 5, 0, 160)
+traitRow.BackgroundTransparency = 1
+traitRow.ClipsDescendants = false
+traitRow.Parent = win
+local traitIconSize = 26
+local traitPad = 2
+local traitRowWidth = CONFIG.Width - 10
+local allAnimalsCache = {}
+local currentUid = nil
+local lastPlot = nil
+local lastSlot = nil
+local clone = nil
+local cloneCenter = Vector3.new(0, 0, 0)
+local cloneRadius = 4
+local cloneOrigin = Vector3.new(0, 0, 0)
+local rotationAngle = 0
+local function clearViewport()
+    for _, child in ipairs(viewport:GetChildren()) do
+        if child ~= camera then
+            pcall(function()
+                child:Destroy()
+            end)
+        end
+    end
+    clone = nil
+end
+local function isMyBase(animalData)
+    if not CONFIG.ExcludeMyBase then
+        return false
+    end
+    if not animalData or not animalData.plot then
+        return false
+    end
+    local plots = Workspace:FindFirstChild("Plots")
+    local plot = plots and plots:FindFirstChild(animalData.plot)
+    if not plot then
+        return false
+    end
+    local channel = Synchronizer:Get(plot.Name)
+    if not channel then
+        return false
+    end
+    local owner = channel:Get("Owner")
+    if owner == LocalPlayer then
+        return true
+    end
+    if typeof(owner) == "table" and owner.UserId == LocalPlayer.UserId then
+        return true
+    end
+    if typeof(owner) == "Instance" and owner:IsA("Player") and owner.UserId == LocalPlayer.UserId then
+        return true
+    end
+    return false
+end
+local function getGenerationText(value)
+    local ok, result = pcall(function()
+        return "$" .. NumberUtils:ToString(value or 0) .. "/s"
+    end)
+    if ok and result then
+        return result
+    end
+    local v = tonumber(value) or 0
+    if v >= 1e9 then
+        return string.format("$%.2fB/s", v / 1e9)
+    elseif v >= 1e6 then
+        return string.format("$%.2fM/s", v / 1e6)
+    elseif v >= 1e3 then
+        return string.format("$%.2fK/s", v / 1e3)
+    end
+    return string.format("$%d/s", math.floor(v))
+end
+local function scanPlots()
+    local list = {}
+    local plots = Workspace:FindFirstChild("Plots")
+    if not plots then
+        allAnimalsCache = list
+        return
+    end
+    for _, plot in ipairs(plots:GetChildren()) do
+        pcall(function()
+            local channel = Synchronizer:Get(plot.Name)
+            if not channel then
+                return
+            end
+            local animals = channel:Get("AnimalList")
+            if not animals then
+                return
+            end
+            local owner = channel:Get("Owner")
+            local ownerName = nil
+            if typeof(owner) == "Instance" then
+                ownerName = owner.Name
+            elseif type(owner) == "table" then
+                ownerName = owner.Name or (owner.UserId and tostring(owner.UserId))
+            end
+            for slot, data in pairs(animals) do
+                if type(data) ~= "table" then
+                    continue
+                end
+                if data.IsFusing or data.Fusing then
+                    continue
+                end
+                local animalInfo = AnimalsData[data.Index]
+                if not animalInfo then
+                    continue
+                end
+                local mutation = data.Mutation
+                if not mutation or mutation == "" then
+                    mutation = "None"
+                end
+                local generation = 0
+                pcall(function()
+                    generation = AnimalsShared:GetGeneration(data.Index, data.Mutation, data.Traits, nil) or 0
+                end)
+                list[#list + 1] = {
+                    uid = plot.Name .. "_" .. tostring(slot),
+                    name = animalInfo.DisplayName or data.Index,
+                    animalIndex = data.Index,
+                    index = data.Index,
+                    genValue = generation,
+                    genText = getGenerationText(generation),
+                    mutation = mutation,
+                    traits = data.Traits,
+                    owner = ownerName,
+                    plot = plot.Name,
+                    slot = tostring(slot),
+                }
+            end
+        end)
+    end
+    table.sort(list, function(a, b)
+        return (a.genValue or 0) > (b.genValue or 0)
+    end)
+    allAnimalsCache = list
+end
+local function getBestBrainrot()
+    local best = nil
+    local bestGeneration = -1
+    for _, animal in ipairs(allAnimalsCache) do
+        if not isMyBase(animal) and animal.genValue and animal.genValue > bestGeneration then
+            bestGeneration = animal.genValue
+            best = animal
+        end
+    end
+    return best
+end
+local function findAdornee(animalData)
+    if not animalData then
+        return nil
+    end
+    local plots = Workspace:FindFirstChild("Plots")
+    local plot = plots and plots:FindFirstChild(animalData.plot)
+    if not plot then
+        return nil
+    end
+    local podiums = plot:FindFirstChild("AnimalPodiums")
+    local podium = podiums and podiums:FindFirstChild(animalData.slot)
+    if not podium then
+        return nil
+    end
+    local base = podium:FindFirstChild("Base")
+    if not base then
+        return nil
+    end
+    return base:FindFirstChild("Spawn") or base:FindFirstChildWhichIsA("BasePart") or base
+end
+local function loadModel(animalData)
+    if not animalData then
+        return
+    end
+    local uid = (animalData.plot or "") .. "_" .. (animalData.slot or "")
+    if currentUid == uid then
+        return
+    end
+    currentUid = uid
+    clearViewport()
+    local spawnPart = findAdornee(animalData)
+    if not spawnPart then
+        currentUid = nil
+        return
+    end
+    local spawnPos = spawnPart.Position
+    local plots = Workspace:FindFirstChild("Plots")
+    local plot = plots and plots:FindFirstChild(animalData.plot)
+    local sourceModel = nil
+    local bestScore = -1
+    if plot then
+        for _, obj in ipairs(plot:GetDescendants()) do
+            if not obj:IsA("Model") then
+                continue
+            end
+            if obj.Name == "Base" then
+                continue
+            end
+            local root = obj:FindFirstChild("HumanoidRootPart") or obj.PrimaryPart or obj:FindFirstChildWhichIsA("BasePart")
+            if not root then
+                continue
+            end
+            local distance = (root.Position - spawnPos).Magnitude
+            if distance > 10 then
+                continue
+            end
+            local score = -distance
+            local indexName = animalData.animalIndex or animalData.index
+            if indexName and (obj.Name == indexName or obj.Name:find(indexName, 1, true)) then
+                score += 500
+            end
+            if animalData.name and (obj.Name == animalData.name or obj.Name:find(animalData.name, 1, true)) then
+                score += 500
+            end
+            if obj:FindFirstChildOfClass("Humanoid") then
+                score += 50
+            end
+            if score > bestScore then
+                bestScore = score
+                sourceModel = obj
+            end
+        end
+    end
+    if not sourceModel then
+        currentUid = nil
+        return
+    end
+    local ok = pcall(function()
+        local newClone = sourceModel:Clone()
+        for _, desc in ipairs(newClone:GetDescendants()) do
+            if desc:IsA("Script") or desc:IsA("LocalScript") or desc:IsA("ModuleScript")
+                or desc:IsA("Sound") or desc:IsA("SoundGroup")
+                or desc:IsA("BodyMover") or desc:IsA("Constraint") then
+                desc:Destroy()
+            elseif desc:IsA("BasePart") then
+                desc.Anchored = true
+                desc.CanCollide = false
+            elseif desc:IsA("Animator") then
+                for _, track in ipairs(desc:GetPlayingAnimationTracks()) do
+                    track:Stop(0)
+                end
+            end
+        end
+        local boundingCFrame = newClone:GetBoundingBox()
+        local delta = cloneOrigin - boundingCFrame.Position
+        newClone:PivotTo(newClone:GetPivot() + delta)
+        newClone.Parent = viewport
+        clone = newClone
+        local newCFrame, size = newClone:GetBoundingBox()
+        cloneCenter = newCFrame.Position
+        cloneRadius = math.max(math.max(size.X, size.Y, size.Z) * 0.55 + 0.5, 2.5)
+        local cameraDistance = cloneRadius * 3
+        camera.CFrame = CFrame.new(cloneCenter + Vector3.new(0, cloneRadius * 0.35, cameraDistance), cloneCenter)
+    end)
+    if not ok then
+        currentUid = nil
+    end
+end
+local function clearTraits()
+    for _, child in ipairs(traitRow:GetChildren()) do
+        if child:IsA("ImageLabel") then
+            child:Destroy()
+        end
+    end
+end
+local function resizeForTraits(traitCount)
+    local width = math.max(CONFIG.Width, win.Size.X.Offset)
+    if traitCount <= 0 then
+        traitRow.Size = UDim2.new(1, -10, 0, 0)
+        win.Size = UDim2.new(0, width, 0, 168)
+        return
+    end
+    local perRow = math.floor(traitRowWidth / (traitIconSize + traitPad))
+    if perRow < 1 then
+        perRow = 1
+    end
+    local rows = math.ceil(traitCount / perRow)
+    local traitHeight = rows * (traitIconSize + traitPad)
+    traitRow.Size = UDim2.new(1, -10, 0, traitHeight)
+    win.Size = UDim2.new(0, width, 0, 160 + traitHeight + 8)
+end
+local function updateTraits(traits)
+    clearTraits()
+    if not TraitsData or type(traits) ~= "table" or #traits <= 0 then
+        resizeForTraits(0)
+        return
+    end
+    local perRow = math.floor(traitRowWidth / (traitIconSize + traitPad))
+    if perRow < 1 then
+        perRow = 1
+    end
+    local count = 0
+    for _, traitName in ipairs(traits) do
+        local traitData = TraitsData[traitName]
+        local icon = traitData and traitData.Icon or ""
+        if icon ~= "" then
+            local column = count % perRow
+            local row = math.floor(count / perRow)
+            local image = Instance.new("ImageLabel")
+            image.Size = UDim2.new(0, traitIconSize, 0, traitIconSize)
+            image.Position = UDim2.new(0, column * (traitIconSize + traitPad), 0, row * (traitIconSize + traitPad))
+            image.BackgroundTransparency = 1
+            image.Image = icon
+            image.Parent = traitRow
+            count += 1
+        end
+    end
+    resizeForTraits(count)
+end
+local function updateMutationLabel(mutation)
+    mutationLabel.RichText = false
+    mutationLabel.TextColor3 = Color3.fromRGB(120, 120, 135)
+    if mutation == "None" or mutation == "" or not mutation then
+        mutationLabel.Text = ""
+        return
+    end
+    local color = MutationColors[mutation]
+    if color == "rainbow_rich" then
+        mutationLabel.RichText = true
+        mutationLabel.Text = '<font color="#FF4444">R</font><font color="#FF9933">a</font><font color="#FFDD33">i</font><font color="#44DD44">n</font><font color="#4488FF">b</font><font color="#AA55FF">o</font><font color="#FF66AA">w</font>  '
+    elseif mutation == "Cursed" then
+        mutationLabel.RichText = true
+        mutationLabel.Text = '<font color="#FF0000">C</font><font color="#CC0000">u</font><font color="#990000">r</font><font color="#550000">s</font><font color="#220000">e</font><font color="#000000">d</font>  '
+    elseif mutation == "YinYang" then
+        mutationLabel.RichText = true
+        mutationLabel.Text = '<font color="#FFFFFF">Yin</font><font color="#000000">Yang</font>  '
+    else
+        mutationLabel.Text = mutation .. "  "
+        if typeof(color) == "Color3" then
+            mutationLabel.TextColor3 = color
+        end
+    end
+end
+local function refreshLabels(best)
+    if not best then
+        mutationLabel.Text = ""
+        nameLabel.Text = ""
+        genLabel.Text = ""
+        clearTraits()
+        resizeForTraits(0)
+        clearViewport()
+        currentUid = nil
+        lastPlot = nil
+        lastSlot = nil
+        return
+    end
+    local mutation = best.mutation or "None"
+    local traits = best.traits or {}
+    pcall(function()
+        local channel = Synchronizer:Get(best.plot)
+        local animalList = channel and channel:Get("AnimalList")
+        local slotData = animalList and (animalList[tonumber(best.slot)] or animalList[best.slot])
+        if slotData and type(slotData) == "table" then
+            mutation = (slotData.Mutation or "None"):gsub("Yin Yang", "YinYang")
+            if slotData.Traits and type(slotData.Traits) == "table" then
+                traits = slotData.Traits
+            end
+        end
+    end)
+    updateMutationLabel(mutation)
+    nameLabel.Text = (best.name or "Brainrot") .. "  "
+    genLabel.Text = getGenerationText(best.genValue or 0)
+    task.wait()
+    local mutationWidth = mutationLabel.Text ~= "" and mutationLabel.TextBounds.X or 0
+    nameLabel.Position = UDim2.new(0, mutationWidth, 0, 0)
+    local nameEnd = mutationWidth + nameLabel.TextBounds.X
+    genLabel.Position = UDim2.new(0, nameEnd, 0, 0)
+    local totalWidth = nameEnd + genLabel.TextBounds.X + 16
+    if totalWidth > CONFIG.Width then
+        win.Size = UDim2.new(0, totalWidth, 0, win.Size.Y.Offset)
+    end
+    lastPlot = best.plot
+    lastSlot = best.slot
+    loadModel(best)
+    updateTraits(traits)
+end
+RunService.Heartbeat:Connect(function()
+    if not clone then
+        return
+    end
+    rotationAngle = (rotationAngle + 0.9) % 360
+    local radians = math.rad(rotationAngle)
+    local cameraDistance = cloneRadius * 2.8
+    camera.CFrame = CFrame.new(
+        cloneCenter + Vector3.new(math.sin(radians) * cameraDistance, cloneRadius * 0.4, math.cos(radians) * cameraDistance),
+        cloneCenter
+    )
+end)
+task.spawn(function()
+    while gui.Parent do
+        scanPlots()
+        if currentUid and lastPlot and lastSlot then
+            local gone = false
+            pcall(function()
+                local channel = Synchronizer:Get(lastPlot)
+                local animalList = channel and channel:Get("AnimalList")
+                if not animalList or (not animalList[tonumber(lastSlot)] and not animalList[lastSlot]) then
+                    gone = true
+                end
+            end)
+            if gone then
+                clearViewport()
+                currentUid = nil
+                lastPlot = nil
+                lastSlot = nil
+                scanPlots()
+            end
+        end
+        refreshLabels(getBestBrainrot())
+        task.wait(CONFIG.ScanInterval)
+    end
+end)
+_G.BestBrainrotViewerOnly = {
+    Gui = gui,
+    Refresh = function()
+        scanPlots()
+        refreshLabels(getBestBrainrot())
+    end,
+    Destroy = function()
+        if gui then
+            gui:Destroy()
+        end
+    end,
+}
+print("[BestBrainrotViewerOnly] loaded")

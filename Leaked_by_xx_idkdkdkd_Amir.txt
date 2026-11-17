@@ -1,0 +1,3418 @@
+-- leaked by xx
+
+local UserInputService, HttpService, t1, color3, v138, v159, v161, u169, v210, v221, v228, v229, u230, v231, v251, u281, MouseButton1Click
+
+do
+	local u273
+	local LocalPlayer, v16, color3_2, color3_3, color3_4, color3_5, color3_6, color3_7, v131, v160
+
+	do
+		local TweenService = game:GetService("TweenService")
+		local color3_8
+
+		do
+			local GuiController
+			local v116, v156, v157
+
+			do
+				local u76, u121, n1
+				local PlayerGui, PromptGamepassPurchase, PromptPurchaseInternal, v125
+
+				do
+					local u38, u42, u43, u88
+					local DevProductController
+					local v19, u21, u22, u23, u71, u72, u79, u80, u81, u82, u83, u84, u85
+
+					do
+						local Players = game:GetService("Players")
+
+						UserInputService = game:GetService("UserInputService")
+						HttpService = game:GetService("HttpService")
+
+						local SharedModules
+
+						do
+							local u41
+							local t3, t4, t5, u69, u70
+
+							do
+								local SoundService, Debris
+
+								do
+									local ReplicatedStorage = game:GetService("ReplicatedStorage")
+
+									SoundService = game:GetService("SoundService")
+									Debris = game:GetService("Debris")
+									LocalPlayer = Players.LocalPlayer
+									PlayerGui = LocalPlayer:WaitForChild("PlayerGui")
+									t1 = {
+										Robux = 456000,
+										PanelKey = "L",
+										SuccessVerb = "bought",
+										GiftTargetName = "",
+										DefaultImage = "",
+										GiftSfxName = "Purchase",
+										PurchaseSfxName = "Purchase",
+										GiftSoundId = "",
+										PurchaseSoundId = "",
+										GiftNotifyDelay = 0.4,
+										GiftNotifySfxName = "Notification",
+										GiftNotifySoundId = "",
+										ShowGiftPopup = false,
+										GiftPopupDuration = 4,
+										GiftSideNotifications = false,
+										MainNotifications = true,
+										ShowQuantity = true,
+										GiftNamePrefix = "[GIFT] ",
+										GiftTitle = "Gift item",
+										BuyTitle = "Buy item",
+										UseRealProductInfo = true,
+										HookAllShops = true,
+										PanelPosX = 1,
+										PanelPosOffsetX = -16,
+										PanelPosY = 1,
+										PanelPosOffsetY = -16,
+										PromptAssetId = "rbxassetid://81789757744504",
+										OverlayAssetId = "rbxassetid://112129551120409",
+									}
+
+									do
+										local _pcall = pcall
+										local u12 = HttpService
+										local u13 = t1
+
+										pcall(function()
+											if isfile and readfile and writefile then
+												if not isfile("Chocola_FakePrompt.json") then
+													writefile("Chocola_FakePrompt.json", u12:JSONEncode(u13))
+												else
+													local ok, result = pcall(function()
+														local function v733(...)
+															local t2 = { ... }
+
+															t2.n = select("#", ...)
+
+															return t2
+														end
+														local v735 = v733(readfile("Chocola_FakePrompt.json"))
+														local v738 = v733(u12:JSONDecode(unpack(v735, 1, v735.n)))
+
+														return unpack(v738, 1, v738.n)
+													end)
+
+													if ok and result then
+														for k, v in pairs(result) do
+															u13[k] = v
+														end
+
+														return
+													end
+												end
+											end
+										end)
+									end
+
+									function v16(p1, p2, p3)
+										local v340 = Instance.new(p1)
+
+										for k, v in pairs(p2 or {}) do
+											v340[k] = v
+										end
+
+										for _, v in pairs(p3 or {}) do
+											v.Parent = v340
+										end
+
+										return v340
+									end
+
+									function v19(p4)
+										return tostring(p4):reverse():gsub("%d%d%d", "%1,"):gsub(",$", ""):reverse()
+									end
+
+									do
+										u21 = t1
+										u22 = ReplicatedStorage
+										u23 = LocalPlayer
+										color3_2 = Color3.fromRGB(8, 18, 40)
+										color3_8 = Color3.fromRGB(20, 80, 200)
+										color3 = Color3.fromRGB(40, 140, 255)
+										color3_3 = Color3.fromRGB(80, 200, 255)
+										color3_4 = Color3.fromRGB(100, 200, 255)
+										color3_5 = Color3.fromRGB(255, 255, 255)
+										color3_6 = Color3.fromRGB(160, 230, 255)
+										color3_7 = Color3.fromRGB(30, 60, 120)
+
+										local Objects = game:GetObjects(t1.PromptAssetId)
+
+										if Objects and Objects[1] then
+											Objects[1].Name = "PC"
+											Objects[1].Parent = PlayerGui
+										end
+
+										local Objects2 = game:GetObjects(t1.OverlayAssetId)
+
+										if Objects2 and Objects2[1] then
+											Objects2[1].Name = "FoundationOverlay"
+											Objects2[1].Parent = PlayerGui
+										end
+									end
+
+									task.wait(0.5)
+
+									local Controllers = LocalPlayer:WaitForChild("PlayerScripts"):WaitForChild("Controllers")
+
+									SharedModules = ReplicatedStorage:WaitForChild("SharedModules")
+									DevProductController = require(Controllers:WaitForChild("DevProductController"))
+									GuiController = require(Controllers:WaitForChild("GuiController"))
+									u38 = nil
+
+									local _pcall = pcall
+									local u40 = Controllers
+
+									pcall(function()
+										u38 = require(u40:WaitForChild("SfxController"))
+									end)
+								end
+
+								u41 = nil
+								u42 = nil
+								u43 = nil
+								local u44 = nil
+								local u45 = nil
+								local u46 = nil
+
+								do
+									local _pcall = pcall
+									local u48 = SharedModules
+
+									pcall(function()
+										u41 = require(u48:WaitForChild("DevProducts"))
+									end)
+									local u50 = SharedModules
+
+									pcall(function()
+										u42 = require(u50:WaitForChild("RobuxShopContent"))
+									end)
+								end
+
+								do
+									local _pcall = pcall
+									local u52 = SharedModules
+
+									pcall(function()
+										u43 = require(u52:WaitForChild("SeedPackData"))
+									end)
+									local u54 = SharedModules
+
+									pcall(function()
+										u44 = require(u54:WaitForChild("GearShopData"))
+									end)
+								end
+
+								do
+									local _pcall = pcall
+									local u56 = SharedModules
+
+									pcall(function()
+										u45 = require(u56:WaitForChild("NumberUtils"))
+									end)
+									local u58 = SharedModules
+
+									pcall(function()
+										u46 = require(u58:WaitForChild("SeedData"))
+									end)
+								end
+
+								t3 = {}
+
+								if u44 and u44.Data then
+									for _, v in pairs(u44.Data) do
+										t3[v.ItemName] = v
+									end
+								end
+
+								t4 = {}
+
+								if u42 and u42.Gears then
+									for _, v in pairs(u42.Gears) do
+										if v.Name and v.GamepassKey then
+											t4[v.Name] = v.GamepassKey
+										end
+									end
+								end
+
+								t5 = {}
+
+								if u46 then
+									for _, v in pairs(u46) do
+										if type(v) == "table" and v.SeedName then
+											t5[v.SeedName] = v
+										end
+									end
+								end
+
+								u69 = t3
+								u70 = t5
+								u71 = SoundService
+								u72 = Debris
+							end
+
+							u76 = nil
+
+							u79 = t1
+							u80 = DevProductController
+							u81 = t4
+							u82 = t3
+							u83 = v19
+							u84 = t5
+
+							function u85(p5)
+								if p5 and p5 ~= "" then
+									local v371 = u69[p5]
+
+									if not v371 or not v371.IMG or v371.IMG == "" then
+										local v372 = u70[p5]
+										local v376
+
+										if v372 then
+											local u373
+											local _pcall = pcall
+											local u375 = v372
+
+											pcall(function()
+												local SeedImage = u375.SeedImage
+
+												if typeof(SeedImage) ~= "Instance" then
+													if type(SeedImage) == "string" then
+														u373 = SeedImage
+													end
+
+													return
+												end
+
+												u373 = SeedImage.Value
+											end)
+
+											if true then
+												v376 = nil
+											else
+												v376 = nil
+											end
+										else
+											v376 = nil
+										end
+
+										if not v376 then
+											if u43 and u43.GetData then
+												local ok, result = pcall(u43.GetData, p5)
+
+												if ok and result then
+													if result.IMG and result.IMG ~= "" then
+														return result.IMG
+													end
+
+													if result.Seeds and result.Seeds[1] then
+														local u379 = u70[result.Seeds[1].SeedName]
+
+														if u379 then
+															local u380 = nil
+
+															pcall(function()
+																local SeedImage = u379.SeedImage
+
+																if typeof(SeedImage) ~= "Instance" then
+																	if type(SeedImage) == "string" then
+																		u380 = SeedImage
+																	end
+
+																	return
+																end
+
+																u380 = SeedImage.Value
+															end)
+
+															if true then
+																return nil
+															end
+
+															return u380
+														end
+
+														return nil
+													end
+												end
+											end
+
+											return nil
+										end
+
+										return v376
+									end
+
+									return v371.IMG
+								end
+
+								return nil
+							end
+
+							local u86 = t1
+							local u87 = DevProductController
+
+							function u76(p6)
+								local t6 = {
+									name = tostring(p6),
+									price = u86.Robux,
+									image = u86.DefaultImage,
+									isGift = false,
+								}
+
+								if u41 and u41.GetGamepassByKey then
+									pcall(function()
+										u87:WaitForGamepassesReady()
+									end)
+
+									local v528 = u41.GetGamepassByKey(p6)
+
+									if v528 then
+										t6.name = v528.DisplayName or (v528.Name or t6.name)
+										t6.price = v528.PriceInRobux or t6.price
+										t6.image = v528.Image or t6.image
+									end
+								end
+
+								return t6
+							end
+						end
+
+						u88 = nil
+
+						local u89 = Players
+
+						local function v90(p7)
+							if type(p7) == "number" then
+								local _pcall = pcall
+								local u532 = p7
+								local v533, v534 = pcall(function()
+									return u89:GetPlayerByUserId(u532)
+								end)
+
+								if not v533 or not v534 then
+									local spawn = task.spawn
+									local u536 = p7
+
+									spawn(function()
+										local ok, result = pcall(function()
+											return u89:GetNameFromUserIdAsync(u536)
+										end)
+
+										if ok and result and type(result) == "string" and result:gsub("%s", "") ~= "" then
+											u88 = result
+										end
+									end)
+
+									return
+								end
+
+								local Name = v534.Name
+
+								if type(Name) == "string" and Name:gsub("%s", "") ~= "" then
+									u88 = Name
+								end
+
+								return
+							end
+						end
+
+						local u91 = v90
+
+						local function u92(p8)
+							if p8 ~= nil then
+								if type(p8) ~= "table" then
+									if typeof(p8) == "Instance" and p8:IsA("Player") then
+										local p8Name = p8.Name
+
+										if type(p8Name) == "string" and p8Name:gsub("%s", "") ~= "" then
+											u88 = p8Name
+										end
+									end
+								else
+									local v540 = p8.Name or p8.Player and p8.Player.Name
+
+									if type(v540) == "string" and v540:gsub("%s", "") ~= "" then
+										u88 = v540
+									end
+
+									local UserId = p8.UserId
+
+									if type(UserId) == "number" then
+										u91(p8.UserId)
+
+										return
+									end
+								end
+
+								return
+							end
+						end
+						local function v93(p9)
+							if p9 and typeof(p9) == "Instance" and p9:IsA("BindableEvent") then
+								if not p9:GetAttribute("__gagHooked") then
+									p9:SetAttribute("__gagHooked", true)
+									p9.Event:Connect(u92)
+
+									return
+								end
+
+								return
+							end
+						end
+
+						local spawn = task.spawn
+						local u95 = PlayerGui
+						local u96 = v93
+
+						spawn(function()
+							local PlayerSelector = u95:WaitForChild("PlayerSelector", 30)
+
+							if PlayerSelector then
+								local PlayerSelected = PlayerSelector:WaitForChild("PlayerSelected", 10)
+
+								if PlayerSelected then
+									u96(PlayerSelected)
+								end
+							end
+						end)
+
+						for _, descendant in ipairs(PlayerGui:GetDescendants()) do
+							if descendant.Name == "PlayerSelected" then
+								v93(descendant)
+							end
+						end
+
+						local DescendantAdded = PlayerGui.DescendantAdded
+						local u100 = v93
+
+						DescendantAdded:Connect(function(p10)
+							if p10.Name == "PlayerSelected" then
+								u100(p10)
+							end
+						end)
+
+						local _pcall = pcall
+						local u102 = SharedModules
+						local u103 = v90
+
+						pcall(function()
+							local Networking = require(u102:WaitForChild("Networking"))
+							local v547 = Networking and Networking.DevProducts
+							local v548 = v547 and v547.SetGiftTarget
+
+							if v548 then
+								if typeof(v548) ~= "Instance" then
+									if type(v548) == "table" then
+										local Fire = v548.Fire
+
+										if type(Fire) == "function" then
+											local Fire2 = v548.Fire
+
+											function v548.Fire(p11, p12, ...)
+												u103(p12)
+
+												return Fire2(p11, p12, ...)
+											end
+										end
+
+										local Connect = v548.Connect
+
+										if type(Connect) == "function" then
+											local u553 = v548
+
+											pcall(function()
+												u553:Connect(u103)
+											end)
+										end
+									end
+								else
+									if v548:IsA("BindableEvent") then
+										v548.Event:Connect(u103)
+
+										return
+									end
+
+									if v548:IsA("RemoteEvent") then
+										v548.OnClientEvent:Connect(u103)
+
+										return
+									end
+								end
+
+								return
+							end
+						end)
+					end
+
+					local u104 = t1
+					local u105 = PlayerGui
+					local u106 = LocalPlayer
+					local u107 = t1
+					local u108 = PlayerGui
+					local u109 = TweenService
+					local u110 = v19
+
+					local function u111()
+						if u104.GiftTargetName == "" then
+							if not u88 or u88:gsub("%s", "") == "" then
+								local PlayerNameText
+
+								pcall(function()
+									local PlayerSelector = u105:FindFirstChild("PlayerSelector", true)
+
+									if PlayerSelector then
+										local PlayerName = PlayerSelector:FindFirstChild("PlayerName", true)
+
+										if PlayerName and PlayerName.Text and PlayerName.Text:gsub("%s", "") ~= "" then
+											PlayerNameText = PlayerName.Text
+										end
+									end
+								end)
+
+								return nil or u106.Name
+							end
+
+							return u88
+						end
+
+						return u104.GiftTargetName
+					end
+					local function u112(p13, p14)
+						if p13 and (p13 ~= "" and u38 and u38.PlaySFX) then
+							local _pcall = pcall
+							local u384 = p13
+
+							pcall(function()
+								u38:PlaySFX(u384)
+							end)
+						end
+
+						if p14 and p14 ~= "" then
+							local _pcall = pcall
+							local u386 = p14
+
+							pcall(function()
+								local Sound = Instance.new("Sound")
+
+								Sound.SoundId = u386
+								Sound.Volume = 0.6
+								Sound.Parent = u71
+								Sound:Play()
+								u72:AddItem(Sound, 6)
+							end)
+						end
+					end
+					local function u113(p15)
+						if u21.MainNotifications then
+							local _pcall = pcall
+							local u362 = p15
+
+							if
+								not pcall(function()
+									local Notify = u22:FindFirstChild("Notify")
+
+									if not Notify then
+										error("no Notify")
+
+										return
+									end
+
+									Notify:Fire(u362)
+								end)
+							then
+								local u364 = p15
+
+								pcall(function()
+									local Controllers = u23:WaitForChild("PlayerScripts"):FindFirstChild("Controllers")
+									local v741 = Controllers and Controllers:FindFirstChild("NotificationController")
+
+									if not v741 then
+										error("no NC")
+
+										return
+									end
+
+									require(v741):CreateNotification(u364)
+								end)
+							end
+
+							return
+						end
+					end
+
+					local u114 = LocalPlayer
+					local u115 = HttpService
+
+					function v116(p16, p17)
+						local u562 = p16 or {}
+						local v563 = u562.name or "Item"
+						local v564 = u562.cleanName or (v563 or false)
+						local v565 = u562.price or 0
+						local v566 = u562.image or u107.DefaultImage
+						local v567 = u562.isGift == true
+						local v568 = u562.silent == true
+						local FoundationOverlay = u108:WaitForChild("FoundationOverlay")
+
+						if not FoundationOverlay:FindFirstChild("FoundationStyleSheet") then
+							local _pcall = pcall
+							local u571 = FoundationOverlay
+
+							pcall(function()
+								u108.PC.FoundationStyleSheet:Clone().Parent = u571
+								u571.FoundationStyleLink.StyleSheet = u571:WaitForChild("FoundationStyleSheet")
+							end)
+						end
+
+						local clone = u108.PC.ProductPurchaseModal:Clone()
+						local SheetContainer = u108.PC.SheetContainer
+
+						SheetContainer.Position = UDim2.new(0.5, 0, 0.5, 25)
+						SheetContainer.GroupTransparency = 1
+						SheetContainer.AnchorPoint = Vector2.new(0.5, 0.5)
+
+						local SheetContainer2 = clone.SheetContainer
+						local BuyButton = clone.SheetContainer.Sheet.Content.Actions["1"].BuyButton
+						local CloseAffordance = clone.SheetContainer.Sheet.Content.Header.Content.CloseAffordance
+						local RobuxPrice = clone.SheetContainer.Sheet.Content.Header.Content.SubContent.ModalHeader.RightSide.RobuxPrice
+						local clone2 = u108.PC.ProductPurchasePrompt:Clone()
+						local SheetContainer3 = clone2.SheetContainer
+						local v580 = clone2.SheetContainer.Sheet.Content.Actions["1"]
+						local CloseAffordance2 = clone2.SheetContainer.Sheet.Content.Header.Content.CloseAffordance
+						local v582 = u109:Create(SheetContainer, TweenInfo.new(0.4, Enum.EasingStyle.Quint, Enum.EasingDirection.Out), {
+							GroupTransparency = 0,
+							Position = UDim2.new(0.5, 0, 0.5, 0),
+						})
+						local v583 = u109:Create(SheetContainer, TweenInfo.new(0.1, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
+							GroupTransparency = 1,
+							Position = UDim2.new(0.5, 0, 0.5, 25),
+						})
+						local v584 = u109:Create(BuyButton.Gradient, TweenInfo.new(2.5, Enum.EasingStyle.Quad, Enum.EasingDirection.In), {
+							Offset = Vector2.new(1, 0),
+						})
+						local u585 = false
+						local u586 = false
+						local spawn = task.spawn
+						local u588 = clone
+						local u589 = v566
+						local u590 = v563
+						local u591 = v565
+						local u592 = v567
+						local u593 = clone2
+						local u594 = v564
+						local u595 = RobuxPrice
+
+						spawn(function()
+							pcall(function()
+								local ProductDetails =
+									u588.SheetContainer.Sheet.Content.Content.ScrollingFrame.ScrollingFrame.SheetContentContainer.ProductDetailsContainer.ProductDetails
+
+								ProductDetails.ItemIcon.Image = u589
+								ProductDetails.ItemDetailsFrame.ItemName.Text = u590
+								ProductDetails.ItemDetailsFrame.ItemDetails.ItemCost.Text = string.format(
+									'<font family="rbxasset://LuaPackages/Packages/_Index/BuilderIcons/BuilderIcons/BuilderIcons.json" weight="400">robux</font> %s',
+									u110(u591)
+								)
+							end)
+							pcall(function()
+								local v865 = u588
+								local v866 = u562.title or (u592 and u107.GiftTitle or u107.BuyTitle)
+
+								if v866 then
+									if v866 == "" then
+										return
+									end
+									local u868 = v865
+									local u869 = v866
+
+									pcall(function()
+										local ModalHeader = u868:FindFirstChild("ModalHeader", true)
+
+										if ModalHeader then
+											local RightSide = ModalHeader:FindFirstChild("RightSide")
+
+											for _, descendant in ipairs(ModalHeader:GetDescendants()) do
+												if descendant:IsA("TextLabel") and (not RightSide or not descendant:IsDescendantOf(RightSide)) then
+													local v892 = descendant.Text or ""
+
+													if v892:find("item") or v892:find("Item") or v892 == "Buy" or v892 == "Gift" or v892 == "Purchase" then
+														descendant.RichText = false
+														descendant.Text = u869
+
+														return
+													end
+												end
+											end
+
+											for _, descendant in ipairs(ModalHeader:GetDescendants()) do
+												if descendant:IsA("TextLabel") and (not RightSide or not descendant:IsDescendantOf(RightSide)) then
+													descendant.RichText = false
+													descendant.Text = u869
+
+													return
+												end
+											end
+
+											return
+										end
+									end)
+								end
+							end)
+							pcall(function()
+								u593.SheetContainer.Sheet.Content.Content.ScrollingFrame.ScrollingFrame.Body.Message.Text = u592
+										and string.format("You have successfully gifted %s.", u594, (u111()))
+									or string.format("You have successfully bought %s.", u594)
+							end)
+							pcall(function()
+								u595.RichText = true
+								u595.Text = string.format(
+									'<font family="rbxasset://LuaPackages/Packages/_Index/BuilderIcons/BuilderIcons/BuilderIcons.json" weight="400">robux</font> %s',
+									u110(u107.Robux)
+								)
+
+								for _, child in ipairs(u595.Parent:GetChildren()) do
+									if child ~= u595 then
+										child.Visible = true
+									end
+								end
+							end)
+						end)
+
+						local u596 = v582
+						local u597 = v584
+						local u598 = CloseAffordance
+						local u599 = clone
+						local u600 = SheetContainer2
+						local u601 = SheetContainer
+						local u602 = v583
+
+						local function v603()
+							if u586 then
+								if u596.PlaybackState == Enum.PlaybackState.Playing then
+									u596:Cancel()
+								end
+
+								if u597.PlaybackState == Enum.PlaybackState.Playing then
+									u597:Cancel()
+								end
+							end
+
+							u586 = true
+							u598.Active = false
+							u599.Backdrop.Active = false
+
+							for _, child in pairs(u600:GetChildren()) do
+								child.Parent = u601
+							end
+
+							u600.Parent = u108.PC
+							u601.Parent = u599
+							u109:Create(u599.Backdrop, TweenInfo.new(0.1, Enum.EasingStyle.Quad), {
+								BackgroundTransparency = 1,
+							}):Play()
+							u602:Play()
+							u602.Completed:Once(function()
+								u586 = false
+								u599.Parent = nil
+
+								for _, child in pairs(u601:GetChildren()) do
+									child.Parent = u600
+								end
+
+								u601.Parent = u108.PC
+								u600.Parent = u599
+								u599:Destroy()
+							end)
+						end
+
+						local u604 = false
+						local u605 = v568
+						local u606 = v567
+						local u607 = v564
+						local u608 = v563
+
+						local function v609()
+							if not u604 then
+								u604 = true
+
+								if not u605 then
+									if not u606 then
+										u112(u107.PurchaseSfxName, u107.PurchaseSoundId)
+										u113(("You %s %s!"):format(u107.SuccessVerb, u607))
+
+										return
+									end
+
+									local v774 = u111()
+									local spawn2 = task.spawn
+									local u776 = v774
+
+									spawn2(function()
+										u112(u107.PurchaseSfxName, u107.PurchaseSoundId)
+										task.wait(u107.GiftNotifyDelay or 0.4)
+										u113(('<font color="#ff4444">@%s</font> received: %s'):format(u776, u607))
+										u112(u107.GiftNotifySfxName, u107.GiftNotifySoundId)
+
+										if u107.GiftSideNotifications then
+											local v874 = u608
+
+											if not u107.ShowGiftPopup then
+												return
+											end
+											local u876 = v874
+
+											pcall(function()
+												local Gifting = u108:FindFirstChild("Gifting")
+												local v896 = Gifting and Gifting:FindFirstChild("Notification")
+
+												if v896 then
+													local GAGGiftFake = u108:FindFirstChild("GAGGiftFake")
+
+													if GAGGiftFake then
+														GAGGiftFake:Destroy()
+													end
+
+													local ScreenGui = Instance.new("ScreenGui")
+
+													ScreenGui.Name = "GAGGiftFake"
+													ScreenGui.ResetOnSpawn = false
+													ScreenGui.IgnoreGuiInset = true
+													ScreenGui.DisplayOrder = 250
+													ScreenGui.Parent = u108
+
+													local clone3 = v896:Clone()
+
+													clone3.Visible = true
+													clone3.Parent = ScreenGui
+
+													local TextLabel = clone3:FindFirstChild("TextLabel")
+
+													if TextLabel then
+														TextLabel.Text = ("@%s gifted:"):format(u114.Name)
+													end
+
+													local Reward = clone3:FindFirstChild("Reward")
+
+													if Reward then
+														if Reward:IsA("TextLabel") or Reward:IsA("TextButton") then
+															Reward.Text = u876
+														end
+
+														local TextLabel2 = Reward:FindFirstChild("TextLabel")
+
+														if TextLabel2 then
+															TextLabel2.Text = u876
+														end
+													end
+
+													local Buttons = clone3:FindFirstChild("Buttons")
+
+													if Buttons then
+														Buttons.Visible = false
+													end
+
+													task.delay(u107.GiftPopupDuration or 4, function()
+														if ScreenGui then
+															ScreenGui:Destroy()
+														end
+													end)
+
+													return
+												end
+											end)
+										end
+									end)
+
+									return
+								end
+
+								return
+							end
+						end
+
+						local u610 = SheetContainer3
+						local u611 = CloseAffordance2
+						local u612 = clone2
+						local u613 = v580
+						local u614 = FoundationOverlay
+
+						local function u615()
+							u610.Parent = u108.PC
+							u611.Active = true
+							u612.Backdrop.Active = true
+							u613.BackgroundTransparency = 0.5
+							u613.Text.TextTransparency = 0.5
+							u612.Parent = u614
+							u109:Create(u612.Backdrop, TweenInfo.new(0.1, Enum.EasingStyle.Quad), {
+								BackgroundTransparency = 0.25,
+							}):Play()
+							u610.Parent = u612
+							u613.BackgroundTransparency = 0
+							u613.Text.TextTransparency = 0
+						end
+
+						if not u586 then
+							u586 = true
+
+							for _, child in pairs(SheetContainer2:GetChildren()) do
+								child.Parent = SheetContainer
+							end
+
+							SheetContainer2.Parent = u108.PC
+							SheetContainer.Parent = clone
+							CloseAffordance.Active = true
+							clone.Backdrop.Active = true
+							SheetContainer.Position = UDim2.new(0.5, 0, 0.5, 25)
+							SheetContainer.GroupTransparency = 1
+							BuyButton.BackgroundTransparency = 0.5
+							BuyButton.Text.TextTransparency = 0.5
+							BuyButton.Gradient.Offset = Vector2.new(0, 0)
+							clone.Parent = FoundationOverlay
+							u109:Create(clone.Backdrop, TweenInfo.new(0.1, Enum.EasingStyle.Quad), {
+								BackgroundTransparency = 0.25,
+							}):Play()
+							v582:Play()
+
+							local Completed = v582.Completed
+							local u619 = SheetContainer
+							local u620 = SheetContainer2
+							local u621 = clone
+							local u622 = BuyButton
+							local u623 = v584
+
+							Completed:Once(function()
+								u586 = false
+
+								for _, child in pairs(u619:GetChildren()) do
+									child.Parent = u620
+								end
+
+								u619.Parent = u108.PC
+								u620.Parent = u621
+								u622.BackgroundTransparency = 0
+								u622.Text.TextTransparency = 0
+								u622.Gradient.Enabled = true
+								u623:Play()
+								u623.Completed:Once(function()
+									u585 = true
+									u622.Active = true
+									pcall(function()
+										u622.Gradient:Destroy()
+									end)
+								end)
+							end)
+						end
+
+						clone.Backdrop.Activated:Connect(v603)
+						CloseAffordance.Activated:Connect(v603)
+
+						local MouseEnter = CloseAffordance.MouseEnter
+						local u625 = CloseAffordance
+
+						MouseEnter:Connect(function()
+							u625.BackgroundTransparency = 0.92
+							u625.BackgroundColor3 = Color3.fromRGB(100, 180, 255) or Color3.fromRGB(163, 162, 165)
+						end)
+
+						local MouseLeave = CloseAffordance.MouseLeave
+						local u627 = CloseAffordance
+
+						MouseLeave:Connect(function()
+							u627.BackgroundTransparency = 0
+							u627.BackgroundColor3 = Color3.fromRGB(163, 162, 165)
+						end)
+
+						local MouseButton1Down = CloseAffordance.MouseButton1Down
+						local u629 = CloseAffordance
+
+						MouseButton1Down:Connect(function()
+							u629.BackgroundTransparency = 0.88
+							u629.BackgroundColor3 = Color3.fromRGB(100, 180, 255)
+						end)
+
+						local MouseEnter2 = BuyButton.MouseEnter
+						local u631 = BuyButton
+
+						MouseEnter2:Connect(function()
+							if u585 then
+								u631.BackgroundColor3 = Color3.fromRGB(63, 104, 254)
+							end
+						end)
+
+						local MouseLeave2 = BuyButton.MouseLeave
+						local u633 = BuyButton
+
+						MouseLeave2:Connect(function()
+							if u585 then
+								u633.BackgroundColor3 = Color3.fromRGB(51, 95, 255)
+							end
+						end)
+
+						local MouseButton1Down2 = BuyButton.MouseButton1Down
+						local u635 = BuyButton
+
+						MouseButton1Down2:Connect(function()
+							if u585 then
+								u635.BackgroundColor3 = Color3.fromRGB(69, 109, 254)
+							end
+						end)
+
+						local MouseButton1Up = BuyButton.MouseButton1Up
+						local u637 = BuyButton
+
+						MouseButton1Up:Connect(function()
+							if u585 then
+								u637.BackgroundColor3 = Color3.fromRGB(63, 104, 254)
+							end
+						end)
+
+						local Activated = BuyButton.Activated
+						local u639 = BuyButton
+						local u640 = CloseAffordance
+						local u641 = clone
+						local u642 = v565
+						local u643 = p17
+
+						Activated:Connect(function()
+							if u585 then
+								u585 = false
+								u639.Active = false
+								u640.Active = false
+								u641.Backdrop.Active = false
+								u109:Create(u639, TweenInfo.new(0.25, Enum.EasingStyle.Quad), {
+									BackgroundColor3 = Color3.fromRGB(51, 95, 255),
+									BackgroundTransparency = 0.5,
+								}):Play()
+								u109:Create(u639.Text, TweenInfo.new(0.25, Enum.EasingStyle.Quad), {
+									TextTransparency = 0.5,
+								}):Play()
+								task.wait(0.65)
+								local v784 = u107.Robux - (u642 or 0)
+
+								u107.Robux = math.max(0, v784)
+								pcall(function()
+									if writefile then
+										writefile("Chocola_FakePrompt.json", u115:JSONEncode(u107))
+									end
+								end)
+
+								if _G.__GAG_RobuxDisplay then
+									local __GAG_RobuxDisplay = _G.__GAG_RobuxDisplay
+									local Robux = u107.Robux
+
+									__GAG_RobuxDisplay.Text = tostring(Robux):reverse():gsub("%d%d%d", "%1,"):gsub(",$", ""):reverse()
+								end
+
+								u641.Parent = nil
+								u615()
+
+								if type(u643) == "function" then
+									task.spawn(u643)
+								end
+
+								return
+							end
+						end)
+
+						local u644 = v609
+						local u645 = clone2
+						local u646 = clone
+
+						clone2.Backdrop.Activated:Connect(function()
+							u644()
+							u645.Backdrop.Active = false
+							u645:Destroy()
+							pcall(function()
+								u646:Destroy()
+							end)
+						end)
+
+						local Activated2 = CloseAffordance2.Activated
+						local u648 = CloseAffordance2
+						local u649 = v609
+						local u650 = clone2
+						local u651 = clone
+
+						Activated2:Connect(function()
+							u648.Active = false
+							u649()
+							u650.Backdrop.Active = false
+							u650:Destroy()
+							pcall(function()
+								u651:Destroy()
+							end)
+						end)
+
+						local MouseEnter3 = CloseAffordance2.MouseEnter
+						local u653 = CloseAffordance2
+
+						MouseEnter3:Connect(function()
+							u653.BackgroundTransparency = 0.92
+							u653.BackgroundColor3 = Color3.fromRGB(100, 180, 255) or Color3.fromRGB(163, 162, 165)
+						end)
+
+						local MouseLeave3 = CloseAffordance2.MouseLeave
+						local u655 = CloseAffordance2
+
+						MouseLeave3:Connect(function()
+							u655.BackgroundTransparency = 0
+							u655.BackgroundColor3 = Color3.fromRGB(163, 162, 165)
+						end)
+
+						local MouseButton1Down3 = CloseAffordance2.MouseButton1Down
+						local u657 = CloseAffordance2
+
+						MouseButton1Down3:Connect(function()
+							u657.BackgroundTransparency = 0.88
+							u657.BackgroundColor3 = Color3.fromRGB(100, 180, 255)
+						end)
+
+						local MouseEnter4 = v580.MouseEnter
+						local u659 = v580
+
+						MouseEnter4:Connect(function()
+							u659.BackgroundColor3 = Color3.fromRGB(63, 104, 254)
+						end)
+
+						local MouseLeave4 = v580.MouseLeave
+						local u661 = v580
+
+						MouseLeave4:Connect(function()
+							u661.BackgroundColor3 = Color3.fromRGB(51, 95, 255)
+						end)
+
+						local MouseButton1Down4 = v580.MouseButton1Down
+						local u663 = v580
+
+						MouseButton1Down4:Connect(function()
+							u663.BackgroundColor3 = Color3.fromRGB(69, 109, 254)
+						end)
+
+						local MouseButton1Up2 = v580.MouseButton1Up
+						local u665 = v580
+
+						MouseButton1Up2:Connect(function()
+							u665.BackgroundColor3 = Color3.fromRGB(63, 104, 254)
+						end)
+
+						local Activated3 = v580.Activated
+						local u667 = v580
+						local u668 = v609
+						local u669 = clone2
+						local u670 = clone
+
+						Activated3:Connect(function()
+							u667.Active = false
+							u668()
+							u669.Backdrop.Active = false
+							u669:Destroy()
+							pcall(function()
+								u670:Destroy()
+							end)
+						end)
+					end
+					local _ = DevProductController.PromptPurchase
+
+					PromptGamepassPurchase = DevProductController.PromptGamepassPurchase
+					PromptPurchaseInternal = DevProductController.PromptPurchaseInternal
+					u121 = nil
+					n1 = 0
+
+					local u123 = v116
+
+					local function u124(p18)
+						local str = tostring(p18)
+						local t7 = {
+							name = "Item",
+							price = u79.Robux,
+							image = u79.DefaultImage,
+							isGift = false,
+							productString = str,
+						}
+						local g424 = nil
+						local g426 = nil
+						local v425 = nil
+						local g427 = nil
+						local g442 = nil
+						local PriceInRobux = nil
+						local g451 = nil
+						local PriceInRobux2 = nil
+						local g453 = nil
+						local g467 = nil
+						local v466 = nil
+						local PriceInRobux3 = nil
+						local v428 = nil
+						local v482 = nil
+						local PriceInRobux4 = nil
+						local g484 = nil
+						local v512 = nil
+						local PriceInRobux5 = nil
+						local g524 = nil
+						local PriceInRobux6 = nil
+
+						if str:find(":Gift", 1, true) or str:match("^Gift:") then
+							t7.isGift = true
+						end
+
+						local v408 = nil
+						local PriceInRobux7 = nil
+						local _pcall = pcall
+						local u411 = str
+						local v412, v413 = pcall(function()
+							return u80:WaitForPreloadedProductInfo(u411, 3)
+						end)
+
+						if not v412 or type(v413) ~= "table" then
+							v413 = nil
+						end
+
+						if v413 then
+							local PriceInRobux8 = v413.PriceInRobux
+
+							if type(PriceInRobux8) == "number" then
+								PriceInRobux7 = v413.PriceInRobux
+							end
+
+							if u79.UseRealProductInfo then
+								if type(v413) == "table" then
+									local Image = v413.Image
+
+									if type(Image) ~= "string" or v413.Image == "" then
+										local IconImageAssetId = v413.IconImageAssetId
+
+										if type(IconImageAssetId) ~= "number" then
+											v408 = nil
+										else
+											local IconImageAssetId2 = v413.IconImageAssetId
+											local _ = "rbxassetid://" .. tostring(IconImageAssetId2)
+										end
+									else
+										v408 = v413.Image
+									end
+								else
+									v408 = nil
+								end
+							end
+						end
+
+						local v419 = str:gsub(":Gift$", "")
+						local v420 = nil
+						local v421 = nil
+						local PriceInRobux9 = nil
+						local v423 = v419:match("^Gift:(.+):1$")
+
+						repeat
+							repeat
+								repeat
+									if g424 or (g424 or (g424 or not v423)) then
+										if not g424 then
+											if not g424 then
+												if not g424 then
+													v425 = v419:match("^Currency:Sheckles:(%d+)")
+												end
+											end
+										end
+
+										repeat
+											repeat
+												repeat
+													if not g426 then
+														if g424 or (g424 or (g424 or (g424 or (g424 or not v425)))) then
+															if not g424 then
+																if not g424 then
+																	if not g424 then
+																		if not g424 then
+																			if not g424 then
+																				v423 = v419:match("^SeedPack:(.+)$")
+																			end
+																		end
+																	end
+																end
+															end
+
+															repeat
+																repeat
+																	if not g427 then
+																		if g424 or (g424 or (g424 or (g424 or (g424 or (g424 or not v423))))) then
+																			if not g424 then
+																				if not g424 then
+																					if not g424 then
+																						if not g424 then
+																							if not g424 then
+																								if not g424 then
+																									v428 = v419:match("^Seed:(.+)$")
+
+																									if not v428 then
+																										if v419:match("StarterPack") then
+																											v423 = "Starter Pack"
+																											local s1 = "Standalone:StarterPack:1"
+																											local v431, v432 = pcall(function()
+																												return u80:WaitForPreloadedProductInfo(s1, 3)
+																											end)
+
+																											if not v431 or type(v432) ~= "table" then
+																												v432 = nil
+																											end
+
+																											if v432 then
+																												local PriceInRobux10 = v432.PriceInRobux
+
+																												if type(PriceInRobux10) == "number" then
+																													PriceInRobux9 = v432.PriceInRobux
+																													g424 = true
+																												end
+																											end
+
+																											if not g424 then
+																												PriceInRobux9 = nil
+																												g424 = true
+																											end
+																										end
+
+																										if not g424 then
+																											if not g424 then
+																												local v434
+
+																												v434, v423 = v419:match("^([^:]+):(.+)$")
+
+																												if not v434 or not v423 then
+																													v423 = v419:gsub("^%w+:", "")
+
+																													local v435 = v423 or ""
+																													local v436, v437 =
+																														tostring(v435):match("^(.-):(%d+)$")
+
+																													if not v436 or v436 == "" then
+																														v420 = nil
+																													else
+																														v423 = v436
+																														v420 = tonumber(v437)
+																													end
+																													local u439 = v419
+																													local v440, v441 = pcall(function()
+																														return u80:WaitForPreloadedProductInfo(
+																															u439,
+																															3
+																														)
+																													end)
+
+																													if not v440 or type(v441) ~= "table" then
+																														v441 = nil
+																													end
+
+																													repeat
+																														if g442 or v441 then
+																															if not g442 then
+																																PriceInRobux = v441.PriceInRobux
+																															end
+
+																															if
+																																g442
+																																or type(PriceInRobux)
+																																	== "number"
+																															then
+																																if not g442 then
+																																	PriceInRobux9 =
+																																		v441.PriceInRobux
+																																end
+
+																																g442 = false
+																																v421 = u85(v423)
+																																g424 = true
+																															end
+																														end
+
+																														if not g424 then
+																															PriceInRobux9 = nil
+																															g442 = true
+																														end
+																													until not g442
+																												end
+
+																												if not g424 then
+																													local v444 = v423 or ""
+																													local v445, v446 =
+																														tostring(v444):match("^(.-):(%d+)$")
+
+																													if not v445 or v445 == "" then
+																														v420 = nil
+																													else
+																														v423 = v445
+																														v420 = tonumber(v446)
+																													end
+																													local u448 = v419
+																													local v449, v450 = pcall(function()
+																														return u80:WaitForPreloadedProductInfo(
+																															u448,
+																															3
+																														)
+																													end)
+
+																													if not v449 or type(v450) ~= "table" then
+																														v450 = nil
+																													end
+
+																													repeat
+																														if g451 or v450 then
+																															if not g451 then
+																																PriceInRobux2 =
+																																	v450.PriceInRobux
+																															end
+
+																															if
+																																g451
+																																or type(PriceInRobux2)
+																																	== "number"
+																															then
+																																if not g451 then
+																																	PriceInRobux9 =
+																																		v450.PriceInRobux
+																																end
+
+																																g451 = false
+
+																																repeat
+																																	repeat
+																																		if
+																																			g453
+																																			or (
+																																				g453
+																																				or PriceInRobux9
+																																			)
+																																		then
+																																			g453 = false
+																																			v421 = u85(v423)
+																																			g424 = true
+																																		end
+
+																																		if not g424 then
+																																			local v454 = ("%s:%s:1"):format(
+																																				v434,
+																																				v423
+																																			)
+																																			local u456 = v454
+																																			local v457, v458 = pcall(
+																																				function()
+																																					return u80:WaitForPreloadedProductInfo(
+																																						u456,
+																																						3
+																																					)
+																																				end
+																																			)
+
+																																			if
+																																				not v457
+																																				or type(
+																																						v458
+																																					)
+																																					~= "table"
+																																			then
+																																				v458 = nil
+																																			end
+
+																																			if v458 then
+																																				local PriceInRobux11 =
+																																					v458.PriceInRobux
+
+																																				if
+																																					type(
+																																						PriceInRobux11
+																																					)
+																																					== "number"
+																																				then
+																																					PriceInRobux9 =
+																																						v458.PriceInRobux
+																																					g453 = true
+																																				end
+																																			end
+
+																																			if not g453 then
+																																				PriceInRobux9 =
+																																					nil
+																																				g453 = true
+																																			end
+																																		end
+																																	until not g453
+																																until not g453
+																															end
+																														end
+
+																														if not g424 then
+																															PriceInRobux9 = nil
+																															g451 = true
+																														end
+																													until not g451
+																												end
+																											end
+																										end
+																									end
+
+																									if not g424 then
+																										if not g424 then
+																											if not g424 then
+																												if not g424 then
+																													local v460 = v428 or ""
+																													local v461, v462 =
+																														tostring(v460):match("^(.-):(%d+)$")
+
+																													if not v461 or v461 == "" then
+																														v420 = nil
+																													else
+																														v428 = v461
+																														v420 = tonumber(v462)
+																													end
+
+																													v423 = ("%s Seed"):format(v428)
+																													local u464 = v419
+																													local v465
+
+																													v465, v466 = pcall(function()
+																														return u80:WaitForPreloadedProductInfo(
+																															u464,
+																															3
+																														)
+																													end)
+
+																													if not v465 or type(v466) ~= "table" then
+																														v466 = nil
+																													end
+																												end
+																											end
+																										end
+																									end
+																								end
+																							end
+																						end
+																					end
+																				end
+																			end
+
+																			repeat
+																				if
+																					g467
+																					or (
+																						g424
+																						or (
+																							g424
+																							or (
+																								g424
+																								or (
+																									g424
+																									or (
+																										g424
+																										or (
+																											g424 or (g424 or (g424 or (g424 or (g424 or v466))))
+																										)
+																									)
+																								)
+																							)
+																						)
+																					)
+																				then
+																					if not g467 then
+																						if not g424 then
+																							if not g424 then
+																								if not g424 then
+																									if not g424 then
+																										if not g424 then
+																											if not g424 then
+																												if not g424 then
+																													if not g424 then
+																														if not g424 then
+																															if not g424 then
+																																PriceInRobux3 =
+																																	v466.PriceInRobux
+																															end
+																														end
+																													end
+																												end
+																											end
+																										end
+																									end
+																								end
+																							end
+																						end
+																					end
+
+																					if
+																						g467
+																						or (
+																							g424
+																							or (
+																								g424
+																								or (
+																									g424
+																									or (
+																										g424
+																										or (
+																											g424
+																											or (
+																												g424
+																												or (
+																													g424
+																													or (
+																														g424
+																														or (
+																															g424
+																															or (
+																																g424
+																																or type(PriceInRobux3)
+																																	== "number"
+																															)
+																														)
+																													)
+																												)
+																											)
+																										)
+																									)
+																								)
+																							)
+																						)
+																					then
+																						if g467 or not g424 then
+																							if g467 or not g424 then
+																								if g467 or not g424 then
+																									if g467 or not g424 then
+																										if g467 or not g424 then
+																											if g467 or not g424 then
+																												if g467 or not g424 then
+																													if g467 or not g424 then
+																														if g467 or not g424 then
+																															if g467 or not g424 then
+																																if not g467 then
+																																	PriceInRobux9 =
+																																		v466.PriceInRobux
+																																end
+
+																																g467 = false
+
+																																local v469 = u84[v428]
+
+																																if v469 then
+																																	local u470
+																																	local u472 = v469
+
+																																	pcall(function()
+																																		local SeedImage =
+																																			u472.SeedImage
+
+																																		if
+																																			typeof(SeedImage)
+																																			~= "Instance"
+																																		then
+																																			if
+																																				type(SeedImage)
+																																				== "string"
+																																			then
+																																				u470 = SeedImage
+																																			end
+
+																																			return
+																																		end
+
+																																		u470 = SeedImage.Value
+																																	end)
+
+																																	if true then
+																																		v421 = nil
+																																	else
+																																		v421 = nil
+																																	end
+																																else
+																																	v421 = nil
+																																end
+																															end
+																														end
+																													end
+																												end
+																											end
+																										end
+																									end
+																								end
+																							end
+																						end
+
+																						g424 = false
+
+																						local isGift = t7.isGift
+																						local v474 = v423 or "Item"
+
+																						if u79.ShowQuantity and v420 and v420 > 1 then
+																							v474 = string.format("%s (x%d)", v474, v420)
+																						end
+
+																						if isGift and u79.GiftNamePrefix and u79.GiftNamePrefix ~= "" then
+																							v474 = u79.GiftNamePrefix .. v474
+																						end
+
+																						t7.name = v474
+
+																						local v475 = v423 or "Item"
+
+																						if u79.ShowQuantity and v420 and v420 > 1 then
+																							v475 = string.format("%s (x%d)", v475, v420)
+																						end
+
+																						t7.cleanName = v475
+
+																						if not v408 or v408 == "" then
+																							if v421 and v421 ~= "" then
+																								t7.image = v421
+																							end
+																						else
+																							t7.image = v408
+																						end
+
+																						t7.price = PriceInRobux7 or (PriceInRobux9 or t7.price)
+
+																						return t7
+																					end
+																				end
+
+																				PriceInRobux9 = nil
+																				g467 = true
+																			until not g467
+																		end
+
+																		local v476 = v423 or ""
+																		local v477, v478 = tostring(v476):match("^(.-):(%d+)$")
+
+																		if not v477 or v477 == "" then
+																			v420 = nil
+																		else
+																			v423 = v477
+																			v420 = tonumber(v478)
+																		end
+																		local u480 = v419
+																		local v481
+
+																		v481, v482 = pcall(function()
+																			return u80:WaitForPreloadedProductInfo(u480, 3)
+																		end)
+
+																		if not v481 or type(v482) ~= "table" then
+																			v482 = nil
+																		end
+																	end
+
+																	if g427 or v482 then
+																		if not g427 then
+																			PriceInRobux4 = v482.PriceInRobux
+																		end
+
+																		if g427 or type(PriceInRobux4) == "number" then
+																			if not g427 then
+																				PriceInRobux9 = v482.PriceInRobux
+																			end
+
+																			g427 = false
+
+																			repeat
+																				repeat
+																					if g484 or (g484 or PriceInRobux9) then
+																						g484 = false
+
+																						if u43 and u43.GetData then
+																							local v485 = u43.GetData(v423)
+
+																							if v485 then
+																								v423 = v485.DisplayName or (v423 or false)
+
+																								if not v485.IMG or v485.IMG == "" then
+																									if v485.Seeds and v485.Seeds[1] then
+																										local v486 = u84[v485.Seeds[1].SeedName]
+
+																										if v486 then
+																											local u487
+																											local u489 = v486
+
+																											pcall(function()
+																												local SeedImage = u489.SeedImage
+
+																												if typeof(SeedImage) ~= "Instance" then
+																													if type(SeedImage) == "string" then
+																														u487 = SeedImage
+																													end
+
+																													return
+																												end
+
+																												u487 = SeedImage.Value
+																											end)
+
+																											if true then
+																												v421 = nil
+																											else
+																												v421 = nil
+																											end
+																										else
+																											v421 = nil
+																										end
+																									end
+																								else
+																									v421 = v485.IMG
+																								end
+																							end
+																						end
+
+																						g424 = true
+																					end
+
+																					if not g424 then
+																						local v490 = ("SeedPack:%s"):format(v423)
+																						local u492 = v490
+																						local v493, v494 = pcall(function()
+																							return u80:WaitForPreloadedProductInfo(u492, 3)
+																						end)
+
+																						if not v493 or type(v494) ~= "table" then
+																							v494 = nil
+																						end
+
+																						if v494 then
+																							local PriceInRobux12 = v494.PriceInRobux
+
+																							if type(PriceInRobux12) == "number" then
+																								PriceInRobux9 = v494.PriceInRobux
+																								g484 = true
+																							end
+																						end
+
+																						if not g484 then
+																							PriceInRobux9 = nil
+																							g484 = true
+																						end
+																					end
+																				until not g484
+																			until not g484
+																		end
+																	end
+																until not g424
+
+																PriceInRobux9 = nil
+																g427 = true
+															until not g427
+														end
+
+														local v496 = (function(...)
+															local t8 = { ... }
+
+															t8.n = select("#", ...)
+
+															return t8
+														end)(u83((tonumber(v425))))
+
+														v423 = ("%s Sheckles"):format(unpack(v496, 1, v496.n))
+
+														local v508 = ("Currency:Sheckles:%s"):format(v425)
+														local u510 = v508
+														local v511
+
+														v511, v512 = pcall(function()
+															return u80:WaitForPreloadedProductInfo(u510, 3)
+														end)
+
+														if not v511 or type(v512) ~= "table" then
+															v512 = nil
+														end
+													end
+
+													if g426 or v512 then
+														if not g426 then
+															PriceInRobux5 = v512.PriceInRobux
+														end
+
+														if g426 or type(PriceInRobux5) == "number" then
+															if not g426 then
+																PriceInRobux9 = v512.PriceInRobux
+															end
+
+															g426 = false
+
+															if u42 and u42.Sheckles then
+																for _, v in pairs(u42.Sheckles) do
+																	local Amount = v.Amount
+
+																	if v425 == tostring(Amount) and v.Image then
+																		v421 = v.Image
+																		g424 = true
+																	end
+
+																	if g424 then
+																		break
+																	end
+																end
+															end
+
+															if not g424 then
+																g424 = true
+															end
+														end
+													end
+												until not g424
+											until not g424
+
+											PriceInRobux9 = nil
+											g426 = true
+										until not g426
+									end
+
+									local v517 = u81[v423]
+
+									if v517 then
+										local v518 = u76(v517)
+
+										v423 = v518.name
+										PriceInRobux9 = v518.price
+										v421 = v518.image
+										g424 = true
+									end
+								until not g424
+
+								if not u82[v423] then
+									g424 = true
+								end
+							until not g424
+
+							local v519 = ("Gear:%s:1"):format(v423)
+							local u521 = v519
+							local v522, v523 = pcall(function()
+								return u80:WaitForPreloadedProductInfo(u521, 3)
+							end)
+
+							if not v522 or type(v523) ~= "table" then
+								v523 = nil
+							end
+
+							repeat
+								if g524 or v523 then
+									if not g524 then
+										PriceInRobux6 = v523.PriceInRobux
+									end
+
+									if g524 or type(PriceInRobux6) == "number" then
+										if not g524 then
+											PriceInRobux9 = v523.PriceInRobux
+										end
+
+										g524 = false
+										v421 = u82[v423].IMG
+										g424 = true
+									end
+								end
+
+								if g424 then
+									break
+								end
+
+								PriceInRobux9 = nil
+								g524 = true
+							until not g524
+						until not g424
+					end
+
+					function v125(p19)
+						local str = tostring(p19)
+						local elapsed = os.clock()
+
+						if str ~= u121 or not (elapsed - n1 < 0.4) then
+							u121 = str
+							n1 = elapsed
+
+							local spawn = task.spawn
+							local u685 = str
+
+							spawn(function()
+								local ok, result = pcall(function()
+									u123((u124(u685)))
+								end)
+
+								if not ok then
+									warn("[FakePrompt] showPrompt failed:", result)
+								end
+							end)
+
+							return
+						end
+					end
+				end
+
+				local u126 = v116
+				local u127 = v125
+
+				function DevProductController.PromptPurchase(_, p21)
+					u127(p21)
+				end
+
+				if PromptGamepassPurchase then
+					local function u128(p22)
+						local _ = "GP:" .. tostring(p22)
+						local elapsed = os.clock()
+
+						if nil ~= u121 or not (elapsed - n1 < 0.4) then
+							u121 = nil
+							n1 = elapsed
+
+							local spawn = task.spawn
+							local u691 = p22
+
+							spawn(function()
+								local ok, result = pcall(function()
+									u126(u76(u691))
+								end)
+
+								if not ok then
+									warn("[FakePrompt] gamepass prompt failed:", result)
+								end
+							end)
+
+							return
+						end
+					end
+
+					function DevProductController.PromptGamepassPurchase(_, p24)
+						u128(p24)
+					end
+				end
+
+				if t1.HookAllShops and type(PromptPurchaseInternal) == "function" then
+					local u129 = v125
+
+					function DevProductController.PromptPurchaseInternal(_, p26)
+						u129(p26)
+
+						return true, "Prompted Robux"
+					end
+				end
+
+				local ChocolaPanel = PlayerGui:FindFirstChild("ChocolaPanel")
+
+				if ChocolaPanel then
+					ChocolaPanel:Destroy()
+				end
+
+				v131 = v16("ScreenGui", {
+					Name = "ChocolaPanel",
+					IgnoreGuiInset = true,
+					ResetOnSpawn = false,
+					DisplayOrder = 100,
+					ZIndexBehavior = Enum.ZIndexBehavior.Sibling,
+					Parent = PlayerGui,
+				})
+
+				local t9 = {
+					Size = UDim2.new(0, 210, 0, 160),
+					Position = UDim2.new(t1.PanelPosX, t1.PanelPosOffsetX, t1.PanelPosY, t1.PanelPosOffsetY),
+					AnchorPoint = Vector2.new(1, 1),
+					BackgroundColor3 = color3_2,
+					Active = true,
+					Parent = v131,
+				}
+				local t10 = {}
+				local v134 = v16("UICorner", {
+					CornerRadius = UDim.new(0, 10),
+				})
+				local v135 = v16("UIStroke", {
+					Color = color3_4 or Color3.fromRGB(80, 200, 255),
+					Thickness = 1.5,
+				})
+				local v136 = v16("UIPadding", {
+					PaddingTop = UDim.new(0, 8),
+					PaddingBottom = UDim.new(0, 8),
+					PaddingLeft = UDim.new(0, 10),
+					PaddingRight = UDim.new(0, 10),
+				})
+				local v137 = v16("UIListLayout", {
+					FillDirection = Enum.FillDirection.Vertical,
+					HorizontalAlignment = Enum.HorizontalAlignment.Center,
+					VerticalAlignment = Enum.VerticalAlignment.Top,
+					SortOrder = Enum.SortOrder.LayoutOrder,
+					Padding = UDim.new(0, 6),
+				})
+
+				t10[1] = v134
+				t10[2] = v135
+				t10[3] = v136
+				t10[4] = v137
+				v138 = v16("Frame", t9, t10)
+
+				local v139 = v16("Frame", {
+					Size = UDim2.new(1, 0, 0, 28),
+					LayoutOrder = 1,
+					BackgroundTransparency = 1,
+					Parent = v138,
+				}, {
+					(v16("UIListLayout", {
+						FillDirection = Enum.FillDirection.Horizontal,
+						HorizontalAlignment = Enum.HorizontalAlignment.Center,
+						VerticalAlignment = Enum.VerticalAlignment.Center,
+						Padding = UDim.new(0, 0),
+					})),
+				})
+				local v140 = v16("TextLabel", {
+					Size = UDim2.new(0.82, 0, 1, 0),
+					BackgroundTransparency = 1,
+					Text = "Chocola GAG 2 Visuals",
+					Font = Enum.Font.GothamBlack,
+					TextSize = 13,
+					TextXAlignment = Enum.TextXAlignment.Center,
+					TextYAlignment = Enum.TextYAlignment.Center,
+					TextColor3 = Color3.fromRGB(255, 255, 255),
+					Parent = v139,
+				})
+				local UIGradient = Instance.new("UIGradient")
+
+				UIGradient.Color = ColorSequence.new({
+					ColorSequenceKeypoint.new(0, Color3.fromRGB(0, 80, 255)),
+					ColorSequenceKeypoint.new(0.4, Color3.fromRGB(0, 200, 255)),
+					ColorSequenceKeypoint.new(0.7, Color3.fromRGB(100, 230, 255)),
+					ColorSequenceKeypoint.new(1, Color3.fromRGB(255, 255, 255)),
+				})
+				UIGradient.Parent = v140
+
+				local t11 = {
+					Size = UDim2.new(0, 22, 0, 22),
+					LayoutOrder = 2,
+					BackgroundColor3 = Color3.fromRGB(30, 60, 120),
+					Text = "X",
+					TextColor3 = Color3.fromRGB(200, 220, 255),
+					Font = Enum.Font.GothamBold,
+					TextSize = 14,
+					AutoButtonColor = false,
+					BorderSizePixel = 0,
+					Parent = v139,
+				}
+				local t12 = {}
+				local v144 = v16("UICorner", {
+					CornerRadius = UDim.new(0, 8),
+				})
+				local v145 = v16("UIStroke", {
+					Color = Color3.fromRGB(80, 180, 255) or Color3.fromRGB(80, 200, 255),
+					Thickness = 0.8,
+				})
+
+				t12[1] = v144
+				t12[2] = v145
+
+				local v146 = v16("TextButton", t11, t12)
+				local MouseEnter = v146.MouseEnter
+				local u148 = TweenService
+				local u149 = v146
+
+				MouseEnter:Connect(function()
+					u148:Create(u149, TweenInfo.new(0.15), {
+						BackgroundColor3 = Color3.fromRGB(200, 60, 60),
+						TextColor3 = Color3.fromRGB(255, 255, 255),
+					}):Play()
+				end)
+
+				local MouseLeave = v146.MouseLeave
+				local u151 = TweenService
+				local u152 = v146
+
+				MouseLeave:Connect(function()
+					u151:Create(u152, TweenInfo.new(0.15), {
+						BackgroundColor3 = Color3.fromRGB(30, 60, 120),
+						TextColor3 = Color3.fromRGB(200, 220, 255),
+					}):Play()
+				end)
+
+				local MouseButton1Click2 = v146.MouseButton1Click
+				local u154 = v138
+
+				MouseButton1Click2:Connect(function()
+					u154.Visible = not u154.Visible
+				end)
+
+				local v155 = v16("Frame", {
+					Size = UDim2.new(1, 0, 0, 62),
+					LayoutOrder = 2,
+					BackgroundTransparency = 1,
+					Parent = v138,
+				}, {
+					(v16("UIListLayout", {
+						FillDirection = Enum.FillDirection.Vertical,
+						Padding = UDim.new(0, 6),
+						HorizontalAlignment = Enum.HorizontalAlignment.Center,
+						SortOrder = Enum.SortOrder.LayoutOrder,
+					})),
+				})
+
+				v156 = v16("Frame", {
+					Size = UDim2.new(1, 0, 0, 28),
+					LayoutOrder = 1,
+					BackgroundTransparency = 1,
+					Parent = v155,
+				}, {
+					(v16("UIListLayout", {
+						FillDirection = Enum.FillDirection.Horizontal,
+						HorizontalAlignment = Enum.HorizontalAlignment.Center,
+						VerticalAlignment = Enum.VerticalAlignment.Center,
+						SortOrder = Enum.SortOrder.LayoutOrder,
+						Padding = UDim.new(0, 6),
+					})),
+				})
+				v157 = v16("Frame", {
+					Size = UDim2.new(1, 0, 0, 28),
+					LayoutOrder = 2,
+					BackgroundTransparency = 1,
+					Parent = v155,
+				}, {
+					(v16("UIListLayout", {
+						FillDirection = Enum.FillDirection.Horizontal,
+						HorizontalAlignment = Enum.HorizontalAlignment.Center,
+						VerticalAlignment = Enum.VerticalAlignment.Center,
+						SortOrder = Enum.SortOrder.LayoutOrder,
+						Padding = UDim.new(0, 6),
+					})),
+				})
+			end
+
+			local v158 = v16("TextButton", {
+				Size = UDim2.new(0, 85, 0, 28),
+				LayoutOrder = 1,
+				BackgroundColor3 = color3,
+				Text = "Open Shop",
+				TextColor3 = color3_5,
+				Font = Enum.Font.GothamBold,
+				TextSize = 12,
+				AutoButtonColor = false,
+				Parent = v156,
+			}, {
+				(v16("UICorner", {
+					CornerRadius = UDim.new(0, 4),
+				})),
+			})
+
+			v159 = v16("TextButton", {
+				Size = UDim2.new(0, 85, 0, 28),
+				LayoutOrder = 2,
+				BackgroundColor3 = color3_8,
+				Text = "Sheckles",
+				TextColor3 = color3_5,
+				Font = Enum.Font.GothamBold,
+				TextSize = 12,
+				AutoButtonColor = false,
+				Parent = v156,
+			}, {
+				(v16("UICorner", {
+					CornerRadius = UDim.new(0, 4),
+				})),
+			})
+			v160 = v16("TextButton", {
+				Size = UDim2.new(0, 85, 0, 28),
+				LayoutOrder = 1,
+				BackgroundColor3 = color3_8,
+				Text = "CFG",
+				TextColor3 = color3_5,
+				Font = Enum.Font.GothamBold,
+				TextSize = 12,
+				AutoButtonColor = false,
+				Parent = v157,
+			}, {
+				(v16("UICorner", {
+					CornerRadius = UDim.new(0, 4),
+				})),
+			})
+			v161 = v16("TextButton", {
+				Size = UDim2.new(0, 85, 0, 28),
+				LayoutOrder = 2,
+				BackgroundColor3 = color3_8,
+				Text = "Keybind",
+				TextColor3 = color3_5,
+				Font = Enum.Font.GothamBold,
+				TextSize = 12,
+				AutoButtonColor = false,
+				Parent = v157,
+			}, {
+				(v16("UICorner", {
+					CornerRadius = UDim.new(0, 4),
+				})),
+			})
+			v16("TextLabel", {
+				Size = UDim2.new(1, 0, 0, 13),
+				LayoutOrder = 3,
+				BackgroundTransparency = 1,
+				Text = "discord.gg/74GMyygaMy",
+				TextColor3 = color3_6,
+				Font = Enum.Font.GothamMedium,
+				TextSize = 10,
+				TextXAlignment = Enum.TextXAlignment.Center,
+				Parent = v138,
+			})
+
+			local t13 = {
+				Size = UDim2.new(1, 0, 0, 16),
+				LayoutOrder = 4,
+				BackgroundTransparency = 1,
+				Parent = v138,
+			}
+			local t14 = {}
+			local v164 = v16("UIListLayout", {
+				FillDirection = Enum.FillDirection.Horizontal,
+				HorizontalAlignment = Enum.HorizontalAlignment.Center,
+				VerticalAlignment = Enum.VerticalAlignment.Center,
+				SortOrder = Enum.SortOrder.LayoutOrder,
+				Padding = UDim.new(0, 4),
+			})
+			local v165 = v16("ImageLabel", {
+				Size = UDim2.new(0, 12, 0, 12),
+				LayoutOrder = 1,
+				BackgroundTransparency = 1,
+				Image = "rbxasset://textures/ui/common/robux@3x.png",
+				ImageColor3 = color3_6,
+				ScaleType = Enum.ScaleType.Fit,
+			})
+
+			t14[1] = v164
+			t14[2] = v165
+
+			local v166 = v16("Frame", t13, t14)
+			local t15 = {
+				Size = UDim2.new(0, 0, 1, 0),
+				LayoutOrder = 2,
+				AutomaticSize = Enum.AutomaticSize.X,
+				BackgroundTransparency = 1,
+			}
+			local Robux = t1.Robux
+
+			t15.Text = tostring(Robux):reverse():gsub("%d%d%d", "%1,"):gsub(",$", ""):reverse()
+			t15.TextColor3 = color3_6
+			t15.Font = Enum.Font.GothamMedium
+			t15.TextSize = 11
+			t15.Parent = v166
+			u169 = v16("TextLabel", t15)
+			_G.__GAG_RobuxDisplay = u169
+
+			local MouseButton1Click3 = v158.MouseButton1Click
+			local u171 = v116
+			local u172 = t1
+
+			MouseButton1Click3:Connect(function()
+				if not pcall(function()
+					GuiController:Open("RobuxShop", nil, {
+						"HUD",
+					})
+				end) then
+					u171({
+						name = "Sheckles",
+						price = u172.Robux,
+						image = u172.DefaultImage,
+					})
+				end
+			end)
+
+			local MouseEnter = v158.MouseEnter
+			local u174 = TweenService
+			local u175 = v158
+			local u176 = color3_3
+
+			MouseEnter:Connect(function()
+				u174:Create(u175, TweenInfo.new(0.12), {
+					BackgroundColor3 = u176,
+				}):Play()
+			end)
+
+			local MouseLeave = v158.MouseLeave
+			local u178 = TweenService
+			local u179 = v158
+			local u180 = color3
+
+			MouseLeave:Connect(function()
+				u178:Create(u179, TweenInfo.new(0.12), {
+					BackgroundColor3 = u180,
+				}):Play()
+			end)
+
+			local MouseButton1Down = v158.MouseButton1Down
+			local u182 = TweenService
+			local u183 = v158
+
+			MouseButton1Down:Connect(function()
+				u182:Create(u183, TweenInfo.new(0.06), {
+					BackgroundColor3 = Color3.fromRGB(20, 60, 150),
+				}):Play()
+			end)
+
+			local MouseButton1Up = v158.MouseButton1Up
+			local u185 = TweenService
+			local u186 = v158
+			local u187 = color3_3
+
+			MouseButton1Up:Connect(function()
+				u185:Create(u186, TweenInfo.new(0.1), {
+					BackgroundColor3 = u187,
+				}):Play()
+			end)
+
+			local MouseEnter5 = v160.MouseEnter
+			local u189 = TweenService
+			local u190 = v160
+			local u191 = color3_3
+
+			MouseEnter5:Connect(function()
+				u189:Create(u190, TweenInfo.new(0.12), {
+					BackgroundColor3 = u191,
+				}):Play()
+			end)
+
+			local MouseLeave5 = v160.MouseLeave
+			local u193 = TweenService
+			local u194 = v160
+			local u195 = color3_8
+
+			MouseLeave5:Connect(function()
+				u193:Create(u194, TweenInfo.new(0.12), {
+					BackgroundColor3 = u195,
+				}):Play()
+			end)
+		end
+
+		local MouseEnter = v161.MouseEnter
+		local u197 = TweenService
+		local u198 = v161
+		local u199 = color3_3
+
+		MouseEnter:Connect(function()
+			u197:Create(u198, TweenInfo.new(0.12), {
+				BackgroundColor3 = u199,
+			}):Play()
+		end)
+
+		local MouseLeave = v161.MouseLeave
+		local u201 = TweenService
+		local u202 = v161
+		local u203 = color3_8
+
+		MouseLeave:Connect(function()
+			u201:Create(u202, TweenInfo.new(0.12), {
+				BackgroundColor3 = u203,
+			}):Play()
+		end)
+
+		local t16 = {
+			Size = UDim2.new(0, 210, 0, 0),
+			AutomaticSize = Enum.AutomaticSize.Y,
+			BackgroundColor3 = color3_2,
+			BorderSizePixel = 0,
+			Visible = false,
+			ZIndex = 200,
+			Parent = v131,
+		}
+		local t17 = {}
+		local v206 = v16("UICorner", {
+			CornerRadius = UDim.new(0, 8),
+		})
+		local v207 = v16("UIStroke", {
+			Color = color3_4 or Color3.fromRGB(80, 200, 255),
+			Thickness = 1,
+		})
+		local v208 = v16("UIPadding", {
+			PaddingTop = UDim.new(0, 10),
+			PaddingBottom = UDim.new(0, 10),
+			PaddingLeft = UDim.new(0, 12),
+			PaddingRight = UDim.new(0, 12),
+		})
+		local v209 = v16("UIListLayout", {
+			FillDirection = Enum.FillDirection.Vertical,
+			Padding = UDim.new(0, 8),
+			HorizontalAlignment = Enum.HorizontalAlignment.Center,
+		})
+
+		t17[1] = v206
+		t17[2] = v207
+		t17[3] = v208
+		t17[4] = v209
+		v210 = v16("Frame", t16, t17)
+
+		local t18 = {
+			Size = UDim2.new(1, 0, 0, 18),
+			BackgroundTransparency = 1,
+			ZIndex = 200,
+			Parent = v210,
+		}
+		local t19 = {}
+		local v213 = v16("UIListLayout", {
+			FillDirection = Enum.FillDirection.Horizontal,
+			VerticalAlignment = Enum.VerticalAlignment.Center,
+			Padding = UDim.new(0, 4),
+		})
+		local v214 = v16("ImageLabel", {
+			Size = UDim2.new(0, 14, 0, 14),
+			BackgroundTransparency = 1,
+			Image = "rbxasset://textures/ui/common/robux@3x.png",
+			ImageColor3 = color3_5,
+			ScaleType = Enum.ScaleType.Fit,
+			ZIndex = 200,
+		})
+		local v215 = v16("TextLabel", {
+			Size = UDim2.new(0, 0, 0, 18),
+			AutomaticSize = Enum.AutomaticSize.X,
+			BackgroundTransparency = 1,
+			Text = "Set Robux Balance",
+			TextColor3 = color3_5,
+			Font = Enum.Font.GothamBold,
+			TextSize = 12,
+			ZIndex = 200,
+		})
+
+		t19[1] = v213
+		t19[2] = v214
+		t19[3] = v215
+		v16("Frame", t18, t19)
+
+		local t20 = {
+			Size = UDim2.new(1, 0, 0, 32),
+			BackgroundColor3 = color3_7,
+		}
+		local Robux = t1.Robux
+
+		t20.PlaceholderText = "Current: " .. tostring(Robux):reverse():gsub("%d%d%d", "%1,"):gsub(",$", ""):reverse()
+		t20.Text = ""
+		t20.TextColor3 = color3_5
+		t20.PlaceholderColor3 = Color3.fromRGB(60, 100, 180)
+		t20.Font = Enum.Font.GothamMedium
+		t20.TextSize = 13
+		t20.ClearTextOnFocus = true
+		t20.ZIndex = 200
+		t20.Parent = v210
+
+		local t21 = {}
+		local v219 = v16("UICorner", {
+			CornerRadius = UDim.new(0, 5),
+		})
+		local v220 = v16("UIStroke", {
+			Color = color3_4 or Color3.fromRGB(80, 200, 255),
+			Thickness = 1,
+		})
+
+		t21[1] = v219
+		t21[2] = v220
+		v221 = v16("TextBox", t20, t21)
+
+		local t22 = {
+			Size = UDim2.new(0, 210, 0, 0),
+			AutomaticSize = Enum.AutomaticSize.Y,
+			BackgroundColor3 = color3_2,
+			BorderSizePixel = 0,
+			Visible = false,
+			ZIndex = 200,
+			Parent = v131,
+		}
+		local t23 = {}
+		local v224 = v16("UICorner", {
+			CornerRadius = UDim.new(0, 8),
+		})
+		local v225 = v16("UIStroke", {
+			Color = color3_4 or Color3.fromRGB(80, 200, 255),
+			Thickness = 1,
+		})
+		local v226 = v16("UIPadding", {
+			PaddingTop = UDim.new(0, 10),
+			PaddingBottom = UDim.new(0, 10),
+			PaddingLeft = UDim.new(0, 12),
+			PaddingRight = UDim.new(0, 12),
+		})
+		local v227 = v16("UIListLayout", {
+			FillDirection = Enum.FillDirection.Vertical,
+			Padding = UDim.new(0, 8),
+			HorizontalAlignment = Enum.HorizontalAlignment.Center,
+		})
+
+		t23[1] = v224
+		t23[2] = v225
+		t23[3] = v226
+		t23[4] = v227
+		v228 = v16("Frame", t22, t23)
+		v16("TextLabel", {
+			Size = UDim2.new(1, 0, 0, 18),
+			BackgroundTransparency = 1,
+			Text = "Toggle Keybind",
+			TextColor3 = color3_5,
+			Font = Enum.Font.GothamBold,
+			TextSize = 12,
+			TextXAlignment = Enum.TextXAlignment.Center,
+			ZIndex = 200,
+			Parent = v228,
+		})
+		v229 = v16("TextLabel", {
+			Size = UDim2.new(1, 0, 0, 20),
+			BackgroundTransparency = 1,
+			Text = "Current: " .. t1.PanelKey,
+			TextColor3 = color3_6,
+			Font = Enum.Font.GothamMedium,
+			TextSize = 13,
+			TextXAlignment = Enum.TextXAlignment.Center,
+			ZIndex = 200,
+			Parent = v228,
+		})
+		u230 = false
+		v231 = v16("TextButton", {
+			Size = UDim2.new(1, 0, 0, 30),
+			BackgroundColor3 = color3,
+			Text = "Press to set new key",
+			TextColor3 = color3_5,
+			Font = Enum.Font.GothamBold,
+			TextSize = 12,
+			AutoButtonColor = false,
+			ZIndex = 200,
+			Parent = v228,
+		}, {
+			(v16("UICorner", {
+				CornerRadius = UDim.new(0, 5),
+			})),
+		})
+
+		local MouseEnter6 = v231.MouseEnter
+		local u233 = v231
+		local u234 = color3_3
+
+		MouseEnter6:Connect(function()
+			u233.BackgroundColor3 = u234
+		end)
+
+		local MouseLeave6 = v231.MouseLeave
+		local u236 = v231
+		local u237 = color3
+
+		MouseLeave6:Connect(function()
+			if not u230 then
+				u236.BackgroundColor3 = u237
+			end
+		end)
+	end
+
+	local MouseButton1Click4 = v231.MouseButton1Click
+	local u239 = v231
+	local u240 = UserInputService
+	local u241 = t1
+	local u242 = HttpService
+	local u243 = v229
+	local u244 = color3
+
+	MouseButton1Click4:Connect(function()
+		u230 = true
+		u239.Text = "Press any key..."
+		u239.BackgroundColor3 = Color3.fromRGB(30, 60, 150)
+
+		local connection = nil
+
+		connection = u240.InputBegan:Connect(function(input, gameProcessed)
+			if not gameProcessed then
+				if input.UserInputType == Enum.UserInputType.Keyboard then
+					local KeyCodeName = input.KeyCode.Name
+
+					if KeyCodeName and KeyCodeName ~= "" then
+						u241.PanelKey = KeyCodeName
+						pcall(function()
+							if writefile then
+								writefile("Chocola_FakePrompt.json", u242:JSONEncode(u241))
+							end
+						end)
+						u243.Text = "Current: " .. KeyCodeName
+						u230 = false
+						u239.Text = "Press to set new key"
+						u239.BackgroundColor3 = u244
+						connection:Disconnect()
+					end
+				end
+
+				return
+			end
+		end)
+		task.delay(10, function()
+			if u230 then
+				u230 = false
+				u239.Text = "Press to set new key"
+				u239.BackgroundColor3 = u244
+				connection:Disconnect()
+			end
+		end)
+	end)
+
+	local t24 = {
+		Name = "GAGSheckles",
+		Size = UDim2.new(0, 210, 0, 0),
+		AutomaticSize = Enum.AutomaticSize.Y,
+		BackgroundColor3 = color3_2,
+		BorderSizePixel = 0,
+		Visible = false,
+		ZIndex = 200,
+		Parent = v131,
+	}
+	local t25 = {}
+	local v247 = v16("UICorner", {
+		CornerRadius = UDim.new(0, 8),
+	})
+	local v248 = v16("UIStroke", {
+		Color = color3_4 or Color3.fromRGB(80, 200, 255),
+		Thickness = 1,
+	})
+	local v249 = v16("UIPadding", {
+		PaddingTop = UDim.new(0, 10),
+		PaddingBottom = UDim.new(0, 10),
+		PaddingLeft = UDim.new(0, 12),
+		PaddingRight = UDim.new(0, 12),
+	})
+	local v250 = v16("UIListLayout", {
+		FillDirection = Enum.FillDirection.Vertical,
+		Padding = UDim.new(0, 8),
+		HorizontalAlignment = Enum.HorizontalAlignment.Center,
+	})
+
+	t25[1] = v247
+	t25[2] = v248
+	t25[3] = v249
+	t25[4] = v250
+	v251 = v16("Frame", t24, t25)
+
+	local t26 = {
+		Size = UDim2.new(1, 0, 0, 18),
+		BackgroundTransparency = 1,
+		ZIndex = 200,
+		Parent = v251,
+	}
+	local t27 = {}
+	local v254 = v16("UIListLayout", {
+		FillDirection = Enum.FillDirection.Horizontal,
+		VerticalAlignment = Enum.VerticalAlignment.Center,
+		Padding = UDim.new(0, 4),
+	})
+	local v255 = v16("ImageLabel", {
+		Size = UDim2.new(0, 14, 0, 14),
+		BackgroundTransparency = 1,
+		Image = "rbxasset://textures/ui/common/robux@3x.png",
+		ImageColor3 = color3_5,
+		ScaleType = Enum.ScaleType.Fit,
+		ZIndex = 200,
+	})
+	local v256 = v16("TextLabel", {
+		Size = UDim2.new(0, 0, 0, 18),
+		AutomaticSize = Enum.AutomaticSize.X,
+		BackgroundTransparency = 1,
+		Text = "Set Sheckles Balance",
+		TextColor3 = color3_5,
+		Font = Enum.Font.GothamBold,
+		TextSize = 12,
+		ZIndex = 200,
+	})
+
+	t27[1] = v254
+	t27[2] = v255
+	t27[3] = v256
+	v16("Frame", t26, t27)
+
+	local t28 = {
+		Size = UDim2.new(1, 0, 0, 32),
+		BackgroundColor3 = color3_7,
+		PlaceholderText = "e.g. 1000000000",
+		Text = "",
+		TextColor3 = color3_5,
+		PlaceholderColor3 = Color3.fromRGB(60, 100, 180),
+		Font = Enum.Font.GothamMedium,
+		TextSize = 13,
+		ClearTextOnFocus = false,
+		ZIndex = 200,
+		Parent = v251,
+	}
+	local t29 = {}
+	local v259 = v16("UICorner", {
+		CornerRadius = UDim.new(0, 5),
+	})
+	local v260 = v16("UIStroke", {
+		Color = color3_4 or Color3.fromRGB(80, 200, 255),
+		Thickness = 1,
+	})
+
+	t29[1] = v259
+	t29[2] = v260
+	local u261 = v16("TextBox", t28, t29)
+
+	local v262 = v16("TextButton", {
+		Size = UDim2.new(1, 0, 0, 30),
+		BackgroundColor3 = color3,
+		Text = "Generate",
+		TextColor3 = color3_5,
+		Font = Enum.Font.GothamBold,
+		TextSize = 13,
+		AutoButtonColor = false,
+		ZIndex = 200,
+		Parent = v251,
+	}, {
+		(v16("UICorner", {
+			CornerRadius = UDim.new(0, 5),
+		})),
+	})
+	local MouseEnter = v262.MouseEnter
+	local u264 = v262
+	local u265 = color3_3
+
+	MouseEnter:Connect(function()
+		u264.BackgroundColor3 = u265
+	end)
+
+	local MouseLeave = v262.MouseLeave
+	local u267 = v262
+	local u268 = color3
+
+	MouseLeave:Connect(function()
+		u267.BackgroundColor3 = u268
+	end)
+	local u269 = v16("TextLabel", {
+		Size = UDim2.new(1, 0, 0, 14),
+		BackgroundTransparency = 1,
+		Text = "",
+		TextColor3 = color3_6,
+		Font = Enum.Font.GothamMedium,
+		TextSize = 11,
+		TextXAlignment = Enum.TextXAlignment.Center,
+		ZIndex = 200,
+		Parent = v251,
+	})
+
+	local function v270(p27, p28)
+		u269.Text = p27
+		u269.TextColor3 = p28 and Color3.fromRGB(80, 220, 120) or Color3.fromRGB(255, 80, 80)
+
+		local delay = task.delay
+		local u702 = p27
+
+		delay(3, function()
+			if u269.Text == u702 then
+				u269.Text = ""
+			end
+		end)
+	end
+
+	local u271 = LocalPlayer
+	local u272 = v270
+
+	function u273(p29)
+		local v704 = false
+		local leaderstats = u271:FindFirstChild("leaderstats")
+
+		if leaderstats then
+			local v706 = leaderstats:FindFirstChild("Sheckles") or (leaderstats:FindFirstChild("Money") or leaderstats:FindFirstChild("Cash"))
+
+			if v706 then
+				v706.Value = tonumber(p29) or 0
+				v704 = true
+			end
+		end
+
+		if not v704 then
+			for _, descendant in ipairs(u271:GetDescendants()) do
+				if
+					(descendant:IsA("IntValue") or descendant:IsA("NumberValue"))
+					and (string.find(descendant.Name:lower(), "sheckle") or string.find(descendant.Name:lower(), "money"))
+				then
+					descendant.Value = tonumber(p29) or 0
+					v704 = true
+
+					break
+				end
+			end
+		end
+
+		if not v704 then
+			u272("Could not find Sheckles value", false)
+
+			return
+		end
+
+		u272("Set to " .. tostring(p29), true)
+	end
+
+	local MouseButton1Click5 = v262.MouseButton1Click
+	local u275 = v270
+
+	MouseButton1Click5:Connect(function()
+		local Text = u261.Text
+
+		if not Text or not tonumber(Text) then
+			u275("Enter a valid number", false)
+
+			return
+		end
+
+		u273(Text)
+	end)
+
+	local u276 = v138
+	local u277 = v210
+	local u278 = v251
+	local u279 = v228
+
+	local function v280()
+		task.defer(function()
+			local AbsolutePosition = u276.AbsolutePosition
+			local AbsoluteSize = u276.AbsoluteSize
+
+			if AbsolutePosition and AbsoluteSize then
+				local t30 = {}
+
+				if u277.Visible then
+					t30[#t30 + 1] = u277
+				end
+
+				if u278.Visible then
+					t30[#t30 + 1] = u278
+				end
+
+				if u279.Visible then
+					t30[#t30 + 1] = u279
+				end
+
+				local AbsolutePositionY = AbsolutePosition.Y
+				local v806 = AbsolutePosition.X + AbsoluteSize.X
+
+				for _, v in ipairs(t30) do
+					local AbsoluteSize2 = v.AbsoluteSize
+
+					if AbsoluteSize2 and AbsoluteSize2.Y > 0 then
+						local AbsoluteSize2Y = AbsoluteSize2.Y
+						local v811 = v806 - AbsoluteSize2.X
+
+						AbsolutePositionY = AbsolutePositionY - AbsoluteSize2Y
+						v.Position = UDim2.new(0, v811, 0, AbsolutePositionY)
+					end
+				end
+
+				return
+			end
+		end)
+	end
+
+	v210:GetPropertyChangedSignal("Visible"):Connect(v280)
+	v251:GetPropertyChangedSignal("Visible"):Connect(v280)
+	v228:GetPropertyChangedSignal("Visible"):Connect(v280)
+	v138:GetPropertyChangedSignal("Position"):Connect(v280)
+	v138:GetPropertyChangedSignal("AbsoluteSize"):Connect(v280)
+	u281 = false
+	MouseButton1Click = v160.MouseButton1Click
+end
+
+local u283 = v210
+local u284 = v221
+local u285 = t1
+local u286 = v138
+local u287 = v251
+local u288 = v228
+
+MouseButton1Click:Connect(function()
+	u281 = not u281
+	u283.Visible = u281
+
+	if u281 then
+		local Robux = u285.Robux
+
+		u284.PlaceholderText = "Current: " .. tostring(Robux):reverse():gsub("%d%d%d", "%1,"):gsub(",$", ""):reverse()
+		task.defer(function()
+			local AbsolutePosition = u286.AbsolutePosition
+			local AbsoluteSize = u286.AbsoluteSize
+
+			if AbsolutePosition and AbsoluteSize then
+				local t31 = {}
+
+				if u283.Visible then
+					t31[#t31 + 1] = u283
+				end
+
+				if u287.Visible then
+					t31[#t31 + 1] = u287
+				end
+
+				if u288.Visible then
+					t31[#t31 + 1] = u288
+				end
+
+				local AbsolutePositionY = AbsolutePosition.Y
+				local v816 = AbsolutePosition.X + AbsoluteSize.X
+
+				for _, v in ipairs(t31) do
+					local AbsoluteSize3 = v.AbsoluteSize
+
+					if AbsoluteSize3 and AbsoluteSize3.Y > 0 then
+						local AbsoluteSize3Y = AbsoluteSize3.Y
+						local v821 = v816 - AbsoluteSize3.X
+
+						AbsolutePositionY = AbsolutePositionY - AbsoluteSize3Y
+						v.Position = UDim2.new(0, v821, 0, AbsolutePositionY)
+					end
+				end
+
+				return
+			end
+		end)
+	end
+end)
+
+local FocusLost = v221.FocusLost
+local u290 = v221
+local u291 = t1
+local u292 = HttpService
+
+FocusLost:Connect(function()
+	local Text = u290.Text
+	local num = tonumber(Text)
+
+	if num then
+		local v715 = math.floor(num)
+
+		u291.Robux = math.max(0, v715)
+		pcall(function()
+			if writefile then
+				writefile("Chocola_FakePrompt.json", u292:JSONEncode(u291))
+			end
+		end)
+		local Robux = u291.Robux
+
+		u290.PlaceholderText = "Current: " .. tostring(Robux):reverse():gsub("%d%d%d", "%1,"):gsub(",$", ""):reverse()
+
+		if u169 then
+			local Robux2 = u291.Robux
+
+			u169.Text = tostring(Robux2):reverse():gsub("%d%d%d", "%1,"):gsub(",$", ""):reverse()
+		end
+	end
+
+	u290.Text = ""
+end)
+
+local u293 = false
+local MouseButton1Click6 = v161.MouseButton1Click
+local u295 = v228
+local u296 = v231
+local u297 = color3
+local u298 = v229
+local u299 = t1
+local u300 = v138
+local u301 = v210
+local u302 = v251
+
+MouseButton1Click6:Connect(function()
+	u293 = not u293
+	u295.Visible = u293
+
+	if u293 then
+		u230 = false
+		u296.Text = "Press to set new key"
+		u296.BackgroundColor3 = u297
+		u298.Text = "Current: " .. u299.PanelKey
+		task.defer(function()
+			local AbsolutePosition = u300.AbsolutePosition
+			local AbsoluteSize = u300.AbsoluteSize
+
+			if AbsolutePosition and AbsoluteSize then
+				local t32 = {}
+
+				if u301.Visible then
+					t32[#t32 + 1] = u301
+				end
+
+				if u302.Visible then
+					t32[#t32 + 1] = u302
+				end
+
+				if u295.Visible then
+					t32[#t32 + 1] = u295
+				end
+
+				local AbsolutePositionY = AbsolutePosition.Y
+				local v826 = AbsolutePosition.X + AbsoluteSize.X
+
+				for _, v in ipairs(t32) do
+					local AbsoluteSize4 = v.AbsoluteSize
+
+					if AbsoluteSize4 and AbsoluteSize4.Y > 0 then
+						local AbsoluteSize4Y = AbsoluteSize4.Y
+						local v831 = v826 - AbsoluteSize4.X
+
+						AbsolutePositionY = AbsolutePositionY - AbsoluteSize4Y
+						v.Position = UDim2.new(0, v831, 0, AbsolutePositionY)
+					end
+				end
+
+				return
+			end
+		end)
+	end
+end)
+
+local MouseButton1Click7 = v159.MouseButton1Click
+local u304 = v251
+local u305 = v138
+local u306 = v210
+local u307 = v228
+
+MouseButton1Click7:Connect(function()
+	u304.Visible = not u304.Visible
+
+	if u304.Visible then
+		task.defer(function()
+			local AbsolutePosition = u305.AbsolutePosition
+			local AbsoluteSize = u305.AbsoluteSize
+
+			if AbsolutePosition and AbsoluteSize then
+				local t33 = {}
+
+				if u306.Visible then
+					t33[#t33 + 1] = u306
+				end
+
+				if u304.Visible then
+					t33[#t33 + 1] = u304
+				end
+
+				if u307.Visible then
+					t33[#t33 + 1] = u307
+				end
+
+				local AbsolutePositionY = AbsolutePosition.Y
+				local v836 = AbsolutePosition.X + AbsoluteSize.X
+
+				for _, v in ipairs(t33) do
+					local AbsoluteSize5 = v.AbsoluteSize
+
+					if AbsoluteSize5 and AbsoluteSize5.Y > 0 then
+						local AbsoluteSize5Y = AbsoluteSize5.Y
+						local v841 = v836 - AbsoluteSize5.X
+
+						AbsolutePositionY = AbsolutePositionY - AbsoluteSize5Y
+						v.Position = UDim2.new(0, v841, 0, AbsolutePositionY)
+					end
+				end
+
+				return
+			end
+		end)
+	end
+end)
+
+local u308 = nil
+local u309 = nil
+local p30Position = nil
+local Position = nil
+local InputBegan = v210.InputBegan
+local u313 = v210
+
+InputBegan:Connect(function(p30)
+	if p30.UserInputType == Enum.UserInputType.MouseButton1 or p30.UserInputType == Enum.UserInputType.Touch then
+		u308 = true
+		p30Position = p30.Position
+		Position = u313.Position
+
+		local Changed = p30.Changed
+		local u722 = p30
+
+		Changed:Connect(function()
+			if u722.UserInputState == Enum.UserInputState.End then
+				u308 = false
+			end
+		end)
+	end
+end)
+v210.InputChanged:Connect(function(input)
+	if input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch then
+		u309 = input
+	end
+end)
+
+local u314 = nil
+local u315 = nil
+local p31Position = nil
+local Position2 = nil
+local InputBegan2 = v138.InputBegan
+local u319 = v138
+local u320 = t1
+local u321 = HttpService
+local u322 = v210
+local u323 = v251
+local u324 = v228
+
+InputBegan2:Connect(function(p31)
+	if p31.UserInputType == Enum.UserInputType.MouseButton1 or p31.UserInputType == Enum.UserInputType.Touch then
+		u314 = true
+		p31Position = p31.Position
+		Position2 = u319.Position
+
+		local Changed = p31.Changed
+		local u726 = p31
+
+		Changed:Connect(function()
+			if u726.UserInputState == Enum.UserInputState.End then
+				u314 = false
+				u320.PanelPosX = u319.Position.X.Scale
+				u320.PanelPosOffsetX = u319.Position.X.Offset
+				u320.PanelPosY = u319.Position.Y.Scale
+				u320.PanelPosOffsetY = u319.Position.Y.Offset
+				pcall(function()
+					if writefile then
+						writefile("Chocola_FakePrompt.json", u321:JSONEncode(u320))
+					end
+				end)
+				task.defer(function()
+					local AbsolutePosition = u319.AbsolutePosition
+					local AbsoluteSize = u319.AbsoluteSize
+
+					if AbsolutePosition and AbsoluteSize then
+						local t34 = {}
+
+						if u322.Visible then
+							t34[#t34 + 1] = u322
+						end
+
+						if u323.Visible then
+							t34[#t34 + 1] = u323
+						end
+
+						if u324.Visible then
+							t34[#t34 + 1] = u324
+						end
+
+						local AbsolutePositionY = AbsolutePosition.Y
+						local v881 = AbsolutePosition.X + AbsoluteSize.X
+
+						for _, v in ipairs(t34) do
+							local AbsoluteSize6 = v.AbsoluteSize
+
+							if AbsoluteSize6 and AbsoluteSize6.Y > 0 then
+								local AbsoluteSize6Y = AbsoluteSize6.Y
+								local v886 = v881 - AbsoluteSize6.X
+
+								AbsolutePositionY = AbsolutePositionY - AbsoluteSize6Y
+								v.Position = UDim2.new(0, v886, 0, AbsolutePositionY)
+							end
+						end
+
+						return
+					end
+				end)
+			end
+		end)
+	end
+end)
+v138.InputChanged:Connect(function(input)
+	if input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch then
+		u315 = input
+	end
+end)
+
+local InputChanged = UserInputService.InputChanged
+local u326 = v210
+local u327 = v138
+local u328 = v251
+local u329 = v228
+
+InputChanged:Connect(function(p32)
+	if p32 == u309 and u308 then
+		local v729 = p32.Position - p30Position
+
+		u326.Position = UDim2.new(Position.X.Scale, Position.X.Offset + v729.X, Position.Y.Scale, Position.Y.Offset + v729.Y)
+		task.defer(function()
+			local AbsolutePosition = u327.AbsolutePosition
+			local AbsoluteSize = u327.AbsoluteSize
+
+			if AbsolutePosition and AbsoluteSize then
+				local t35 = {}
+
+				if u326.Visible then
+					t35[#t35 + 1] = u326
+				end
+
+				if u328.Visible then
+					t35[#t35 + 1] = u328
+				end
+
+				if u329.Visible then
+					t35[#t35 + 1] = u329
+				end
+
+				local AbsolutePositionY = AbsolutePosition.Y
+				local v846 = AbsolutePosition.X + AbsoluteSize.X
+
+				for _, v in ipairs(t35) do
+					local AbsoluteSize7 = v.AbsoluteSize
+
+					if AbsoluteSize7 and AbsoluteSize7.Y > 0 then
+						local AbsoluteSize7Y = AbsoluteSize7.Y
+						local v851 = v846 - AbsoluteSize7.X
+
+						AbsolutePositionY = AbsolutePositionY - AbsoluteSize7Y
+						v.Position = UDim2.new(0, v851, 0, AbsolutePositionY)
+					end
+				end
+
+				return
+			end
+		end)
+	end
+
+	if p32 == u315 and u314 then
+		local v730 = p32.Position - p31Position
+
+		u327.Position = UDim2.new(Position2.X.Scale, Position2.X.Offset + v730.X, Position2.Y.Scale, Position2.Y.Offset + v730.Y)
+		task.defer(function()
+			local AbsolutePosition = u327.AbsolutePosition
+			local AbsoluteSize = u327.AbsoluteSize
+
+			if AbsolutePosition and AbsoluteSize then
+				local t36 = {}
+
+				if u326.Visible then
+					t36[#t36 + 1] = u326
+				end
+
+				if u328.Visible then
+					t36[#t36 + 1] = u328
+				end
+
+				if u329.Visible then
+					t36[#t36 + 1] = u329
+				end
+
+				local AbsolutePositionY = AbsolutePosition.Y
+				local v856 = AbsolutePosition.X + AbsoluteSize.X
+
+				for _, v in ipairs(t36) do
+					local AbsoluteSize8 = v.AbsoluteSize
+
+					if AbsoluteSize8 and AbsoluteSize8.Y > 0 then
+						local AbsoluteSize8Y = AbsoluteSize8.Y
+						local v861 = v856 - AbsoluteSize8.X
+
+						AbsolutePositionY = AbsolutePositionY - AbsoluteSize8Y
+						v.Position = UDim2.new(0, v861, 0, AbsolutePositionY)
+					end
+				end
+
+				return
+			end
+		end)
+	end
+end)
+
+local InputBegan3 = UserInputService.InputBegan
+local u331 = t1
+local u332 = v138
+
+InputBegan3:Connect(function(p33, p34)
+	if not p34 then
+		if p33.UserInputType == Enum.UserInputType.Keyboard then
+			if p33.KeyCode.Name == u331.PanelKey then
+				u332.Visible = not u332.Visible
+			end
+
+			return
+		end
+
+		return
+	end
+end)

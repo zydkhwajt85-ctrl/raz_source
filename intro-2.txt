@@ -1,0 +1,121 @@
+local player = game:GetService("Players").LocalPlayer
+local contentProvider = game:GetService("ContentProvider")
+
+local Images = {
+    "rbxassetid://90082193310359",
+    "rbxassetid://140111217806195",
+    "rbxassetid://113259892662011",
+    "rbxassetid://131132202280501",
+    "rbxassetid://119205939792116",
+    "rbxassetid://88418000250691",
+    "rbxassetid://120238785712873",
+    "rbxassetid://83808651896724",
+    "rbxassetid://105345289833569",
+    "rbxassetid://94330536346405",
+    "rbxassetid://136006381271922",
+    "rbxassetid://87906794545741",
+    "rbxassetid://112714840439381",
+    "rbxassetid://135185412807788",
+    "rbxassetid://137259627256626",
+    "rbxassetid://120220914912790",
+    "rbxassetid://93523282075094",
+    "rbxassetid://136732688200255",
+    "rbxassetid://138525844130589",
+    "rbxassetid://140334678801360",
+    "rbxassetid://134105611692204",
+    "rbxassetid://89336885265398",
+    "rbxassetid://101990250036387",
+    "rbxassetid://75637145908292",
+    "rbxassetid://116874353510206",
+    "rbxassetid://109499593730240",
+    "rbxassetid://93246503182802",
+    "rbxassetid://72860360932966",
+    "rbxassetid://99337238315017",
+    "rbxassetid://97845911184347",
+    "rbxassetid://131590118496375",
+    "rbxassetid://94049526088192",
+    "rbxassetid://129600097997101",
+    "rbxassetid://93840405668970",
+    "rbxassetid://102532764909158",
+    "rbxassetid://124718361223677",
+    "rbxassetid://140151979212906",
+    "rbxassetid://77069622782367",
+    "rbxassetid://94639382197235",
+    "rbxassetid://98828480242667",
+    "rbxassetid://135083086902172",
+    "rbxassetid://109318742417115",
+    "rbxassetid://117259790998663",
+    "rbxassetid://124917742187190",
+    "rbxassetid://111964888652172",
+    "rbxassetid://117782207065349",
+    "rbxassetid://72406282546539",
+    "rbxassetid://124069160042945",
+    "rbxassetid://137758638233258",
+    "rbxassetid://98296136420850"
+}
+
+local FPS = 30
+local LOOP = true
+
+local assets = {}
+for _, id in ipairs(Images) do
+    table.insert(assets, id)
+end
+contentProvider:PreloadAsync(assets)
+
+local screenGui = Instance.new("ScreenGui")
+screenGui.Parent = player:FindFirstChild("PlayerGui") or player:WaitForChild("PlayerGui")
+screenGui.ResetOnSpawn = false
+screenGui.IgnoreGuiInset = true
+
+local frame = Instance.new("Frame")
+frame.Size = UDim2.new(1, 0, 1, 0)
+frame.BackgroundColor3 = Color3.new(0, 0, 0)
+frame.BackgroundTransparency = 0
+frame.Parent = screenGui
+
+local layer1 = Instance.new("ImageLabel")
+layer1.Size = UDim2.new(1, 0, 1, 0)
+layer1.BackgroundTransparency = 1
+layer1.ScaleType = Enum.ScaleType.Fit
+layer1.ZIndex = 2
+layer1.Parent = frame
+
+local layer2 = Instance.new("ImageLabel")
+layer2.Size = UDim2.new(1, 0, 1, 0)
+layer2.BackgroundTransparency = 1
+layer2.ScaleType = Enum.ScaleType.Fit
+layer2.ZIndex = 1
+layer2.Parent = frame
+
+layer1.Image = Images[1]
+layer2.Image = Images[1]
+
+local currentIdx = 1
+local total = #Images
+local delay = 1 / FPS
+
+while LOOP or currentIdx < total do
+    local nextIdx = currentIdx + 1
+    if nextIdx > total then
+        if not LOOP then break end
+        nextIdx = 1
+    end
+
+    local behind, front
+    if layer1.ZIndex == 1 then
+        behind = layer1
+        front = layer2
+    else
+        behind = layer2
+        front = layer1
+    end
+
+    behind.Image = Images[nextIdx]
+    task.wait(0.01)
+    behind.ZIndex = 2
+    front.ZIndex = 1
+
+    currentIdx = nextIdx
+    task.wait(delay)
+end

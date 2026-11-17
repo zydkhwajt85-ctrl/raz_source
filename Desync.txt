@@ -1,0 +1,297 @@
+local Players = game:GetService("Players")
+local UserInputService = game:GetService("UserInputService")
+local TweenService = game:GetService("TweenService")
+local LocalPlayer = Players.LocalPlayer
+local PlayerGui = LocalPlayer:WaitForChild("PlayerGui")
+local function getExecutorName()
+    if identifyexecutor then
+        local ok, name = pcall(identifyexecutor)
+        if ok and type(name) == "string" and name ~= "" then return name:lower() end
+    end
+    if getexecutorname then
+        local ok, name = pcall(getexecutorname)
+        if ok and type(name) == "string" and name ~= "" then return name:lower() end
+    end
+    if syn and syn.get_executor_id then
+        local ok, name = pcall(syn.get_executor_id)
+        if ok and type(name) == "string" and name ~= "" then return name:lower() end
+    end
+    if KRNL_LOADED then return "krnl" end
+    if is_sirhurt_closure then return "sirhurt" end
+    return "unknown"
+end
+local SUPPORTED_KEYWORDS = { "synapse", "delta", "volt", "seliware" }
+local function isSupportedExecutor(name)
+    if not name then return false end
+    for _, keyword in ipairs(SUPPORTED_KEYWORDS) do
+        if name:find(keyword, 1, true) then return true end
+    end
+    return false
+end
+local executorName      = getExecutorName()
+local executorSupported = isSupportedExecutor(executorName)
+local execDisplayName   = executorName ~= "unknown"
+    and (executorName:sub(1,1):upper() .. executorName:sub(2))
+    or "Unknown"
+local function addCorner(parent, radius)
+    local c = Instance.new("UICorner")
+    c.CornerRadius = UDim.new(0, radius or 8)
+    c.Parent = parent
+end
+local function addStroke(parent, color, thickness, transparency, mode)
+    local s = Instance.new("UIStroke")
+    s.Color = color or Color3.fromRGB(99, 102, 241)
+    s.Thickness = thickness or 1.5
+    s.Transparency = transparency or 0
+    s.ApplyStrokeMode = mode or Enum.ApplyStrokeMode.Border
+    s.Parent = parent
+end
+local function gotham(weight)
+    return Font.new(
+        "rbxasset://fonts/families/GothamSSm.json",
+        weight or Enum.FontWeight.Bold,
+        Enum.FontStyle.Normal
+    )
+end
+local COLOR_GREEN = Color3.fromRGB(73, 222, 128)
+local COLOR_RED   = Color3.fromRGB(248, 113, 113)
+local DesyncPanel = Instance.new("ScreenGui")
+DesyncPanel.Name = "DesyncPanel"
+DesyncPanel.ResetOnSpawn = false
+DesyncPanel.Parent = PlayerGui
+local Card = Instance.new("Frame")
+Card.Name = "Card"
+Card.Position = UDim2.new(0.5, -126, 0, 17)
+Card.Size = UDim2.new(0, 252, 0, 164)
+Card.BackgroundColor3 = Color3.fromRGB(12, 12, 18)
+Card.BackgroundTransparency = 0.05
+Card.BorderSizePixel = 0
+Card.ClipsDescendants = true
+Card.Parent = DesyncPanel
+addCorner(Card, 10)
+addStroke(Card, Color3.fromRGB(0, 0, 0), 1, 0, Enum.ApplyStrokeMode.Border)
+local Header = Instance.new("Frame")
+Header.Name = "Header"
+Header.Position = UDim2.new(0, 10, 0, 10)
+Header.Size = UDim2.new(1, -20, 0, 30)
+Header.Active = true
+Header.BackgroundTransparency = 1
+Header.Parent = Card
+local TitleLabel = Instance.new("TextLabel")
+TitleLabel.Size = UDim2.new(1, 0, 0, 17)
+TitleLabel.Active = true
+TitleLabel.BackgroundTransparency = 1
+TitleLabel.FontFace = gotham(Enum.FontWeight.Heavy)
+TitleLabel.Text = "XENHUB DESYNC"
+TitleLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+TitleLabel.TextSize = 13
+TitleLabel.Parent = Header
+local SubtitleLabel = Instance.new("TextLabel")
+SubtitleLabel.Position = UDim2.new(0, 0, 0, 17)
+SubtitleLabel.Size = UDim2.new(1, 0, 0, 12)
+SubtitleLabel.Active = true
+SubtitleLabel.BackgroundTransparency = 1
+SubtitleLabel.FontFace = gotham(Enum.FontWeight.Bold)
+SubtitleLabel.Text = "discord.gg/xenhub"
+SubtitleLabel.TextColor3 = Color3.fromRGB(160, 160, 170)
+SubtitleLabel.TextSize = 11
+SubtitleLabel.Parent = Header
+local MinimizeBtn = Instance.new("TextButton")
+MinimizeBtn.Position = UDim2.new(1, -24, 0.5, -10)
+MinimizeBtn.Size = UDim2.new(0, 24, 0, 20)
+MinimizeBtn.BackgroundColor3 = Color3.fromRGB(50, 50, 65)
+MinimizeBtn.BackgroundTransparency = 0.15
+MinimizeBtn.BorderSizePixel = 0
+MinimizeBtn.FontFace = gotham(Enum.FontWeight.Bold)
+MinimizeBtn.Text = "−"
+MinimizeBtn.TextColor3 = Color3.fromRGB(220, 220, 230)
+MinimizeBtn.TextSize = 12
+MinimizeBtn.Parent = Header
+addCorner(MinimizeBtn, 5)
+local Body = Instance.new("Frame")
+Body.Name = "Body"
+Body.Position = UDim2.new(0, 10, 0, 47)
+Body.Size = UDim2.new(1, -20, 1, -57)
+Body.BackgroundTransparency = 1
+Body.Parent = Card
+local UIListLayout = Instance.new("UIListLayout")
+UIListLayout.Padding = UDim.new(0, 6)
+UIListLayout.SortOrder = Enum.SortOrder.LayoutOrder
+UIListLayout.Parent = Body
+local BodyPadding = Instance.new("UIPadding")
+BodyPadding.PaddingLeft   = UDim.new(0, 2)
+BodyPadding.PaddingRight  = UDim.new(0, 2)
+BodyPadding.PaddingTop    = UDim.new(0, 2)
+BodyPadding.PaddingBottom = UDim.new(0, 2)
+BodyPadding.Parent = Body
+local ExecRow = Instance.new("Frame")
+ExecRow.Name = "ExecRow"
+ExecRow.Size = UDim2.new(1, 0, 0, 32)
+ExecRow.BackgroundColor3 = Color3.fromRGB(50, 50, 65)
+ExecRow.BackgroundTransparency = 0.3
+ExecRow.BorderSizePixel = 0
+ExecRow.LayoutOrder = 1
+ExecRow.Parent = Body
+addCorner(ExecRow, 7)
+addStroke(ExecRow, Color3.fromRGB(99, 102, 241), 1.5, 0, Enum.ApplyStrokeMode.Border)
+local ExecDot = Instance.new("Frame")
+ExecDot.Position = UDim2.new(0, 12, 0.5, -3)
+ExecDot.Size = UDim2.new(0, 7, 0, 7)
+ExecDot.BorderSizePixel = 0
+ExecDot.Parent = ExecRow
+addCorner(ExecDot, 100)
+local ExecLabel = Instance.new("TextLabel")
+ExecLabel.Position = UDim2.new(0, 25, 0, 0)
+ExecLabel.Size = UDim2.new(1, -29, 1, 0)
+ExecLabel.BackgroundTransparency = 1
+ExecLabel.FontFace = gotham(Enum.FontWeight.Bold)
+ExecLabel.TextColor3 = Color3.fromRGB(220, 220, 230)
+ExecLabel.TextSize = 13
+ExecLabel.TextXAlignment = Enum.TextXAlignment.Left
+ExecLabel.Parent = ExecRow
+if executorSupported then
+    ExecDot.BackgroundColor3 = COLOR_GREEN
+    ExecLabel.Text = execDisplayName .. ": Supported"
+else
+    ExecDot.BackgroundColor3 = COLOR_RED
+    ExecLabel.Text = execDisplayName .. ": Unsupported"
+end
+local StatusRow = Instance.new("Frame")
+StatusRow.Name = "StatusRow"
+StatusRow.Size = UDim2.new(1, 0, 0, 32)
+StatusRow.BackgroundColor3 = Color3.fromRGB(50, 50, 65)
+StatusRow.BackgroundTransparency = 0.3
+StatusRow.BorderSizePixel = 0
+StatusRow.LayoutOrder = 2
+StatusRow.Parent = Body
+addCorner(StatusRow, 7)
+addStroke(StatusRow, Color3.fromRGB(99, 102, 241), 1.5, 0, Enum.ApplyStrokeMode.Border)
+local StatusDot = Instance.new("Frame")
+StatusDot.Name = "StatusDot"
+StatusDot.Position = UDim2.new(0, 12, 0.5, -3)
+StatusDot.Size = UDim2.new(0, 7, 0, 7)
+StatusDot.BackgroundColor3 = COLOR_RED
+StatusDot.BorderSizePixel = 0
+StatusDot.Parent = StatusRow
+addCorner(StatusDot, 100)
+local StatusLabel = Instance.new("TextLabel")
+StatusLabel.Name = "StatusLabel"
+StatusLabel.Position = UDim2.new(0, 25, 0, 0)
+StatusLabel.Size = UDim2.new(1, -29, 1, 0)
+StatusLabel.BackgroundTransparency = 1
+StatusLabel.FontFace = gotham(Enum.FontWeight.Bold)
+StatusLabel.Text = "Desync Disabled"
+StatusLabel.TextColor3 = Color3.fromRGB(220, 220, 230)
+StatusLabel.TextSize = 13
+StatusLabel.TextXAlignment = Enum.TextXAlignment.Left
+StatusLabel.Parent = StatusRow
+local UnwalkRow = Instance.new("TextButton")
+UnwalkRow.Name = "UnwalkRow"
+UnwalkRow.Size = UDim2.new(1, 0, 0, 34)
+UnwalkRow.BackgroundColor3 = Color3.fromRGB(50, 50, 65)
+UnwalkRow.BackgroundTransparency = 0.3
+UnwalkRow.BorderSizePixel = 0
+UnwalkRow.LayoutOrder = 3
+UnwalkRow.Text = ""
+UnwalkRow.Parent = Body
+addCorner(UnwalkRow, 7)
+addStroke(UnwalkRow, Color3.fromRGB(99, 102, 241), 1.5, 0, Enum.ApplyStrokeMode.Border)
+local UnwalkLabel = Instance.new("TextLabel")
+UnwalkLabel.Position = UDim2.new(0, 13, 0, 0)
+UnwalkLabel.Size = UDim2.new(1, -67, 1, 0)
+UnwalkLabel.BackgroundTransparency = 1
+UnwalkLabel.FontFace = gotham(Enum.FontWeight.Bold)
+UnwalkLabel.Text = "Unwalk"
+UnwalkLabel.TextColor3 = Color3.fromRGB(220, 220, 230)
+UnwalkLabel.TextSize = 13
+UnwalkLabel.TextXAlignment = Enum.TextXAlignment.Left
+UnwalkLabel.Parent = UnwalkRow
+local TogglePill = Instance.new("Frame")
+TogglePill.Name = "TogglePill"
+TogglePill.Position = UDim2.new(1, -49, 0.5, -9)
+TogglePill.Size = UDim2.new(0, 37, 0, 18)
+TogglePill.BackgroundColor3 = Color3.fromRGB(50, 50, 65)
+TogglePill.BorderSizePixel = 0
+TogglePill.Parent = UnwalkRow
+addCorner(TogglePill, 100)
+addStroke(TogglePill, Color3.fromRGB(99, 102, 241), 1, 0.5)
+local ToggleKnob = Instance.new("Frame")
+ToggleKnob.Name = "ToggleKnob"
+ToggleKnob.Position = UDim2.new(0, 3, 0.5, -6)
+ToggleKnob.Size = UDim2.new(0, 13, 0, 13)
+ToggleKnob.BackgroundColor3 = Color3.fromRGB(220, 220, 230)
+ToggleKnob.BorderSizePixel = 0
+ToggleKnob.Parent = TogglePill
+addCorner(ToggleKnob, 100)
+local minimized     = false
+local FULL_HEIGHT   = 164
+local MIN_HEIGHT    = 47
+local MINIMIZE_INFO = TweenInfo.new(0.25, Enum.EasingStyle.Quint, Enum.EasingDirection.Out)
+local minimizeBusy  = false
+MinimizeBtn.MouseButton1Click:Connect(function()
+    if minimizeBusy then return end
+    minimizeBusy = true
+    minimized = not minimized
+    if minimized then
+        MinimizeBtn.Text = "+"
+        Body.Visible = false
+        local t = TweenService:Create(Card, MINIMIZE_INFO, { Size = UDim2.new(0, 252, 0, MIN_HEIGHT) })
+        t:Play()
+        t.Completed:Once(function() minimizeBusy = false end)
+    else
+        local t = TweenService:Create(Card, MINIMIZE_INFO, { Size = UDim2.new(0, 252, 0, FULL_HEIGHT) })
+        t:Play()
+        t.Completed:Once(function()
+            Body.Visible = true
+            MinimizeBtn.Text = "−"
+            minimizeBusy = false
+        end)
+    end
+end)
+local unwalkEnabled  = false
+local COLOR_OFF_PILL = Color3.fromRGB(50, 50, 65)
+local COLOR_ON_PILL  = COLOR_GREEN
+local COLOR_OFF_KNOB = Color3.fromRGB(220, 220, 230)
+local COLOR_ON_KNOB  = Color3.fromRGB(255, 255, 255)
+local POS_OFF_KNOB   = UDim2.new(0, 3, 0.5, -6)
+local POS_ON_KNOB    = UDim2.new(1, -16, 0.5, -6)
+local TOGGLE_INFO    = TweenInfo.new(0.2, Enum.EasingStyle.Quint, Enum.EasingDirection.Out)
+UnwalkRow.MouseButton1Click:Connect(function()
+    unwalkEnabled = not unwalkEnabled
+    TweenService:Create(TogglePill, TOGGLE_INFO, {
+        BackgroundColor3 = unwalkEnabled and COLOR_ON_PILL or COLOR_OFF_PILL
+    }):Play()
+    TweenService:Create(ToggleKnob, TOGGLE_INFO, {
+        Position         = unwalkEnabled and POS_ON_KNOB or POS_OFF_KNOB,
+        BackgroundColor3 = unwalkEnabled and COLOR_ON_KNOB or COLOR_OFF_KNOB,
+    }):Play()
+end)
+local dragging     = false
+local dragStart    = nil
+local cardStartPos = nil
+Header.InputBegan:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseButton1
+    or input.UserInputType == Enum.UserInputType.Touch then
+        dragging = true
+        dragStart = input.Position
+        cardStartPos = Card.Position
+    end
+end)
+UserInputService.InputChanged:Connect(function(input)
+    if not dragging then return end
+    if input.UserInputType ~= Enum.UserInputType.MouseMovement
+    and input.UserInputType ~= Enum.UserInputType.Touch then return end
+    local delta = input.Position - dragStart
+    Card.Position = UDim2.new(
+        cardStartPos.X.Scale,
+        cardStartPos.X.Offset + delta.X,
+        cardStartPos.Y.Scale,
+        cardStartPos.Y.Offset + delta.Y
+    )
+end)
+UserInputService.InputEnded:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseButton1
+    or input.UserInputType == Enum.UserInputType.Touch then
+        dragging = false
+    end
+end)

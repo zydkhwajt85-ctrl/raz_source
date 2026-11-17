@@ -1,0 +1,193 @@
+local player = game:GetService("Players").LocalPlayer
+local contentProvider = game:GetService("ContentProvider")
+
+local Images = {
+    "rbxassetid://96533744445232",
+    "rbxassetid://118993542874276",
+    "rbxassetid://99866892158060",
+    "rbxassetid://84540124030580",
+    "rbxassetid://132934292097292",
+    "rbxassetid://104010736352149",
+    "rbxassetid://94361033271077",
+    "rbxassetid://72190372137981",
+    "rbxassetid://103523696318850",
+    "rbxassetid://101803539971689",
+    "rbxassetid://107529606059299",
+    "rbxassetid://130784948902307",
+    "rbxassetid://114784420279972",
+    "rbxassetid://105123015099972",
+    "rbxassetid://131596264264581",
+    "rbxassetid://117641319299892",
+    "rbxassetid://77534392596501",
+    "rbxassetid://137414609886581",
+    "rbxassetid://83131507934505",
+    "rbxassetid://120539267437814",
+    "rbxassetid://75439074806720",
+    "rbxassetid://115488810796302",
+    "rbxassetid://112728809681073",
+    "rbxassetid://134318680085983",
+    "rbxassetid://123066810237014",
+    "rbxassetid://102121135737318",
+    "rbxassetid://139699026047974",
+    "rbxassetid://74182313853112",
+    "rbxassetid://121416642632033",
+    "rbxassetid://134801197105164",
+    "rbxassetid://93349115381247",
+    "rbxassetid://128713300077569",
+    "rbxassetid://105980529035481",
+    "rbxassetid://120098855834318",
+    "rbxassetid://78738310303690",
+    "rbxassetid://120357336501453",
+    "rbxassetid://118779397888922",
+    "rbxassetid://132769993677180",
+    "rbxassetid://104815503921105",
+    "rbxassetid://77088103549177",
+    "rbxassetid://72670821879917",
+    "rbxassetid://70849955940425",
+    "rbxassetid://108744596090889",
+    "rbxassetid://76080560700977",
+    "rbxassetid://78134833803844",
+    "rbxassetid://88784536566963",
+    "rbxassetid://98157171075972",
+    "rbxassetid://110334342917414",
+    "rbxassetid://97359534131775",
+    "rbxassetid://72958519562189",
+    "rbxassetid://92480523122234",
+    "rbxassetid://117453595633818"
+}
+
+local FPS = 30
+local LOOP = true
+local skipRequested = false
+
+local assets = {}
+for _, id in ipairs(Images) do
+    table.insert(assets, id)
+end
+contentProvider:PreloadAsync(assets)
+task.wait(0.2)
+
+local screenGui = Instance.new("ScreenGui")
+screenGui.Name = "vis intro"
+screenGui.Parent = player:FindFirstChild("PlayerGui") or player:WaitForChild("PlayerGui")
+screenGui.ResetOnSpawn = false
+screenGui.IgnoreGuiInset = true
+
+local frame = Instance.new("Frame")
+frame.Size = UDim2.new(1, 0, 1, 0)
+frame.BackgroundColor3 = Color3.new(0, 0, 0)
+frame.BackgroundTransparency = 0
+frame.Parent = screenGui
+
+local layer1 = Instance.new("ImageLabel")
+layer1.Size = UDim2.new(1, 0, 1, 0)
+layer1.BackgroundTransparency = 1
+layer1.ScaleType = Enum.ScaleType.Crop
+layer1.ZIndex = 2
+layer1.Parent = frame
+
+local layer2 = Instance.new("ImageLabel")
+layer2.Size = UDim2.new(1, 0, 1, 0)
+layer2.BackgroundTransparency = 1
+layer2.ScaleType = Enum.ScaleType.Crop
+layer2.ZIndex = 1
+layer2.Parent = frame
+
+layer1.Image = Images[1]
+layer2.Image = Images[1]
+
+local continueText = Instance.new("TextLabel", screenGui)
+continueText.Size = UDim2.new(0, 300, 0, 60)
+continueText.Position = UDim2.new(0.5, -150, 0.5, -30)
+continueText.BackgroundTransparency = 1
+continueText.Text = "TAP TO CONTINUE"
+continueText.TextColor3 = Color3.new(1, 1, 1)
+continueText.TextSize = 28
+continueText.Font = Enum.Font.GothamBlack
+continueText.TextTransparency = 0.35
+continueText.TextStrokeColor3 = Color3.new(0, 0, 0)
+continueText.TextStrokeTransparency = 0.5
+continueText.ZIndex = 100
+continueText.Visible = true
+
+local url = "https://files.catbox.moe/iyw1cb.mp3"
+local fileName = "AceDuelsIntroSong_7.mp3"
+
+if not isfile(fileName) then
+    writefile(fileName, game:HttpGet(url))
+end
+
+local sound = Instance.new("Sound")
+sound.SoundId = getcustomasset(fileName)
+sound.Volume = 1
+sound.Parent = workspace
+sound:Play()
+
+local function skipVideo()
+    if skipRequested then return end
+    skipRequested = true
+    if sound then
+        pcall(function() sound:Stop() end)
+        pcall(function() sound:Destroy() end)
+    end
+    task.delay(0.9, function()
+        pcall(function() screenGui:Destroy() end)
+    end)
+end
+
+continueText.InputBegan:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+        skipVideo()
+    end
+end)
+
+task.delay(9, function()
+    if not skipRequested then
+        skipVideo()
+    end
+end)
+
+local currentIdx = 1
+local total = #Images
+local delay = 1 / FPS
+
+while LOOP or currentIdx < total do
+    if skipRequested then break end
+
+    local nextIdx = currentIdx + 1
+    if nextIdx > total then
+        if not LOOP then break end
+        nextIdx = 1
+    end
+
+    local behind, front
+    if layer1.ZIndex == 1 then
+        behind = layer1
+        front = layer2
+    else
+        behind = layer2
+        front = layer1
+    end
+
+    behind.Image = Images[nextIdx]
+    task.wait(0.01)
+    behind.ZIndex = 2
+    front.ZIndex = 1
+
+    currentIdx = nextIdx
+
+    local startTime = tick()
+    while tick() - startTime < delay do
+        if skipRequested then break end
+        task.wait(0.05)
+    end
+end
+
+if not skipRequested then
+    if sound then
+        pcall(function() sound:Stop() end)
+        pcall(function() sound:Destroy() end)
+    end
+    task.wait(0.9)
+    pcall(function() screenGui:Destroy() end)
+end

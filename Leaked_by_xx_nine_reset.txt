@@ -1,0 +1,197 @@
+local localPlayer = (game:GetService("Players")).LocalPlayer
+local object = game
+
+if not (object:IsLoaded()) then
+
+  game.Loaded:Wait()
+end
+
+task.spawn(function()
+
+  if not localPlayer.Character then
+
+    localPlayer.CharacterAdded:Wait()
+  end
+
+  local val = false
+  local remoteEvent = Instance.new("RemoteEvent")
+  local val2, val3
+
+  local val4 = hookfunction(remoteEvent.FireServer, function(p1, ...)
+    local val5 = not val2
+    local val6 = val5
+    local v19 = p1
+
+    if val5 then
+
+      val6 = (p1.Name:sub(1, 3)) == "RE/"
+    end
+
+    if val6 then
+      val2 = p1
+    end
+
+    return val3(p1, ...)
+  end)
+
+  local function safeCall()
+    local character
+
+    if val then
+      return
+    else
+      if not val2 then
+        return
+      else
+        val = true
+        character = localPlayer.Character
+
+        task.spawn(function()
+          while localPlayer.Character == character do
+            pcall(function()
+
+              val2:FireServer("GUID_HERE", localPlayer)
+              return
+            end)
+
+            task.wait()
+          end
+
+          val = false
+          return
+        end)
+
+        return
+      end
+    end
+  end
+
+  val3 = val4
+  local v21 = safeCall
+
+  ;(game:GetService("UserInputService")).InputBegan:Connect(function(input, p2)
+    local v22 = input
+
+    if not p2 and input.KeyCode == Enum.KeyCode.R then
+      safeCall()
+    end
+
+    return
+  end)
+
+  local nineHubResetGui = Instance.new("ScreenGui")
+  nineHubResetGui.Name = "NineHubResetGui"
+  nineHubResetGui.ResetOnSpawn = false
+
+  local v23 = localPlayer
+  nineHubResetGui.Parent = localPlayer:WaitForChild("PlayerGui")
+
+  local resetButton = (Instance.new("TextButton"))
+  resetButton.Name = "ResetButton"
+  resetButton.Size = UDim2.new(0, 60, 0, 60)
+  resetButton.Position = UDim2.new(0.5, -30, 0.2, 0)
+  resetButton.BackgroundColor3 = Color3.fromRGB(10, 10, 12)
+  resetButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+  resetButton.TextSize = 13
+  resetButton.Font = Enum.Font.GothamBold
+  resetButton.Text = "Reset"
+  resetButton.AutoButtonColor = false
+  resetButton.Parent = nineHubResetGui
+
+  local uiCorner = Instance.new("UICorner")
+  uiCorner.CornerRadius = UDim.new(0, 12)
+  uiCorner.Parent = resetButton
+
+  local uiStroke = (Instance.new("UIStroke"))
+  uiStroke.Color = Color3.fromRGB(130, 60, 200)
+  uiStroke.Thickness = 1.5
+  uiStroke.Parent = resetButton
+
+  local glow = (Instance.new("UIStroke"))
+  glow.Name = "Glow"
+  glow.Color = Color3.fromRGB(150, 80, 220)
+  glow.Thickness = 4
+  glow.Transparency = 0.6
+  glow.Parent = resetButton
+
+  local element = game
+
+  local val7 = element.GetService(element, "UserInputService")
+  local val8 = false
+
+  local position, position2
+
+  resetButton.InputBegan:Connect(function(input2)
+    local v27 = input2
+
+    local val9 = input2.UserInputType == Enum.UserInputType.MouseButton1
+      or input2.UserInputType == Enum.UserInputType.Touch
+
+    if val9 then
+      val8 = true
+      position = input2.Position
+      position2 = resetButton.Position
+
+      input2.Changed:Connect(function()
+        if input2.UserInputState == Enum.UserInputState.End then
+          val8 = false
+        end
+
+        return
+      end)
+    end
+
+    return
+  end)
+
+  local val10
+
+  resetButton.InputChanged:Connect(function(input3)
+    local v31 = input3
+
+    if input3.UserInputType == Enum.UserInputType.MouseMovement
+      or input3.UserInputType == Enum.UserInputType.Touch then
+      val10 = input3
+    end
+
+    return
+  end)
+
+  val7.InputChanged:Connect(function(input4)
+    local v32 = input4
+
+    local val11 = input4 == val10 and val8
+
+    if val11 then
+      local element2
+      element2 = input4.Position - position
+
+      resetButton.Position = UDim2.new(
+        position2.X.Scale, position2.X.Offset + element2.X, position2.Y.Scale, position2.Y.Offset + element2.Y
+      )
+    end
+
+    return
+  end)
+
+  resetButton.MouseEnter:Connect(function()
+    resetButton.BackgroundColor3 = Color3.fromRGB(25, 25, 28)
+    uiStroke.Color = Color3.fromRGB(150, 80, 220)
+    glow.Transparency = 0.3
+    return
+  end)
+
+  resetButton.MouseLeave:Connect(function()
+    resetButton.BackgroundColor3 = Color3.fromRGB(10, 10, 12)
+    uiStroke.Color = Color3.fromRGB(130, 60, 200)
+    glow.Transparency = 0.6
+    return
+  end)
+
+  resetButton.MouseButton1Click:Connect(function()
+    safeCall()
+    return
+  end)
+
+  return
+end)

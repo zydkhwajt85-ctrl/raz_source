@@ -1,0 +1,485 @@
+-- https://discord.gg/TBBAUZu8cW
+repeat task.wait() until game:IsLoaded()
+
+local UserInputService = game:GetService("UserInputService")
+local TweenService = game:GetService("TweenService")
+local CoreGui = game:GetService("CoreGui")
+
+local function initializeLaggerInterface()
+    local existingGui = CoreGui:FindFirstChild("MKLagger")
+    if existingGui then existingGui:Destroy() end
+
+    local screenGui = Instance.new("ScreenGui")
+    screenGui.Name = "MKLagger"
+    screenGui.ResetOnSpawn = false
+    screenGui.DisplayOrder = 999
+    screenGui.IgnoreGuiInset = true
+    screenGui.Parent = CoreGui
+
+    local settings = {
+        enabled = false,
+        intensity = "Low",
+        keybind = Enum.KeyCode.E
+    }
+
+    local function handleToggle(isEnabled)
+        print("[MK LAGGER UI] Toggle:", isEnabled, "| Intensity:", settings.intensity)
+    end
+
+    local function handleIntensityChange(level)
+        print("[MK LAGGER UI] Intensity changed to:", level)
+    end
+
+    local panelWidth, panelHeight = 260, 120
+
+    local mainFrame = Instance.new("Frame")
+    mainFrame.Name = "MainPanel"
+    mainFrame.Size = UDim2.new(0, panelWidth, 0, panelHeight)
+    mainFrame.Position = UDim2.new(1, -(panelWidth + 12), 0.5, -(panelHeight / 2))
+    mainFrame.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
+    mainFrame.BackgroundTransparency = 1
+    mainFrame.Active = true
+    mainFrame.ClipsDescendants = false
+    mainFrame.Parent = screenGui
+    Instance.new("UICorner", mainFrame).CornerRadius = UDim.new(0, 14)
+
+    local mainStroke = Instance.new("UIStroke")
+    mainStroke.Color = Color3.fromRGB(90, 50, 150)
+    mainStroke.Parent = mainFrame
+
+    local backgroundImage = Instance.new("ImageLabel")
+    backgroundImage.Size = UDim2.new(1, 0, 1, 0)
+    backgroundImage.BackgroundColor3 = Color3.fromRGB(10, 3, 20)
+    backgroundImage.Image = "rbxassetid://88214228815837"
+    backgroundImage.ImageTransparency = 0
+    backgroundImage.ScaleType = Enum.ScaleType.Stretch
+    backgroundImage.ZIndex = 0
+    backgroundImage.Parent = mainFrame
+    Instance.new("UICorner", backgroundImage).CornerRadius = UDim.new(0, 14)
+
+    local backgroundOverlay = Instance.new("Frame")
+    backgroundOverlay.Size = UDim2.new(1, 0, 1, 0)
+    backgroundOverlay.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
+    backgroundOverlay.BackgroundTransparency = 0.65
+    backgroundOverlay.ZIndex = 1
+    backgroundOverlay.Parent = mainFrame
+    Instance.new("UICorner", backgroundOverlay).CornerRadius = UDim.new(0, 14)
+
+    local titleLabel = Instance.new("TextLabel")
+    titleLabel.Size = UDim2.new(0, 120, 0, 24)
+    titleLabel.Position = UDim2.new(0, 12, 0, 8)
+    titleLabel.BackgroundTransparency = 1
+    titleLabel.Text = "MK LAGGER"
+    titleLabel.TextColor3 = Color3.fromRGB(230, 190, 255)
+    titleLabel.Font = Enum.Font.LuckiestGuy
+    titleLabel.TextSize = 20
+    titleLabel.TextXAlignment = Enum.TextXAlignment.Left
+    titleLabel.TextStrokeTransparency = 0.2
+    titleLabel.ZIndex = 5
+    titleLabel.Parent = mainFrame
+
+    local rowYOffset = 42
+
+    local statusLabel = Instance.new("TextLabel")
+    statusLabel.Size = UDim2.new(0, 40, 0, 22)
+    statusLabel.Position = UDim2.new(0, 12, 0, rowYOffset)
+    statusLabel.BackgroundColor3 = Color3.fromRGB(15, 5, 30)
+    statusLabel.BackgroundTransparency = 0.3
+    statusLabel.Text = "OFF"
+    statusLabel.TextColor3 = Color3.fromRGB(255, 110, 110)
+    statusLabel.TextSize = 13
+    statusLabel.Font = Enum.Font.LuckiestGuy
+    statusLabel.ZIndex = 5
+    statusLabel.Parent = mainFrame
+    Instance.new("UICorner", statusLabel).CornerRadius = UDim.new(0, 6)
+    local statusStroke = Instance.new("UIStroke")
+    statusStroke.Color = Color3.fromRGB(90, 50, 150)
+    statusStroke.Parent = statusLabel
+
+    local trackWidth, trackHeight = 44, 22
+    local trackXPosition = 60
+
+    local toggleTrack = Instance.new("Frame")
+    toggleTrack.Size = UDim2.new(0, trackWidth, 0, trackHeight)
+    toggleTrack.Position = UDim2.new(0, trackXPosition, 0, rowYOffset)
+    toggleTrack.BackgroundColor3 = Color3.fromRGB(20, 8, 40)
+    toggleTrack.BackgroundTransparency = 0.2
+    toggleTrack.ZIndex = 5
+    toggleTrack.Parent = mainFrame
+    Instance.new("UICorner", toggleTrack).CornerRadius = UDim.new(1, 0)
+
+    local trackStroke = Instance.new("UIStroke")
+    trackStroke.Color = Color3.fromRGB(90, 50, 150)
+    trackStroke.Parent = toggleTrack
+
+    local knobSize = 16
+    local toggleKnob = Instance.new("Frame")
+    toggleKnob.Size = UDim2.new(0, knobSize, 0, knobSize)
+    toggleKnob.Position = UDim2.new(0, 2, 0.5, -knobSize / 2)
+    toggleKnob.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+    toggleKnob.ZIndex = 6
+    toggleKnob.Parent = toggleTrack
+    Instance.new("UICorner", toggleKnob).CornerRadius = UDim.new(1, 0)
+
+    local dropdownX = trackXPosition + trackWidth + 8
+    local dropdownWidth, dropdownHeight = 75, 22
+
+    local dropdownFrame = Instance.new("Frame")
+    dropdownFrame.Size = UDim2.new(0, dropdownWidth, 0, dropdownHeight)
+    dropdownFrame.Position = UDim2.new(0, dropdownX, 0, rowYOffset)
+    dropdownFrame.BackgroundColor3 = Color3.fromRGB(20, 8, 40)
+    dropdownFrame.BackgroundTransparency = 0.2
+    dropdownFrame.ZIndex = 8
+    dropdownFrame.Parent = mainFrame
+    Instance.new("UICorner", dropdownFrame).CornerRadius = UDim.new(0, 6)
+
+    local dropdownStroke = Instance.new("UIStroke")
+    dropdownStroke.Color = Color3.fromRGB(90, 50, 150)
+    dropdownStroke.Parent = dropdownFrame
+
+    local dropdownButton = Instance.new("TextButton")
+    dropdownButton.Size = UDim2.new(1, 0, 1, 0)
+    dropdownButton.BackgroundTransparency = 1
+    dropdownButton.Text = settings.intensity .. " ▼"
+    dropdownButton.TextColor3 = Color3.fromRGB(220, 180, 255)
+    dropdownButton.Font = Enum.Font.LuckiestGuy
+    dropdownButton.TextSize = 12
+    dropdownButton.ZIndex = 9
+    dropdownButton.Parent = dropdownFrame
+
+    local dropdownMenu = Instance.new("Frame")
+    dropdownMenu.Size = UDim2.new(0, dropdownWidth, 0, dropdownHeight * 3 + 6)
+    dropdownMenu.Position = UDim2.new(0, dropdownX, 0, rowYOffset + dropdownHeight + 2)
+    dropdownMenu.BackgroundColor3 = Color3.fromRGB(15, 5, 30)
+    dropdownMenu.BackgroundTransparency = 0.1
+    dropdownMenu.ZIndex = 20
+    dropdownMenu.Visible = false
+    dropdownMenu.Parent = mainFrame
+    Instance.new("UICorner", dropdownMenu).CornerRadius = UDim.new(0, 6)
+
+    local dropdownMenuStroke = Instance.new("UIStroke")
+    dropdownMenuStroke.Color = Color3.fromRGB(120, 70, 200)
+    dropdownMenuStroke.Parent = dropdownMenu
+
+    local listLayout = Instance.new("UIListLayout")
+    listLayout.Padding = UDim.new(0, 2)
+    listLayout.Parent = dropdownMenu
+
+    local isDropdownOpen = false
+    local function closeDropdown()
+        isDropdownOpen = false
+        dropdownMenu.Visible = false
+    end
+
+    for index, level in ipairs({ "Low", "Mid", "High" }) do
+        local optionButton = Instance.new("TextButton")
+        optionButton.Size = UDim2.new(1, -4, 0, dropdownHeight)
+        optionButton.BackgroundColor3 = Color3.fromRGB(30, 12, 55)
+        optionButton.BackgroundTransparency = 0.2
+        optionButton.Text = level
+        optionButton.TextColor3 = Color3.fromRGB(220, 180, 255)
+        optionButton.Font = Enum.Font.LuckiestGuy
+        optionButton.TextSize = 12
+        optionButton.ZIndex = 21
+        optionButton.LayoutOrder = index
+        optionButton.Parent = dropdownMenu
+        Instance.new("UICorner", optionButton).CornerRadius = UDim.new(0, 4)
+
+        optionButton.MouseButton1Click:Connect(function()
+            settings.intensity = level
+            dropdownButton.Text = level .. " ▼"
+            handleIntensityChange(level)
+            closeDropdown()
+        end)
+
+        optionButton.MouseEnter:Connect(function()
+            optionButton.BackgroundColor3 = Color3.fromRGB(70, 30, 120)
+        end)
+
+        optionButton.MouseLeave:Connect(function()
+            optionButton.BackgroundColor3 = Color3.fromRGB(30, 12, 55)
+        end)
+    end
+
+    dropdownButton.MouseButton1Click:Connect(function()
+        isDropdownOpen = not isDropdownOpen
+        dropdownMenu.Visible = isDropdownOpen
+    end)
+
+    local function updateVisualState(isActive)
+        settings.enabled = isActive
+        if isActive then
+            TweenService:Create(toggleKnob, TweenInfo.new(0.22, Enum.EasingStyle.Quint), {
+                Position = UDim2.new(1, -(knobSize + 2), 0.5, -knobSize / 2)
+            }):Play()
+            TweenService:Create(toggleTrack, TweenInfo.new(0.2), {
+                BackgroundColor3 = Color3.fromRGB(50, 20, 100)
+            }):Play()
+            TweenService:Create(trackStroke, TweenInfo.new(0.15), {
+                Color = Color3.fromRGB(180, 130, 255)
+            }):Play()
+            statusLabel.Text = "ON"
+            statusLabel.TextColor3 = Color3.fromRGB(140, 255, 140)
+        else
+            TweenService:Create(toggleKnob, TweenInfo.new(0.22, Enum.EasingStyle.Quint), {
+                Position = UDim2.new(0, 2, 0.5, -knobSize / 2)
+            }):Play()
+            TweenService:Create(toggleTrack, TweenInfo.new(0.2), {
+                BackgroundColor3 = Color3.fromRGB(20, 8, 40)
+            }):Play()
+            TweenService:Create(trackStroke, TweenInfo.new(0.15), {
+                Color = Color3.fromRGB(90, 50, 150)
+            }):Play()
+            statusLabel.Text = "OFF"
+            statusLabel.TextColor3 = Color3.fromRGB(255, 110, 110)
+        end
+        handleToggle(isActive)
+    end
+
+    local trackButton = Instance.new("TextButton")
+    trackButton.Size = UDim2.new(1, 0, 1, 0)
+    trackButton.BackgroundTransparency = 1
+    trackButton.Text = ""
+    trackButton.ZIndex = 7
+    trackButton.Parent = toggleTrack
+
+    trackButton.Activated:Connect(function()
+        updateVisualState(not settings.enabled)
+    end)
+
+    local isSettingKey = false
+    local keyRowY = 74
+
+    local keyRow = Instance.new("Frame")
+    keyRow.Size = UDim2.new(1, -10, 0, 22)
+    keyRow.Position = UDim2.new(0, 5, 0, keyRowY)
+    keyRow.BackgroundTransparency = 1
+    keyRow.ZIndex = 5
+    keyRow.Parent = mainFrame
+
+    local keyLabel = Instance.new("TextLabel")
+    keyLabel.Size = UDim2.new(0, 42, 1, 0)
+    keyLabel.Position = UDim2.new(0, 6, 0, 0)
+    keyLabel.BackgroundTransparency = 1
+    keyLabel.Text = "KEY:"
+    keyLabel.TextColor3 = Color3.fromRGB(220, 190, 255)
+    keyLabel.TextSize = 12
+    keyLabel.Font = Enum.Font.LuckiestGuy
+    keyLabel.ZIndex = 6
+    keyLabel.Parent = keyRow
+
+    local keyButton = Instance.new("TextButton")
+    keyButton.Size = UDim2.new(0, 68, 1, 0)
+    keyButton.Position = UDim2.new(0, 50, 0, 0)
+    keyButton.BackgroundColor3 = Color3.fromRGB(25, 10, 45)
+    keyButton.BackgroundTransparency = 0.2
+    keyButton.Text = settings.keybind.Name
+    keyButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+    keyButton.Font = Enum.Font.LuckiestGuy
+    keyButton.TextSize = 12
+    keyButton.ZIndex = 6
+    keyButton.Parent = keyRow
+    Instance.new("UICorner", keyButton).CornerRadius = UDim.new(0, 5)
+
+    local keyStroke = Instance.new("UIStroke")
+    keyStroke.Color = Color3.fromRGB(90, 50, 150)
+    keyStroke.Parent = keyButton
+
+    local keyHint = Instance.new("TextLabel")
+    keyHint.Size = UDim2.new(0, 90, 1, 0)
+    keyHint.Position = UDim2.new(0, 124, 0, 0)
+    keyHint.BackgroundTransparency = 1
+    keyHint.Text = "(right-click edit)"
+    keyHint.TextColor3 = Color3.fromRGB(150, 110, 200)
+    keyHint.TextSize = 9
+    keyHint.Font = Enum.Font.LuckiestGuy
+    keyHint.ZIndex = 6
+    keyHint.Parent = keyRow
+
+    keyButton.MouseButton1Click:Connect(function()
+        if isSettingKey then return end
+        updateVisualState(not settings.enabled)
+    end)
+
+    keyButton.MouseButton2Click:Connect(function()
+        if isSettingKey then return end
+        isSettingKey = true
+        keyButton.Text = "..."
+        keyButton.TextColor3 = Color3.fromRGB(255, 230, 100)
+        TweenService:Create(keyStroke, TweenInfo.new(0.1), {
+            Color = Color3.fromRGB(255, 200, 80)
+        }):Play()
+    end)
+
+    UserInputService.InputBegan:Connect(function(input, gameProcessed)
+        if gameProcessed then return end
+        if input.UserInputType ~= Enum.UserInputType.Keyboard then return end
+
+        if isSettingKey then
+            if input.KeyCode ~= Enum.KeyCode.Unknown then
+                settings.keybind = input.KeyCode
+                keyButton.Text = input.KeyCode.Name
+                keyButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+                TweenService:Create(keyStroke, TweenInfo.new(0.1), {
+                    Color = Color3.fromRGB(90, 50, 150)
+                }):Play()
+                isSettingKey = false
+            end
+            return
+        end
+
+        if input.KeyCode == settings.keybind then
+            updateVisualState(not settings.enabled)
+        end
+    end)
+
+    local minimizeButton = Instance.new("TextButton")
+    minimizeButton.Size = UDim2.new(0, 24, 0, 22)
+    minimizeButton.Position = UDim2.new(1, -54, 0, 6)
+    minimizeButton.BackgroundColor3 = Color3.fromRGB(25, 10, 45)
+    minimizeButton.BackgroundTransparency = 0.3
+    minimizeButton.Text = "—"
+    minimizeButton.TextColor3 = Color3.fromRGB(255, 220, 100)
+    minimizeButton.Font = Enum.Font.LuckiestGuy
+    minimizeButton.TextSize = 14
+    minimizeButton.ZIndex = 10
+    minimizeButton.Parent = mainFrame
+    Instance.new("UICorner", minimizeButton).CornerRadius = UDim.new(0, 5)
+
+    local minimizeStroke = Instance.new("UIStroke")
+    minimizeStroke.Color = Color3.fromRGB(120, 60, 150)
+    minimizeStroke.Parent = minimizeButton
+
+    local closeButton = Instance.new("TextButton")
+    closeButton.Size = UDim2.new(0, 24, 0, 22)
+    closeButton.Position = UDim2.new(1, -26, 0, 6)
+    closeButton.BackgroundColor3 = Color3.fromRGB(25, 10, 45)
+    closeButton.BackgroundTransparency = 0.3
+    closeButton.Text = "X"
+    closeButton.TextColor3 = Color3.fromRGB(255, 120, 120)
+    closeButton.Font = Enum.Font.LuckiestGuy
+    closeButton.TextSize = 14
+    closeButton.ZIndex = 10
+    closeButton.Parent = mainFrame
+    Instance.new("UICorner", closeButton).CornerRadius = UDim.new(0, 5)
+
+    local closeStroke = Instance.new("UIStroke")
+    closeStroke.Color = Color3.fromRGB(120, 60, 150)
+    closeStroke.Parent = closeButton
+
+    local miniButton = Instance.new("TextButton")
+    miniButton.Name = "MiniButton"
+    miniButton.Size = UDim2.new(0, 52, 0, 52)
+    miniButton.Position = UDim2.new(1, -62, 0.5, -26)
+    miniButton.BackgroundColor3 = Color3.fromRGB(10, 3, 20)
+    miniButton.Text = ""
+    miniButton.ZIndex = 10
+    miniButton.Visible = false
+    miniButton.Active = true
+    miniButton.Parent = screenGui
+    Instance.new("UICorner", miniButton).CornerRadius = UDim.new(0, 12)
+
+    local miniStroke = Instance.new("UIStroke")
+    miniStroke.Color = Color3.fromRGB(140, 80, 220)
+    miniStroke.Parent = miniButton
+
+    local miniBackground = Instance.new("ImageLabel")
+    miniBackground.Size = UDim2.new(1, 0, 1, 0)
+    miniBackground.BackgroundTransparency = 1
+    miniBackground.Image = "rbxassetid://88214228815837"
+    miniBackground.ImageTransparency = 0.2
+    miniBackground.ScaleType = Enum.ScaleType.Crop
+    miniBackground.ZIndex = 9
+    miniBackground.Parent = miniButton
+    Instance.new("UICorner", miniBackground).CornerRadius = UDim.new(0, 12)
+
+    local miniText = Instance.new("TextLabel")
+    miniText.Size = UDim2.new(1, 0, 1, 0)
+    miniText.BackgroundTransparency = 1
+    miniText.Text = "MK"
+    miniText.TextColor3 = Color3.fromRGB(230, 190, 255)
+    miniText.Font = Enum.Font.LuckiestGuy
+    miniText.TextSize = 18
+    miniText.TextStrokeTransparency = 0.2
+    miniText.ZIndex = 11
+    miniText.Parent = miniButton
+
+    minimizeButton.MouseButton1Click:Connect(function()
+        mainFrame.Visible = false
+        miniButton.Visible = true
+        closeDropdown()
+    end)
+
+    miniButton.MouseButton1Click:Connect(function()
+        mainFrame.Visible = true
+        miniButton.Visible = false
+    end)
+
+    closeButton.MouseButton1Click:Connect(function()
+        screenGui:Destroy()
+    end)
+
+    do
+        local isDragging = false
+        miniButton.InputBegan:Connect(function(input)
+            if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+                isDragging = true
+                local dragStartPoint = input.Position
+                local currentStartPos = miniButton.Position
+                input.Changed:Connect(function()
+                    if input.UserInputState == Enum.UserInputState.End then
+                        isDragging = false
+                    end
+                end)
+                local connection
+                connection = UserInputService.InputChanged:Connect(function(inputObj)
+                    if not isDragging then
+                        connection:Disconnect()
+                        return
+                    end
+                    if inputObj.UserInputType == Enum.UserInputType.MouseMovement or inputObj.UserInputType == Enum.UserInputType.Touch then
+                        miniButton.Position = UDim2.new(
+                            currentStartPos.X.Scale,
+                            currentStartPos.X.Offset + (inputObj.Position.X - dragStartPoint.X),
+                            currentStartPos.Y.Scale,
+                            currentStartPos.Y.Offset + (inputObj.Position.Y - dragStartPoint.Y)
+                        )
+                    end
+                end)
+            end
+        end)
+    end
+
+    do
+        local isDragging = false
+        local dragStartPoint
+        local startPos
+
+        mainFrame.InputBegan:Connect(function(input)
+            if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+                isDragging = true
+                dragStartPoint = input.Position
+                startPos = mainFrame.Position
+                input.Changed:Connect(function()
+                    if input.UserInputState == Enum.UserInputState.End then
+                        isDragging = false
+                    end
+                end)
+            end
+        end)
+
+        UserInputService.InputChanged:Connect(function(input)
+            if isDragging and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then
+                local delta = input.Position - dragStartPoint
+                mainFrame.Position = UDim2.new(
+                    startPos.X.Scale,
+                    startPos.X.Offset + delta.X,
+                    startPos.Y.Scale,
+                    startPos.Y.Offset + delta.Y
+                )
+            end
+        end)
+    end
+end
+
+initializeLaggerInterface()

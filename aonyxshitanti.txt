@@ -1,0 +1,282 @@
+https://discord.gg/chpuemCN83
+Gian shit made this wtf
+local Players = game:GetService("Players")
+local LocalPlayer = Players.LocalPlayer
+local CoreGui = game:GetService("CoreGui")
+local RunService = game:GetService("RunService")
+local UIS = game:GetService("UserInputService")
+local UserInput = game:GetService("UserInputService")
+local State = {antiBatActive = false, infJumpActive = false, guiMinimized = false}
+local jumpHeld = false
+local lastJumpBoostTime = 0
+local JUMP_BOOST_INTERVAL = 0.05
+local ScreenGui = Instance.new("ScreenGui")
+ScreenGui.Name = "onixHub" ScreenGui.DisplayOrder = 1000 ScreenGui.ResetOnSpawn = false ScreenGui.Parent = CoreGui
+local Panel = Instance.new("Frame")
+Panel.BackgroundColor3 = Color3.fromRGB(0,0,0) Panel.BorderSizePixel = 0 Panel.ClipsDescendants = true
+Panel.Position = UDim2.new(0.05, 0, 0.3, 0) Panel.Size = UDim2.new(0, 260, 0, 326) Panel.Parent = ScreenGui
+local Corner = Instance.new("UICorner") Corner.CornerRadius = UDim.new(0, 14) Corner.Parent = Panel
+local Stroke = Instance.new("UIStroke") Stroke.Color = Color3.fromRGB(60,60,65) Stroke.Thickness = 1.5 Stroke.Parent = Panel
+local Header = Instance.new("Frame")
+Header.BackgroundColor3 = Color3.fromRGB(0,0,0) Header.BorderSizePixel = 0 Header.Size = UDim2.new(1, 0, 0, 46) Header.ZIndex = 10 Header.Parent = Panel
+local HC = Instance.new("UICorner") HC.CornerRadius = UDim.new(0, 14) HC.Parent = Header
+local DragArea = Instance.new("TextButton") DragArea.BackgroundTransparency = 1 DragArea.Position = UDim2.new(0, 0, 0, 0) DragArea.Size = UDim2.new(1, -44, 1, 0) DragArea.Text = "" DragArea.ZIndex = 5 DragArea.Parent = Header
+local Title = Instance.new("TextLabel")
+Title.BackgroundTransparency = 1 Title.Position = UDim2.new(0, 12, 0, 0) Title.Size = UDim2.new(1, -56, 1, 0) Title.ZIndex = 12
+Title.Font = Enum.Font.Bangers Title.Text = "ØNIX HUB-ANTI BAT" Title.TextColor3 = Color3.fromRGB(255,255,255) Title.TextSize = 20 Title.TextXAlignment = Enum.TextXAlignment.Left Title.Parent = Header
+local MinBtn = Instance.new("TextButton")
+MinBtn.BackgroundColor3 = Color3.fromRGB(28,28,32) MinBtn.Position = UDim2.new(1, -44, 0.5, -8) MinBtn.Size = UDim2.new(0, 32, 0, 16) MinBtn.ZIndex = 12
+MinBtn.Font = Enum.Font.Bangers MinBtn.Text = "-" MinBtn.TextColor3 = Color3.fromRGB(255,255,255) MinBtn.TextSize = 14 MinBtn.Parent = Header
+local MC = Instance.new("UICorner") MC.CornerRadius = UDim.new(0, 6) MC.Parent = MinBtn
+local MS = Instance.new("UIStroke") MS.Color = Color3.fromRGB(60,60,65) MS.Parent = MinBtn
+local Line = Instance.new("Frame") Line.BackgroundColor3 = Color3.fromRGB(60,60,65) Line.BorderSizePixel = 0
+Line.Position = UDim2.new(0, 0, 1, -1) Line.Size = UDim2.new(1, 0, 0, 1) Line.ZIndex = 11 Line.Parent = Header
+local Content = Instance.new("Frame")
+Content.BackgroundTransparency = 1 Content.BorderSizePixel = 0 Content.ClipsDescendants = true
+Content.Position = UDim2.new(0, 0, 0, 46) Content.Size = UDim2.new(1, 0, 0, 252) Content.Parent = Panel
+local ImgFrame = Instance.new("Frame") ImgFrame.BackgroundColor3 = Color3.fromRGB(0,0,0) ImgFrame.BorderSizePixel = 0 ImgFrame.Size = UDim2.new(0, 90, 1, 0) ImgFrame.Parent = Content
+local Img = Instance.new("ImageLabel") Img.BackgroundTransparency = 1 Img.Size = UDim2.new(1, 0, 1, 0) Img.ZIndex = 2 Img.Image = "rbxassetid://92081139728958" Img.ScaleType = Enum.ScaleType.Crop Img.Parent = ImgFrame
+local Divider = Instance.new("Frame") Divider.BackgroundColor3 = Color3.fromRGB(60,60,65) Divider.BorderSizePixel = 0 Divider.Position = UDim2.new(0, 90, 0, 0) Divider.Size = UDim2.new(0, 1, 1, 0) Divider.Parent = Content
+local ItemList = Instance.new("Frame") ItemList.BackgroundTransparency = 1 ItemList.BorderSizePixel = 0 ItemList.ClipsDescendants = true ItemList.Position = UDim2.new(0, 91, 0, 0) ItemList.Size = UDim2.new(0, 169, 1, 0) ItemList.Parent = Content
+local Layout = Instance.new("UIListLayout") Layout.Padding = UDim.new(0, 6) Layout.SortOrder = Enum.SortOrder.LayoutOrder Layout.Parent = ItemList
+local Padding = Instance.new("UIPadding") Padding.PaddingLeft = UDim.new(0, 8) Padding.PaddingRight = UDim.new(0, 8) Padding.PaddingTop = UDim.new(0, 8) Padding.PaddingBottom = UDim.new(0, 8) Padding.Parent = ItemList
+local ABFrame = Instance.new("Frame")
+ABFrame.BackgroundColor3 = Color3.fromRGB(18,18,20) ABFrame.BorderSizePixel = 0 ABFrame.Size = UDim2.new(1, 0, 0, 62) ABFrame.LayoutOrder = 1 ABFrame.Parent = ItemList
+local ABFC = Instance.new("UICorner") ABFC.Parent = ABFrame
+local ABFS = Instance.new("UIStroke") ABFS.Color = Color3.fromRGB(60,60,65) ABFS.ApplyStrokeMode = Enum.ApplyStrokeMode.Border ABFS.Parent = ABFrame
+local ABTitle = Instance.new("TextLabel")
+ABTitle.BackgroundTransparency = 1 ABTitle.Position = UDim2.new(0, 10, 0, 6) ABTitle.Size = UDim2.new(1, -60, 0, 20) ABTitle.ZIndex = 3
+ABTitle.Font = Enum.Font.Bangers ABTitle.Text = "ANTI BAT" ABTitle.TextColor3 = Color3.fromRGB(255,255,255) ABTitle.TextSize = 16 ABTitle.TextXAlignment = Enum.TextXAlignment.Left ABTitle.Parent = ABFrame
+local antiBatStatusLabel = Instance.new("TextLabel")
+antiBatStatusLabel.BackgroundTransparency = 1 antiBatStatusLabel.Position = UDim2.new(0, 10, 0, 27) antiBatStatusLabel.Size = UDim2.new(1, -60, 0, 14) antiBatStatusLabel.ZIndex = 3
+antiBatStatusLabel.Font = Enum.Font.Bangers antiBatStatusLabel.Text = "ANTI BAT : DISABLED" antiBatStatusLabel.TextColor3 = Color3.fromRGB(140, 50, 50) antiBatStatusLabel.TextSize = 12 antiBatStatusLabel.TextXAlignment = Enum.TextXAlignment.Left antiBatStatusLabel.Parent = ABFrame
+local ABToggle = Instance.new("Frame")
+ABToggle.BackgroundColor3 = Color3.fromRGB(120,120,120) ABToggle.Position = UDim2.new(1, -48, 0, 8) ABToggle.Size = UDim2.new(0, 38, 0, 20) ABToggle.ZIndex = 3 ABToggle.Parent = ABFrame
+local ABTC = Instance.new("UICorner") ABTC.CornerRadius = UDim.new(0, 10) ABTC.Parent = ABToggle
+local ABTS = Instance.new("UIStroke") ABTS.Color = Color3.fromRGB(60,60,65) ABTS.Parent = ABToggle
+local ABDot = Instance.new("Frame")
+ABDot.BackgroundColor3 = Color3.fromRGB(200,200,200) ABDot.Position = UDim2.new(0, 4, 0.5, -5) ABDot.Size = UDim2.new(0, 10, 0, 10) ABDot.ZIndex = 4 ABDot.Parent = ABToggle
+local ABDC = Instance.new("UICorner") ABDC.CornerRadius = UDim.new(0, 5) ABDC.Parent = ABDot
+local antiBatMainBtn = Instance.new("TextButton") antiBatMainBtn.BackgroundTransparency = 1 antiBatMainBtn.Size = UDim2.new(1, 0, 1, 0) antiBatMainBtn.ZIndex = 5 antiBatMainBtn.Text = "" antiBatMainBtn.Parent = ABFrame
+local ABKeyFrame = Instance.new("Frame")
+ABKeyFrame.BackgroundColor3 = Color3.fromRGB(20,20,24) ABKeyFrame.BorderSizePixel = 0 ABKeyFrame.Position = UDim2.new(0, 8, 0, 42) ABKeyFrame.Size = UDim2.new(0, 90, 0, 16) ABKeyFrame.ZIndex = 3 ABKeyFrame.Parent = ABFrame
+local ABKFC = Instance.new("UICorner") ABKFC.CornerRadius = UDim.new(0, 4) ABKFC.Parent = ABKeyFrame
+local ABKFS = Instance.new("UIStroke") ABKFS.Color = Color3.fromRGB(60,60,65) ABKFS.Parent = ABKeyFrame
+local ABKeyLabel = Instance.new("TextLabel")
+ABKeyLabel.BackgroundTransparency = 1 ABKeyLabel.Position = UDim2.new(0, 4, 0, 0) ABKeyLabel.Size = UDim2.new(0, 28, 1, 0) ABKeyLabel.ZIndex = 4
+ABKeyLabel.Font = Enum.Font.Bangers ABKeyLabel.Text = "KEY:" ABKeyLabel.TextColor3 = Color3.fromRGB(190,190,195) ABKeyLabel.TextSize = 11 ABKeyLabel.TextXAlignment = Enum.TextXAlignment.Left ABKeyLabel.Parent = ABKeyFrame
+local ABKeyBtn = Instance.new("TextButton")
+ABKeyBtn.BackgroundColor3 = Color3.fromRGB(28,28,36) ABKeyBtn.BorderSizePixel = 0 ABKeyBtn.Position = UDim2.new(0, 32, 0, 2) ABKeyBtn.Size = UDim2.new(0, 48, 1, -4) ABKeyBtn.ZIndex = 5
+ABKeyBtn.Font = Enum.Font.Bangers ABKeyBtn.Text = "O" ABKeyBtn.TextColor3 = Color3.fromRGB(255,255,255) ABKeyBtn.TextSize = 11 ABKeyBtn.Parent = ABKeyFrame
+local ABKBC = Instance.new("UICorner") ABKBC.CornerRadius = UDim.new(0, 3) ABKBC.Parent = ABKeyBtn
+local ABKBS = Instance.new("UIStroke") ABKBS.Color = Color3.fromRGB(60,60,65) ABKBS.ApplyStrokeMode = Enum.ApplyStrokeMode.Border ABKBS.Parent = ABKeyBtn
+local IJFrame = Instance.new("Frame")
+IJFrame.BackgroundColor3 = Color3.fromRGB(18,18,20) IJFrame.BorderSizePixel = 0 IJFrame.Size = UDim2.new(1, 0, 0, 62) IJFrame.LayoutOrder = 2 IJFrame.Parent = ItemList
+local IJFC = Instance.new("UICorner") IJFC.Parent = IJFrame
+local IJFS = Instance.new("UIStroke") IJFS.Color = Color3.fromRGB(60,60,65) IJFS.ApplyStrokeMode = Enum.ApplyStrokeMode.Border IJFS.Parent = IJFrame
+local IJTitle = Instance.new("TextLabel")
+IJTitle.BackgroundTransparency = 1 IJTitle.Position = UDim2.new(0, 10, 0, 6) IJTitle.Size = UDim2.new(1, -60, 0, 20) IJTitle.ZIndex = 3
+IJTitle.Font = Enum.Font.Bangers IJTitle.Text = "INF JUMP" IJTitle.TextColor3 = Color3.fromRGB(255,255,255) IJTitle.TextSize = 16 IJTitle.TextXAlignment = Enum.TextXAlignment.Left IJTitle.Parent = IJFrame
+local infJumpStatusLabel = Instance.new("TextLabel")
+infJumpStatusLabel.BackgroundTransparency = 1 infJumpStatusLabel.Position = UDim2.new(0, 10, 0, 27) infJumpStatusLabel.Size = UDim2.new(1, -60, 0, 14) infJumpStatusLabel.ZIndex = 3
+infJumpStatusLabel.Font = Enum.Font.Bangers infJumpStatusLabel.Text = "INF JUMP : DISABLED" infJumpStatusLabel.TextColor3 = Color3.fromRGB(140, 50, 50) infJumpStatusLabel.TextSize = 12 infJumpStatusLabel.TextXAlignment = Enum.TextXAlignment.Left infJumpStatusLabel.Parent = IJFrame
+local IJToggle = Instance.new("Frame")
+IJToggle.BackgroundColor3 = Color3.fromRGB(120,120,120) IJToggle.Position = UDim2.new(1, -48, 0, 8) IJToggle.Size = UDim2.new(0, 38, 0, 20) IJToggle.ZIndex = 3 IJToggle.Parent = IJFrame
+local IJTC = Instance.new("UICorner") IJTC.CornerRadius = UDim.new(0, 10) IJTC.Parent = IJToggle
+local IJTS = Instance.new("UIStroke") IJTS.Color = Color3.fromRGB(60,60,65) IJTS.Parent = IJToggle
+local IJDot = Instance.new("Frame")
+IJDot.BackgroundColor3 = Color3.fromRGB(200,200,200) IJDot.Position = UDim2.new(0, 4, 0.5, -5) IJDot.Size = UDim2.new(0, 10, 0, 10) IJDot.ZIndex = 4 IJDot.Parent = IJToggle
+local IJDC = Instance.new("UICorner") IJDC.CornerRadius = UDim.new(0, 5) IJDC.Parent = IJDot
+local infJumpMainBtn = Instance.new("TextButton") infJumpMainBtn.BackgroundTransparency = 1 infJumpMainBtn.Size = UDim2.new(1, 0, 1, 0) infJumpMainBtn.ZIndex = 5 infJumpMainBtn.Text = "" infJumpMainBtn.Parent = IJFrame
+local IJKeyFrame = Instance.new("Frame")
+IJKeyFrame.BackgroundColor3 = Color3.fromRGB(20,20,24) IJKeyFrame.BorderSizePixel = 0 IJKeyFrame.Position = UDim2.new(0, 8, 0, 42) IJKeyFrame.Size = UDim2.new(0, 90, 0, 16) IJKeyFrame.ZIndex = 3 IJKeyFrame.Parent = IJFrame
+local IJKFC = Instance.new("UICorner") IJKFC.CornerRadius = UDim.new(0, 4) IJKFC.Parent = IJKeyFrame
+local IJKFS = Instance.new("UIStroke") IJKFS.Color = Color3.fromRGB(60,60,65) IJKFS.Parent = IJKeyFrame
+local IJKeyLabel = Instance.new("TextLabel")
+IJKeyLabel.BackgroundTransparency = 1 IJKeyLabel.Position = UDim2.new(0, 4, 0, 0) IJKeyLabel.Size = UDim2.new(0, 28, 1, 0) IJKeyLabel.ZIndex = 4
+IJKeyLabel.Font = Enum.Font.Bangers IJKeyLabel.Text = "KEY:" IJKeyLabel.TextColor3 = Color3.fromRGB(190,190,195) IJKeyLabel.TextSize = 11 IJKeyLabel.TextXAlignment = Enum.TextXAlignment.Left IJKeyLabel.Parent = IJKeyFrame
+local IJKeyBtn = Instance.new("TextButton")
+IJKeyBtn.BackgroundColor3 = Color3.fromRGB(28,28,36) IJKeyBtn.BorderSizePixel = 0 IJKeyBtn.Position = UDim2.new(0, 32, 0, 2) IJKeyBtn.Size = UDim2.new(0, 48, 1, -4) IJKeyBtn.ZIndex = 5
+IJKeyBtn.Font = Enum.Font.Bangers IJKeyBtn.Text = "O" IJKeyBtn.TextColor3 = Color3.fromRGB(255,255,255) IJKeyBtn.TextSize = 11 IJKeyBtn.Parent = IJKeyFrame
+local IJKBC = Instance.new("UICorner") IJKBC.CornerRadius = UDim.new(0, 3) IJKBC.Parent = IJKeyBtn
+local IJKBS = Instance.new("UIStroke") IJKBS.Color = Color3.fromRGB(60,60,65) IJKBS.ApplyStrokeMode = Enum.ApplyStrokeMode.Border IJKBS.Parent = IJKeyBtn
+local GUIFrame = Instance.new("Frame")
+GUIFrame.BackgroundColor3 = Color3.fromRGB(18,18,20) GUIFrame.BorderSizePixel = 0 GUIFrame.Size = UDim2.new(1, 0, 0, 40) GUIFrame.LayoutOrder = 3 GUIFrame.Parent = ItemList
+local GFC = Instance.new("UICorner") GFC.Parent = GUIFrame
+local GFS = Instance.new("UIStroke") GFS.Color = Color3.fromRGB(60,60,65) GFS.Parent = GUIFrame
+local GUITitle = Instance.new("TextLabel")
+GUITitle.BackgroundTransparency = 1 GUITitle.Position = UDim2.new(0, 10, 0, 5) GUITitle.Size = UDim2.new(1, -80, 0, 20) GUITitle.ZIndex = 3
+GUITitle.Font = Enum.Font.Bangers GUITitle.Text = "GUI TOGGLE KEY" GUITitle.TextColor3 = Color3.fromRGB(255,255,255) GUITitle.TextSize = 15 GUITitle.TextXAlignment = Enum.TextXAlignment.Left GUITitle.Parent = GUIFrame
+local GUISubtitle = Instance.new("TextLabel")
+GUISubtitle.BackgroundTransparency = 1 GUISubtitle.Position = UDim2.new(0, 10, 0, 22) GUISubtitle.Size = UDim2.new(1, -80, 0, 14) GUISubtitle.ZIndex = 3
+GUISubtitle.Font = Enum.Font.Bangers GUISubtitle.Text = "Click to rebind" GUISubtitle.TextColor3 = Color3.fromRGB(190,190,195) GUISubtitle.TextSize = 11 GUISubtitle.TextXAlignment = Enum.TextXAlignment.Left GUISubtitle.Parent = GUIFrame
+local GUIBtn = Instance.new("TextButton")
+GUIBtn.BackgroundColor3 = Color3.fromRGB(28,28,36) GUIBtn.BorderSizePixel = 0 GUIBtn.Position = UDim2.new(1, -66, 0.5, -11) GUIBtn.Size = UDim2.new(0, 56, 0, 22) GUIBtn.ZIndex = 4
+GUIBtn.Font = Enum.Font.Bangers GUIBtn.Text = "LCTRL" GUIBtn.TextColor3 = Color3.fromRGB(255,255,255) GUIBtn.TextSize = 12 GUIBtn.Parent = GUIFrame
+local GBC = Instance.new("UICorner") GBC.CornerRadius = UDim.new(0, 5) GBC.Parent = GUIBtn
+local GBS = Instance.new("UIStroke") GBS.Color = Color3.fromRGB(60,60,65) GBS.ApplyStrokeMode = Enum.ApplyStrokeMode.Border GBS.Parent = GUIBtn
+local Footer = Instance.new("Frame")
+Footer.BackgroundColor3 = Color3.fromRGB(0,0,0) Footer.BorderSizePixel = 0 Footer.Position = UDim2.new(0, 0, 0, 298) Footer.Size = UDim2.new(1, 0, 0, 28) Footer.ZIndex = 10 Footer.Parent = Panel
+local FCorner = Instance.new("UICorner") FCorner.CornerRadius = UDim.new(0, 14) FCorner.Parent = Footer
+local FLine = Instance.new("Frame") FLine.BackgroundColor3 = Color3.fromRGB(60,60,65) FLine.BorderSizePixel = 0 FLine.Size = UDim2.new(1, 0, 0, 1) FLine.ZIndex = 11 FLine.Parent = Footer
+local Discord = Instance.new("TextLabel")
+Discord.BackgroundTransparency = 1 Discord.Position = UDim2.new(0, 12, 0, 0) Discord.Size = UDim2.new(1, -12, 1, 0) Discord.ZIndex = 11
+Discord.Font = Enum.Font.Bangers Discord.Text = "https://discord.gg/AgrcNZpwXZ" Discord.TextColor3 = Color3.fromRGB(255,255,255) Discord.TextSize = 13 Discord.TextXAlignment = Enum.TextXAlignment.Left Discord.Parent = Footer
+local function updateAntiBatVisuals()
+    local on = State.antiBatActive
+    if antiBatStatusLabel then
+        antiBatStatusLabel.Text = on and "ANTI BAT : ENABLED" or "ANTI BAT : DISABLED"
+        antiBatStatusLabel.TextColor3 = on and Color3.fromRGB(255, 255, 255) or Color3.fromRGB(170, 170, 170)
+    end
+    -- Cambiar colores de botones
+    if ABToggle then
+        ABToggle.BackgroundColor3 = on and Color3.fromRGB(255, 255, 255) or Color3.fromRGB(120, 120, 120)
+    end
+    if ABDot then
+        ABDot.BackgroundColor3 = on and Color3.fromRGB(0, 0, 0) or Color3.fromRGB(200, 200, 200)
+    end
+end
+local function toggleAntiBat()
+    State.antiBatActive = not State.antiBatActive
+    if State.antiBatActive then
+        if State.antiBatThread then State.antiBatThread:Disconnect() end
+        State.antiBatThread = RunService.Heartbeat:Connect(function()
+            local char = LocalPlayer.Character
+            if not char then return end
+            local hum = char:FindFirstChildOfClass("Humanoid")
+            local hrp = char:FindFirstChild("HumanoidRootPart")
+            if not hum or not hrp then return end
+            if hum.MoveDirection.Magnitude <= 0 then return end
+            local vel = hrp.Velocity
+            hrp.Velocity = Vector3.new(vel.X * 55, 55, vel.Z * 55)
+            RunService.RenderStepped:Wait()
+            hrp.Velocity = vel + Vector3.new(0, 0.05, 0)
+        end)
+    else
+        if State.antiBatThread then State.antiBatThread:Disconnect() State.antiBatThread = nil end
+    end
+    updateAntiBatVisuals()
+end
+task.spawn(function()
+    local pg = LocalPlayer:WaitForChild("PlayerGui", 10)
+    if not pg then return end
+    local function hookBtn(btn)
+        if btn:IsA("GuiButton") and btn.Name == "JumpButton" and not btn:GetAttribute("Hooked") then
+            btn:SetAttribute("Hooked", true)
+            btn.MouseButton1Down:Connect(function() if State.infJumpActive then jumpHeld = true end end)
+            btn.MouseButton1Up:Connect(function() jumpHeld = false end)
+            btn.MouseLeave:Connect(function() jumpHeld = false end)
+        end
+    end
+    for _, d in ipairs(pg:GetDescendants()) do hookBtn(d) end
+    pg.DescendantAdded:Connect(hookBtn)
+end)
+UIS.JumpRequest:Connect(function()
+    if State.infJumpActive then jumpHeld = true task.wait(0.05) jumpHeld = false end
+end)
+UIS.InputBegan:Connect(function(inp, gpe)
+    if gpe then return end
+    if State.infJumpActive and inp.UserInputType == Enum.UserInputType.Keyboard and inp.KeyCode == Enum.KeyCode.Space then
+        jumpHeld = true
+    end
+end)
+UIS.InputEnded:Connect(function(inp)
+    if inp.UserInputType == Enum.UserInputType.Keyboard and inp.KeyCode == Enum.KeyCode.Space then
+        jumpHeld = false
+    end
+end)
+local function startInfJumpLoop()
+    if State.infJumpThread then State.infJumpThread:Disconnect() end
+    State.infJumpThread = RunService.Stepped:Connect(function()
+        if not State.infJumpActive or not jumpHeld then return end
+        local now = tick()
+        if now - lastJumpBoostTime < JUMP_BOOST_INTERVAL then return end
+        lastJumpBoostTime = now
+        local char = LocalPlayer.Character
+        if not char then return end
+        local hum = char:FindFirstChildOfClass("Humanoid")
+        local hrp = char:FindFirstChild("HumanoidRootPart")
+        if not hum or not hrp or hum.Health <= 0 then return end
+        local vel = hrp.AssemblyLinearVelocity
+        if vel.Y < 55 then hrp.AssemblyLinearVelocity = Vector3.new(vel.X, 65, vel.Z) end
+    end)
+end
+local function stopInfJumpLoop()
+    if State.infJumpThread then State.infJumpThread:Disconnect() State.infJumpThread = nil end
+    jumpHeld = false
+    lastJumpBoostTime = 0
+end
+local function updateInfJumpVisuals()
+    local on = State.infJumpActive
+    if infJumpStatusLabel then
+        infJumpStatusLabel.Text = on and "INF JUMP : ENABLED" or "INF JUMP : DISABLED"
+        infJumpStatusLabel.TextColor3 = on and Color3.fromRGB(255, 255, 255) or Color3.fromRGB(170, 170, 170)
+    end
+    -- Cambiar colores de botones
+    if IJToggle then
+        IJToggle.BackgroundColor3 = on and Color3.fromRGB(255, 255, 255) or Color3.fromRGB(120, 120, 120)
+    end
+    if IJDot then
+        IJDot.BackgroundColor3 = on and Color3.fromRGB(0, 0, 0) or Color3.fromRGB(200, 200, 200)
+    end
+end
+local function toggleInfJump()
+    State.infJumpActive = not State.infJumpActive
+    if State.infJumpActive then
+        startInfJumpLoop()
+    else
+        stopInfJumpLoop()
+    end
+    updateInfJumpVisuals()
+end
+antiBatMainBtn.MouseButton1Click:Connect(toggleAntiBat)
+infJumpMainBtn.MouseButton1Click:Connect(toggleInfJump)
+MinBtn.MouseButton1Click:Connect(function()
+    State.guiMinimized = not State.guiMinimized
+    if State.guiMinimized then
+        Content.Size = UDim2.new(1, 0, 0, 0)
+        Footer.Size = UDim2.new(1, 0, 0, 0)
+        Panel.Size = UDim2.new(0, 260, 0, 46)
+        MinBtn.Text = "+"
+    else
+        Content.Size = UDim2.new(1, 0, 0, 252)
+        Footer.Size = UDim2.new(1, 0, 0, 28)
+        Panel.Size = UDim2.new(0, 260, 0, 326)
+        MinBtn.Text = "-"
+    end
+end)
+GUIBtn.MouseButton1Click:Connect(function()
+    ScreenGui.Visible = not ScreenGui.Visible
+end)
+local isDragging = false
+local dragStartPos = nil
+local panelStartPos = nil
+DragArea.InputBegan:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+        isDragging = true
+        dragStartPos = input.Position
+        panelStartPos = Panel.Position
+    end
+end)
+DragArea.InputEnded:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+        isDragging = false
+        dragStartPos = nil
+        panelStartPos = nil
+    end
+end)
+UIS.InputChanged:Connect(function(input)
+    if not isDragging then return end
+    if input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch then
+        local delta = input.Position - dragStartPos
+        Panel.Position = UDim2.new(
+            panelStartPos.X.Scale,
+            panelStartPos.X.Offset + delta.X,
+            panelStartPos.Y.Scale,
+            panelStartPos.Y.Offset + delta.Y
+        )
+    end
+end)
+updateAntiBatVisuals()
+updateInfJumpVisuals()
+print("ØNIX HUB LOADED ")

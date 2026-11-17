@@ -1,0 +1,401 @@
+local Lighting = game:GetService("Lighting")
+local Workspace = game:GetService("Workspace")
+local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
+local LocalPlayer = Players.LocalPlayer
+local colors = {
+	bg = Color3.new(.96, .95, 1),
+	header = Color3.new(.92, .9, 1),
+	row = Color3.new(1, 1, 1),
+	rowStroke = Color3.new(.65, .3, 1),
+	toggleOff = Color3.new(.82, .78, .92),
+	toggleBall = Color3.new(.6, .55, 0.75),
+	text = Color3.new(.15, .05, .35),
+	primary = Color3.new(.55, .1, 1),
+	accent = Color3.new(.85, .2, 1),
+	white = Color3.new(1, 1, 1),
+	black = Color3.new(0, 0, 0)
+}
+local particleColors = {
+	Color3.new(.65, 0.25, 1),
+	Color3.new(.8, 0.5, 1),
+	Color3.new(0.5, .1, .9),
+	Color3.new(.85, .6, 1),
+	Color3.new(0.75, .35, 1),
+	Color3.new(.9, .7, 1),
+	Color3.new(.55, .15, 1)
+}
+local gradientRainbow = ColorSequence.new({
+	ColorSequenceKeypoint.new(0, Color3.new(1, 1, 1)),
+	ColorSequenceKeypoint.new(.18, Color3.new(.6, .1, 1)),
+	ColorSequenceKeypoint.new(.36, Color3.new(1, 1, 1)),
+	ColorSequenceKeypoint.new(.54, Color3.new(.45, .05, .95)),
+	ColorSequenceKeypoint.new(.72, Color3.new(1, 1, 1)),
+	ColorSequenceKeypoint.new(.9, Color3.new(.7, .2, 1)),
+	ColorSequenceKeypoint.new(1, Color3.new(1, 1, 1))
+})
+local existingGUI = Players.LocalPlayer.PlayerGui:FindFirstChild("KTMAntiLagGUI")
+if existingGUI then existingGUI:Destroy() end
+local screenGui = Instance.new("ScreenGui")
+screenGui.Name = "KTMAntiLagGUI"
+screenGui.ResetOnSpawn = false
+screenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+screenGui.Parent = LocalPlayer.PlayerGui
+local function roundCorners(frame, radius)
+	local corners = Instance.new("UICorner")
+	corners.CornerRadius = UDim.new(0, radius)
+	corners.Parent = frame
+end
+local borderFrame = Instance.new("Frame")
+borderFrame.Name = "KTMAntiLagBorder"
+borderFrame.Size = UDim2.fromOffset(178 + 2 * 2, 128 + 2 * 2)
+borderFrame.Position = UDim2.new(.02, -2, .3, -2)
+borderFrame.BackgroundColor3 = colors.primary
+borderFrame.BorderSizePixel = 0
+borderFrame.ZIndex = 0
+borderFrame.Parent = screenGui
+roundCorners(borderFrame, 20)
+local borderGradient = Instance.new("UIGradient", borderFrame)
+borderGradient.Color = ColorSequence.new({
+	ColorSequenceKeypoint.new(0, Color3.new(.55, .1, 1)),
+	ColorSequenceKeypoint.new(.15, Color3.new(1, 1, 1)),
+	ColorSequenceKeypoint.new(.3, Color3.new(0.75, .3, 1)),
+	ColorSequenceKeypoint.new(.45, Color3.new(1, 1, 1)),
+	ColorSequenceKeypoint.new(.55, Color3.new(.85, .4, 1)),
+	ColorSequenceKeypoint.new(.7, Color3.new(1, 1, 1)),
+	ColorSequenceKeypoint.new(.85, Color3.new(.6, .15, 1)),
+	ColorSequenceKeypoint.new(1, Color3.new(1, 1, 1))
+})
+borderGradient.Rotation = 0
+local mainPanel = Instance.new("Frame")
+mainPanel.Name = "KTMAntiLagPanel"
+mainPanel.Size = UDim2.fromOffset(178, 128)
+mainPanel.Position = UDim2.new(.02, 0, .3, 0)
+mainPanel.BackgroundColor3 = colors.bg
+mainPanel.BorderSizePixel = 0
+mainPanel.Active = true
+mainPanel.Draggable = true
+mainPanel.ClipsDescendants = true
+mainPanel.ZIndex = 1
+mainPanel.Parent = screenGui
+roundCorners(mainPanel, 18)
+mainPanel:GetPropertyChangedSignal("Position"):Connect(function()
+	local pos = mainPanel.Position
+	borderFrame.Position = UDim2.new(pos.X.Scale, pos.X.Offset - 2, pos.Y.Scale, pos.Y.Offset - 2)
+end)
+local function addParticleFrame(color, x, y, size, transparency)
+	local frame = Instance.new("Frame")
+	frame.Size = UDim2.fromOffset(size, size)
+	frame.Position = UDim2.new(x, 0, y, 0)
+	frame.BackgroundColor3 = color
+	frame.BackgroundTransparency = transparency
+	frame.BorderSizePixel = 0
+	frame.ZIndex = 1
+	frame.Parent = mainPanel
+	roundCorners(frame, 99)
+end
+addParticleFrame(Color3.new(0.75, 0.5, 1), -0.1, -0.1, 150, 0.88)
+addParticleFrame(Color3.new(.55, .2, 1), 0.5, -0.15, 130, 0.9)
+addParticleFrame(Color3.new(.8, .4, 1), 0.6, 0.45, 120, 0.91)
+addParticleFrame(Color3.new(.6, .3, 1), 0.05, 0.6, 130, 0.89)
+addParticleFrame(Color3.new(.7, 0.25, 1), 0.35, 0.75, 110, 0.92)
+local animatedParticles = {}
+local rand = Random.new()
+for i = 1, 55 do
+	local size = rand:NextInteger(3, 6)
+	local particle = Instance.new("Frame")
+	particle.Size = UDim2.fromOffset(size, size)
+	particle.Position = UDim2.new(rand:NextNumber(), 0, rand:NextNumber(), 0)
+	particle.BackgroundColor3 = particleColors[rand:NextInteger(1, #particleColors)]
+	particle.BackgroundTransparency = rand:NextNumber(0.2, 0.7)
+	local gradient = Instance.new("UIGradient", particle)
+	gradient.Color = gradientRainbow
+	particle.ZIndex = 2
+	particle.BorderSizePixel = 0
+	particle.Parent = mainPanel
+	roundCorners(particle, 99)
+	table.insert(animatedParticles, {
+		frame = particle,
+		x = rand:NextNumber(),
+		y = rand:NextNumber(),
+		speedX = rand:NextNumber(-0.006, 0.006),
+		speedY = rand:NextNumber(0.1, 0.45),
+		phase = rand:NextNumber(0, math.pi * 2),
+		baseT = rand:NextNumber(0.1, 0.45)
+	})
+end
+local headerBg = Instance.new("Frame")
+headerBg.Size = UDim2.new(1, 0, 0, 38)
+headerBg.Position = UDim2.fromOffset(0, 0)
+headerBg.BackgroundColor3 = colors.header
+headerBg.BorderSizePixel = 0
+headerBg.ZIndex = 5
+headerBg.Parent = mainPanel
+roundCorners(headerBg, 18)
+local headerShadow = Instance.new("Frame")
+headerShadow.Size = UDim2.new(1, 0, 0, 20)
+headerShadow.Position = UDim2.fromOffset(0, 18)
+headerShadow.BackgroundColor3 = colors.header
+headerShadow.BorderSizePixel = 0
+headerShadow.ZIndex = 5
+headerShadow.Parent = mainPanel
+local headerGradient = Instance.new("UIGradient", headerBg)
+headerGradient.Color = ColorSequence.new({
+	ColorSequenceKeypoint.new(0, Color3.new(.95, .92, 1)),
+	ColorSequenceKeypoint.new(.35, Color3.new(.88, .82, 1)),
+	ColorSequenceKeypoint.new(.65, Color3.new(.9, .86, 1)),
+	ColorSequenceKeypoint.new(1, Color3.new(.94, .92, 1))
+})
+Instance.new("UIGradient", headerShadow).Color = headerGradient.Color
+local headerDecorZone = Instance.new("Frame")
+headerDecorZone.Size = UDim2.new(1, 0, 1, 0)
+headerDecorZone.BackgroundTransparency = 1
+headerDecorZone.ClipsDescendants = true
+headerDecorZone.ZIndex = 6
+headerDecorZone.BorderSizePixel = 0
+headerDecorZone.Parent = headerBg
+local headerParticles = {}
+local headerRand = Random.new(42)
+for i = 1, 25 do
+	local size = headerRand:NextInteger(2, 5)
+	local particle = Instance.new("Frame")
+	particle.Size = UDim2.fromOffset(size, size)
+	particle.Position = UDim2.new(headerRand:NextNumber(), 0, headerRand:NextNumber(), 0)
+	particle.BackgroundColor3 = particleColors[headerRand:NextInteger(1, #particleColors)]
+	particle.BackgroundTransparency = headerRand:NextNumber(0, 0.4)
+	particle.ZIndex = 7
+	particle.BorderSizePixel = 0
+	particle.Parent = headerDecorZone
+	roundCorners(particle, 99)
+	table.insert(headerParticles, {
+		frame = particle,
+		x = headerRand:NextNumber(),
+		y = headerRand:NextNumber(),
+		speedX = headerRand:NextNumber(-0.006, 0.006),
+		speedY = headerRand:NextNumber(0.3, 0.65),
+		phase = headerRand:NextNumber(0, math.pi * 2),
+		baseT = headerRand:NextNumber(0, 0.4)
+	})
+end
+local separator = Instance.new("Frame")
+separator.Size = UDim2.new(1, 0, 0, 1)
+separator.Position = UDim2.fromOffset(0, 38)
+separator.BackgroundTransparency = 0.6
+separator.BorderSizePixel = 0
+separator.ZIndex = 8
+separator.Parent = mainPanel
+local separatorGradient = Instance.new("UIGradient", separator)
+separatorGradient.Color = ColorSequence.new({
+	ColorSequenceKeypoint.new(0, Color3.new(0, 0, 0)),
+	ColorSequenceKeypoint.new(.3, Color3.new(0.5, .1, 1)),
+	ColorSequenceKeypoint.new(.7, Color3.new(.2, 0.5, 1)),
+	ColorSequenceKeypoint.new(1, Color3.new(0, 0, 0))
+})
+local iconLabel = Instance.new("TextLabel")
+iconLabel.Size = UDim2.fromOffset(28, 28)
+iconLabel.Position = UDim2.fromOffset(6, 5)
+iconLabel.BackgroundColor3 = Color3.new(.92, .88, 1)
+iconLabel.Text = "⚡"
+iconLabel.TextSize = 14
+iconLabel.Font = Enum.Font.LuckiestGuy
+iconLabel.ZIndex = 8
+iconLabel.Parent = mainPanel
+roundCorners(iconLabel, 14)
+local iconGradient = Instance.new("UIGradient", iconLabel)
+iconGradient.Color = ColorSequence.new({
+	ColorSequenceKeypoint.new(0, Color3.new(0.5, .1, 1)),
+	ColorSequenceKeypoint.new(0.5, Color3.new(.2, 0.5, 1)),
+	ColorSequenceKeypoint.new(1, Color3.new(.8, .2, 1))
+})
+local titleLabel = Instance.new("TextLabel")
+titleLabel.Size = UDim2.fromOffset(136, 18)
+titleLabel.Position = UDim2.fromOffset(38, 4)
+titleLabel.BackgroundTransparency = 1
+titleLabel.Text = "⚔️ KTM ANTI LAG"
+titleLabel.TextSize = 11
+titleLabel.Font = Enum.Font.LuckiestGuy
+titleLabel.TextXAlignment = Enum.TextXAlignment.Left
+titleLabel.TextStrokeColor3 = Color3.new(.45, .05, .9)
+titleLabel.TextStrokeTransparency = 0.3
+titleLabel.ZIndex = 8
+titleLabel.Parent = mainPanel
+local titleGradient = Instance.new("UIGradient", titleLabel)
+titleGradient.Color = gradientRainbow
+titleGradient.Rotation = 0
+local subtitleLabel = Instance.new("TextLabel")
+subtitleLabel.Size = UDim2.fromOffset(136, 12)
+subtitleLabel.Position = UDim2.fromOffset(38, 23)
+subtitleLabel.BackgroundTransparency = 1
+subtitleLabel.Text = "Performance Optimizer"
+subtitleLabel.TextSize = 7
+subtitleLabel.Font = Enum.Font.LuckiestGuy
+subtitleLabel.TextXAlignment = Enum.TextXAlignment.Left
+subtitleLabel.ZIndex = 8
+subtitleLabel.Parent = mainPanel
+local subtitleGradient = Instance.new("UIGradient", subtitleLabel)
+subtitleGradient.Color = gradientRainbow
+subtitleGradient.Rotation = 0
+local discordFrame = Instance.new("Frame")
+discordFrame.Size = UDim2.new(1, -12, 0, 16)
+discordFrame.Position = UDim2.fromOffset(6, 41)
+discordFrame.BackgroundColor3 = Color3.new(.92, .88, 1)
+discordFrame.BorderSizePixel = 0
+discordFrame.ZIndex = 8
+discordFrame.Parent = mainPanel
+roundCorners(discordFrame, 8)
+local discordStroke = Instance.new("UIStroke", discordFrame)
+discordStroke.Thickness = 1.5
+discordStroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
+local discordGradient = Instance.new("UIGradient", discordStroke)
+discordGradient.Color = ColorSequence.new({
+	ColorSequenceKeypoint.new(0, Color3.new(.55, .1, 1)),
+	ColorSequenceKeypoint.new(0.25, Color3.new(1, 1, 1)),
+	ColorSequenceKeypoint.new(0.5, Color3.new(.7, .3, 1)),
+	ColorSequenceKeypoint.new(0.75, Color3.new(.9, .9, 1)),
+	ColorSequenceKeypoint.new(1, Color3.new(.55, .1, 1))
+})
+discordGradient.Rotation = 0
+local discordText = Instance.new("TextLabel")
+discordText.Size = UDim2.new(1, 0, 1, 0)
+discordText.BackgroundTransparency = 1
+discordText.Text = "discord.gg/UmgdzgCAeU"
+discordText.TextColor3 = Color3.new(.35, .05, .8)
+discordText.TextSize = 7
+discordText.Font = Enum.Font.LuckiestGuy
+discordText.TextXAlignment = Enum.TextXAlignment.Center
+discordText.ZIndex = 9
+discordText.Parent = discordFrame
+local bottomSeparator = Instance.new("Frame")
+bottomSeparator.Size = UDim2.new(1, 0, 0, 1)
+bottomSeparator.Position = UDim2.fromOffset(0, 59)
+bottomSeparator.BackgroundTransparency = 0.6
+bottomSeparator.BorderSizePixel = 0
+bottomSeparator.ZIndex = 8
+bottomSeparator.Parent = mainPanel
+Instance.new("UIGradient", bottomSeparator).Color = separatorGradient.Color
+local antiLagActive = false
+local function optimizePart(part)
+	if part:IsA("BasePart") and not part:IsA("Accessory") then
+		part.Material = Enum.Material.Plastic
+		part.Reflectance = 0
+		part.CastShadow = false
+		part.LocalTransparencyModifier = 0
+	elseif part:IsA("Decal") or part:IsA("Texture") then
+		part.Transparency = 1
+	elseif part:IsA("Fire") or part:IsA("Smoke") or part:IsA("Sparkles") then
+		part.Enabled = false
+	elseif part:IsA("ParticleEmitter") then
+		part.Enabled = false
+	elseif part:IsA("Sound") then
+		part.Volume = 0
+	end
+end
+local function applyOptimizations()
+	Lighting.GlobalShadows = false
+	Lighting.FogEnd = 9000000000
+	Lighting.Brightness = 1
+	Lighting.EnvironmentDiffuseScale = 0
+	Lighting.EnvironmentSpecularScale = 0
+	for _, effect in pairs(Lighting:GetChildren()) do
+		if effect:IsA("BloomEffect") or effect:IsA("BlurEffect") or effect:IsA("ColorCorrectionEffect") then
+			effect.Enabled = false
+		end
+	end
+	for _, descendant in pairs(Workspace:GetDescendants()) do
+		optimizePart(descendant)
+	end
+	Workspace.DescendantAdded:Connect(optimizePart)
+end
+local buttonY = 65
+local buttonHeight = 20
+local buttonSpacing = 4
+local function createButton(text, color, yOffset)
+	local btn = Instance.new("TextButton")
+	btn.Size = UDim2.new(0.9, 0, 0, buttonHeight)
+	btn.Position = UDim2.new(0.05, 0, 0, yOffset)
+	btn.BackgroundColor3 = color
+	btn.Text = text
+	btn.TextSize = 9
+	btn.Font = Enum.Font.LuckiestGuy
+	btn.TextColor3 = Color3.new(1, 1, 1)
+	btn.BorderSizePixel = 0
+	btn.ZIndex = 8
+	btn.Parent = mainPanel
+	roundCorners(btn, 10)
+	return btn
+end
+local antiLagBtn = createButton("⚡ ANTI LAG", colors.primary, 62)
+local ultraModeBtn = createButton("🔥 ULTRA MODE", colors.accent, 62 + buttonHeight + buttonSpacing)
+antiLagBtn.MouseButton1Click:Connect(function()
+	if antiLagActive then return end
+	antiLagActive = true
+	antiLagBtn.Text = "✅ ANTI LAG ACTIVE"
+	ultraModeBtn.Text = "🔥 ULTRA MODE"
+	applyOptimizations()
+end)
+ultraModeBtn.MouseButton1Click:Connect(function()
+	if antiLagActive then return end
+	antiLagActive = true
+	ultraModeBtn.Text = "✅ ULTRA MODE ACTIVE"
+	antiLagBtn.Text = "⚡ ANTI LAG"
+	applyOptimizations()
+	-- Suppression supplémentaire pour l'ultra mode
+	for _, descendant in pairs(Workspace:GetDescendants()) do
+		if descendant:IsA("Accessory") then
+			descendant:Destroy()
+		end
+	end
+end)
+local rotatingGradients = {borderGradient, discordGradient}
+local rotatingFrames = {}
+RunService.Heartbeat:Connect(function(deltaTime)
+	-- Rotation des gradients
+	for _, grad in pairs(rotatingGradients) do
+		if grad then
+			grad.Rotation = (grad.Rotation + deltaTime * 12) % 360
+		end
+	end
+	-- Rotation du gradient Discord
+	if discordGradient then
+		discordGradient.Rotation = (discordGradient.Rotation + deltaTime * 120) % 360
+	end
+	-- Animation des particules du panneau
+	for _, p in ipairs(animatedParticles) do
+		p.y = p.y + p.speedY * deltaTime
+		p.x = p.x + p.speedX * deltaTime
+		if p.y > 1.05 then
+			p.y = -0.05
+			p.x = math.random()
+		end
+		if p.x < -0.02 then
+			p.x = 1.02
+		elseif p.x > 1.02 then
+			p.x = -0.02
+		end
+		if p.frame then
+			p.frame.BackgroundTransparency = math.clamp(p.baseT + math.sin(tick() * 2.2 + p.phase) * 0.15, 0, 0.88)
+			p.frame.Position = UDim2.new(p.x, 0, p.y, 0)
+		end
+	end
+	-- Animation des particules d'en-tête
+	for _, p in ipairs(headerParticles) do
+		p.y = p.y + p.speedY * deltaTime
+		p.x = p.x + p.speedX * deltaTime
+		if p.y > 1.1 then
+			p.y = -0.1
+			p.x = math.random()
+		end
+		if p.x < -0.02 then
+			p.x = 1.02
+		elseif p.x > 1.02 then
+			p.x = -0.02
+		end
+		if p.frame then
+			p.frame.BackgroundTransparency = math.clamp(p.baseT + math.sin(tick() * 4.5 + p.phase) * 0.18, 0, 0.85)
+			p.frame.Position = UDim2.new(p.x, 0, p.y, 0)
+		end
+	end
+end)
+print("╔══════════════════════════════╗")
+print("║  ⚔️  KTM ANTI LAG  LOADED   ║")
+print("╚══════════════════════════════╝")

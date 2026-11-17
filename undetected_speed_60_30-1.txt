@@ -1,0 +1,48 @@
+local UserInputService = game:GetService("UserInputService")
+local RunService = game:GetService("RunService")
+local Players = game:GetService("Players")
+local player = Players.LocalPlayer
+
+local char = player.Character or player.CharacterAdded:Wait()
+local root = char:WaitForChild("HumanoidRootPart")
+local hum = char:WaitForChild("Humanoid")
+
+local speedValues = {30, 60}
+local currentIndex = 1
+local currentSpeed = speedValues[currentIndex]
+
+local bodyForce = Instance.new("BodyForce")
+bodyForce.Force = Vector3.new(0, 0, 0)
+bodyForce.Parent = root
+
+RunService.RenderStepped:Connect(function(deltaTime)
+    local moveDir = hum.MoveDirection
+    if moveDir.Magnitude > 0.1 then
+        local currentVel = root.AssemblyLinearVelocity
+        local targetVel = moveDir * currentSpeed
+        local diff = targetVel - currentVel
+        local mass = root:GetMass() or 2
+        local forceAmount = diff * mass / deltaTime
+        forceAmount = Vector3.new(forceAmount.X, 0, forceAmount.Z) -- Sadece yatay
+        bodyForce.Force = forceAmount
+    else
+        bodyForce.Force = Vector3.new(0, 0, 0)
+    end
+end)
+
+UserInputService.InputBegan:Connect(function(input, gameProcessed)
+    if gameProcessed then return end
+    if input.KeyCode == Enum.KeyCode.C then
+        currentIndex = (currentIndex == 1) and 2 or 1
+        currentSpeed = speedValues[currentIndex]
+        print("Speed: " .. currentSpeed)
+    end
+end)
+
+player.CharacterAdded:Connect(function(newChar)
+    char = newChar
+    root = char:WaitForChild("HumanoidRootPart")
+    hum = char:WaitForChild("Humanoid")
+    bodyForce.Parent = root
+    bodyForce.Force = Vector3.new(0, 0, 0)
+end)

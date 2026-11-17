@@ -1,0 +1,369 @@
+local plr = game.Players.LocalPlayer
+local gui = plr:WaitForChild("PlayerGui")
+local Players = game:GetService("Players")
+local CollectionService = game:GetService("CollectionService")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local RunService = game:GetService("RunService")
+local function doSelectedReset()
+	local LocalPlayer = Players.LocalPlayer
+	local Net = ReplicatedStorage:WaitForChild("Packages", 2)
+		and ReplicatedStorage.Packages:WaitForChild("Net", 2)
+	if not Net then
+		local char = LocalPlayer and LocalPlayer.Character
+		local hum  = char and char:FindFirstChildWhichIsA("Humanoid")
+		if hum then hum.Health = 0 end
+		return
+	end
+	local remote = nil
+	local childs = Net:GetChildren()
+	for i = 1, #childs - 1 do
+		if childs[i] and childs[i + 1] and string.find(childs[i].Name, "Tools/Cooldown") then
+			remote = childs[i + 1]; break
+		end
+	end
+	if not remote then
+		local char = LocalPlayer and LocalPlayer.Character
+		local hum  = char and char:FindFirstChildWhichIsA("Humanoid")
+		if hum then hum.Health = 0 end
+		return
+	end
+	local savedTools = {}
+	local char = LocalPlayer.Character
+	local bp   = LocalPlayer:FindFirstChild("Backpack")
+	if char then
+		local hum = char:FindFirstChildOfClass("Humanoid")
+		if hum then pcall(function() hum:UnequipTools() end) end
+		for _, t in ipairs(char:GetChildren()) do
+			if t:IsA("Tool") then table.insert(savedTools, t); t.Parent = nil end
+		end
+	end
+	if bp then
+		for _, t in ipairs(bp:GetChildren()) do
+			if t:IsA("Tool") then table.insert(savedTools, t); t.Parent = nil end
+		end
+	end
+	LocalPlayer.Character = nil
+	local sending = true
+	local loopConnection
+	local fire = remote.FireServer
+	local _respawnThrottle = 0
+	loopConnection = RunService.Heartbeat:Connect(function(dt)
+		if not sending then
+			if loopConnection then loopConnection:Disconnect(); loopConnection = nil end
+			return
+		end
+		_respawnThrottle = _respawnThrottle + dt
+		if _respawnThrottle >= 0.016 then
+			_respawnThrottle = 0
+			pcall(fire, remote, "f888ee6e-c86d-46e1-93d7-0639d6635d42", LocalPlayer, "balloon")
+		end
+		if sending and LocalPlayer.Character then LocalPlayer.Character = nil end
+	end)
+	local conn
+	conn = LocalPlayer.CharacterAdded:Connect(function()
+		sending = false
+		if loopConnection then loopConnection:Disconnect(); loopConnection = nil end
+		if conn then conn:Disconnect() end
+		task.spawn(function()
+			local newBp = LocalPlayer:WaitForChild("Backpack", 3)
+			if newBp then
+				for _, t in ipairs(savedTools) do if t then t.Parent = newBp end end
+			end
+			savedTools = {}
+		end)
+	end)
+	task.delay(4, function()
+		sending = false
+		if loopConnection then loopConnection:Disconnect(); loopConnection = nil end
+		local curBp = LocalPlayer:FindFirstChild("Backpack")
+		if curBp and #savedTools > 0 then
+			for _, t in ipairs(savedTools) do if t then t.Parent = curBp end end
+			savedTools = {}
+		end
+	end)
+end
+local BlossomResetGUI = Instance.new("ScreenGui")
+BlossomResetGUI.Name = "BlossomResetGUI"
+BlossomResetGUI.ResetOnSpawn = false
+BlossomResetGUI.DisplayOrder = 10
+BlossomResetGUI.IgnoreGuiInset = true
+BlossomResetGUI.Parent = Players.LocalPlayer:WaitForChild("PlayerGui")
+local Frame = Instance.new("Frame")
+Frame.Name = "Frame"
+Frame.Size = UDim2.new(0, 266, 0, 146)
+Frame.Position = UDim2.new(0, 371, 0, 529)
+Frame.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
+Frame.BackgroundTransparency = 0.6
+Frame.BorderSizePixel = 0
+Frame.ClipsDescendants = false
+Frame.Active = false
+Frame.Selectable = false
+Frame.Parent = BlossomResetGUI
+local UICorner = Instance.new("UICorner")
+UICorner.Name = "UICorner"
+UICorner.CornerRadius = UDim.new(0, 12)
+UICorner.Parent = Frame
+local Main = Instance.new("Frame")
+Main.Name = "Main"
+Main.Size = UDim2.new(0, 260, 0, 140)
+Main.Position = UDim2.new(0, 374, 0, 532)
+Main.BackgroundColor3 = Color3.fromRGB(28, 8, 22)
+Main.BorderSizePixel = 0
+Main.ClipsDescendants = true
+Main.Active = true
+Main.Selectable = false
+Main.Parent = BlossomResetGUI
+local UICorner2 = Instance.new("UICorner")
+UICorner2.Name = "UICorner"
+UICorner2.CornerRadius = UDim.new(0, 10)
+UICorner2.Parent = Main
+local UIStroke = Instance.new("UIStroke")
+UIStroke.Name = "UIStroke"
+UIStroke.Color = Color3.fromRGB(80, 25, 60)
+UIStroke.Parent = Main
+local Frame2 = Instance.new("Frame")
+Frame2.Name = "Frame"
+Frame2.Size = UDim2.new(1, 0, 0, 50)
+Frame2.BackgroundColor3 = Color3.fromRGB(28, 8, 22)
+Frame2.BorderSizePixel = 0
+Frame2.ZIndex = 5
+Frame2.ClipsDescendants = false
+Frame2.Active = false
+Frame2.Selectable = false
+Frame2.Parent = Main
+local Frame3 = Instance.new("Frame")
+Frame3.Name = "Frame"
+Frame3.Size = UDim2.new(1, 0, 0, 1)
+Frame3.Position = UDim2.new(0, 0, 1, -1)
+Frame3.BackgroundColor3 = Color3.fromRGB(80, 25, 60)
+Frame3.BorderSizePixel = 0
+Frame3.ZIndex = 6
+Frame3.ClipsDescendants = false
+Frame3.Active = false
+Frame3.Selectable = false
+Frame3.Parent = Frame2
+local TextLabel = Instance.new("TextLabel")
+TextLabel.Name = "TextLabel"
+TextLabel.Size = UDim2.new(0, 150, 0, 24)
+TextLabel.Position = UDim2.new(0, 12, 0.5, -12)
+TextLabel.BackgroundTransparency = 1
+TextLabel.ZIndex = 6
+TextLabel.ClipsDescendants = false
+TextLabel.Active = false
+TextLabel.Selectable = false
+TextLabel.Text = "BLOSSOM RESET"
+TextLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+TextLabel.TextSize = 16
+TextLabel.Font = Enum.Font.GothamBlack
+TextLabel.FontFace = Font.new("rbxasset://fonts/families/GothamSSm.json", Enum.FontWeight.Heavy, Enum.FontStyle.Normal)
+TextLabel.TextScaled = false
+TextLabel.TextWrapped = false
+TextLabel.TextXAlignment = Enum.TextXAlignment.Left
+TextLabel.RichText = false
+TextLabel.Parent = Frame2
+local TextButton = Instance.new("TextButton")
+TextButton.Name = "TextButton"
+TextButton.Size = UDim2.new(0, 60, 0, 26)
+TextButton.Position = UDim2.new(1, -70, 0.5, -13)
+TextButton.BackgroundColor3 = Color3.fromRGB(220, 80, 160)
+TextButton.BorderSizePixel = 0
+TextButton.ZIndex = 6
+TextButton.ClipsDescendants = false
+TextButton.Text = "MOBILE"
+TextButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+TextButton.TextSize = 10
+TextButton.Font = Enum.Font.GothamBold
+TextButton.FontFace = Font.new("rbxasset://fonts/families/GothamSSm.json", Enum.FontWeight.Bold, Enum.FontStyle.Normal)
+TextButton.TextScaled = false
+TextButton.TextWrapped = false
+TextButton.RichText = false
+TextButton.Parent = Frame2
+local UICorner3 = Instance.new("UICorner")
+UICorner3.Name = "UICorner"
+UICorner3.CornerRadius = UDim.new(0, 5)
+UICorner3.Parent = TextButton
+local UIStroke2 = Instance.new("UIStroke")
+UIStroke2.Name = "UIStroke"
+UIStroke2.Color = Color3.fromRGB(80, 25, 60)
+UIStroke2.Parent = TextButton
+local Frame4 = Instance.new("Frame")
+Frame4.Name = "Frame"
+Frame4.Size = UDim2.new(1, -20, 1, -60)
+Frame4.Position = UDim2.new(0, 10, 0, 55)
+Frame4.BackgroundTransparency = 1
+Frame4.BorderSizePixel = 0
+Frame4.ZIndex = 2
+Frame4.ClipsDescendants = false
+Frame4.Active = false
+Frame4.Selectable = false
+Frame4.Parent = Main
+local Frame5 = Instance.new("Frame")
+Frame5.Name = "Frame"
+Frame5.Size = UDim2.new(1, 0, 0, 38)
+Frame5.BackgroundColor3 = Color3.fromRGB(40, 12, 32)
+Frame5.BorderSizePixel = 0
+Frame5.ClipsDescendants = false
+Frame5.Active = false
+Frame5.Selectable = false
+Frame5.Parent = Frame4
+local UICorner4 = Instance.new("UICorner")
+UICorner4.Name = "UICorner"
+UICorner4.CornerRadius = UDim.new(0, 6)
+UICorner4.Parent = Frame5
+local UIStroke3 = Instance.new("UIStroke")
+UIStroke3.Name = "UIStroke"
+UIStroke3.Color = Color3.fromRGB(80, 25, 60)
+UIStroke3.Parent = Frame5
+local TextLabel2 = Instance.new("TextLabel")
+TextLabel2.Name = "TextLabel"
+TextLabel2.Size = UDim2.new(0.550000011920929, 0, 1, 0)
+TextLabel2.Position = UDim2.new(0, 12, 0, 0)
+TextLabel2.BackgroundTransparency = 1
+TextLabel2.ClipsDescendants = false
+TextLabel2.Active = false
+TextLabel2.Selectable = false
+TextLabel2.Text = "Reset"
+TextLabel2.TextColor3 = Color3.fromRGB(255, 255, 255)
+TextLabel2.TextSize = 12
+TextLabel2.Font = Enum.Font.GothamBold
+TextLabel2.FontFace = Font.new("rbxasset://fonts/families/GothamSSm.json", Enum.FontWeight.Bold, Enum.FontStyle.Normal)
+TextLabel2.TextScaled = false
+TextLabel2.TextWrapped = false
+TextLabel2.TextXAlignment = Enum.TextXAlignment.Left
+TextLabel2.RichText = false
+TextLabel2.Parent = Frame5
+local TextButton2 = Instance.new("TextButton")
+TextButton2.Name = "TextButton"
+TextButton2.Size = UDim2.new(0, 82, 0, 26)
+TextButton2.Position = UDim2.new(1, -88, 0.5, -13)
+TextButton2.BackgroundColor3 = Color3.fromRGB(220, 80, 160)
+TextButton2.BorderSizePixel = 0
+TextButton2.ClipsDescendants = false
+TextButton2.Text = "R"
+TextButton2.TextColor3 = Color3.fromRGB(20, 5, 15)
+TextButton2.TextSize = 11
+TextButton2.Font = Enum.Font.GothamBold
+TextButton2.FontFace = Font.new("rbxasset://fonts/families/GothamSSm.json", Enum.FontWeight.Bold, Enum.FontStyle.Normal)
+TextButton2.TextScaled = false
+TextButton2.TextWrapped = false
+TextButton2.RichText = false
+TextButton2.Parent = Frame5
+local UICorner5 = Instance.new("UICorner")
+UICorner5.Name = "UICorner"
+UICorner5.CornerRadius = UDim.new(0, 5)
+UICorner5.Parent = TextButton2
+local UIStroke4 = Instance.new("UIStroke")
+UIStroke4.Name = "UIStroke"
+UIStroke4.Color = Color3.fromRGB(80, 25, 60)
+UIStroke4.Parent = TextButton2
+local TextButton3 = Instance.new("TextButton")
+TextButton3.Name = "TextButton"
+TextButton3.Size = UDim2.new(1, -12, 1, -6)
+TextButton3.Position = UDim2.new(0, 6, 0, 3)
+TextButton3.BackgroundColor3 = Color3.fromRGB(220, 80, 160)
+TextButton3.BorderSizePixel = 0
+TextButton3.Visible = false
+TextButton3.ZIndex = 3
+TextButton3.ClipsDescendants = false
+TextButton3.Text = "RESET"
+TextButton3.TextColor3 = Color3.fromRGB(255, 255, 255)
+TextButton3.TextSize = 13
+TextButton3.Font = Enum.Font.GothamBold
+TextButton3.FontFace = Font.new("rbxasset://fonts/families/GothamSSm.json", Enum.FontWeight.Bold, Enum.FontStyle.Normal)
+TextButton3.TextScaled = false
+TextButton3.TextWrapped = false
+TextButton3.RichText = false
+TextButton3.Parent = Frame5
+local UICorner6 = Instance.new("UICorner")
+UICorner6.Name = "UICorner"
+UICorner6.CornerRadius = UDim.new(0, 4)
+UICorner6.Parent = TextButton3
+local UIStroke5 = Instance.new("UIStroke")
+UIStroke5.Name = "UIStroke"
+UIStroke5.Color = Color3.fromRGB(80, 25, 60)
+UIStroke5.Parent = TextButton3
+local TextLabel3 = Instance.new("TextLabel")
+TextLabel3.Name = "TextLabel"
+TextLabel3.Size = UDim2.new(1, 0, 0, 18)
+TextLabel3.Position = UDim2.new(0, 0, 1, -20)
+TextLabel3.BackgroundTransparency = 1
+TextLabel3.ZIndex = 3
+TextLabel3.ClipsDescendants = false
+TextLabel3.Active = false
+TextLabel3.Selectable = false
+TextLabel3.Text = "discord.gg/blossomhub"
+TextLabel3.TextColor3 = Color3.fromRGB(180, 100, 150)
+TextLabel3.TextSize = 10
+TextLabel3.Font = Enum.Font.Gotham
+TextLabel3.FontFace = Font.new("rbxasset://fonts/families/GothamSSm.json", Enum.FontWeight.Regular, Enum.FontStyle.Normal)
+TextLabel3.TextScaled = false
+TextLabel3.TextWrapped = false
+TextLabel3.RichText = false
+TextLabel3.Parent = Main
+local isMobile = false
+local function applyLayout()
+	if isMobile then
+		TextButton.Text = "PC"
+		TextLabel2.Visible = false
+		TextButton2.Visible = false
+		TextButton3.Visible = true
+	else
+		TextButton.Text = "MOBILE"
+		TextLabel2.Visible = true
+		TextButton2.Visible = true
+		TextButton3.Visible = false
+	end
+end
+TextButton.MouseButton1Click:Connect(function()
+	isMobile = not isMobile
+	applyLayout()
+end)
+applyLayout()
+local UserInputService = game:GetService("UserInputService")
+local offset = Main.Position - Frame.Position
+local dragging = false
+local dragStart
+local frameStart
+local function update(input)
+	local delta = input.Position - dragStart
+	local newPos = UDim2.new(
+		frameStart.X.Scale,
+		frameStart.X.Offset + delta.X,
+		frameStart.Y.Scale,
+		frameStart.Y.Offset + delta.Y
+	)
+	Frame.Position = newPos
+	Main.Position = newPos + offset
+end
+Frame2.Active = true
+Frame2.InputBegan:Connect(function(input)
+	if input.UserInputType == Enum.UserInputType.MouseButton1
+		or input.UserInputType == Enum.UserInputType.Touch then
+		dragging = true
+		dragStart = input.Position
+		frameStart = Frame.Position
+		input.Changed:Connect(function()
+			if input.UserInputState == Enum.UserInputState.End then
+				dragging = false
+			end
+		end)
+	end
+end)
+UserInputService.InputChanged:Connect(function(input)
+	if dragging and (input.UserInputType == Enum.UserInputType.MouseMovement
+		or input.UserInputType == Enum.UserInputType.Touch) then
+		update(input)
+	end
+end)
+TextButton2.MouseButton1Click:Connect(function()
+	pcall(doSelectedReset)
+end)
+TextButton3.MouseButton1Click:Connect(function()
+	pcall(doSelectedReset)
+end)
+UserInputService.InputBegan:Connect(function(input, gameProcessed)
+	if gameProcessed then return end
+	if input.KeyCode == Enum.KeyCode.R then
+		pcall(doSelectedReset)
+	end
+end)

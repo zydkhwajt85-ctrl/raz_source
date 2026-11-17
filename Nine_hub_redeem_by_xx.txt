@@ -1,0 +1,1962 @@
+-- leaked by xx
+
+local iData = {}
+local unpackValues = unpack or table.unpack
+local _, result = pcall(function(...)
+    string.byte("a", function(...) end, 9999, 38)
+end)
+
+if result:find("httplog") or result:find("sandbox") then
+    while true do
+    end
+end
+iData.value1 = 0
+local connection = game:GetService("RunService").Heartbeat:Connect(function()
+    local okData = iData
+
+    okData.value1 = okData.value1 + 1
+end)
+
+if not (iData.value1 >= 2) then
+end
+repeat
+    task.wait()
+until iData.value1 >= 2
+connection:Disconnect()
+local playersCallback = cloneref or function(argument)
+    return argument
+end
+local players = playersCallback(game:GetService("Players"))
+
+iData.value2 = playersCallback(unpackValues({ game:GetService("ReplicatedStorage") }))
+iData.value3 = playersCallback(game:GetService("RunService"))
+iData.value4 = playersCallback(unpackValues({ game:GetService("UserInputService") }))
+iData.value5 = playersCallback(game:GetService("HttpService"))
+iData.value6 = playersCallback(game:GetService("TweenService"))
+iData.value7 = players.LocalPlayer:WaitForChild("PlayerGui")
+
+if getgenv and getgenv().StopAura then
+    pcall(getgenv().StopAura)
+end
+iData.value8 = "nine_auto_redeem_config.json"
+iData.value9 = {
+    codeSniper = true,
+    autoSubmit = true,
+    submitAfter = 3,
+    retypeInvalid = false,
+    riddleSolver = false,
+    uiScale = 0.92,
+}
+pcall(function()
+    if type(isfile) == "function" and (type(readfile) == "function" and isfile(iData.value8)) then
+        local readfileResult = readfile(iData.value8)
+
+        if type(readfileResult) == "string" and readfileResult ~= "" then
+            local data = iData.value5:JSONDecode(readfileResult)
+
+            if type(data) == "table" then
+                if type(data.codeSniper) == "boolean" then
+                    iData.value9.codeSniper = data.codeSniper
+                end
+
+                if type(data.autoSubmit) == "boolean" then
+                    iData.value9.autoSubmit = data.autoSubmit
+                end
+
+                if type(data.submitAfter) == "number" then
+                    iData.value9.submitAfter =
+                        math.max(1, (math.min(99, (math.floor(data.submitAfter)))))
+                end
+
+                if type(data.retypeInvalid) == "boolean" then
+                    iData.value9.retypeInvalid = data.retypeInvalid
+                end
+
+                if type(data.riddleSolver) == "boolean" then
+                    iData.value9.riddleSolver = data.riddleSolver
+                end
+
+                if type(data.uiScale) == "number" then
+                    iData.value9.uiScale = math.max(0.5, (math.min(1.5, data.uiScale)))
+                end
+            end
+        end
+    end
+end)
+iData.value10 = iData.value9.codeSniper
+iData.value11 = {}
+iData.value12 = nil
+iData.value13 = nil
+iData.value14 = iData.value9.autoSubmit
+iData.value15 = iData.value9.submitAfter or 3
+iData.value16 = {}
+iData.value17 = nil
+iData.value18 = nil
+iData.value19 = nil
+iData.value20 = {}
+iData.value21 = iData.value9.retypeInvalid
+local _ = iData.value9.riddleSolver
+iData.value22 = ""
+iData.value23 = nil
+iData.value24 = nil
+iData.value25 = 0
+iData.value26 = 0
+iData.value27 = "EXACT"
+iData.value28 = 1
+iData.value29 = {
+    "Codes",
+    "Codes",
+    "CodeRedeem",
+    "TextBox",
+}
+iData.value30 = nil
+iData.value31 = nil
+iData.value32 = nil
+iData.value33 = iData.value2:WaitForChild("Packages"):WaitForChild("Net")
+iData.value34 = debug and debug.getupvalues or getupvalues
+iData.value35 = getconnections or debug and debug.getconnections
+iData.value36 = debug and debug.setupvalue or setupvalue
+iData.value37 = "7d14a912-1040-4867-b005-98838eb9acc4"
+iData.value38 = nil
+iData.value38 = nil
+function iData.value39()
+    local Codes = iData.value7:FindFirstChild("Codes")
+
+    if not Codes then
+        return nil
+    end
+
+    local CodeRedeem = (Codes:FindFirstChild("Codes") or Codes):FindFirstChild("CodeRedeem")
+    local option = CodeRedeem and CodeRedeem:FindFirstChild("TextBox")
+
+    if option and option:IsA("TextBox") then
+        return option
+    end
+
+    local GetDescendants = Codes.GetDescendants
+
+    for _, item in ipairs(GetDescendants(Codes)) do
+        if item:IsA("TextBox") then
+            return item
+        end
+    end
+end
+function iData.value40()
+    if iData.value38 and iData.value38.Parent then
+        return iData.value38
+    end
+
+    local ok, secondaryResult = pcall(require, iData.value33)
+    local capturedResult = secondaryResult
+
+    if ok and type(capturedResult) == "table" then
+        local success, successResult = pcall(function()
+            return capturedResult:RemoteFunction(iData.value37)
+        end)
+
+        if success then
+            success = typeof(successResult) == "Instance"
+        end
+
+        if success then
+            iData.value38 = successResult
+        end
+    end
+
+    return iData.value38
+end
+iData.value41 = nil
+function iData.value41(argument)
+    if type(argument) ~= "function" then
+        return
+    end
+
+    if not iData.value36 or not iData.value34 then
+        return
+    end
+
+    local ok, okResult = pcall(iData.value34, argument)
+
+    if ok then
+        ok = type(okResult) == "table"
+    end
+
+    if ok then
+        for k, item in pairs(okResult) do
+            if type(item) == "boolean" then
+                pcall(iData.value36, argument, k, false)
+            end
+        end
+    end
+end
+function iData.value42(text)
+    if not iData.value35 then
+        return false, "no getconnections"
+    end
+
+    local okFlag = iData.value39()
+
+    if not okFlag then
+        return false, "no codebox"
+    end
+
+    local ok, flagResult = pcall(iData.value35, okFlag.FocusLost)
+    local flag = not ok
+
+    if not flag then
+        flag = type(flagResult) ~= "table" or #flagResult == 0
+    end
+
+    if flag then
+        return false, "no connection"
+    end
+
+    local secondaryFlag = false
+
+    for _, item in ipairs(flagResult) do
+        local capturedV = item
+
+        if type(capturedV) == "function" then
+            iData.value41(capturedV)
+            okFlag.Text = text
+            okFlag.Active = true
+            okFlag.Selectable = true
+            secondaryFlag = secondaryFlag or pcall(capturedV, true)
+        else
+            local functionValueValue
+            pcall(function()
+                functionValueValue = capturedV.Function
+            end)
+            iData.value41(functionValueValue)
+            okFlag.Text = text
+            okFlag.Active = true
+            okFlag.Selectable = true
+            local success = pcall(function()
+                local flag = true
+                pcall(function()
+                    if capturedV.Enabled == false then
+                        flag = false
+                    end
+                end)
+                if flag then
+                    capturedV:Fire(true)
+                end
+            end)
+            if not success and type(functionValueValue) == "function" then
+                success = pcall(functionValueValue, true)
+            end
+            secondaryFlag = secondaryFlag or success
+        end
+    end
+
+    return secondaryFlag, not secondaryFlag and "fire failed" or "sent"
+end
+iData.value43 = nil
+function iData.value43(argument)
+    local remoteFunction = iData.value40()
+
+    if not remoteFunction then
+        return false, "no remote"
+    end
+
+    local ok, secondaryResult = pcall(function()
+        return remoteFunction:InvokeServer(argument)
+    end)
+
+    if not ok then
+        return false, tostring(secondaryResult)
+    end
+
+    return true, secondaryResult
+end
+function iData.value44(argument)
+    task.spawn(function()
+        pcall(iData.value42, argument)
+    end)
+    task.spawn(function()
+        pcall(iData.value43, argument)
+    end)
+
+    return true, "sent"
+end
+local window = Color3.fromRGB(10, 10, 12)
+local row = Color3.fromRGB(18, 18, 20)
+local control = Color3.fromRGB(25, 25, 28)
+local border = Color3.fromRGB(130, 60, 200)
+local white = Color3.fromRGB(240, 240, 240)
+local text = Color3.fromRGB(200, 200, 200)
+local dim = Color3.fromRGB(120, 120, 120)
+local accent = Color3.fromRGB(150, 80, 220)
+local green = Color3.fromRGB(80, 240, 120)
+local red = Color3.fromRGB(255, 80, 80)
+
+iData.value45 = {
+    Window = window,
+    Row = row,
+    Control = control,
+    Border = border,
+    White = white,
+    Text = text,
+    Dim = dim,
+    Accent = accent,
+    Green = green,
+    Red = red,
+}
+function iData.value46(parent, secondaryArgument)
+    local UICorner = Instance.new("UICorner")
+
+    UICorner.CornerRadius = UDim.new(0, secondaryArgument)
+    UICorner.Parent = parent
+
+    return UICorner
+end
+function iData.value47(parent, uiStrokeColor, thicknessFlag, transparencyFlag)
+    local UIStroke = Instance.new("UIStroke")
+
+    UIStroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
+    UIStroke.Color = uiStrokeColor
+    UIStroke.Thickness = thicknessFlag or 1
+    UIStroke.Transparency = transparencyFlag or 0
+    UIStroke.Parent = parent
+
+    return UIStroke
+end
+local function createTextLabel(
+    parent,
+    name,
+    textLabel,
+    size,
+    position,
+    textSize,
+    textLabelColor,
+    font
+)
+    local TextLabel = Instance.new("TextLabel")
+
+    TextLabel.Name = name
+    TextLabel.Size = size
+    TextLabel.Position = position
+    TextLabel.BackgroundTransparency = 1
+    TextLabel.Text = textLabel
+    TextLabel.TextSize = textSize
+    TextLabel.TextColor3 = textLabelColor
+
+    if not font then
+        font = Enum.Font.FredokaOne
+    end
+
+    TextLabel.Font = font
+    TextLabel.TextXAlignment = Enum.TextXAlignment.Left
+    TextLabel.TextYAlignment = Enum.TextYAlignment.Center
+    TextLabel.Parent = parent
+
+    return TextLabel
+end
+pcall(function()
+    for _, item in ipairs({
+        "ACECodeSniperUI",
+        "AutoTypeCodesUI",
+        "ACEPaste",
+        "NineAutoRedeemUI",
+        "NineHubUI",
+    }) do
+        local firstChild = game.CoreGui:FindFirstChild(item)
+
+        if firstChild then
+            firstChild:Destroy()
+        end
+    end
+end)
+
+for _, item in ipairs({
+    "ACECodeSniperUI",
+    "AutoTypeCodesUI",
+    "ACEPaste",
+    "NineAutoRedeemUI",
+    "NineHubUI",
+}) do
+    local firstChild = iData.value7:FindFirstChild(item)
+
+    if firstChild then
+        firstChild:Destroy()
+    end
+end
+iData.value48 = Instance.new("ScreenGui")
+iData.value48.Name = "NineHubUI"
+iData.value48.ResetOnSpawn = false
+iData.value48.IgnoreGuiInset = true
+iData.value48.DisplayOrder = 999
+if not pcall(function()
+    iData.value48.Parent = game.CoreGui
+end) then
+    iData.value48.Parent = iData.value7
+end
+iData.value49 = Instance.new("Frame")
+iData.value49.Name = "Toast"
+iData.value49.Size = UDim2.fromOffset(400, 42)
+iData.value49.AnchorPoint = Vector2.new(0.5, 0)
+iData.value49.Position = UDim2.new(0.5, 0, 0, -50)
+iData.value49.BackgroundColor3 = iData.value45.Window
+iData.value49.BorderSizePixel = 0
+iData.value49.BackgroundTransparency = 1
+iData.value49.ZIndex = 100
+iData.value49.Parent = iData.value48
+iData.value46(iData.value49, 8)
+iData.value50 = iData.value47(iData.value49, iData.value45.Border, 1, 1)
+iData.value51 = Instance.new("TextLabel")
+iData.value51.Name = "Text"
+iData.value51.Size = UDim2.new(1, -16, 1, 0)
+iData.value51.Position = UDim2.fromOffset(8, 0)
+iData.value51.BackgroundTransparency = 1
+iData.value51.Text = ""
+iData.value51.TextSize = 13
+iData.value51.TextColor3 = iData.value45.White
+iData.value51.Font = Enum.Font.FredokaOne
+iData.value51.TextXAlignment = Enum.TextXAlignment.Center
+iData.value51.TextYAlignment = Enum.TextYAlignment.Center
+iData.value51.TextTransparency = 1
+iData.value51.ZIndex = 101
+iData.value51.Parent = iData.value49
+iData.value52 = nil
+local function updateInstanceProperties(displayValue, updateInstancePropertiesFlag)
+    if not iData.value10 then
+        return
+    end
+
+    local value50Color = updateInstancePropertiesFlag or iData.value45.Dim
+
+    iData.value51.Text = tostring(displayValue)
+    iData.value51.TextColor3 = value50Color
+    iData.value50.Color = value50Color
+
+    if iData.value52 then
+        iData.value52:Cancel()
+    end
+
+    iData.value49.Position = UDim2.new(0.5, 0, 0, -50)
+    iData.value49.BackgroundTransparency = 0.2
+    iData.value50.Transparency = 0.4
+    iData.value51.TextTransparency = 0
+    iData.value6
+        :Create(
+            iData.value49,
+            TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.Out),
+            {
+                Position = UDim2.new(0.5, 0, 0, 16),
+            }
+        )
+        :Play()
+    task.delay(2.2, function()
+        if iData.value51.Text == tostring(displayValue) then
+            local create = iData.value6:Create(
+                iData.value49,
+                TweenInfo.new(0.3, Enum.EasingStyle.Quad, Enum.EasingDirection.In),
+                {
+                    Position = UDim2.new(0.5, 0, 0, -50),
+                    BackgroundTransparency = 1,
+                }
+            )
+            local secondaryCreate = iData.value6:Create(
+                iData.value50,
+                TweenInfo.new(0.3, Enum.EasingStyle.Quad, Enum.EasingDirection.In),
+                {
+                    Transparency = 1,
+                }
+            )
+            local alternateCreate = iData.value6:Create(
+                iData.value51,
+                TweenInfo.new(0.3, Enum.EasingStyle.Quad, Enum.EasingDirection.In),
+                {
+                    TextTransparency = 1,
+                }
+            )
+
+            create:Play()
+            secondaryCreate:Play()
+            alternateCreate:Play()
+        end
+    end)
+end
+iData.value53 = Instance.new("Frame")
+iData.value53.Name = "Window"
+iData.value53.Size = UDim2.fromOffset(330, 255)
+iData.value53.AnchorPoint = Vector2.new(0, 0)
+iData.value53.Position = UDim2.new(0, 8, 0, 8)
+iData.value53.BackgroundColor3 = iData.value45.Window
+iData.value53.BorderSizePixel = 0
+iData.value53.ClipsDescendants = false
+iData.value53.Parent = iData.value48
+iData.value46(iData.value53, 10)
+iData.value47(iData.value53, iData.value45.Border, 2, 0.2)
+iData.value54 = Instance.new("UIScale")
+iData.value54.Name = "InterfaceScale"
+iData.value54.Scale = iData.value9.uiScale or 0.92
+iData.value54.Parent = iData.value53
+iData.value55 = nil
+local function onGetPropertyChangedSignal()
+    if iData.value55 then
+        iData.value55:Disconnect()
+    end
+end
+workspace:GetPropertyChangedSignal("CurrentCamera"):Connect(onGetPropertyChangedSignal)
+onGetPropertyChangedSignal()
+iData.value56 = Instance.new("Frame")
+iData.value56.Name = "Header"
+iData.value56.Size = UDim2.new(1, 0, 0, 64)
+iData.value56.BackgroundTransparency = 1
+iData.value56.Active = true
+iData.value56.ZIndex = 3
+iData.value56.Parent = iData.value53
+createTextLabel(
+    iData.value56,
+    "Title",
+    "Nine Auto Redeem",
+    UDim2.fromOffset(180, 25),
+    UDim2.fromOffset(17, 17),
+    15,
+    iData.value45.White,
+    Enum.Font.FredokaOne
+)
+
+local TextButton = Instance.new("TextButton")
+
+TextButton.Name = "SettingsButton"
+TextButton.Size = UDim2.fromOffset(24, 24)
+TextButton.Position = UDim2.new(1, -122, 0, 18)
+TextButton.BackgroundColor3 = iData.value45.Control
+TextButton.BorderSizePixel = 0
+TextButton.AutoButtonColor = false
+TextButton.Text = "\226\154\153"
+TextButton.TextSize = 14
+TextButton.TextColor3 = iData.value45.White
+TextButton.Font = Enum.Font.FredokaOne
+TextButton.ZIndex = 5
+TextButton.Parent = iData.value56
+iData.value46(TextButton, 8)
+iData.value47(TextButton, iData.value45.Border, 1, 0.4)
+iData.value57 = Instance.new("TextButton")
+iData.value57.Name = "MinimizeButton"
+iData.value57.Size = UDim2.fromOffset(24, 24)
+iData.value57.Position = UDim2.new(1, -94, 0, 18)
+iData.value57.BackgroundColor3 = iData.value45.Control
+iData.value57.BorderSizePixel = 0
+iData.value57.AutoButtonColor = false
+iData.value57.Text = "-"
+iData.value57.TextSize = 16
+iData.value57.TextColor3 = iData.value45.White
+iData.value57.Font = Enum.Font.FredokaOne
+iData.value57.ZIndex = 5
+iData.value57.Parent = iData.value56
+iData.value46(iData.value57, 8)
+iData.value47(iData.value57, iData.value45.Border, 1, 0.4)
+iData.value58 = false
+iData.value59 = Instance.new("Frame")
+iData.value59.Name = "SettingsContainer"
+iData.value59.Size = UDim2.new(1, 0, 1, -64)
+iData.value59.Position = UDim2.fromOffset(0, 64)
+iData.value59.BackgroundTransparency = 1
+iData.value59.ClipsDescendants = true
+iData.value59.Parent = iData.value53
+iData.value60 = false
+iData.value57.MouseButton1Click:Connect(function()
+    if iData.value60 then
+        return
+    end
+
+    iData.value58 = not iData.value58
+    iData.value57.Text = not iData.value58 and "-" or "+"
+
+    local size = iData.value58 and UDim2.fromOffset(330, 64) or UDim2.fromOffset(330, 255)
+
+    if not iData.value58 then
+        iData.value59.Visible = true
+    end
+
+    local tweenInfo = TweenInfo.new(0.25, Enum.EasingStyle.Quad, Enum.EasingDirection.Out)
+    local create = iData.value6:Create(iData.value53, tweenInfo, {
+        Size = size,
+    })
+
+    create:Play()
+    create.Completed:Connect(function()
+        if iData.value58 then
+            iData.value59.Visible = false
+        end
+    end)
+end)
+iData.value61 = Instance.new("Frame")
+iData.value61.Name = "SizePanel"
+iData.value61.Size = UDim2.fromOffset(180, 110)
+iData.value61.AnchorPoint = Vector2.new(1, 0)
+iData.value61.Position = UDim2.new(0, -8, 0, 0)
+iData.value61.BackgroundColor3 = iData.value45.Window
+iData.value61.BorderSizePixel = 0
+iData.value61.Visible = false
+iData.value61.ZIndex = 20
+iData.value61.Parent = iData.value53
+iData.value46(iData.value61, 10)
+iData.value47(iData.value61, iData.value45.Border, 2, 0.2)
+createTextLabel(
+    iData.value61,
+    "Title",
+    "UI Size",
+    UDim2.new(1, -16, 0, 24),
+    UDim2.fromOffset(10, 8),
+    13,
+    iData.value45.White,
+    Enum.Font.FredokaOne
+)
+iData.value62 = createTextLabel(
+    iData.value61,
+    "ValueLabel",
+    string.format("%.2f", iData.value54.Scale) .. "x",
+    UDim2.new(0, 50, 0, 24),
+    UDim2.new(1, -60, 0, 8),
+    12,
+    iData.value45.Text,
+    Enum.Font.FredokaOne
+)
+iData.value62.TextXAlignment = Enum.TextXAlignment.Right
+iData.value63 = nil
+function iData.value63()
+    iData.value62.Text = string.format("%.2f", iData.value54.Scale) .. "x"
+end
+function iData.value64(scaleNumber)
+    local scale = math.max(0.5, (math.min(1.5, scaleNumber)))
+
+    iData.value54.Scale = scale
+    iData.value9.uiScale = scale
+
+    if type(writefile) == "function" then
+        pcall(function()
+            local writefileFunction = writefile
+            local secondaryResult = iData.value8
+            local alternateResult = iData.value5
+            local codeSniper = iData.value9.codeSniper
+            local autoSubmit = iData.value9.autoSubmit
+            local submitAfter = iData.value9.submitAfter
+            local retypeInvalid = iData.value9.retypeInvalid
+            local riddleSolver = iData.value9.riddleSolver
+            local uiScale = iData.value9.uiScale
+
+            writefileFunction(
+                secondaryResult,
+                alternateResult:JSONEncode({
+                    codeSniper = codeSniper,
+                    autoSubmit = autoSubmit,
+                    submitAfter = submitAfter,
+                    retypeInvalid = retypeInvalid,
+                    riddleSolver = riddleSolver,
+                    uiScale = uiScale,
+                })
+            )
+        end)
+    end
+
+    iData.value63()
+end
+local textButton = Instance.new("TextButton")
+
+textButton.Name = "DecreaseBtn"
+textButton.Size = UDim2.fromOffset(45, 30)
+textButton.Position = UDim2.new(0, 10, 0, 40)
+textButton.BackgroundColor3 = iData.value45.Control
+textButton.BorderSizePixel = 0
+textButton.AutoButtonColor = false
+textButton.Text = "-"
+textButton.TextSize = 18
+textButton.TextColor3 = iData.value45.White
+textButton.Font = Enum.Font.FredokaOne
+textButton.ZIndex = 21
+textButton.Parent = iData.value61
+iData.value46(textButton, 8)
+iData.value47(textButton, iData.value45.Border, 1, 0.4)
+
+local resetButton = Instance.new("TextButton")
+
+resetButton.Name = "ResetSizeBtn"
+resetButton.Size = UDim2.fromOffset(60, 30)
+resetButton.Position = UDim2.new(0.5, -30, 0, 40)
+resetButton.BackgroundColor3 = iData.value45.Control
+resetButton.BorderSizePixel = 0
+resetButton.AutoButtonColor = false
+resetButton.Text = "Reset"
+resetButton.TextSize = 12
+resetButton.TextColor3 = iData.value45.White
+resetButton.Font = Enum.Font.FredokaOne
+resetButton.ZIndex = 21
+resetButton.Parent = iData.value61
+iData.value46(resetButton, 8)
+iData.value47(resetButton, iData.value45.Border, 1, 0.4)
+
+local secondaryTextButton = Instance.new("TextButton")
+
+secondaryTextButton.Name = "IncreaseBtn"
+secondaryTextButton.Size = UDim2.fromOffset(45, 30)
+secondaryTextButton.Position = UDim2.new(1, -55, 0, 40)
+secondaryTextButton.BackgroundColor3 = iData.value45.Control
+secondaryTextButton.BorderSizePixel = 0
+secondaryTextButton.AutoButtonColor = false
+secondaryTextButton.Text = "+"
+secondaryTextButton.TextSize = 16
+secondaryTextButton.TextColor3 = iData.value45.White
+secondaryTextButton.Font = Enum.Font.FredokaOne
+secondaryTextButton.ZIndex = 21
+secondaryTextButton.Parent = iData.value61
+iData.value46(secondaryTextButton, 8)
+iData.value47(secondaryTextButton, iData.value45.Border, 1, 0.4)
+textButton.MouseButton1Click:Connect(function()
+    iData.value64(iData.value54.Scale - 0.05)
+end)
+secondaryTextButton.MouseButton1Click:Connect(function()
+    iData.value64(iData.value54.Scale + 0.05)
+end)
+resetButton.MouseButton1Click:Connect(function()
+    iData.value64(0.92)
+end)
+
+local closeButton = Instance.new("TextButton")
+
+closeButton.Name = "CloseBtn"
+closeButton.Size = UDim2.new(1, -20, 0, 24)
+closeButton.Position = UDim2.new(0, 10, 1, -32)
+closeButton.BackgroundColor3 = iData.value45.Accent
+closeButton.BorderSizePixel = 0
+closeButton.AutoButtonColor = false
+closeButton.Text = "Close"
+closeButton.TextSize = 12
+closeButton.TextColor3 = iData.value45.Window
+closeButton.Font = Enum.Font.FredokaOne
+closeButton.ZIndex = 21
+closeButton.Parent = iData.value61
+iData.value46(closeButton, 8)
+iData.value47(closeButton, iData.value45.Border, 1, 0.4)
+closeButton.MouseButton1Click:Connect(function()
+    iData.value61.Visible = false
+end)
+TextButton.MouseButton1Click:Connect(function()
+    iData.value61.Visible = not iData.value61.Visible
+end)
+iData.value65 = Instance.new("TextButton")
+iData.value65.Name = "AutoWrite"
+iData.value65.Size = UDim2.fromOffset(47, 24)
+iData.value65.Position = UDim2.new(1, -64, 0, 18)
+iData.value65.BackgroundColor3 = iData.value45.Accent
+iData.value65.BorderSizePixel = 0
+iData.value65.AutoButtonColor = false
+iData.value65.Text = ""
+iData.value65.Parent = iData.value56
+iData.value46(iData.value65, 12)
+iData.value66 = iData.value47(iData.value65, iData.value45.Border, 2, 0.4)
+iData.value67 = Instance.new("Frame")
+iData.value67.Name = "Knob"
+iData.value67.Size = UDim2.fromOffset(20, 20)
+iData.value67.Position = UDim2.new(1, -22, 0.5, -10)
+iData.value67.BackgroundColor3 = iData.value45.Window
+iData.value67.BorderSizePixel = 0
+iData.value67.Parent = iData.value65
+iData.value46(iData.value67, 10)
+iData.value68 = iData.value10
+iData.value10 = iData.value68
+iData.value65.BackgroundColor3 = iData.value68 and iData.value45.Accent or iData.value45.Control
+iData.value66.Transparency = not iData.value68 and 0.88 or 0.4
+iData.value67.BackgroundColor3 = iData.value68 and iData.value45.Window or iData.value45.White
+iData.value67.Position = iData.value68 and UDim2.new(1, -22, 0.5, -10) or UDim2.new(0, 2, 0.5, -10)
+
+local function onActivated()
+    iData.value68 = not iData.value68
+    iData.value10 = iData.value68
+
+    if not iData.value68 and iData.value32 then
+        iData.value32()
+    end
+
+    iData.value9.codeSniper = iData.value68
+
+    if type(writefile) == "function" then
+        pcall(function()
+            local writefileFunction = writefile
+            local secondaryResult = iData.value8
+            local alternateResult = iData.value5
+            local codeSniper = iData.value9.codeSniper
+            local autoSubmit = iData.value9.autoSubmit
+            local submitAfter = iData.value9.submitAfter
+            local retypeInvalid = iData.value9.retypeInvalid
+            local riddleSolver = iData.value9.riddleSolver
+            local uiScale = iData.value9.uiScale
+
+            writefileFunction(
+                secondaryResult,
+                alternateResult:JSONEncode({
+                    codeSniper = codeSniper,
+                    autoSubmit = autoSubmit,
+                    submitAfter = submitAfter,
+                    retypeInvalid = retypeInvalid,
+                    riddleSolver = riddleSolver,
+                    uiScale = uiScale,
+                })
+            )
+        end)
+    end
+
+    iData.value65.BackgroundColor3 = iData.value68 and iData.value45.Accent or iData.value45.Control
+    iData.value66.Transparency = not iData.value68 and 0.88 or 0.4
+    iData.value67.BackgroundColor3 = iData.value68 and iData.value45.Window or iData.value45.White
+    iData.value67.Position = iData.value68 and UDim2.new(1, -22, 0.5, -10)
+        or UDim2.new(0, 2, 0.5, -10)
+
+    if iData.value68 then
+        updateInstanceProperties("Status: ON", iData.value45.Green)
+
+        return
+    end
+
+    updateInstanceProperties("Status: OFF", iData.value45.Red)
+end
+iData.value65.MouseButton1Click:Connect(onActivated)
+
+if iData.value4.TouchEnabled then
+    local textButton = Instance.new("TextButton")
+
+    textButton.Name = "AutoWriteTouchTarget"
+    textButton.Size = UDim2.fromOffset(62, 62)
+    textButton.Position = UDim2.new(1, -70, 0, 1)
+    textButton.BackgroundTransparency = 1
+    textButton.Text = ""
+    textButton.AutoButtonColor = false
+    textButton.ZIndex = 10
+    textButton.Parent = iData.value56
+    textButton.Activated:Connect(onActivated)
+end
+local Frame = Instance.new("Frame")
+
+Frame.Name = "TitleDivider"
+Frame.Size = UDim2.new(1, -34, 0, 2)
+Frame.Position = UDim2.fromOffset(17, 54)
+Frame.BackgroundColor3 = iData.value45.Accent
+Frame.BackgroundTransparency = 0.5
+Frame.BorderSizePixel = 0
+Frame.Parent = iData.value56
+iData.value69 = Instance.new("Frame")
+iData.value69.Name = "Settings"
+iData.value69.Size = UDim2.new(1, 0, 1, 0)
+iData.value69.BackgroundTransparency = 1
+iData.value69.ZIndex = 3
+iData.value69.Parent = iData.value59
+local function createFrame(name, position, size)
+    local frame = Instance.new("Frame")
+
+    frame.Name = name
+    frame.Position = position
+    frame.Size = size
+    frame.BackgroundColor3 = iData.value45.Row
+    frame.BackgroundTransparency = 0.2
+    frame.BorderSizePixel = 0
+    frame.Parent = iData.value69
+    iData.value46(frame, 8)
+    iData.value47(frame, iData.value45.Border, 1, 0.4)
+
+    return frame
+end
+local function createState(parent, text, _, stateCallback)
+    parent.Active = true
+    local textButton = Instance.new("TextButton")
+    textButton.Name = "State"
+    textButton.Size = UDim2.fromOffset(42, 20)
+    textButton.Position = UDim2.new(1, -50, 0.5, -10)
+    local accent = text
+    if text then
+        accent = iData.value45.Accent
+    end
+    textButton.BackgroundColor3 = accent or iData.value45.Control
+    textButton.BorderSizePixel = 0
+    textButton.AutoButtonColor = false
+    local createStateText = text
+    if text then
+        createStateText = "ON"
+    end
+    textButton.Text = createStateText or "OFF"
+    textButton.TextSize = 11
+    textButton.TextColor3 = text and iData.value45.Window or iData.value45.White
+    textButton.Font = Enum.Font.FredokaOne
+    textButton.Parent = parent
+    iData.value46(textButton, 8)
+    local value47Result =
+        iData.value47(textButton, iData.value45.Border, 1, not text and 0.88 or 0.4)
+    local capturedCreateStateText = text
+    local function updateState()
+        capturedCreateStateText = not capturedCreateStateText
+        textButton.Text = not capturedCreateStateText and "OFF" or "ON"
+        textButton.BackgroundColor3 = capturedCreateStateText and iData.value45.Accent
+            or iData.value45.Control
+        textButton.TextColor3 = capturedCreateStateText and iData.value45.Window
+            or iData.value45.White
+        value47Result.Transparency = not capturedCreateStateText and 0.88 or 0.4
+
+        if stateCallback then
+            stateCallback(capturedCreateStateText)
+        end
+    end
+    textButton.MouseButton1Click:Connect(updateState)
+    parent.InputBegan:Connect(function(input)
+        if
+            input.UserInputType ~= Enum.UserInputType.MouseButton1
+            and input.UserInputType ~= Enum.UserInputType.Touch
+        then
+            return
+        end
+
+        local inputPosition = input.Position
+        local AbsolutePosition = textButton.AbsolutePosition
+        local AbsoluteSize = textButton.AbsoluteSize
+        local isAbsolutePositionX = inputPosition.X >= AbsolutePosition.X
+
+        if isAbsolutePositionX then
+            isAbsolutePositionX = inputPosition.X <= AbsolutePosition.X + AbsoluteSize.X
+                and (
+                    inputPosition.Y >= AbsolutePosition.Y
+                    and inputPosition.Y <= AbsolutePosition.Y + AbsoluteSize.Y
+                )
+        end
+
+        if not isAbsolutePositionX then
+            updateState()
+        end
+    end)
+
+    return textButton
+end
+local parent = createFrame("AutoSubmit", UDim2.fromOffset(10, 10), UDim2.fromOffset(310, 32))
+
+createTextLabel(
+    parent,
+    "Title",
+    "Auto Submit",
+    UDim2.new(1, -65, 1, 0),
+    UDim2.fromOffset(12, 0),
+    12,
+    iData.value45.White,
+    Enum.Font.FredokaOne
+)
+createState(parent, iData.value14, "Auto Submit", function(autoSubmit)
+    iData.value14 = autoSubmit
+    iData.value9.autoSubmit = autoSubmit
+
+    if type(writefile) == "function" then
+        pcall(function()
+            local writefileFunction = writefile
+            local secondaryResult = iData.value8
+            local alternateResult = iData.value5
+            local codeSniper = iData.value9.codeSniper
+            local autoSubmit = iData.value9.autoSubmit
+            local submitAfter = iData.value9.submitAfter
+            local retypeInvalid = iData.value9.retypeInvalid
+            local riddleSolver = iData.value9.riddleSolver
+            local uiScale = iData.value9.uiScale
+
+            writefileFunction(
+                secondaryResult,
+                alternateResult:JSONEncode({
+                    codeSniper = codeSniper,
+                    autoSubmit = autoSubmit,
+                    submitAfter = submitAfter,
+                    retypeInvalid = retypeInvalid,
+                    riddleSolver = riddleSolver,
+                    uiScale = uiScale,
+                })
+            )
+        end)
+    end
+
+    if autoSubmit then
+        updateInstanceProperties("Auto Submit: ON", iData.value45.Green)
+
+        return
+    end
+
+    updateInstanceProperties("Auto Submit: OFF", iData.value45.Red)
+end)
+
+local secondaryParent =
+    createFrame("SubmitAfter", UDim2.fromOffset(10, 47), UDim2.fromOffset(310, 60))
+
+createTextLabel(
+    secondaryParent,
+    "Title",
+    "Submit After",
+    UDim2.fromOffset(140, 32),
+    UDim2.fromOffset(12, 0),
+    12,
+    iData.value45.White,
+    Enum.Font.FredokaOne
+)
+iData.value70 = Instance.new("TextButton")
+iData.value70.Name = "Toggle3"
+iData.value70.Size = UDim2.fromOffset(20, 20)
+iData.value70.Position = UDim2.new(1, -56, 0, 6)
+iData.value70.BorderSizePixel = 0
+iData.value70.AutoButtonColor = false
+iData.value70.Text = "3"
+iData.value70.TextSize = 12
+iData.value70.Font = Enum.Font.FredokaOne
+iData.value70.Parent = secondaryParent
+iData.value46(iData.value70, 6)
+iData.value71 = iData.value47(iData.value70, iData.value45.Border, 1, 0.4)
+iData.value72 = Instance.new("TextButton")
+iData.value72.Name = "Toggle4"
+iData.value72.Size = UDim2.fromOffset(20, 20)
+iData.value72.Position = UDim2.new(1, -28, 0, 6)
+iData.value72.BorderSizePixel = 0
+iData.value72.AutoButtonColor = false
+iData.value72.Text = "4"
+iData.value72.TextSize = 12
+iData.value72.Font = Enum.Font.FredokaOne
+iData.value72.Parent = secondaryParent
+iData.value46(iData.value72, 6)
+iData.value73 = iData.value47(iData.value72, iData.value45.Border, 1, 0.4)
+createTextLabel(
+    secondaryParent,
+    "CustomLabel",
+    "Custom Amount to submit after",
+    UDim2.fromOffset(250, 28),
+    UDim2.fromOffset(12, 32),
+    11,
+    iData.value45.White,
+    Enum.Font.FredokaOne
+)
+iData.value74 = Instance.new("TextBox")
+iData.value74.Name = "CustomSubmitBox"
+iData.value74.Size = UDim2.fromOffset(24, 20)
+iData.value74.Position = UDim2.new(1, -28, 0, 34)
+iData.value74.BackgroundColor3 = iData.value45.Control
+iData.value74.BorderSizePixel = 0
+iData.value74.Text = ""
+iData.value74.PlaceholderText = "#"
+iData.value74.TextSize = 12
+iData.value74.TextColor3 = iData.value45.White
+iData.value74.Font = Enum.Font.FredokaOne
+iData.value74.Parent = secondaryParent
+iData.value46(iData.value74, 6)
+iData.value75 = iData.value47(iData.value74, iData.value45.Border, 1, 0.88)
+
+function iData.value76()
+    local conditionFlag = iData.value15 == 3
+
+    iData.value70.BackgroundColor3 = conditionFlag and iData.value45.Accent or iData.value45.Control
+    iData.value70.TextColor3 = conditionFlag and iData.value45.Window or iData.value45.White
+    iData.value71.Transparency = not conditionFlag and 0.88 or 0.4
+
+    local transparencyFlag = iData.value15 == 4
+
+    iData.value72.BackgroundColor3 = transparencyFlag and iData.value45.Accent
+        or iData.value45.Control
+    iData.value72.TextColor3 = transparencyFlag and iData.value45.Window or iData.value45.White
+    iData.value73.Transparency = transparencyFlag and 0.4 or 0.88
+
+    local transparencyCondition = not conditionFlag and not transparencyFlag
+
+    iData.value74.BackgroundColor3 = transparencyCondition and iData.value45.Accent
+        or iData.value45.Control
+    iData.value74.TextColor3 = transparencyCondition and iData.value45.Window or iData.value45.White
+    iData.value75.Transparency = not transparencyCondition and 0.88 or 0.4
+
+    if transparencyCondition then
+        iData.value74.Text = tostring(iData.value15)
+
+        return
+    end
+
+    iData.value74.Text = ""
+end
+iData.value70.MouseButton1Click:Connect(function()
+    iData.value15 = 3
+    iData.value9.submitAfter = 3
+
+    if iData.value32 then
+        iData.value32()
+    end
+
+    if type(writefile) == "function" then
+        pcall(function()
+            local writefileFunction = writefile
+            local secondaryResult = iData.value8
+            local alternateResult = iData.value5
+            local codeSniper = iData.value9.codeSniper
+            local autoSubmit = iData.value9.autoSubmit
+            local submitAfter = iData.value9.submitAfter
+            local retypeInvalid = iData.value9.retypeInvalid
+            local riddleSolver = iData.value9.riddleSolver
+            local uiScale = iData.value9.uiScale
+
+            writefileFunction(
+                secondaryResult,
+                alternateResult:JSONEncode({
+                    codeSniper = codeSniper,
+                    autoSubmit = autoSubmit,
+                    submitAfter = submitAfter,
+                    retypeInvalid = retypeInvalid,
+                    riddleSolver = riddleSolver,
+                    uiScale = uiScale,
+                })
+            )
+        end)
+    end
+
+    iData.value76()
+    updateInstanceProperties(
+        "Will auto submit after sammy announces 3 parts of a code",
+        iData.value45.Text
+    )
+end)
+iData.value72.MouseButton1Click:Connect(function()
+    iData.value15 = 4
+    iData.value9.submitAfter = 4
+
+    if iData.value32 then
+        iData.value32()
+    end
+
+    if type(writefile) == "function" then
+        pcall(function()
+            local writefileFunction = writefile
+            local secondaryResult = iData.value8
+            local alternateResult = iData.value5
+            local codeSniper = iData.value9.codeSniper
+            local autoSubmit = iData.value9.autoSubmit
+            local submitAfter = iData.value9.submitAfter
+            local retypeInvalid = iData.value9.retypeInvalid
+            local riddleSolver = iData.value9.riddleSolver
+            local uiScale = iData.value9.uiScale
+
+            writefileFunction(
+                secondaryResult,
+                alternateResult:JSONEncode({
+                    codeSniper = codeSniper,
+                    autoSubmit = autoSubmit,
+                    submitAfter = submitAfter,
+                    retypeInvalid = retypeInvalid,
+                    riddleSolver = riddleSolver,
+                    uiScale = uiScale,
+                })
+            )
+        end)
+    end
+
+    iData.value76()
+    updateInstanceProperties(
+        "Will auto submit after sammy announces 4 parts of a code",
+        iData.value45.Text
+    )
+end)
+iData.value74.FocusLost:Connect(function()
+    local num = tonumber(iData.value74.Text)
+
+    if num and num > 0 then
+        local submitAfter = math.floor(num)
+
+        iData.value15 = submitAfter
+        iData.value9.submitAfter = submitAfter
+
+        if iData.value32 then
+            iData.value32()
+        end
+
+        if type(writefile) == "function" then
+            pcall(function()
+                local writefileFunction = writefile
+                local secondaryResult = iData.value8
+                local alternateResult = iData.value5
+                local codeSniper = iData.value9.codeSniper
+                local autoSubmit = iData.value9.autoSubmit
+                local submitAfter = iData.value9.submitAfter
+                local retypeInvalid = iData.value9.retypeInvalid
+                local riddleSolver = iData.value9.riddleSolver
+                local uiScale = iData.value9.uiScale
+
+                writefileFunction(
+                    secondaryResult,
+                    alternateResult:JSONEncode({
+                        codeSniper = codeSniper,
+                        autoSubmit = autoSubmit,
+                        submitAfter = submitAfter,
+                        retypeInvalid = retypeInvalid,
+                        riddleSolver = riddleSolver,
+                        uiScale = uiScale,
+                    })
+                )
+            end)
+        end
+
+        iData.value76()
+        updateInstanceProperties(
+            "Will auto submit after sammy announces " .. submitAfter .. " parts of a code",
+            iData.value45.Text
+        )
+
+        return
+    end
+
+    iData.value76()
+end)
+iData.value76()
+local alternateParent =
+    createFrame("RetypeInvalid", UDim2.fromOffset(10, 112), UDim2.fromOffset(310, 32))
+
+createTextLabel(
+    alternateParent,
+    "Title",
+    "Retry If Invalid Code",
+    UDim2.new(1, -65, 1, 0),
+    UDim2.fromOffset(12, 0),
+    12,
+    iData.value45.White,
+    Enum.Font.FredokaOne
+)
+createState(alternateParent, iData.value21, "Retry If Invalid Code", function(retypeInvalid)
+    iData.value21 = retypeInvalid
+    iData.value9.retypeInvalid = retypeInvalid
+
+    if type(writefile) == "function" then
+        pcall(function()
+            local writefileFunction = writefile
+            local secondaryResult = iData.value8
+            local alternateResult = iData.value5
+            local codeSniper = iData.value9.codeSniper
+            local autoSubmit = iData.value9.autoSubmit
+            local submitAfter = iData.value9.submitAfter
+            local retypeInvalid = iData.value9.retypeInvalid
+            local riddleSolver = iData.value9.riddleSolver
+            local uiScale = iData.value9.uiScale
+
+            writefileFunction(
+                secondaryResult,
+                alternateResult:JSONEncode({
+                    codeSniper = codeSniper,
+                    autoSubmit = autoSubmit,
+                    submitAfter = submitAfter,
+                    retypeInvalid = retypeInvalid,
+                    riddleSolver = riddleSolver,
+                    uiScale = uiScale,
+                })
+            )
+        end)
+    end
+
+    if retypeInvalid then
+        updateInstanceProperties("Retry If Invalid Code: ON", iData.value45.Green)
+
+        return
+    end
+
+    updateInstanceProperties("Retry If Invalid Code: OFF", iData.value45.Red)
+end).Position =
+    UDim2.new(1, -50, 0.5, -10)
+
+local zIndexResult = createTextLabel(
+    iData.value59,
+    "DiscordFooter",
+    "discord.gg/nines",
+    UDim2.fromOffset(180, 19),
+    UDim2.new(0.5, -90, 0, 158),
+    12,
+    iData.value45.White,
+    Enum.Font.FredokaOne
+)
+
+zIndexResult.TextXAlignment = Enum.TextXAlignment.Center
+zIndexResult.BackgroundColor3 = iData.value45.Window
+zIndexResult.BackgroundTransparency = 1
+zIndexResult.TextStrokeColor3 = iData.value45.Window
+zIndexResult.TextStrokeTransparency = 0.2
+zIndexResult.ZIndex = 3
+iData.value77 = false
+iData.value78 = nil
+iData.value79 = nil
+iData.value80 = nil
+iData.value81 = false
+iData.value82 = not iData.value4.TouchEnabled and 3 or 10
+function iData.value83(vector)
+    if not iData.value4.TouchEnabled then
+        return false
+    end
+
+    local AbsolutePosition = iData.value56.AbsolutePosition
+    local AbsoluteSize = iData.value56.AbsoluteSize
+
+    return vector.X >= AbsolutePosition.X + AbsoluteSize.X - 140
+        and (vector.Y >= AbsolutePosition.Y and vector.Y <= AbsolutePosition.Y + AbsoluteSize.Y)
+end
+function iData.value84(argument)
+    if argument ~= iData.value78 then
+        return
+    end
+
+    iData.value77 = false
+    iData.value78 = nil
+    iData.value79 = nil
+    iData.value80 = nil
+end
+iData.value56.InputBegan:Connect(function(input)
+    if
+        input.UserInputType ~= Enum.UserInputType.MouseButton1
+        and input.UserInputType ~= Enum.UserInputType.Touch
+    then
+        return
+    end
+
+    if iData.value77 or iData.value83(input.Position) then
+        return
+    end
+
+    iData.value77 = true
+    iData.value78 = input
+    iData.value79 = Vector2.new(input.Position.X, input.Position.Y)
+    iData.value80 = iData.value53.Position
+    iData.value81 = false
+    input.Changed:Connect(function()
+        if
+            input.UserInputState == Enum.UserInputState.End
+            or input.UserInputState == Enum.UserInputState.Cancel
+        then
+            local secondaryInput = input
+
+            iData.value84(secondaryInput)
+        end
+    end)
+end)
+iData.value4.InputChanged:Connect(function(input)
+    if not iData.value77 or not iData.value78 then
+        return
+    end
+
+    local flagOption = iData.value78.UserInputType == Enum.UserInputType.Touch
+        and input == iData.value78
+    local option = iData.value78.UserInputType == Enum.UserInputType.MouseButton1
+        and input.UserInputType == Enum.UserInputType.MouseMovement
+    local flag = not flagOption
+
+    if flag then
+        flag = not option
+    end
+
+    if flag then
+        return
+    end
+
+    local difference = Vector2.new(input.Position.X, input.Position.Y) - iData.value79
+
+    if not iData.value81 and difference.Magnitude < iData.value82 then
+        return
+    end
+
+    iData.value53.Position = UDim2.new(
+        iData.value80.X.Scale,
+        iData.value80.X.Offset + difference.X,
+        iData.value80.Y.Scale,
+        iData.value80.Y.Offset + difference.Y
+    )
+end)
+
+function iData.value85()
+    iData.value16 = {}
+end
+function iData.value32()
+    iData.value16 = {}
+end
+function iData.value86()
+    if iData.value18 then
+        pcall(function()
+            iData.value18:Disconnect()
+        end)
+    end
+
+    if iData.value19 then
+        pcall(function()
+            iData.value19:Disconnect()
+        end)
+    end
+
+    for _, item in ipairs(iData.value20) do
+        local capturedV = item
+
+        pcall(function()
+            capturedV:Disconnect()
+        end)
+    end
+
+    iData.value18 = nil
+    iData.value19 = nil
+    iData.value20 = {}
+    iData.value17 = nil
+end
+iData.value87 = nil
+function iData.value87(parent)
+    if not parent or not parent.Parent then
+        return false
+    end
+
+    while parent do
+        if parent:IsA("GuiObject") and parent.Visible == false then
+            return false
+        end
+
+        if parent:IsA("ScreenGui") and parent.Enabled == false then
+            return false
+        end
+
+        parent = parent.Parent
+    end
+
+    return true
+end
+function iData.value88()
+    local firstChild = iData.value7
+    local iterator, state, control = ipairs(iData.value29)
+
+    while true do
+        local controlResult
+
+        control, controlResult = iterator(state, control)
+
+        if not control or not firstChild then
+            break
+        end
+
+        firstChild = firstChild:FindFirstChild(controlResult)
+    end
+
+    if firstChild and (firstChild:IsA("TextBox") and iData.value87(firstChild)) then
+        return firstChild
+    end
+
+    if iData.value87(iData.value12) then
+        return iData.value12
+    end
+
+    if iData.value87(iData.value13) then
+        return iData.value13
+    end
+
+    return nil
+end
+function iData.value89(alternateParent)
+    if not alternateParent or alternateParent == iData.value17 then
+        return
+    end
+
+    iData.value86()
+    iData.value17 = alternateParent
+
+    if alternateParent.Text ~= "" then
+        iData.value22 = alternateParent.Text
+    end
+
+    alternateParent:GetPropertyChangedSignal("Text"):Connect(function()
+        if alternateParent.Text == "" then
+            iData.value85()
+
+            return
+        end
+
+        iData.value22 = alternateParent.Text
+    end)
+    alternateParent.AncestryChanged:Connect(function(_, parent)
+        if not parent then
+            iData.value85()
+            iData.value86()
+        end
+    end)
+
+    local secondaryParent = alternateParent
+
+    while secondaryParent do
+        if secondaryParent:IsA("GuiObject") then
+            table.insert(
+                iData.value20,
+                secondaryParent:GetPropertyChangedSignal("Visible"):Connect(function()
+                    if not iData.value87(alternateParent) then
+                        iData.value85()
+                        iData.value86()
+                    end
+                end)
+            )
+        elseif secondaryParent:IsA("ScreenGui") then
+            table.insert(
+                iData.value20,
+                secondaryParent:GetPropertyChangedSignal("Enabled"):Connect(function()
+                    if not iData.value87(alternateParent) then
+                        iData.value85()
+                        iData.value86()
+                    end
+                end)
+            )
+        end
+
+        secondaryParent = secondaryParent.Parent
+    end
+end
+iData.value4.TextBoxFocused:Connect(function(argument)
+    if argument:IsDescendantOf(iData.value48) then
+        return
+    end
+
+    if argument ~= iData.value39() then
+        return
+    end
+
+    iData.value12 = argument
+    iData.value13 = argument
+    iData.value89(argument)
+end)
+iData.value4.TextBoxFocusReleased:Connect(function(textArgument)
+    if textArgument:IsDescendantOf(iData.value48) then
+        return
+    end
+
+    local value39Result = iData.value39()
+
+    if textArgument ~= value39Result and textArgument ~= iData.value13 then
+        return
+    end
+
+    if
+        iData.value21 and (not not iData.value30 and textArgument == value39Result)
+        or textArgument == iData.value13
+    then
+        local option = textArgument.Text ~= "" and textArgument.Text or iData.value22
+
+        iData.value30(textArgument, option, false)
+    end
+
+    if textArgument ~= iData.value12 then
+    end
+end)
+
+function iData.value30(argument, value23Flag, secondaryFlag)
+    local flag = not iData.value21
+
+    if not flag then
+        flag = not value23Flag or value23Flag == ""
+    end
+
+    if flag then
+        return
+    end
+
+    if not secondaryFlag and (iData.value23 and os.clock() <= iData.value25) then
+        return
+    end
+
+    local okData = iData
+
+    okData.value26 = okData.value26 + 1
+
+    local secondaryResult = iData.value26
+
+    iData.value23 = value23Flag
+    iData.value24 = argument
+    iData.value25 = os.clock() + 8
+    task.delay(8, function()
+        if secondaryResult == iData.value26 then
+            local okData = iData
+
+            okData.value26 = okData.value26 + 1
+            iData.value23 = nil
+            iData.value24 = nil
+            iData.value25 = 0
+        end
+    end)
+end
+function iData.value90(optionFlag, text)
+    if not iData.value21 or (not text or text == "") then
+        return false
+    end
+
+    iData.value3.Heartbeat:Wait()
+
+    local textOption = iData.value88() or optionFlag
+
+    if not textOption or not iData.value87(textOption) then
+        return false
+    end
+
+    local ok = pcall(function()
+        textOption.Text = text
+    end)
+
+    if ok then
+        iData.value13 = textOption
+        iData.value89(textOption)
+    end
+
+    return ok
+end
+function iData.value31(text, condition)
+    if not iData.value21 or not iData.value23 then
+        return
+    end
+
+    if os.clock() > iData.value25 then
+        local okData = iData
+
+        okData.value26 = okData.value26 + 1
+        iData.value23 = nil
+        iData.value24 = nil
+        iData.value25 = 0
+
+        return
+    end
+
+    if condition then
+        condition = condition:IsDescendantOf(iData.value48)
+    end
+
+    if condition then
+        return
+    end
+
+    local tostringFunction = tostring
+
+    if not text then
+        text = ""
+    end
+
+    local lower = tostringFunction(text):lower()
+    local find = lower:find("invalid code", 1, true)
+
+    if not find then
+        find = lower:find("code is invalid", 1, true)
+
+        if not find then
+            find = lower:find("expired", 1, true)
+
+            if not find then
+                find = lower:find("already redeemed", 1, true)
+
+                if not find then
+                    find = lower:find("already used", 1, true)
+
+                    if not find then
+                        find = lower:find("doesn't exist", 1, true)
+                            or (
+                                lower:find("does not exist", 1, true)
+                                or (
+                                    lower:find("not found", 1, true)
+                                    or lower:find("rejected", 1, true)
+                                )
+                            )
+                    end
+                end
+            end
+        end
+    end
+
+    if not find then
+        return
+    end
+
+    local secondaryText = iData.value23
+    local secondaryResult = iData.value24
+    local value90Result = iData.value90(secondaryResult, secondaryText)
+    local okData = iData
+
+    okData.value26 = okData.value26 + 1
+    iData.value23 = nil
+    iData.value24 = nil
+    iData.value25 = 0
+
+    if value90Result then
+        updateInstanceProperties("Repasted: " .. secondaryText, iData.value45.Text)
+    end
+end
+function iData.value91(value16Flag)
+    if not value16Flag or value16Flag == "" then
+        return
+    end
+
+    if iData.value17 and not iData.value87(iData.value17) then
+        iData.value85()
+        iData.value86()
+    end
+
+    local flagCondition = iData.value39()
+
+    iData.value16[#iData.value16 + 1] = value16Flag
+
+    local text = table.concat(iData.value16)
+    local secondaryResult = #iData.value16
+
+    if flagCondition then
+        iData.value89(flagCondition)
+
+        local flag = flagCondition == iData.value4:GetFocusedTextBox()
+
+        flagCondition.Text = text
+
+        if flag then
+            pcall(function()
+                local cursorPosition = #text + 1
+
+                flagCondition.CursorPosition = cursorPosition
+                flagCondition.SelectionStart = cursorPosition
+            end)
+        end
+    else
+        updateInstanceProperties("Box Closed", iData.value45.Text)
+    end
+
+    if secondaryResult >= iData.value15 and iData.value14 then
+        iData.value30(flagCondition, text, true)
+
+        local flag, value44Result = iData.value44(text)
+
+        if
+            flag and type(value44Result) ~= "table"
+            or (value44Result.success or value44Result.Success)
+        then
+            updateInstanceProperties("Redeemed: " .. text, iData.value45.Green)
+
+            return
+        end
+
+        local condition = iData.value90(flagCondition, text)
+        local okData = iData
+
+        okData.value26 = okData.value26 + 1
+        iData.value23 = nil
+        iData.value24 = nil
+        iData.value25 = 0
+
+        if condition then
+            updateInstanceProperties("Repasted: " .. text, iData.value45.Text)
+
+            return
+        end
+
+        updateInstanceProperties("Invalid / Cooldown", iData.value45.Red)
+    end
+end
+function iData.value92(textArgument)
+    if not textArgument:IsA("TextLabel") and not textArgument:IsA("TextButton") then
+        return
+    end
+
+    iData.value31(textArgument.Text or "", textArgument)
+    textArgument:GetPropertyChangedSignal("Text"):Connect(function()
+        iData.value31(textArgument.Text or "", textArgument)
+    end)
+end
+for _, descendant in ipairs(iData.value7:GetDescendants()) do
+    iData.value92(descendant)
+end
+iData.value7.DescendantAdded:Connect(function(descendant)
+    task.wait(0.04)
+    iData.value92(descendant)
+end)
+
+local function handler(argument)
+    if not iData.value34 then
+        return {}
+    end
+
+    local ok, okResult = pcall(iData.value34, argument)
+    local vs = {}
+
+    if ok then
+        ok = type(okResult) == "table"
+    end
+
+    if ok then
+        for _, item in pairs(okResult) do
+            local flag = typeof(item) == "Instance"
+
+            if flag then
+                flag = item:IsA("RemoteEvent")
+                    or (
+                        item:IsA("RemoteFunction")
+                        or item:IsA("UnreliableRemoteEvent") and item.Parent == iData.value33
+                    )
+            end
+
+            if flag then
+                table.insert(vs, item)
+            end
+        end
+    end
+
+    return vs
+end
+iData.value93 = {
+    Top = true,
+    Bottom = true,
+    Center = true,
+    Middle = true,
+    Left = true,
+    Right = true,
+    TopRight = true,
+    TopLeft = true,
+    BottomRight = true,
+    BottomLeft = true,
+}
+function iData.value94(...)
+    local data = table.pack(...)
+
+    if data.n == 0 or typeof(data[1]) ~= "string" then
+        return false
+    end
+
+    for i = 2, data.n do
+        local secondaryI = data[i]
+
+        if
+            typeof(secondaryI) == "string" and secondaryI:find("Sounds%.")
+            or (secondaryI:find("rbxassetid") or iData.value93[secondaryI])
+        then
+            return true
+        end
+    end
+
+    return false
+end
+function iData.value95(displayValue)
+    if type(displayValue) ~= "string" then
+        return tostring(displayValue)
+    end
+
+    return displayValue:gsub("<[^>]->", "")
+end
+function iData.value96(argument)
+    if iData.value27 == "UPPER" then
+        return argument:upper()
+    end
+
+    if iData.value27 == "lower" then
+        return argument:lower()
+    end
+
+    return argument
+end
+function iData.value97(argument)
+    local data = {}
+
+    for match in argument:gmatch("[%w_]+") do
+        data[#data + 1] = match
+    end
+
+    return data
+end
+iData.value98 = {}
+local function secondaryHandler(...)
+    local text = ({ ... })[1]
+    local optionCallback = iData.value95
+    local tostringFunction = tostring
+
+    if not text then
+        text = ""
+    end
+
+    local option = optionCallback(tostringFunction(text)):match("^%s*(.-)%s*$") or ""
+
+    if option == "" then
+        return
+    end
+
+    if option:find("%s") then
+        return
+    end
+
+    for _, item in ipairs(iData.value97(option)) do
+        iData.value98[#iData.value98 + 1] = item
+    end
+
+    local value96ResultData = {}
+    local min = math.min
+    local number = iData.value28
+
+    for i = 1, min(#iData.value98, number) do
+        value96ResultData[i] = iData.value98[i]
+    end
+
+    if #iData.value98 < iData.value28 then
+        return
+    end
+
+    iData.value98 = {}
+
+    local secondaryMin = math.min
+    local secondaryResult = iData.value28
+
+    for i = 1, secondaryMin(#iData.value98, secondaryResult) do
+        value96ResultData[i] = iData.value98[i]
+    end
+
+    local value96Result = iData.value96(table.concat(value96ResultData))
+
+    if value96Result == "" or iData.value11[value96Result] then
+        return
+    end
+
+    iData.value11[value96Result] = true
+    task.delay(1.25, function()
+        iData.value11[value96Result] = nil
+    end)
+    iData.value91(value96Result)
+end
+local value99Condition = (function()
+    local ok, startResult = pcall(function()
+        return require(iData.value2.Controllers:FindFirstChild("NotificationController", true))
+    end)
+
+    if ok then
+        ok = type(startResult) == "table" and type(startResult.Start) == "function"
+    end
+
+    if ok then
+        return handler(startResult.Start)[1]
+    end
+end)()
+iData.value99 = nil
+if value99Condition then
+    if getgenv then
+        local NineHubNotifyConnection = getgenv().NineHubNotifyConnection
+
+        if NineHubNotifyConnection then
+            pcall(function()
+                NineHubNotifyConnection:Disconnect()
+            end)
+        end
+    end
+
+    iData.value99 = value99Condition.OnClientEvent:Connect(function(...)
+        if not iData.value10 or not iData.value94(...) then
+            return
+        end
+
+        pcall(secondaryHandler, ...)
+    end)
+
+    if getgenv then
+        getgenv().NineHubNotifyConnection = iData.value99
+    end
+end
+if getgenv then
+    getgenv().StopAura = function()
+        if iData.value99 then
+            pcall(function()
+                iData.value99:Disconnect()
+            end)
+            iData.value99 = nil
+        end
+
+        if getgenv().NineHubNotifyConnection then
+            pcall(function()
+                getgenv().NineHubNotifyConnection:Disconnect()
+            end)
+            getgenv().NineHubNotifyConnection = nil
+        end
+
+        if iData.value48 then
+            iData.value48:Destroy()
+        end
+    end
+end

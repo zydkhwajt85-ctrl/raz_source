@@ -1,0 +1,365 @@
+local _call5 = game:GetService('CoreGui')
+local _call7 = game:GetService('UserInputService')
+game:GetService('TweenService')
+game:GetService('RunService')
+local _call13 = game:GetService('ReplicatedStorage')
+local _call15 = game:GetService('HttpService')
+task.spawn(function(_19)
+    local _ = game:GetService('Players').LocalPlayer.Character
+    task.wait(1)
+    for _27, _27_2 in ipairs(_call13:WaitForChild('Packages'):WaitForChild('Net'):GetChildren())do
+        local _ = _27_2.Name
+    end
+end)
+_call5:FindFirstChild('ZoneProtectorGui')
+_call5.ZoneProtectorGui:Destroy()
+local _call36 = Instance.new('ScreenGui')
+_call36.Name = 'ZoneProtectorGui'
+_call36.ResetOnSpawn = false
+_call36.ZIndexBehavior = Enum.ZIndexBehavior.Global
+_call36.Parent = _call5
+local _call40 = Instance.new('Frame')
+_call40.BackgroundTransparency = 0
+_call40.Position = UDim2.new(0.5, -125, 0.5, -65)
+_call40.ClipsDescendants = true
+_call40.Active = true
+_call40.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
+_call40.Size = UDim2.new(0, 250, 0, 130)
+_call40.Parent = _call36
+_call40.Draggable = true
+local _call48 = Instance.new('UICorner')
+_call48.CornerRadius = UDim.new(0, 10)
+_call48.Parent = _call40
+local _call52 = Instance.new('UIStroke')
+_call52.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
+_call52.Thickness = 2
+_call52.Color = Color3.new(1, 1, 1)
+_call52.Parent = _call40
+local _call58 = Instance.new('UIGradient')
+local _call72 = ColorSequence.new({
+    [1] = ColorSequenceKeypoint.new(0, Color3.fromRGB(30, 30, 30)),
+    [2] = ColorSequenceKeypoint.new(0.5, Color3.fromRGB(90, 90, 90)),
+    [3] = ColorSequenceKeypoint.new(1, Color3.fromRGB(255, 255, 255)),
+})
+_call58.Color = _call72
+_call58.Rotation = 0
+_call58.Parent = _call52
+task.spawn(function(_75)
+    task.wait()
+    local _ = _call58.Parent
+    _call58.Rotation = ((_call58.Rotation + 0.8) % 360)
+    task.wait()
+    local _ = _call58.Parent
+    _call58.Rotation = ((_call58.Rotation + 0.8) % 360)
+    task.wait()
+    local _ = _call58.Parent
+    _call58.Rotation = ((_call58.Rotation + 0.8) % 360)
+    task.wait()
+    local _ = _call58.Parent
+    _call58.Rotation = ((_call58.Rotation + 0.8) % 360)
+    task.wait()
+    local _ = _call58.Parent
+    _call58.Rotation = ((_call58.Rotation + 0.8) % 360)
+    task.wait()
+    local _ = _call58.Parent
+    _call58.Rotation = ((_call58.Rotation + 0.8) % 360)
+    task.wait()
+    local _ = _call58.Parent
+    _call58.Rotation = ((_call58.Rotation + 0.8) % 360)
+    task.wait()
+    local _ = _call58.Parent
+    _call58.Rotation = ((_call58.Rotation + 0.8) % 360)
+    task.wait()
+    local _ = _call58.Parent
+    _call58.Rotation = ((_call58.Rotation + 0.8) % 360)
+    task.wait()
+    local _ = _call58.Parent
+    _call58.Rotation = ((_call58.Rotation + 0.8) % 360)
+    task.wait()
+    local _ = _call58.Parent
+    _call58.Rotation = ((_call58.Rotation + 0.8) % 360)
+    task.wait()
+    local _ = _call58.Parent
+    _call58.Rotation = ((_call58.Rotation + 0.8) % 360)
+    task.wait()
+    local _ = _call58.Parent
+    _call58.Rotation = ((_call58.Rotation + 0.8) % 360)
+    task.wait()
+    local _ = _call58.Parent
+    _call58.Rotation = ((_call58.Rotation + 0.8) % 360)
+    task.wait()
+    local _ = _call58.Parent
+    _call58.Rotation = ((_call58.Rotation + 0.8) % 360)
+    task.wait()
+    local _ = _call58.Parent
+    _call58.Rotation = ((_call58.Rotation + 0.8) % 360)
+    task.wait()
+    local _ = _call58.Parent
+    _call58.Rotation = ((_call58.Rotation + 0.8) % 360)
+    task.wait()
+    local _ = _call58.Parent
+    _call58.Rotation = ((_call58.Rotation + 0.8) % 360)
+    task.wait()
+    local _ = _call58.Parent
+    _call58.Rotation = ((_call58.Rotation + 0.8) % 360)
+    task.wait()
+    local _ = _call58.Parent
+    _call58.Rotation = ((_call58.Rotation + 0.8) % 360)
+    task.wait()
+    local _ = _call58.Parent
+    _call58.Rotation = ((_call58.Rotation + 0.8) % 360)
+    task.wait()
+    local _ = _call58.Parent
+    _call58.Rotation = ((_call58.Rotation + 0.8) % 360)
+    task.wait()
+    local _ = _call58.Parent
+    _call58.Rotation = ((_call58.Rotation + 0.8) % 360)
+    task.wait()
+    local _ = _call58.Parent
+    _call58.Rotation = ((_call58.Rotation + 0.8) % 360)
+    task.wait()
+    local _ = _call58.Parent
+    _call58.Rotation = ((_call58.Rotation + 0.8) % 360)
+    task.wait()
+    local _ = _call58.Parent
+    _call58.Rotation = ((_call58.Rotation + 0.8) % 360)
+    task.wait()
+    local _ = _call58.Parent
+    _call58.Rotation = ((_call58.Rotation + 0.8) % 360)
+    task.wait()
+    local _ = _call58.Parent
+    _call58.Rotation = ((_call58.Rotation + 0.8) % 360)
+    task.wait()
+    local _ = _call58.Parent
+    _call58.Rotation = ((_call58.Rotation + 0.8) % 360)
+    task.wait()
+    local _ = _call58.Parent
+    _call58.Rotation = ((_call58.Rotation + 0.8) % 360)
+    task.wait()
+    local _ = _call58.Parent
+    _call58.Rotation = ((_call58.Rotation + 0.8) % 360)
+    task.wait()
+    local _ = _call58.Parent
+    _call58.Rotation = ((_call58.Rotation + 0.8) % 360)
+    task.wait()
+    local _ = _call58.Parent
+    _call58.Rotation = ((_call58.Rotation + 0.8) % 360)
+    task.wait()
+    local _ = _call58.Parent
+    _call58.Rotation = ((_call58.Rotation + 0.8) % 360)
+    task.wait()
+    local _ = _call58.Parent
+    _call58.Rotation = ((_call58.Rotation + 0.8) % 360)
+    task.wait()
+    local _ = _call58.Parent
+    _call58.Rotation = ((_call58.Rotation + 0.8) % 360)
+    task.wait()
+    local _ = _call58.Parent
+    _call58.Rotation = ((_call58.Rotation + 0.8) % 360)
+    task.wait()
+    local _ = _call58.Parent
+    _call58.Rotation = ((_call58.Rotation + 0.8) % 360)
+    task.wait()
+    local _ = _call58.Parent
+    _call58.Rotation = ((_call58.Rotation + 0.8) % 360)
+    task.wait()
+    local _ = _call58.Parent
+    _call58.Rotation = ((_call58.Rotation + 0.8) % 360)
+    task.wait()
+    local _ = _call58.Parent
+    _call58.Rotation = ((_call58.Rotation + 0.8) % 360)
+    task.wait()
+    local _ = _call58.Parent
+    _call58.Rotation = ((_call58.Rotation + 0.8) % 360)
+    task.wait()
+    local _ = _call58.Parent
+    _call58.Rotation = ((_call58.Rotation + 0.8) % 360)
+    task.wait()
+    local _ = _call58.Parent
+    _call58.Rotation = ((_call58.Rotation + 0.8) % 360)
+    task.wait()
+    local _ = _call58.Parent
+    _call58.Rotation = ((_call58.Rotation + 0.8) % 360)
+    task.wait()
+    local _ = _call58.Parent
+    _call58.Rotation = ((_call58.Rotation + 0.8) % 360)
+    task.wait()
+    local _ = _call58.Parent
+    _call58.Rotation = ((_call58.Rotation + 0.8) % 360)
+    task.wait()
+    local _ = _call58.Parent
+    _call58.Rotation = ((_call58.Rotation + 0.8) % 360)
+    task.wait()
+    local _ = _call58.Parent
+    _call58.Rotation = ((_call58.Rotation + 0.8) % 360)
+    task.wait()
+    local _ = _call58.Parent
+    _call58.Rotation = ((_call58.Rotation + 0.8) % 360)
+    task.wait()
+    local _ = _call58.Parent
+    _call58.Rotation = ((_call58.Rotation + 0.8) % 360)
+    task.wait()
+    local _ = _call58.Parent
+    _call58.Rotation = ((_call58.Rotation + 0.8) % 360)
+    task.wait()
+    local _ = _call58.Parent
+    _call58.Rotation = ((_call58.Rotation + 0.8) % 360)
+    task.wait()
+    local _ = _call58.Parent
+    _call58.Rotation = ((_call58.Rotation + 0.8) % 360)
+    task.wait()
+    local _ = _call58.Parent
+    _call58.Rotation = ((_call58.Rotation + 0.8) % 360)
+    task.wait()
+    local _ = _call58.Parent
+    _call58.Rotation = ((_call58.Rotation + 0.8) % 360)
+    task.wait()
+    local _ = _call58.Parent
+    _call58.Rotation = ((_call58.Rotation + 0.8) % 360)
+    task.wait()
+    local _ = _call58.Parent
+    _call58.Rotation = ((_call58.Rotation + 0.8) % 360)
+    task.wait()
+    local _ = _call58.Parent
+    _call58.Rotation = ((_call58.Rotation + 0.8) % 360)
+    task.wait()
+    local _ = _call58.Parent
+    _call58.Rotation = ((_call58.Rotation + 0.8) % 360)
+    task.wait()
+    local _ = _call58.Parent
+    _call58.Rotation = ((_call58.Rotation + 0.8) % 360)
+    task.wait()
+    local _ = _call58.Parent
+    _call58.Rotation = ((_call58.Rotation + 0.8) % 360)
+    task.wait()
+    local _ = _call58.Parent
+    _call58.Rotation = ((_call58.Rotation + 0.8) % 360)
+    task.wait()
+    local _ = _call58.Parent
+    _call58.Rotation = ((_call58.Rotation + 0.8) % 360)
+    task.wait()
+    local _ = _call58.Parent
+    _call58.Rotation = ((_call58.Rotation + 0.8) % 360)
+    task.wait()
+    local _ = _call58.Parent
+    _call58.Rotation = ((_call58.Rotation + 0.8) % 360)
+    task.wait()
+    local _ = _call58.Parent
+    _call58.Rotation = ((_call58.Rotation + 0.8) % 360)
+    task.wait()
+    local _ = _call58.Parent
+    _call58.Rotation = ((_call58.Rotation + 0.8) % 360)
+    task.wait()
+    local _ = _call58.Parent
+    _call58.Rotation = ((_call58.Rotation + 0.8) % 360)
+    task.wait()
+    error('internal 583: <25ms: infinitelooperror>')
+end)
+local _call354 = Instance.new('TextLabel')
+_call354.TextXAlignment = Enum.TextXAlignment.Left
+_call354.Font = Enum.Font.GothamBlack
+_call354.BackgroundTransparency = 1
+_call354.Position = UDim2.new(0, 10, 0, 5)
+_call354.TextColor3 = Color3.new(1, 1, 1)
+_call354.Text = "HUGO'S SCRIPT"
+_call354.TextSize = 14
+_call354.Size = UDim2.new(1, -20, 0, 20)
+_call354.Parent = _call40
+local _call366 = Instance.new('TextLabel')
+_call366.TextXAlignment = Enum.TextXAlignment.Left
+_call366.Font = Enum.Font.Gotham
+_call366.BackgroundTransparency = 1
+_call366.Position = UDim2.new(0, 10, 0, 22)
+_call366.TextColor3 = Color3.new(1, 1, 1)
+_call366.Text = 'AUTO BALLOON'
+_call366.TextSize = 10
+_call366.Size = UDim2.new(1, -20, 0, 12)
+_call366.Parent = _call40
+local _call378 = Instance.new('Frame')
+_call378.Position = UDim2.new(0, 10, 0, 40)
+_call378.BackgroundColor3 = Color3.fromRGB(30, 30, 45)
+_call378.Size = UDim2.new(1, -20, 0, 34)
+_call378.Parent = _call40
+local _call386 = Instance.new('UICorner')
+_call386.Parent = _call378
+local _call388 = Instance.new('UIStroke')
+_call388.Thickness = 1.5
+_call388.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
+_call388.Color = Color3.fromRGB(60, 60, 80)
+_call388.Parent = _call378
+local _call394 = Instance.new('TextLabel')
+_call394.BackgroundTransparency = 1
+_call394.TextXAlignment = Enum.TextXAlignment.Left
+_call394.TextColor3 = Color3.new(1, 1, 1)
+_call394.Font = Enum.Font.GothamBlack
+_call394.Position = UDim2.new(0, 10, 0, 0)
+_call394.Text = 'Status'
+_call394.TextSize = 12
+_call394.Size = UDim2.new(1, -60, 1, 0)
+_call394.Parent = _call378
+local _call406 = Instance.new('Frame')
+_call406.BackgroundTransparency = 1
+_call406.Position = UDim2.new(1, -46, 0.5, -9)
+_call406.Size = UDim2.new(0, 36, 0, 18)
+_call406.Parent = _call378
+local _call412 = Instance.new('UICorner')
+_call412.CornerRadius = UDim.new(0, 9)
+_call412.Parent = _call406
+local _call416 = Instance.new('UIStroke')
+_call416.Thickness = 2
+_call416.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
+_call416.Color = Color3.new(1, 1, 1)
+_call416.Parent = _call406
+local _call422 = Instance.new('Frame')
+_call422.BackgroundColor3 = Color3.new(1, 1, 1)
+_call422.Size = UDim2.new(0, 14, 0, 14)
+_call422.Parent = _call406
+local _call428 = Instance.new('UICorner')
+_call428.CornerRadius = UDim.new(0, 7)
+_call428.Parent = _call422
+_call422.Position = UDim2.new(0, 2, 0.5, -7)
+_call406.BackgroundColor3 = Color3.fromRGB(45, 45, 65)
+local _call436 = Instance.new('TextButton')
+_call436.Text = ''
+_call436.BackgroundTransparency = 1
+_call436.Size = UDim2.new(1, 0, 1, 0)
+_call436.Parent = _call378
+_call436.MouseButton1Click:Connect(function(_442, _442_2, _442_3, _442_4)
+    local _call444 = _call15:JSONEncode({
+        FrameXScale = 0,
+        FrameYScale = 0,
+        FrameXOffset = 50,
+        ZoneLimit = 36,
+        ZoneProtectionEnabled = true,
+        FrameYOffset = 50,
+    })
+    writefile('ZoneProtector_Config.json', _call444)
+    error('internal 583: <25ms: infinitelooperror>')
+end)
+local _call447 = Instance.new('Frame')
+_call447.Position = UDim2.new(0, 10, 0, 85)
+_call447.BackgroundColor3 = Color3.fromRGB(30, 30, 45)
+_call447.Size = UDim2.new(1, -20, 0, 34)
+_call447.Parent = _call40
+local _call455 = Instance.new('UICorner')
+_call455.Parent = _call447
+local _call457 = Instance.new('UIStroke')
+_call457.Thickness = 1.5
+_call457.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
+_call457.Color = Color3.fromRGB(60, 60, 80)
+_call457.Parent = _call447
+local _call463 = Instance.new('TextLabel')
+_call463.BackgroundTransparency = 1
+_call463.TextXAlignment = Enum.TextXAlignment.Center
+_call463.TextColor3 = Color3.new(1, 1, 1)
+_call463.Font = Enum.Font.GothamMedium
+_call463.Position = UDim2.new(0, 0, 0, 0)
+_call463.Text = 'https://discord.gg/VTEhWdCX4'
+_call463.TextSize = 10
+_call463.Size = UDim2.new(1, 0, 1, 0)
+_call463.Parent = _call447
+_call40.InputBegan:Connect(function(_477, _477_2, _477_3, _477_4, _477_5, _477_6) end)
+_call7.InputEnded:Connect(function(_481, _481_2, _481_3) end)
+_call7.InputBegan:Connect(function(_485, _485_2, _485_3, _485_4, _485_5, _485_6) end)
+task.spawn(function() end)
+print('\u{2705} Zone Protector Script Charg\u{e9}!')
