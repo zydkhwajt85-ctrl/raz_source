@@ -1,0 +1,207 @@
+local Players = game:GetService("Players")
+local CoreGui = game:GetService("CoreGui")
+local RunService = game:GetService("RunService")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local LocalPlayer = Players.LocalPlayer
+ 
+if CoreGui:FindFirstChild("Spooky Hub") then CoreGui["Spooky Hub"]:Destroy() end
+ 
+local screenGui = Instance.new("ScreenGui")
+screenGui.Name = "Spooky Hub"
+screenGui.ResetOnSpawn = false
+screenGui.Parent = CoreGui
+ 
+local frame = Instance.new("Frame")
+frame.Size = UDim2.new(0,170,0,260)
+frame.Position = UDim2.new(0.78,0,0.35,0)
+frame.BackgroundColor3 = Color3.fromRGB(20,20,20)
+frame.BackgroundTransparency = 0.3
+frame.BorderSizePixel = 0
+frame.Active = true
+frame.Draggable = true
+frame.Parent = screenGui
+Instance.new("UICorner", frame).CornerRadius = UDim.new(0,10)
+ 
+local title = Instance.new("TextLabel")
+title.Text = "Spooky Hub"
+title.Size = UDim2.new(1,0,0,35)
+title.BackgroundTransparency = 1
+title.TextColor3 = Color3.new(1,1,1)
+title.Font = Enum.Font.GothamBold
+title.TextSize = 19
+title.Parent = frame
+ 
+local function createButton(text, posY)
+    local btn = Instance.new("TextButton")
+    btn.Size = UDim2.new(0.9,0,0,35)
+    btn.Position = UDim2.new(0.05,0,posY,0)
+    btn.BackgroundColor3 = Color3.fromRGB(12,12,12)
+    btn.Text = text
+    btn.TextColor3 = Color3.new(1,1,1)
+    btn.Font = Enum.Font.Gotham
+    btn.TextSize = 16
+    btn.BorderSizePixel = 0
+    btn.Parent = frame
+    Instance.new("UICorner", btn).CornerRadius = UDim.new(0,8)
+    local stroke = Instance.new("UIStroke", btn)
+    stroke.Thickness = 1.4
+    stroke.Color = Color3.fromRGB(70,70,70)
+    return btn
+end
+ 
+local btnDesync   = createButton("Desync V2", 0.18)
+local btnNormal   = createButton("Andar Normal", 0.36)
+local btnUnwalk   = createButton("Unwalk Anim", 0.54)
+local btnLaser    = createButton("Laser Cape: OFF", 0.72)
+ 
+local flags = {
+    ["GameNetPVHeaderRotationalVelocityZeroCutoffExponent"] = "-20000",
+    ["GameNetPVHeaderLinearVelocityZeroCutoffExponent"] = "-20000",
+    ["S2PhysicsSenderRate"] = "60000",
+    ["PhysicsSenderMaxBandwidthBps"] = "80000",
+    ["MaxDataPacketPerSend"] = "4294967295",
+    ["TimestepArbiterVelocityCriteriaThresholdTwoDt"] = "4294967295",
+    ["LargeReplicatorEnabled9"] = "true",
+    ["LargeReplicatorWrite5"] = "true",
+    ["LargeReplicatorRead5"] = "true",
+    ["LargeReplicatorSerializeRead3"] = "true",
+    ["LargeReplicatorSerializeWrite4"] = "true",
+    ["NextGenReplicatorEnabledWrite4"] = "true",
+    ["AngularVelocityLimit"] = "1000",
+    ["DisableDPIScale"] = "true",
+    ["MaxTimestepMultiplierAcceleration"] = "4294967295",
+    ["MaxTimestepMultiplierBuoyancy"] = "4294967295",
+    ["MaxTimestepMultiplierConstraint"] = "4294967295",
+    ["SimExplicitlyCappedTimestepMultiplier"] = "4294967295",
+    ["StreamJobNOUVolumeCap"] = "4294967295",
+    ["StreamJobNOUVolumeLengthCap"] = "4294967295",
+    ["ReplicationFocusNouExtentsSizeCutoffForPauseStuds"] = "4294967295",
+    ["CheckPVDifferencesForInterpolationMinVelThresholdStudsPerSecHundredth"] = "0.01",
+    ["CheckPVDifferencesForInterpolationMinRotVelThresholdRadsPerSecHundredth"] = "0.01",
+    ["GameNetDontSendRedundantNumTimes"] = "0",
+    ["GameNetDontSendRedundantDeltaPositionMillionth"] = "0.01",
+    ["InterpolationFrameVelocityThresholdMillionth"] = "0.5",
+    ["InterpolationFrameRotVelocityThresholdMillionth"] = "0.5",
+    ["TimestepArbiterHumanoidLinearVelThreshold"] = "0.01",
+    ["TimestepArbiterHumanoidTurningVelThreshold"] = "0.01",
+    ["TimestepArbiterOmegaThou"] = "2147483647",
+    ["MaxAcceptableUpdateDelay"] = "0.001",
+    ["DebugSendDistInSteps"] = "-4294967296",
+    ["MaxMissedWorldStepsRemembered"] = "-4294967296",
+}
+ 
+for k, v in pairs(flags) do pcall(function() setfflag(k, tostring(v)) end) end
+ 
+local desyncActive = false
+local normalActive = false
+local spoofConnection = nil
+local root = nil
+local hum = nil
+ 
+btnDesync.MouseButton1Click:Connect(function()
+    if desyncActive then return end
+    desyncActive = true
+    btnDesync.Text = "Desync ATIVO"
+    local char = LocalPlayer.Character or LocalPlayer.CharacterAdded:Wait()
+    root = char:WaitForChild("HumanoidRootPart")
+    hum = char:WaitForChild("Humanoid")
+    pcall(function() root:SetNetworkOwner(nil) end)
+    spoofConnection = RunService.Heartbeat:Connect(function()
+        if not root or not root.Parent then if spoofConnection then spoofConnection:Disconnect() end return end
+        root.AssemblyLinearVelocity = Vector3.new(0,0,0)
+        root.AssemblyAngularVelocity = Vector3.new(0,0,0)
+    end)
+end)
+ 
+btnNormal.MouseButton1Click:Connect(function()
+    if not desyncActive then return end
+    normalActive = true
+    btnNormal.Text = "Normal ATIVO"
+    if spoofConnection then spoofConnection:Disconnect() spoofConnection = nil end
+    if root then pcall(function() root:SetNetworkOwner(LocalPlayer) end) end
+    if hum then
+        hum:ChangeState(Enum.HumanoidStateType.None)
+        hum.PlatformStand = false
+        hum.AutoRotate = true
+        hum.WalkSpeed = 16
+        hum.JumpPower = 50
+        hum.UseJumpPower = true
+    end
+end)
+ 
+local unwalkConn
+btnUnwalk.MouseButton1Click:Connect(function()
+    local char = LocalPlayer.Character
+    if not char then return end
+    local h = char:FindFirstChildOfClass("Humanoid")
+    if not h then return end
+    local anim = h:FindFirstChildWhichIsA("Animator")
+    if not anim then return end
+    if unwalkConn then unwalkConn:Disconnect() end
+    unwalkConn = RunService.Heartbeat:Connect(function()
+        for _, track in anim:GetPlayingAnimationTracks() do track:Stop() end
+    end)
+end)
+ 
+local autoLaserEnabled = false
+local delayBetweenShots = 0.6
+local laserRange = 300
+local Event = ReplicatedStorage:WaitForChild("Packages"):WaitForChild("Net"):WaitForChild("RE/UseItem")
+ 
+local function getNearestPlayer()
+    if not LocalPlayer.Character or not LocalPlayer.Character:FindFirstChild("HumanoidRootPart") then return nil end
+    local myPos = LocalPlayer.Character.HumanoidRootPart.Position
+    local nearest = nil
+    local shortest = laserRange
+    for _, pl in Players:GetPlayers() do
+        if pl ~= LocalPlayer and pl.Character and pl.Character:FindFirstChild("HumanoidRootPart") then
+            local dist = (pl.Character.HumanoidRootPart.Position - myPos).Magnitude
+            if dist < shortest then shortest = dist nearest = pl end
+        end
+    end
+    return nearest
+end
+ 
+local function equipOnlyLaserCape()
+    local char = LocalPlayer.Character
+    if not char then return false end
+    for _, tool in char:GetChildren() do if tool:IsA("Tool") then tool.Parent = LocalPlayer.Backpack end end
+    local tool = LocalPlayer.Backpack:FindFirstChild("Laser Cape")
+    if tool then tool.Parent = char return true end
+    return false
+end
+ 
+local function fireLaserCape(part)
+    if not part then return end
+    pcall(function() Event:FireServer(part.Position, part) end)
+end
+ 
+task.spawn(function()
+    while task.wait(delayBetweenShots) do
+        if autoLaserEnabled then
+            local t = getNearestPlayer()
+            if t and t.Character then
+                if equipOnlyLaserCape() then
+                    local hand = t.Character:FindFirstChild("RightHand") or t.Character:FindFirstChild("LeftHand")
+                    if hand then fireLaserCape(hand) end
+                end
+            end
+        end
+    end
+end)
+ 
+btnLaser.MouseButton1Click:Connect(function()
+    autoLaserEnabled = not autoLaserEnabled
+    btnLaser.Text = autoLaserEnabled and "Laser Cape: ON" or "Laser Cape: OFF"
+end)
+ 
+LocalPlayer.CharacterAdded:Connect(function()
+    desyncActive = false
+    normalActive = false
+    autoLaserEnabled = false
+    btnDesync.Text = "Desync V2"
+    btnNormal.Text = "Andar Normal"
+    btnLaser.Text = "Laser Cape: OFF"
+    if spoofConnection then spoofConnection:Disconnect() spoofConnection = nil end
+    if unwalkConn then unwalkConn:Disconnect() end
+end)

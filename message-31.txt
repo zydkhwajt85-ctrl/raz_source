@@ -1,0 +1,269 @@
+local player = game.Players.LocalPlayer
+local playerGui = player:WaitForChild("PlayerGui")
+
+local screenGui = Instance.new("ScreenGui")
+screenGui.Name = "MM2FarmGUI_Redux"
+screenGui.ResetOnSpawn = false
+screenGui.Parent = playerGui
+
+-- ## 1. Main Frame (Dark Theme)
+local mainFrame = Instance.new("Frame")
+mainFrame.Name = "MainFrame"
+mainFrame.Size = UDim2.new(0, 260, 0, 220)
+mainFrame.Position = UDim2.new(0.5, -130, 0.5, -110)
+mainFrame.BackgroundColor3 = Color3.fromRGB(20, 20, 25) -- Deep dark gray
+mainFrame.BorderSizePixel = 0
+mainFrame.Parent = screenGui
+
+local uiCorner = Instance.new("UICorner")
+uiCorner.CornerRadius = UDim.new(0, 8)
+uiCorner.Parent = mainFrame
+
+local uiStroke = Instance.new("UIStroke")
+uiStroke.Color = Color3.fromRGB(0, 200, 255) -- Cyan accent border
+uiStroke.Thickness = 1.5
+uiStroke.Parent = mainFrame
+
+-- ## 2. Top Bar
+local topBar = Instance.new("Frame")
+topBar.Size = UDim2.new(1, 0, 0, 35)
+topBar.BackgroundColor3 = Color3.fromRGB(15, 15, 20) -- Slightly darker top bar
+topBar.BorderSizePixel = 0
+topBar.Parent = mainFrame
+
+local topCorner = Instance.new("UICorner")
+topCorner.CornerRadius = UDim.new(0, 8)
+topCorner.Parent = topBar
+
+-- Fix bottom corners of topbar so it blends with mainframe
+local topBarFix = Instance.new("Frame")
+topBarFix.Size = UDim2.new(1, 0, 0, 8)
+topBarFix.Position = UDim2.new(0, 0, 1, -8)
+topBarFix.BackgroundColor3 = Color3.fromRGB(15, 15, 20)
+topBarFix.BorderSizePixel = 0
+topBarFix.Parent = topBar
+
+-- Umbrella Icon
+local umbrella = Instance.new("ImageLabel")
+umbrella.Size = UDim2.new(0, 22, 0, 22)
+umbrella.Position = UDim2.new(0, 10, 0.5, -11)
+umbrella.BackgroundTransparency = 1
+umbrella.Image = "rbxassetid:6031097223"
+umbrella.ImageColor3 = Color3.fromRGB(0, 200, 255) -- Tinted cyan
+umbrella.Parent = topBar
+
+-- Title
+local title = Instance.new("TextLabel")
+title.Size = UDim2.new(0, 150, 1, 0)
+title.Position = UDim2.new(0, 40, 0, 0)
+title.BackgroundTransparency = 1
+title.Text = "MM2 FARMING"
+title.TextColor3 = Color3.new(1, 1, 1)
+title.TextXAlignment = Enum.TextXAlignment.Left
+title.TextSize = 14
+title.Font = Enum.Font.GothamBlack
+title.Parent = topBar
+
+-- Close Button
+local closeBtn = Instance.new("TextButton")
+closeBtn.Size = UDim2.new(0, 24, 0, 24)
+closeBtn.Position = UDim2.new(1, -30, 0.5, -12)
+closeBtn.BackgroundColor3 = Color3.fromRGB(20, 20, 25)
+closeBtn.Text = "×"
+closeBtn.TextColor3 = Color3.fromRGB(200, 200, 200)
+closeBtn.TextScaled = true
+closeBtn.Font = Enum.Font.GothamBold
+closeBtn.Parent = topBar
+
+local closeCorner = Instance.new("UICorner")
+closeCorner.CornerRadius = UDim.new(0, 6)
+closeCorner.Parent = closeBtn
+
+-- ## 3. Info Section
+local statusLabel = Instance.new("TextLabel")
+statusLabel.Size = UDim2.new(0.9, 0, 0, 20)
+statusLabel.Position = UDim2.new(0.05, 0, 0.25, 0)
+statusLabel.BackgroundTransparency = 1
+statusLabel.Text = "Status: Ready"
+statusLabel.TextColor3 = Color3.fromRGB(180, 180, 180)
+statusLabel.TextSize = 14
+statusLabel.TextXAlignment = Enum.TextXAlignment.Left
+statusLabel.Font = Enum.Font.GothamMedium
+statusLabel.Parent = mainFrame
+
+local speedLabel = Instance.new("TextLabel")
+speedLabel.Size = UDim2.new(0.9, 0, 0, 20)
+speedLabel.Position = UDim2.new(0.05, 0, 0.38, 0)
+speedLabel.BackgroundTransparency = 1
+speedLabel.Text = "Speed: 50"
+speedLabel.TextColor3 = Color3.fromRGB(180, 180, 180)
+speedLabel.TextSize = 14
+speedLabel.TextXAlignment = Enum.TextXAlignment.Left
+speedLabel.Font = Enum.Font.GothamMedium
+speedLabel.Parent = mainFrame
+
+-- ## 4. START / STOP Button
+local startButton = Instance.new("TextButton")
+startButton.Size = UDim2.new(0.9, 0, 0, 45)
+startButton.Position = UDim2.new(0.05, 0, 0.55, 0)
+startButton.BackgroundColor3 = Color3.fromRGB(0, 150, 255)
+startButton.Text = "START FARMING"
+startButton.TextColor3 = Color3.new(1, 1, 1)
+startButton.TextSize = 16
+startButton.Font = Enum.Font.GothamBlack
+startButton.Parent = mainFrame
+
+local startCorner = Instance.new("UICorner")
+startCorner.CornerRadius = UDim.new(0, 6)
+startCorner.Parent = startButton
+
+-- ## 5. Credit Text
+local creditLabel = Instance.new("TextLabel")
+creditLabel.Size = UDim2.new(1, 0, 0, 15)
+creditLabel.Position = UDim2.new(0, 0, 1, -25)
+creditLabel.BackgroundTransparency = 1
+creditLabel.Text = "Vinxksk on youtube"
+creditLabel.TextColor3 = Color3.fromRGB(100, 100, 100)
+creditLabel.TextSize = 11
+creditLabel.Font = Enum.Font.Gotham
+creditLabel.Parent = mainFrame
+
+-- ==================== DRAGGABLE SCRIPT ====================
+local dragging
+mainFrame.InputBegan:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+        dragging = true
+        local dragStart = input.Position
+        local startPos = mainFrame.Position
+
+        local connection
+        connection = game:GetService("UserInputService").InputChanged:Connect(function(input2)
+            if dragging and (input2.UserInputType == Enum.UserInputType.MouseMovement or input2.UserInputType == Enum.UserInputType.Touch) then
+                local delta = input2.Position - dragStart
+                mainFrame.Position = UDim2.new(
+                    startPos.X.Scale,
+                    startPos.X.Offset + delta.X,
+                    startPos.Y.Scale,
+                    startPos.Y.Offset + delta.Y
+                )
+            end
+        end)
+
+        input.Changed:Connect(function()
+            if input.UserInputState == Enum.UserInputState.End then
+                dragging = false
+                connection:Disconnect()
+            end
+        end)
+    end
+end)
+
+-- ==================== FARMING SCRIPT ====================
+local isFarming = false
+local farmingConnection = nil
+local TweenService = game:GetService("TweenService")
+local LP = game.Players.LocalPlayer
+local Char = LP.Character or LP.CharacterAdded:Wait()
+local HRP = Char:WaitForChild("HumanoidRootPart")
+local Humanoid = Char:WaitForChild("Humanoid")
+
+local function GetMap()
+    while true do
+        for _, obj in ipairs(workspace:GetChildren()) do
+            if obj:GetAttribute("MapID") and obj:FindFirstChild("CoinContainer") then
+                return obj
+            end
+        end
+        task.wait()
+    end
+end
+
+local function getNearest()
+    local map = GetMap()
+    local closest, dist = nil, math.huge
+    for _, coin in ipairs(map.CoinContainer:GetChildren()) do
+        local v = coin:FindFirstChild("CoinVisual")
+        if v and not v:GetAttribute("Collected") then
+            local d = (HRP.Position - coin.Position).Magnitude
+            if d < dist then
+                closest = coin
+                dist = d
+            end
+        end
+    end
+    return closest
+end
+
+local function tp(hp)
+    Humanoid:ChangeState(11)
+    local d = (HRP.Position - hp.Position).Magnitude
+    local t = TweenService:Create(HRP, TweenInfo.new(d / 25, Enum.EasingStyle.Linear), {CFrame = hp.CFrame})
+    t:Play()
+    t.Completed:Wait()
+end
+
+local function startFarming()
+    if farmingConnection then return end
+
+    farmingConnection = task.spawn(function()
+        while isFarming do
+            local target = getNearest()
+            if target and LP:GetAttribute("Alive") then
+                tp(target)
+                local v = target:FindFirstChild("CoinVisual")
+                while v and not v:GetAttribute("Collected") and v.Parent and isFarming do
+                    if not LP:GetAttribute("Alive") then break end
+                    local n = getNearest()
+                    if n and n ~= target then break end
+                    task.wait()
+                end
+            else
+                task.wait(0.5)
+            end
+        end
+    end)
+end
+
+local function stopFarming()
+    isFarming = false
+    if farmingConnection then
+        farmingConnection = nil
+    end
+end
+
+-- ==================== BUTTON LOGIC ====================
+local function toggleFarming()
+    isFarming = not isFarming
+
+    if isFarming then
+        startButton.Text = "STOP FARMING"
+        startButton.BackgroundColor3 = Color3.fromRGB(220, 50, 70) -- Red when active
+        statusLabel.Text = "Status: Farming..."
+        statusLabel.TextColor3 = Color3.fromRGB(0, 200, 255)
+        startFarming()
+    else
+        startButton.Text = "START FARMING"
+        startButton.BackgroundColor3 = Color3.fromRGB(0, 150, 255) -- Back to Blue
+        statusLabel.Text = "Status: Stopped"
+        statusLabel.TextColor3 = Color3.fromRGB(180, 180, 180)
+        stopFarming()
+    end
+end
+
+-- Close Hover Effect
+closeBtn.MouseEnter:Connect(function()
+    closeBtn.BackgroundColor3 = Color3.fromRGB(220, 50, 70)
+    closeBtn.TextColor3 = Color3.new(1, 1, 1)
+end)
+closeBtn.MouseLeave:Connect(function()
+    closeBtn.BackgroundColor3 = Color3.fromRGB(20, 20, 25)
+    closeBtn.TextColor3 = Color3.fromRGB(200, 200, 200)
+end)
+
+-- Button Connections
+closeBtn.MouseButton1Click:Connect(function()
+    stopFarming()
+    screenGui:Destroy()
+end)
+
+startButton.MouseButton1Click:Connect(toggleFarming)

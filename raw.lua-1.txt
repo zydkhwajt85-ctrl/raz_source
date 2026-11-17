@@ -1,0 +1,672 @@
+--==================================================
+-- PLAYER FOLLOW GUI
+-- FOLLOW + AUTO SPIN
+-- OPEN/CLOSE BUTTON
+-- ANIMATED OUTLINE
+-- ANIMATED ON BUTTON
+--==================================================
+
+local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
+
+local LocalPlayer = Players.LocalPlayer
+
+--==================================================
+-- SETTINGS
+--==================================================
+
+local OFFSET = CFrame.new(0, 0, 1.5)
+
+-- Mengikuti sistem spin yang diminta sebelumnya
+local SPIN_SPEED = 10000
+
+--==================================================
+-- SYSTEM
+--==================================================
+
+local FollowEnabled = false
+local SpinEnabled = true
+local TargetPlayer = nil
+
+local FollowSpinConnection
+
+local SpinAngle = 0
+
+--==================================================
+-- COLORS
+--==================================================
+
+-- Outline
+local DarkRed = Color3.fromRGB(90, 0, 0)
+local Pink = Color3.fromRGB(255, 80, 150)
+
+-- Tombol ON
+local DarkGreen = Color3.fromRGB(20, 100, 45)
+local LightGreen = Color3.fromRGB(80, 255, 130)
+
+local ButtonAnimationSpeed = 3
+local OutlineSpeed = 2
+
+--==================================================
+-- GUI
+--==================================================
+
+local ScreenGui = Instance.new("ScreenGui")
+ScreenGui.Name = "PlayerFollowGUI"
+ScreenGui.ResetOnSpawn = false
+ScreenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+ScreenGui.Parent = LocalPlayer:WaitForChild("PlayerGui")
+
+--==================================================
+-- OPEN BUTTON
+--==================================================
+
+local OpenButton = Instance.new("TextButton")
+OpenButton.Name = "OpenButton"
+OpenButton.Size = UDim2.new(0, 45, 0, 45)
+OpenButton.Position = UDim2.new(0, 15, 0.5, -22)
+OpenButton.BackgroundColor3 = Color3.fromRGB(18, 22, 30)
+OpenButton.BackgroundTransparency = 0.05
+OpenButton.Text = "👥"
+OpenButton.TextSize = 22
+OpenButton.TextColor3 = Color3.new(1, 1, 1)
+OpenButton.BorderSizePixel = 0
+OpenButton.Visible = false
+OpenButton.Parent = ScreenGui
+
+local OpenCorner = Instance.new("UICorner")
+OpenCorner.CornerRadius = UDim.new(0, 12)
+OpenCorner.Parent = OpenButton
+
+local OpenStroke = Instance.new("UIStroke")
+OpenStroke.Name = "AnimatedOutline"
+OpenStroke.Thickness = 2
+OpenStroke.Parent = OpenButton
+
+--==================================================
+-- MAIN FRAME
+--==================================================
+
+local MainFrame = Instance.new("Frame")
+MainFrame.Name = "MainFrame"
+MainFrame.Size = UDim2.new(0, 240, 0, 240)
+MainFrame.Position = UDim2.new(0.5, -120, 0.5, -120)
+MainFrame.BackgroundColor3 = Color3.fromRGB(18, 22, 30)
+MainFrame.BorderSizePixel = 0
+MainFrame.Parent = ScreenGui
+
+local MainCorner = Instance.new("UICorner")
+MainCorner.CornerRadius = UDim.new(0, 12)
+MainCorner.Parent = MainFrame
+
+local MainStroke = Instance.new("UIStroke")
+MainStroke.Name = "AnimatedOutline"
+MainStroke.Thickness = 2
+MainStroke.Parent = MainFrame
+
+--==================================================
+-- TITLE
+--==================================================
+
+local Title = Instance.new("TextLabel")
+Title.Size = UDim2.new(1, -110, 0, 35)
+Title.Position = UDim2.new(0, 10, 0, 5)
+Title.BackgroundTransparency = 1
+Title.Text = "👥 Player Follow"
+Title.TextColor3 = Color3.new(1, 1, 1)
+Title.TextSize = 17
+Title.Font = Enum.Font.GothamBold
+Title.TextXAlignment = Enum.TextXAlignment.Left
+Title.Parent = MainFrame
+
+--==================================================
+-- SPIN BUTTON
+--==================================================
+
+local SpinButton = Instance.new("TextButton")
+SpinButton.Name = "SpinButton"
+SpinButton.Size = UDim2.new(0, 62, 0, 28)
+SpinButton.Position = UDim2.new(1, -96, 0, 8)
+SpinButton.BackgroundColor3 = DarkGreen
+SpinButton.Text = "SPIN : ON"
+SpinButton.TextColor3 = Color3.new(1, 1, 1)
+SpinButton.TextSize = 11
+SpinButton.Font = Enum.Font.GothamBold
+SpinButton.BorderSizePixel = 0
+SpinButton.Parent = MainFrame
+
+local SpinCorner = Instance.new("UICorner")
+SpinCorner.CornerRadius = UDim.new(0, 7)
+SpinCorner.Parent = SpinButton
+
+--==================================================
+-- CLOSE BUTTON
+--==================================================
+
+local CloseButton = Instance.new("TextButton")
+CloseButton.Size = UDim2.new(0, 30, 0, 30)
+CloseButton.Position = UDim2.new(1, -35, 0, 5)
+CloseButton.BackgroundTransparency = 1
+CloseButton.Text = "×"
+CloseButton.TextColor3 = Color3.fromRGB(255, 100, 100)
+CloseButton.TextSize = 25
+CloseButton.Font = Enum.Font.GothamBold
+CloseButton.Parent = MainFrame
+
+--==================================================
+-- TARGET LABEL
+--==================================================
+
+local TargetLabel = Instance.new("TextLabel")
+TargetLabel.Size = UDim2.new(1, -20, 0, 25)
+TargetLabel.Position = UDim2.new(0, 10, 0, 40)
+TargetLabel.BackgroundTransparency = 1
+TargetLabel.Text = "Target: None"
+TargetLabel.TextColor3 = Color3.fromRGB(180, 180, 180)
+TargetLabel.TextSize = 13
+TargetLabel.Font = Enum.Font.Gotham
+TargetLabel.TextXAlignment = Enum.TextXAlignment.Left
+TargetLabel.Parent = MainFrame
+
+--==================================================
+-- FOLLOW BUTTON
+--==================================================
+
+local FollowButton = Instance.new("TextButton")
+FollowButton.Name = "FollowButton"
+FollowButton.Size = UDim2.new(1, -20, 0, 32)
+FollowButton.Position = UDim2.new(0, 10, 0, 68)
+FollowButton.BackgroundColor3 = Color3.fromRGB(170, 50, 50)
+FollowButton.Text = "FOLLOW : OFF"
+FollowButton.TextColor3 = Color3.new(1, 1, 1)
+FollowButton.TextSize = 14
+FollowButton.Font = Enum.Font.GothamBold
+FollowButton.BorderSizePixel = 0
+FollowButton.Parent = MainFrame
+
+local FollowCorner = Instance.new("UICorner")
+FollowCorner.CornerRadius = UDim.new(0, 8)
+FollowCorner.Parent = FollowButton
+
+--==================================================
+-- PLAYER LIST
+--==================================================
+
+local PlayerList = Instance.new("ScrollingFrame")
+PlayerList.Name = "PlayerList"
+PlayerList.Size = UDim2.new(1, -20, 0, 125)
+PlayerList.Position = UDim2.new(0, 10, 0, 108)
+PlayerList.BackgroundColor3 = Color3.fromRGB(25, 29, 38)
+PlayerList.BorderSizePixel = 0
+PlayerList.ScrollBarThickness = 4
+PlayerList.CanvasSize = UDim2.new(0, 0, 0, 0)
+PlayerList.Parent = MainFrame
+
+local ListCorner = Instance.new("UICorner")
+ListCorner.CornerRadius = UDim.new(0, 8)
+ListCorner.Parent = PlayerList
+
+local ListLayout = Instance.new("UIListLayout")
+ListLayout.Padding = UDim.new(0, 4)
+ListLayout.SortOrder = Enum.SortOrder.Name
+ListLayout.Parent = PlayerList
+
+--==================================================
+-- DRAG SYSTEM
+--==================================================
+
+local Dragging = false
+local DragStart
+local StartPosition
+
+Title.InputBegan:Connect(function(Input)
+
+    if Input.UserInputType == Enum.UserInputType.MouseButton1
+        or Input.UserInputType == Enum.UserInputType.Touch then
+
+        Dragging = true
+        DragStart = Input.Position
+        StartPosition = MainFrame.Position
+
+        Input.Changed:Connect(function()
+
+            if Input.UserInputState == Enum.UserInputState.End then
+                Dragging = false
+            end
+
+        end)
+    end
+end)
+
+Title.InputChanged:Connect(function(Input)
+
+    if Input.UserInputType == Enum.UserInputType.MouseMovement
+        or Input.UserInputType == Enum.UserInputType.Touch then
+
+        Input.Changed:Connect(function()
+
+            if Dragging then
+
+                local Delta = Input.Position - DragStart
+
+                MainFrame.Position = UDim2.new(
+                    StartPosition.X.Scale,
+                    StartPosition.X.Offset + Delta.X,
+                    StartPosition.Y.Scale,
+                    StartPosition.Y.Offset + Delta.Y
+                )
+
+            end
+
+        end)
+    end
+end)
+
+--==================================================
+-- SELECT PLAYER
+--==================================================
+
+local function SelectPlayer(Player)
+
+    if Player == LocalPlayer then
+        return
+    end
+
+    TargetPlayer = Player
+
+    TargetLabel.Text = "Target: " .. Player.Name
+
+    FollowEnabled = true
+
+    FollowButton.Text = "FOLLOW : ON"
+end
+
+--==================================================
+-- REFRESH PLAYER LIST
+--==================================================
+
+local function RefreshPlayerList()
+
+    for _, Child in ipairs(PlayerList:GetChildren()) do
+
+        if Child:IsA("TextButton") then
+            Child:Destroy()
+        end
+
+    end
+
+    for _, Player in ipairs(Players:GetPlayers()) do
+
+        if Player ~= LocalPlayer then
+
+            local PlayerButton = Instance.new("TextButton")
+
+            PlayerButton.Size = UDim2.new(1, -8, 0, 30)
+            PlayerButton.BackgroundColor3 =
+                Color3.fromRGB(35, 40, 52)
+
+            PlayerButton.Text =
+                Player.DisplayName .. "  @" .. Player.Name
+
+            PlayerButton.TextColor3 =
+                Color3.new(1, 1, 1)
+
+            PlayerButton.TextSize = 12
+            PlayerButton.Font = Enum.Font.Gotham
+            PlayerButton.BorderSizePixel = 0
+            PlayerButton.Parent = PlayerList
+
+            local Corner = Instance.new("UICorner")
+            Corner.CornerRadius = UDim.new(0, 6)
+            Corner.Parent = PlayerButton
+
+            PlayerButton.MouseButton1Click:Connect(function()
+                SelectPlayer(Player)
+            end)
+
+        end
+    end
+
+    task.wait()
+
+    PlayerList.CanvasSize = UDim2.new(
+        0,
+        0,
+        0,
+        ListLayout.AbsoluteContentSize.Y + 5
+    )
+end
+
+--==================================================
+-- FOLLOW ON / OFF
+--==================================================
+
+FollowButton.MouseButton1Click:Connect(function()
+
+    if not TargetPlayer then
+
+        TargetLabel.Text = "Target: Select a player"
+
+        return
+    end
+
+    FollowEnabled = not FollowEnabled
+
+    if FollowEnabled then
+        FollowButton.Text = "FOLLOW : ON"
+    else
+        FollowButton.Text = "FOLLOW : OFF"
+    end
+
+end)
+
+--==================================================
+-- SPIN ON / OFF
+--==================================================
+
+SpinButton.MouseButton1Click:Connect(function()
+
+    SpinEnabled = not SpinEnabled
+
+    if SpinEnabled then
+
+        SpinButton.Text = "SPIN : ON"
+
+    else
+
+        SpinButton.Text = "SPIN : OFF"
+
+    end
+
+end)
+
+--==================================================
+-- OPEN GUI
+--==================================================
+
+OpenButton.MouseButton1Click:Connect(function()
+
+    MainFrame.Visible = true
+    OpenButton.Visible = false
+
+end)
+
+--==================================================
+-- CLOSE GUI
+--==================================================
+
+CloseButton.MouseButton1Click:Connect(function()
+
+    MainFrame.Visible = false
+    OpenButton.Visible = true
+
+end)
+
+--==================================================
+-- PLAYER JOIN
+--==================================================
+
+Players.PlayerAdded:Connect(function()
+
+    task.wait(0.5)
+
+    RefreshPlayerList()
+
+end)
+
+--==================================================
+-- PLAYER LEAVE
+--==================================================
+
+Players.PlayerRemoving:Connect(function(Player)
+
+    if TargetPlayer == Player then
+
+        TargetPlayer = nil
+        FollowEnabled = false
+
+        TargetLabel.Text = "Target: None"
+        FollowButton.Text = "FOLLOW : OFF"
+
+    end
+
+    RefreshPlayerList()
+
+end)
+
+--==================================================
+-- FOLLOW + SPIN ENGINE
+--==================================================
+
+local function StartFollowSpin(Character)
+
+    if FollowSpinConnection then
+
+        FollowSpinConnection:Disconnect()
+        FollowSpinConnection = nil
+
+    end
+
+    local Root =
+        Character:WaitForChild("HumanoidRootPart")
+
+    SpinAngle = 0
+
+    FollowSpinConnection =
+        RunService.RenderStepped:Connect(function()
+
+            if not Character.Parent then
+                return
+            end
+
+            if not Root.Parent then
+                return
+            end
+
+            --==========================================
+            -- SPIN ANGLE
+            --==========================================
+
+            if SpinEnabled then
+
+                SpinAngle =
+                    SpinAngle + math.rad(SPIN_SPEED)
+
+                if SpinAngle > math.pi * 2 then
+
+                    SpinAngle =
+                        SpinAngle % (math.pi * 2)
+
+                end
+            end
+
+            --==========================================
+            -- FOLLOW TARGET
+            --==========================================
+
+            if FollowEnabled and TargetPlayer then
+
+                local TargetCharacter =
+                    TargetPlayer.Character
+
+                if TargetCharacter then
+
+                    local TargetRoot =
+                        TargetCharacter:FindFirstChild(
+                            "HumanoidRootPart"
+                        )
+
+                    if TargetRoot then
+
+                        -- Posisi menempel target
+                        local TargetCFrame =
+                            TargetRoot.CFrame * OFFSET
+
+                        local TargetPosition =
+                            TargetCFrame.Position
+
+                        -- Rotasi target
+                        local TargetRotation =
+                            TargetRoot.CFrame.Rotation
+
+                        -- Posisi + rotasi target
+                        -- + rotasi spin
+                        Root.CFrame =
+                            CFrame.new(TargetPosition)
+                            * TargetRotation
+                            * CFrame.Angles(
+                                0,
+                                SpinAngle,
+                                0
+                            )
+
+                        Root.AssemblyLinearVelocity =
+                            Vector3.zero
+
+                        Root.AssemblyAngularVelocity =
+                            Vector3.zero
+
+                        return
+
+                    end
+                end
+            end
+
+            --==========================================
+            -- SPIN TANPA FOLLOW
+            --==========================================
+
+            if SpinEnabled then
+
+                local Position = Root.Position
+
+                Root.CFrame =
+                    CFrame.new(Position)
+                    * CFrame.Angles(
+                        0,
+                        SpinAngle,
+                        0
+                    )
+
+            end
+
+        end)
+end
+
+--==================================================
+-- START CHARACTER
+--==================================================
+
+if LocalPlayer.Character then
+
+    StartFollowSpin(
+        LocalPlayer.Character
+    )
+
+end
+
+--==================================================
+-- RESPAWN
+--==================================================
+
+LocalPlayer.CharacterAdded:Connect(function(Character)
+
+    Character:WaitForChild(
+        "HumanoidRootPart"
+    )
+
+    task.wait(0.2)
+
+    StartFollowSpin(Character)
+
+end)
+
+--==================================================
+-- ANIMATION LOOP
+--
+-- OUTLINE:
+-- DARK RED <-> PINK
+--
+-- ON BUTTON:
+-- DARK GREEN <-> LIGHT GREEN
+--==================================================
+
+RunService.RenderStepped:Connect(function()
+
+    --==============================================
+    -- OUTLINE ANIMATION
+    --==============================================
+
+    local OutlineAlpha =
+        (math.sin(
+            os.clock() * OutlineSpeed
+        ) + 1) / 2
+
+    local AnimatedOutline =
+        DarkRed:Lerp(
+            Pink,
+            OutlineAlpha
+        )
+
+    MainStroke.Color =
+        AnimatedOutline
+
+    OpenStroke.Color =
+        AnimatedOutline
+
+    --==============================================
+    -- BUTTON COLOR ANIMATION
+    --==============================================
+
+    local GreenAlpha =
+        (math.sin(
+            os.clock() * ButtonAnimationSpeed
+        ) + 1) / 2
+
+    local AnimatedGreen =
+        DarkGreen:Lerp(
+            LightGreen,
+            GreenAlpha
+        )
+
+    -- FOLLOW
+    if FollowEnabled then
+
+        FollowButton.BackgroundColor3 =
+            AnimatedGreen
+
+    else
+
+        FollowButton.BackgroundColor3 =
+            Color3.fromRGB(
+                170,
+                50,
+                50
+            )
+
+    end
+
+    -- SPIN
+    if SpinEnabled then
+
+        SpinButton.BackgroundColor3 =
+            AnimatedGreen
+
+    else
+
+        SpinButton.BackgroundColor3 =
+            Color3.fromRGB(
+                170,
+                50,
+                50
+            )
+
+    end
+
+end)
+
+--==================================================
+-- INITIALIZE
+--==================================================
+
+RefreshPlayerList()

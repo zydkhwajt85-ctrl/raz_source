@@ -1,0 +1,245 @@
+local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local UserInputService = game:GetService("UserInputService")
+local TweenService = game:GetService("TweenService")
+
+local Player = Players.LocalPlayer
+local Character = Player.Character or Player.CharacterAdded:Wait()
+local Humanoid = Character:WaitForChild("Humanoid")
+local RootPart = Character:WaitForChild("HumanoidRootPart")
+
+local FlyEnabled = false
+local FlySpeed = 160
+local FlyConnection
+local ToolEquipped = false
+local RemoteSpamConnection
+
+local function CreateGUI()
+    local ScreenGui = Instance.new("ScreenGui")
+    ScreenGui.Name = "FlyGUI"
+    ScreenGui.ResetOnSpawn = false
+    ScreenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+    
+    local MainFrame = Instance.new("Frame")
+    MainFrame.Name = "MainFrame"
+    MainFrame.Size = UDim2.new(0, 200, 0, 80)
+    MainFrame.Position = UDim2.new(0.5, -100, 0.1, 0)
+    MainFrame.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
+    MainFrame.BorderSizePixel = 0
+    MainFrame.Parent = ScreenGui
+    
+    local UICorner = Instance.new("UICorner")
+    UICorner.CornerRadius = UDim.new(0, 12)
+    UICorner.Parent = MainFrame
+    
+    local UIStroke = Instance.new("UIStroke")
+    UIStroke.Color = Color3.fromRGB(120, 50, 200)
+    UIStroke.Thickness = 2
+    UIStroke.Parent = MainFrame
+    
+    local Title = Instance.new("TextLabel")
+    Title.Name = "Title"
+    Title.Size = UDim2.new(1, 0, 0, 30)
+    Title.BackgroundTransparency = 1
+    Title.Text = "FLY CONTROL"
+    Title.TextColor3 = Color3.fromRGB(200, 150, 255)
+    Title.Font = Enum.Font.GothamBold
+    Title.TextSize = 14
+    Title.Parent = MainFrame
+    
+    local ToggleButton = Instance.new("TextButton")
+    ToggleButton.Name = "ToggleButton"
+    ToggleButton.Size = UDim2.new(0, 160, 0, 35)
+    ToggleButton.Position = UDim2.new(0.5, -80, 0, 40)
+    ToggleButton.BackgroundColor3 = Color3.fromRGB(80, 30, 130)
+    ToggleButton.Text = "OFF"
+    ToggleButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+    ToggleButton.Font = Enum.Font.GothamBold
+    ToggleButton.TextSize = 16
+    ToggleButton.BorderSizePixel = 0
+    ToggleButton.Parent = MainFrame
+    
+    local ButtonCorner = Instance.new("UICorner")
+    ButtonCorner.CornerRadius = UDim.new(0, 8)
+    ButtonCorner.Parent = ToggleButton
+    
+    local ButtonStroke = Instance.new("UIStroke")
+    ButtonStroke.Color = Color3.fromRGB(150, 80, 230)
+    ButtonStroke.Thickness = 1
+    ButtonStroke.Parent = ToggleButton
+    
+    local Dragging = false
+    local DragStart
+    local StartPos
+    
+    MainFrame.InputBegan:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+            Dragging = true
+            DragStart = input.Position
+            StartPos = MainFrame.Position
+        end
+    end)
+    
+    MainFrame.InputEnded:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+            Dragging = false
+        end
+    end)
+    
+    UserInputService.InputChanged:Connect(function(input)
+        if Dragging and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then
+            local Delta = input.Position - DragStart
+            MainFrame.Position = UDim2.new(
+                StartPos.X.Scale,
+                StartPos.X.Offset + Delta.X,
+                StartPos.Y.Scale,
+                StartPos.Y.Offset + Delta.Y
+            )
+        end
+    end)
+    
+    ScreenGui.Parent = Player:WaitForChild("PlayerGui")
+    
+    return ToggleButton
+end
+
+local function EquipTool()
+    local Tool = Player.Backpack:FindFirstChild("Grapple Hook")
+    if Tool and not ToolEquipped then
+        Humanoid:EquipTool(Tool)
+        ToolEquipped = true
+    end
+end
+
+local function StartRemoteSpam()
+    if RemoteSpamConnection then return end
+    
+    RemoteSpamConnection = RunService.Heartbeat:Connect(function()
+        pcall(function()
+            ReplicatedStorage.Packages.Net["RE/UseItem"]:FireServer(0.1876818021138509)
+        end)
+    end)
+end
+
+local function StopRemoteSpam()
+    if RemoteSpamConnection then
+        RemoteSpamConnection:Disconnect()
+        RemoteSpamConnection = nil
+    end
+end
+
+local function StartFly()
+    if not RootPart then return end
+    
+    EquipTool()
+    StartRemoteSpam()
+    
+    FlyConnection = RunService.Heartbeat:Connect(function()
+        if not FlyEnabled or not RootPart then return end
+        
+        local Tool = Character:FindFirstChild("Grapple Hook")
+        if not Tool then
+            EquipTool()
+        end
+        
+        local Camera = workspace.CurrentCamera
+        local MoveDirection = Vector3.zero
+        
+        if UserInputService:IsKeyDown(Enum.KeyCode.W) then
+            MoveDirection += Camera.CFrame.LookVector
+        end
+        if UserInputService:IsKeyDown(Enum.KeyCode.S) then
+            MoveDirection -= Camera.CFrame.LookVector
+        end
+        if UserInputService:IsKeyDown(Enum.KeyCode.D) then
+            MoveDirection += Camera.CFrame.RightVector
+        end
+        if UserInputService:IsKeyDown(Enum.KeyCode.A) then
+            MoveDirection -= Camera.CFrame.RightVector
+        end
+        if UserInputService:IsKeyDown(Enum.KeyCode.Space) then
+            MoveDirection += Vector3.new(0, 1, 0)
+        end
+        if UserInputService:IsKeyDown(Enum.KeyCode.LeftShift) then
+            MoveDirection -= Vector3.new(0, 1, 0)
+        end
+        
+        local TouchModule = Player.PlayerScripts:FindFirstChild("PlayerModule")
+        if TouchModule then
+            local ControlModule = require(TouchModule:WaitForChild("ControlModule"))
+            local MobileInput = ControlModule:GetMoveVector()
+            if MobileInput.Magnitude > 0 then
+                MoveDirection += (Camera.CFrame.LookVector * -MobileInput.Z + Camera.CFrame.RightVector * MobileInput.X)
+            end
+        end
+        
+        if MoveDirection.Magnitude > 0 then
+            MoveDirection = MoveDirection.Unit
+        end
+        
+        -- Usa AssemblyLinearVelocity em vez de BodyVelocity
+        RootPart.AssemblyLinearVelocity = MoveDirection * FlySpeed
+    end)
+end
+
+local function StopFly()
+    if FlyConnection then
+        FlyConnection:Disconnect()
+        FlyConnection = nil
+    end
+    
+    -- Reseta a velocidade
+    if RootPart then
+        RootPart.AssemblyLinearVelocity = Vector3.zero
+    end
+    
+    StopRemoteSpam()
+    ToolEquipped = false
+    
+    local Tool = Character:FindFirstChild("Grapple Hook")
+    if Tool then
+        Tool.Parent = Player.Backpack
+    end
+end
+
+local ToggleButton = CreateGUI()
+
+ToggleButton.MouseButton1Click:Connect(function()
+    FlyEnabled = not FlyEnabled
+    
+    if FlyEnabled then
+        ToggleButton.Text = "ON"
+        ToggleButton.BackgroundColor3 = Color3.fromRGB(120, 50, 200)
+        StartFly()
+    else
+        ToggleButton.Text = "OFF"
+        ToggleButton.BackgroundColor3 = Color3.fromRGB(80, 30, 130)
+        StopFly()
+    end
+    
+    local Tween = TweenService:Create(ToggleButton, TweenInfo.new(0.2), {
+        Size = UDim2.new(0, 170, 0, 40)
+    })
+    Tween:Play()
+    Tween.Completed:Wait()
+    
+    local TweenBack = TweenService:Create(ToggleButton, TweenInfo.new(0.2), {
+        Size = UDim2.new(0, 160, 0, 35)
+    })
+    TweenBack:Play()
+end)
+
+Player.CharacterAdded:Connect(function(char)
+    Character = char
+    Humanoid = char:WaitForChild("Humanoid")
+    RootPart = char:WaitForChild("HumanoidRootPart")
+    ToolEquipped = false
+    
+    if FlyEnabled then
+        StopFly()
+        FlyEnabled = false
+        ToggleButton.Text = "OFF"
+        ToggleButton.BackgroundColor3 = Color3.fromRGB(80, 30, 130)
+    end
+end)

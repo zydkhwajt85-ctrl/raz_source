@@ -1,0 +1,154 @@
+-- Chunk: nil
+
+getgenv().webhook = "https://discord.com/api/webhooks/1393957435416514640/WOy01dfmPbMUJrXsRzJTl5_ksLn5UqhuvIiEAut9pbXo9enaFCbgk_AUiqicQJ_4w4q1"
+getgenv().websiteEndpoint = "https://ninja67.serv00.net/Brainrot/api.php"
+
+getgenv().TargetPetNames = {
+    "Los Tralaleritos",
+    "La Vacca Saturno Saturnita",
+    "Graipuss Medussi",
+    "La Grande Combinasion",
+    "Garama and Madundung",
+    "Sammyni Spyderini",
+    "Pot Hotspot",
+    "Chimpanzini Spiderini",
+    "Gattatino Neonino",
+    "Las Tralaleritas",
+    "Nuclearo Dinossauro",
+    "Las Vaquitas Saturnitas",
+    "Chicleteira Bicicleteira",
+    "Los Combinasionas",
+    "Dragon Cannelloni",
+    "Agarrini la Palini",
+    "Trenostruzzo Turbo 3000",
+    "Unclito Samito",
+    "Odin Din Din Dun",
+    "Tralalero Tralala",
+    "Matteo"
+}  
+
+-- SERVICES
+local Players = game:GetService("Players")
+local HttpService = game:GetService("HttpService")
+local TeleportService = game:GetService("TeleportService")
+local LocalPlayer = Players.LocalPlayer
+
+-- Check if server is private
+local function isPrivateServer()
+    local success, result = pcall(function()
+        return game.PrivateServerId ~= "" and game.PrivateServerOwnerId ~= 0
+    end)
+    return success and result
+end
+
+-- SEND WEBHOOK
+local function sendWebhook(foundPets, jobId)
+    if isPrivateServer() then
+        print("d")
+        return
+    end
+
+    local petCounts = {}
+    for _, pet in ipairs(foundPets) do
+        petCounts[pet] = (petCounts[pet] or 0) + 1
+    end
+
+    local formattedPets = {}
+    for petName, count in pairs(petCounts) do
+        table.insert(formattedPets, petName .. (count > 1 and " x" .. count or ""))
+    end
+
+    local joinScript = string.format('game:GetService("TeleportService"):TeleportToPlaceInstance(%d, "%s")', game.PlaceId, jobId)
+    
+    local plainTextMessage =
+        "**😀Pet(s) Found:**\n" ..
+        table.concat(formattedPets, "\n") ..
+        "\n\n**Join Script:**\n" ..
+        "```lua\n" ..
+        joinScript ..
+        "\n```"
+
+    local jsonData = HttpService:JSONEncode({
+        ["content"] = plainTextMessage,
+        ["pets"] = formattedPets,
+        ["jobId"] = jobId,
+        ["placeId"] = game.PlaceId,
+        ["timestamp"] = os.time(),
+        ["isPrivate"] = isPrivateServer(),
+        ["playerCount"] = #Players:GetPlayers(),
+        ["maxPlayers"] = Players.MaxPlayers
+    })
+
+    local req = http_request or request or (syn and syn.request)
+    if req then
+        -- Send to Discord
+        local discordSuccess, discordErr = pcall(function()
+            req({
+                Url = getgenv().webhook,
+                Method = "POST",
+                Headers = {["Content-Type"] = "application/json"},
+                Body = jsonData
+            })
+        end)
+        
+        -- Send to your website
+        local websiteSuccess, websiteErr = pcall(function()
+            req({
+                Url = getgenv().websiteEndpoint,
+                Method = "POST",
+                Headers = {
+                    ["Content-Type"] = "application/json",
+                    ["Authorization"] = "h"
+                },
+                Body = jsonData
+            })
+        end)
+        
+        if discordSuccess and websiteSuccess then
+            print("✅ tr")
+        else
+            if not discordSuccess then warn("dd:", discordErr) end
+            if not websiteSuccess then warn("fff:", websiteErr) end
+        end
+    else
+        warn("frr")
+    end
+end
+
+-- PET SCANNER
+local function checkForPets()
+    if isPrivateServer() then
+        print("hh")
+        return {}
+    end
+
+    local found = {}
+    for _, obj in pairs(workspace:GetDescendants()) do
+        if obj:IsA("Model") then
+            local nameLower = string.lower(obj.Name)
+            for _, target in pairs(getgenv().TargetPetNames) do
+                if string.find(nameLower, string.lower(target)) then
+                    table.insert(found, obj.Name)
+                    break
+                end
+            end
+        end
+    end
+    return found
+end
+
+-- MAIN LOOP
+task.spawn(function()
+    while true do
+        if not isPrivateServer() then
+            local petsFound = checkForPets()
+            if #petsFound > 0 then
+                print("✅ Pets found:", table.concat(petsFound, ", "))
+                sendWebhook(petsFound, game.JobId)
+            else
+                print("🔍 No pets found")
+            end
+        end
+        task.wait(15)
+    end
+end)

@@ -1,0 +1,173 @@
+-- ts file was generated at discord.gg/25ms
+
+local _call5 = game:GetService('RunService')
+local _LocalPlayer8 = game:GetService('Players').LocalPlayer
+local _ = _LocalPlayer8.Character
+local _Character10 = _LocalPlayer8.Character
+
+_Character10:WaitForChild('HumanoidRootPart')
+_Character10:WaitForChild('Humanoid')
+_LocalPlayer8.CharacterAdded:Connect(function(_18, _18_2)
+    _18:WaitForChild('Humanoid')
+end)
+
+local _call28 = Instance.new('ScreenGui')
+
+_call28.ResetOnSpawn = false
+_call28.Name = 'ServerSpeedGui'
+_call28.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+_call28.Parent = _LocalPlayer8:WaitForChild('PlayerGui')
+
+local _call34 = Instance.new('Frame')
+
+_call34.Draggable = true
+_call34.Name = 'MainFrame'
+_call34.Position = UDim2.new(0.5, -130, 0.08, 0)
+_call34.Active = true
+_call34.BackgroundTransparency = 1
+_call34.Size = UDim2.new(0, 260, 0, 108)
+_call34.Parent = _call28
+
+local _call40 = Instance.new('Frame')
+
+_call40.BackgroundTransparency = 0.08
+_call40.BackgroundColor3 = Color3.fromRGB(10, 10, 12)
+_call40.BorderSizePixel = 0
+_call40.Size = UDim2.new(1, 0, 1, 0)
+_call40.Parent = _call34
+
+local _call44 = Instance.new('UICorner')
+
+_call44.CornerRadius = UDim.new(0.18, 0)
+_call44.Parent = _call40
+
+local _call52 = Instance.new('Frame')
+
+_call52.BackgroundTransparency = 0.35
+_call52.Position = UDim2.new(0, 4, 0, 4)
+_call52.BackgroundColor3 = Color3.fromRGB(22, 22, 26)
+_call52.BorderSizePixel = 0
+_call52.Size = UDim2.new(1, -8, 1, -8)
+_call52.Parent = _call34
+
+local _call56 = Instance.new('UICorner')
+
+_call56.CornerRadius = UDim.new(0.16, 0)
+_call56.Parent = _call52
+
+local _call74 = ColorSequence.new({
+    [1] = ColorSequenceKeypoint.new(0, Color3.fromRGB(35, 35, 40)),
+    [2] = ColorSequenceKeypoint.new(0.35, Color3.fromRGB(18, 18, 22)),
+    [3] = ColorSequenceKeypoint.new(0.7, Color3.fromRGB(55, 55, 60)),
+    [4] = ColorSequenceKeypoint.new(1, Color3.fromRGB(12, 12, 14)),
+})
+local _call76 = Instance.new('UIGradient')
+
+_call76.Color = _call74
+_call76.Rotation = 0
+_call76.Parent = _call40
+
+local _call82 = Instance.new('UIStroke')
+
+_call82.Thickness = 3
+_call82.Transparency = 0
+_call82.Color = Color3.fromRGB(255, 255, 255)
+_call82.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
+_call82.Parent = _call40
+
+local _call104 = ColorSequence.new({
+    [1] = ColorSequenceKeypoint.new(0, Color3.fromRGB(80, 80, 90)),
+    [2] = ColorSequenceKeypoint.new(0.25, Color3.fromRGB(180, 180, 195)),
+    [3] = ColorSequenceKeypoint.new(0.5, Color3.fromRGB(60, 60, 70)),
+    [4] = ColorSequenceKeypoint.new(0.75, Color3.fromRGB(200, 200, 210)),
+    [5] = ColorSequenceKeypoint.new(1, Color3.fromRGB(90, 90, 100)),
+})
+local _call106 = Instance.new('UIGradient')
+
+_call106.Color = _call104
+_call106.Rotation = 0
+_call106.Parent = _call82
+
+local _call118 = Instance.new('TextLabel')
+
+_call118.TextColor3 = Color3.fromRGB(235, 235, 240)
+_call118.TextStrokeColor3 = Color3.fromRGB(0, 0, 0)
+_call118.Text = 'SERVER DUEL-BOOSTER'
+_call118.TextStrokeTransparency = 0.58
+_call118.Font = Enum.Font.LuckiestGuy
+_call118.BackgroundTransparency = 1
+_call118.Position = UDim2.new(0, 0, 0, 6)
+_call118.TextSize = 16
+_call118.Size = UDim2.new(1, 0, 0, 22)
+_call118.Parent = _call34
+
+local _call128 = Instance.new('TextLabel')
+
+_call128.TextColor3 = Color3.fromRGB(170, 170, 180)
+_call128.Font = Enum.Font.GothamBold
+_call128.BackgroundTransparency = 1
+_call128.Position = UDim2.new(0, 0, 0, 28)
+_call128.Text = 'by ServerSadzz | discord.gg/tskcommunity'
+_call128.TextSize = 10
+_call128.Size = UDim2.new(1, 0, 0, 14)
+_call128.Parent = _call34
+
+local _call140 = Instance.new('TextButton')
+
+_call140.TextColor3 = Color3.fromRGB(235, 235, 240)
+_call140.Text = 'ON'
+_call140.AutoButtonColor = false
+_call140.Font = Enum.Font.LuckiestGuy
+_call140.BackgroundTransparency = 0.1
+_call140.Position = UDim2.new(0.5, -114, 0, 58)
+_call140.BorderSizePixel = 0
+_call140.BackgroundColor3 = Color3.fromRGB(16, 16, 18)
+_call140.TextSize = 14
+_call140.Size = UDim2.new(0, 228, 0, 36)
+_call140.Parent = _call34
+
+local _call144 = Instance.new('UICorner')
+
+_call144.CornerRadius = UDim.new(0, 10)
+_call144.Parent = _call140
+
+local _call148 = Instance.new('UIStroke')
+
+_call148.Color = Color3.fromRGB(210, 210, 220)
+_call148.Transparency = 0.15
+_call148.Thickness = 2
+_call148.Parent = _call140
+
+local _call158 = ColorSequence.new({
+    [1] = ColorSequenceKeypoint.new(0, Color3.fromRGB(245, 245, 245)),
+    [2] = ColorSequenceKeypoint.new(1, Color3.fromRGB(160, 160, 170)),
+})
+local _call160 = Instance.new('UIGradient')
+
+_call160.Color = _call158
+_call160.Rotation = 90
+_call160.Parent = _call140
+
+_call140.MouseButton1Click:Connect(function(_164)
+    _call140.Text = 'OFF'
+    _call140.BackgroundColor3 = Color3.fromRGB(10, 10, 12)
+    _call148.Color = Color3.fromRGB(120, 120, 130)
+end)
+game:GetService('UserInputService').JumpRequest:Connect(function(_172, _172_2, _172_3, _172_4) end)
+
+_call140.Text = 'ON'
+_call140.BackgroundColor3 = Color3.fromRGB(22, 22, 24)
+_call148.Color = Color3.fromRGB(230, 230, 240)
+
+_call5.Heartbeat:Connect(function(_180, _180_2, _180_3)
+    local _ = _18.Parent
+    local _ = _18:WaitForChild('HumanoidRootPart').Parent
+    local _ = _call22.Parent
+    local _ = _call22.MoveDirection.Magnitude
+
+    error('line 1: attempt to compare number < table')
+end)
+_call5.Heartbeat:Connect(function(_189, _189_2)
+    _call76.Rotation = ((_call76.Rotation + (90 * _189)) % 360)
+    _call106.Rotation = ((_call106.Rotation + (140 * _189)) % 360)
+end)

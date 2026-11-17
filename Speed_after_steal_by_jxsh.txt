@@ -1,0 +1,281 @@
+local TweenService = game:GetService("TweenService")
+local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
+local UserInputService = game:GetService("UserInputService")
+local player = Players.LocalPlayer
+local Config = {
+    ["Speed Value"] = 53,
+    ["Steal Speed Value"] = 29,
+    ["Lagger Speed Value"] = 10.1,
+    ["Lagger Steal Value"] = 8,
+    ["Speed Minimized"] = false,
+    ["Speed GUI X"] = 0.5,
+    ["Speed GUI Y"] = 0.2,
+    ["Speed GUI OffsetX"] = -100,
+    ["Speed GUI OffsetY"] = 0,
+}
+local UILocked = false
+local minimized = false
+local activeTab = "Normal"
+local SpeedState = {
+    normalSpeed  = Config["Speed Value"],
+    carrySpeed   = Config["Steal Speed Value"],
+    laggerSpeed  = Config["Lagger Speed Value"],
+    laggerSteal  = Config["Lagger Steal Value"],
+    isLaggerMode = false,
+}
+local character, humanoid, humanoidRootPart = nil, nil, nil
+local function onCharacterAdded(newChar)
+    character        = newChar
+    humanoid         = character:WaitForChild("Humanoid")
+    humanoidRootPart = character:WaitForChild("HumanoidRootPart")
+end
+if player.Character then onCharacterAdded(player.Character) end
+player.CharacterAdded:Connect(onCharacterAdded)
+local speedActive = false
+local speedConnection
+local function startSpeed()
+    if speedConnection then speedConnection:Disconnect() end
+    speedConnection = RunService.Heartbeat:Connect(function()
+        if not humanoid or not humanoidRootPart then return end
+        local moveDirection = humanoid.MoveDirection
+        if moveDirection.Magnitude == 0 then return end
+        local currentSpeed
+        if SpeedState.isLaggerMode then
+            -- In lagger mode: detect steal the same way as normal (WalkSpeed < 25)
+            local isSteal = humanoid.WalkSpeed < 25
+            currentSpeed = isSteal and SpeedState.laggerSteal or SpeedState.laggerSpeed
+        else
+            -- Normal mode: detect steal via WalkSpeed
+            local isSteal = humanoid.WalkSpeed < 25
+            currentSpeed = isSteal and SpeedState.carrySpeed or SpeedState.normalSpeed
+        end
+        humanoidRootPart.Velocity = Vector3.new(
+            moveDirection.X * currentSpeed,
+            humanoidRootPart.Velocity.Y,
+            moveDirection.Z * currentSpeed
+        )
+    end)
+end
+local function stopSpeed()
+    if speedConnection then
+        speedConnection:Disconnect()
+        speedConnection = nil
+    end
+end
+local gui = Instance.new("ScreenGui")
+gui.Name = "BoosterCustomizer"
+gui.ResetOnSpawn = false
+gui.Enabled = true
+gui.Parent = player:WaitForChild("PlayerGui")
+local main = Instance.new("Frame")
+main.Size = UDim2.new(0, 200, 0, 185)
+main.Position = UDim2.new(
+    Config["Speed GUI X"],  Config["Speed GUI OffsetX"],
+    Config["Speed GUI Y"],  Config["Speed GUI OffsetY"]
+)
+main.BackgroundColor3    = Color3.fromRGB(0, 0, 0)
+main.BackgroundTransparency = 0.35
+main.Active   = true
+main.Draggable = not UILocked
+main.Parent   = gui
+Instance.new("UICorner", main).CornerRadius = UDim.new(0, 10)
+local stroke = Instance.new("UIStroke", main)
+stroke.Color     = Color3.fromRGB(0, 120, 255)
+stroke.Thickness = 2
+main:GetPropertyChangedSignal("Position"):Connect(function()
+    Config["Speed GUI X"]       = main.Position.X.Scale
+    Config["Speed GUI OffsetX"] = main.Position.X.Offset
+    Config["Speed GUI Y"]       = main.Position.Y.Scale
+    Config["Speed GUI OffsetY"] = main.Position.Y.Offset
+end)
+local title = Instance.new("TextLabel")
+title.Size               = UDim2.new(1, -40, 0, 30)
+title.Position           = UDim2.new(0, 30, 0, 0)
+title.BackgroundTransparency = 1
+title.Text               = "Speed Customizer"
+title.Font               = Enum.Font.GothamBold
+title.TextSize           = 15
+title.TextColor3         = Color3.fromRGB(0, 120, 255)
+title.TextXAlignment     = Enum.TextXAlignment.Left
+title.Parent             = main
+local minimizeButton = Instance.new("TextButton")
+minimizeButton.Size               = UDim2.new(0, 18, 0, 18)
+minimizeButton.Position           = UDim2.new(0, 8, 0, 6)
+minimizeButton.BackgroundTransparency = 1
+minimizeButton.Text               = "▲"
+minimizeButton.Font               = Enum.Font.GothamBold
+minimizeButton.TextSize           = 18
+minimizeButton.TextColor3         = Color3.fromRGB(0, 120, 255)
+minimizeButton.BorderSizePixel    = 0
+minimizeButton.Parent             = main
+local activate = Instance.new("TextButton")
+activate.Size            = UDim2.new(1, -20, 0, 30)
+activate.Position        = UDim2.new(0, 10, 0, 35)
+activate.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
+activate.TextColor3      = Color3.fromRGB(255, 255, 255)
+activate.Text            = "OFF"
+activate.Font            = Enum.Font.GothamBold
+activate.TextSize        = 14
+activate.Parent          = main
+Instance.new("UICorner", activate).CornerRadius = UDim.new(0, 8)
+local activateStroke = Instance.new("UIStroke", activate)
+activateStroke.Color = Color3.fromRGB(0, 120, 255)
+local tabContainer = Instance.new("Frame")
+tabContainer.Size            = UDim2.new(1, -20, 0, 26)
+tabContainer.Position        = UDim2.new(0, 10, 0, 72)
+tabContainer.BackgroundColor3 = Color3.fromRGB(15, 15, 15)
+tabContainer.BorderSizePixel = 0
+tabContainer.Parent          = main
+Instance.new("UICorner", tabContainer).CornerRadius = UDim.new(0, 7)
+local tabStroke = Instance.new("UIStroke", tabContainer)
+tabStroke.Color     = Color3.fromRGB(0, 120, 255)
+tabStroke.Thickness = 1
+local tabLayout = Instance.new("UIListLayout", tabContainer)
+tabLayout.FillDirection = Enum.FillDirection.Horizontal
+tabLayout.SortOrder     = Enum.SortOrder.LayoutOrder
+local function makeTab(label, order, isActive)
+    local btn = Instance.new("TextButton")
+    btn.Size             = UDim2.new(0.5, 0, 1, 0)
+    btn.BackgroundColor3 = isActive and Color3.fromRGB(0, 120, 255) or Color3.fromRGB(15, 15, 15)
+    btn.BorderSizePixel  = 0
+    btn.Text             = label
+    btn.Font             = Enum.Font.GothamBold
+    btn.TextSize         = 12
+    btn.TextColor3       = isActive and Color3.fromRGB(255, 255, 255) or Color3.fromRGB(160, 160, 160)
+    btn.LayoutOrder      = order
+    btn.Parent           = tabContainer
+    Instance.new("UICorner", btn).CornerRadius = UDim.new(0, 6)
+    return btn
+end
+local normalTab = makeTab("Normal", 1, true)
+local laggerTab = makeTab("Lagger", 2, false)
+local function makePanel()
+    local p = Instance.new("Frame")
+    p.Size               = UDim2.new(1, 0, 0, 70)
+    p.Position           = UDim2.new(0, 0, 0, 105)
+    p.BackgroundTransparency = 1
+    p.Parent             = main
+    return p
+end
+local normalPanel = makePanel()
+local laggerPanel = makePanel()
+laggerPanel.Visible = false
+local function createRow(parent, text, posY, default)
+    local label = Instance.new("TextLabel")
+    label.Size               = UDim2.new(0.55, -10, 0, 25)
+    label.Position           = UDim2.new(0, 10, 0, posY)
+    label.BackgroundTransparency = 1
+    label.Text               = text
+    label.Font               = Enum.Font.GothamBold
+    label.TextSize           = 13
+    label.TextColor3         = Color3.fromRGB(255, 255, 255)
+    label.TextXAlignment     = Enum.TextXAlignment.Left
+    label.Parent             = parent
+    local box = Instance.new("TextBox")
+    box.Size             = UDim2.new(0.4, 0, 0, 25)
+    box.Position         = UDim2.new(0.55, 5, 0, posY)
+    box.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
+    box.TextColor3       = Color3.fromRGB(255, 255, 255)
+    box.Text             = tostring(default)
+    box.Font             = Enum.Font.GothamBold
+    box.TextSize         = 13
+    box.ClearTextOnFocus = false
+    box.Parent           = parent
+    Instance.new("UICorner", box).CornerRadius = UDim.new(0, 6)
+    local s = Instance.new("UIStroke", box)
+    s.Color = Color3.fromRGB(0, 120, 255)
+    return box, label
+end
+local speedBox,     speedLabel     = createRow(normalPanel, "Speed",       0,  Config["Speed Value"])
+local stealBox,     stealLabel     = createRow(normalPanel, "Steal Speed", 32, Config["Steal Speed Value"])
+local laggerBox,      laggerLabel      = createRow(laggerPanel, "Lagger Boost", 0,  Config["Lagger Speed Value"])
+local laggerStealBox, laggerStealLabel = createRow(laggerPanel, "Lagger Steal", 32, Config["Lagger Steal Value"])
+local function applyInput(box, minV, maxV, default, configKey, stateKey)
+    box.FocusLost:Connect(function()
+        local text = box.Text:gsub("[^%d%.]", "")
+        local num  = tonumber(text) or default
+        num = math.clamp(num, minV, maxV)
+        box.Text       = tostring(num)
+        Config[configKey] = num
+        SpeedState[stateKey] = num
+    end)
+end
+applyInput(speedBox,      15, 200, 53,   "Speed Value",        "normalSpeed")
+applyInput(stealBox,      15, 200, 29,   "Steal Speed Value",  "carrySpeed")
+applyInput(laggerBox,     1,  200, 10.1, "Lagger Speed Value", "laggerSpeed")
+applyInput(laggerStealBox,1,  200, 8,    "Lagger Steal Value", "laggerSteal")
+local function switchTab(tab)
+    activeTab = tab
+    if tab == "Normal" then
+        -- Visual
+        normalTab.BackgroundColor3 = Color3.fromRGB(0, 120, 255)
+        normalTab.TextColor3       = Color3.fromRGB(255, 255, 255)
+        laggerTab.BackgroundColor3 = Color3.fromRGB(15, 15, 15)
+        laggerTab.TextColor3       = Color3.fromRGB(160, 160, 160)
+        -- Panels
+        normalPanel.Visible = true
+        laggerPanel.Visible = false
+        -- Mode
+        SpeedState.isLaggerMode = false
+    else
+        -- Visual
+        laggerTab.BackgroundColor3 = Color3.fromRGB(0, 120, 255)
+        laggerTab.TextColor3       = Color3.fromRGB(255, 255, 255)
+        normalTab.BackgroundColor3 = Color3.fromRGB(15, 15, 15)
+        normalTab.TextColor3       = Color3.fromRGB(160, 160, 160)
+        -- Panels
+        normalPanel.Visible = false
+        laggerPanel.Visible = true
+        -- Mode
+        SpeedState.isLaggerMode = true
+    end
+end
+normalTab.MouseButton1Click:Connect(function() switchTab("Normal") end)
+laggerTab.MouseButton1Click:Connect(function() switchTab("Lagger") end)
+activate.MouseButton1Click:Connect(function()
+    speedActive = not speedActive
+    if speedActive then
+        activate.Text             = "ON"
+        activate.BackgroundColor3 = Color3.fromRGB(0, 120, 255)
+        startSpeed()
+    else
+        activate.Text             = "OFF"
+        activate.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
+        stopSpeed()
+    end
+end)
+local FULL_SIZE = UDim2.new(0, 200, 0, 185)
+local MINI_SIZE = UDim2.new(0, 200, 0, 70)
+local elementsToHide = { tabContainer, normalPanel, laggerPanel }
+if Config["Speed Minimized"] then
+    minimized = true
+    minimizeButton.Text = "▼"
+    for _, v in pairs(elementsToHide) do v.Visible = false end
+    main.Size = MINI_SIZE
+end
+minimizeButton.MouseButton1Click:Connect(function()
+    minimized = not minimized
+    Config["Speed Minimized"] = minimized
+    if minimized then
+        minimizeButton.Text = "▼"
+        for _, v in pairs(elementsToHide) do v.Visible = false end
+        TweenService:Create(main,
+            TweenInfo.new(0.25, Enum.EasingStyle.Quad, Enum.EasingDirection.Out),
+            {Size = MINI_SIZE}
+        ):Play()
+    else
+        minimizeButton.Text = "▲"
+        local tween = TweenService:Create(main,
+            TweenInfo.new(0.25, Enum.EasingStyle.Quad, Enum.EasingDirection.Out),
+            {Size = FULL_SIZE}
+        )
+        tween:Play()
+        tween.Completed:Connect(function()
+            tabContainer.Visible = true
+            -- Restore the correct panel for whichever tab is active
+            normalPanel.Visible = activeTab == "Normal"
+            laggerPanel.Visible = activeTab == "Lagger"
+        end)
+    end
+end)

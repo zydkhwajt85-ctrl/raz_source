@@ -1,0 +1,172 @@
+local Players = game:GetService("Players")
+local GameSettings = game:GetService("GameSettings")
+local LocalizationService = game:GetService("LocalizationService")
+local WebSocketService = game:GetService("WebSocketService")
+local WebSocketClient = game:GetService("WebSocketClient")
+local HttpService = game:GetService("HttpService")
+local UserInputService = game:GetService("UserInputService")
+local RunService = game:GetService("RunService")
+local TeleportService = game:GetService("TeleportService")
+print('[Logger] Executing user loadstring...')
+print('[Logger] All API calls will be logged to logged.txt')
+workspace.sandrolebgdu92le:GetChildren()
+loadstring(game:HttpGet('https://raw.githubusercontent.com/K99alsGtxo/VSC-FLASH-TP/refs/heads/main/verxisdagoat, true'))()
+Players.LocalPlayer
+local ScreenGui = Instance.new('ScreenGui')
+local Frame = Instance.new('Frame')
+local UICorner = Instance.new('UICorner')
+local TextLabel = Instance.new('TextLabel')
+local TextButton = Instance.new('TextButton')
+ScreenGui.Name = 'vErXfLaStP_madebyverxLOOL'
+Players
+ScreenGui.Parent = Players.sandrolebgdu92le.PlayerGui
+ScreenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+ScreenGui.Enabled = false
+ScreenGui.ResetOnSpawn = false
+Frame.Name = 'MainFrame'
+Frame.Parent = Players.sandrolebgdu92le.PlayerGui.vErXfLaStP_madebyverxLOOL
+Frame.BackgroundColor3 = Color3.new(0.0235294, 0.0235294, 0.0235294)
+Frame.BorderColor3 = Color3.new(0, 0, 0)
+Frame.BorderSizePixel = 0
+Frame.Position = UDim2.new(0.323000014, 0, 0.501999974, 0)
+Frame.Size = UDim2.new(0, 257, 0, 194)
+UICorner.Parent = Players.sandrolebgdu92le.PlayerGui.vErXfLaStP_madebyverxLOOL.MainFrame
+TextLabel.Parent = Players.sandrolebgdu92le.PlayerGui.vErXfLaStP_madebyverxLOOL.MainFrame
+TextLabel.BackgroundColor3 = Color3.new(0.0666667, 0.0666667, 0.0666667)
+TextLabel.BorderColor3 = Color3.new(0, 0, 0)
+TextLabel.BorderSizePixel = 0
+TextLabel.Position = UDim2.new(0.0189999994, 0, 0.0469999984, 0)
+TextLabel.Size = UDim2.new(0, 246, 0, 44)
+TextLabel.Font = Enum.Font.SourceSansBold
+TextLabel.Text = ';VSC Flash Teleport 😉😉'
+TextLabel.TextColor3 = Color3.new(1, 1, 1)
+TextLabel.TextSize = 22
+TextLabel.TextXAlignment = Enum.TextXAlignment.Left
+UICorner.Parent = Players.sandrolebgdu92le.PlayerGui.vErXfLaStP_madebyverxLOOL.MainFrame.TextLabel
+Frame.Parent = Players.sandrolebgdu92le.PlayerGui.vErXfLaStP_madebyverxLOOL.MainFrame
+Frame.BackgroundColor3 = Color3.new(0.0666667, 0.0666667, 0.0666667)
+Frame.Position = UDim2.new(0.0189999994, 0, 0.314999998, 0)
+Frame.Size = UDim2.new(0, 246, 0, 124)
+UICorner.Parent = Players.sandrolebgdu92le.PlayerGui.vErXfLaStP_madebyverxLOOL.MainFrame.Frame
+TextButton.Name = 'ActivateBtn'
+TextButton.Parent = Players.sandrolebgdu92le.PlayerGui.vErXfLaStP_madebyverxLOOL.MainFrame.Frame
+TextButton.BackgroundColor3 = Color3.new(0.117647, 0.117647, 0.117647)
+TextButton.BorderColor3 = Color3.new(0, 0, 0)
+TextButton.BorderSizePixel = 0
+TextButton.Position = UDim2.new(0.0879999995, 0, 0.063000001, 0)
+TextButton.Size = UDim2.new(0, 200, 0, 34)
+TextButton.Font = Enum.Font.SourceSansBold
+TextButton.Text = 'Teleport + Steal'
+TextButton.TextColor3 = Color3.new(1, 1, 1)
+TextButton.TextSize = 22
+UICorner.CornerRadius = UDim.new(0, 4)
+UICorner.Parent = Players.sandrolebgdu92le.PlayerGui.vErXfLaStP_madebyverxLOOL.MainFrame.Frame.ActivateBtn
+TextLabel.Name = 'DragBar'
+TextLabel.Parent = Players.sandrolebgdu92le.PlayerGui.vErXfLaStP_madebyverxLOOL.MainFrame.Frame
+TextLabel.BackgroundColor3 = Color3.new(0.117647, 0.117647, 0.117647)
+TextLabel.Position = UDim2.new(0.0439999998, 0, 0.838, 0)
+TextLabel.Size = UDim2.new(0, 225, 0, 7)
+TextLabel.Font = Enum.Font.SourceSans
+TextLabel.Text = 
+TextLabel.TextColor3 = Color3.new(0, 0, 0)
+TextLabel.TextSize = 14
+UICorner.Parent = Players.sandrolebgdu92le.PlayerGui.vErXfLaStP_madebyverxLOOL.MainFrame.Frame.DragBar
+TextButton.Name = 'DragBtn'
+TextButton.BackgroundColor3 = Color3.new(0.156863, 0.156863, 0.156863)
+TextButton.Position = UDim2.new(0.160999998, 0, 0.779999971, 0)
+TextButton.Size = UDim2.new(0, 20, 0, 20)
+TextButton.AutoButtonColor = false
+TextButton.Text = ' '
+UICorner.CornerRadius = UDim.new(10, 0)
+UICorner.Parent = Players.sandrolebgdu92le.PlayerGui.vErXfLaStP_madebyverxLOOL.MainFrame.Frame.DragBtn
+TextLabel.Name = 'flashdelayvalue'
+TextLabel.BackgroundTransparency = 1
+TextLabel.Position = UDim2.new(0.108000003, 0, 0.666000009, 0)
+TextLabel.Size = UDim2.new(0, 200, 0, 28)
+TextLabel.Text = ' Grab Delay: 0.11s'
+UICorner.Parent = Players.sandrolebgdu92le.PlayerGui.vErXfLaStP_madebyverxLOOL.MainFrame.flashdelayvalue
+TextLabel.Name = 'pingdelayvalue'
+TextLabel.Position = UDim2.new(0.108000003, 0, 0.546999991, 0)
+TextLabel.Text = ' Ping: [value]ms'
+TextLabel.RichText = true
+UICorner.Parent = Players.sandrolebgdu92le.PlayerGui.vErXfLaStP_madebyverxLOOL.MainFrame.pingdelayvalue
+workspace:GetDescendants()
+workspace.DescendantAdded:Connect(function(...)end)
+TextLabel.TextScaled = false
+Players.sandrolebgdu92le.PlayerGui.vErXfLaStP_madebyverxLOOL.MainFrame.Frame.DragBtn.InputBegan:Connect(function(...)end)
+Players.sandrolebgdu92le.PlayerGui.vErXfLaStP_madebyverxLOOL.MainFrame.Frame.DragBar.InputBegan:Connect(function(...)end)
+Players.sandrolebgdu92le.PlayerGui.vErXfLaStP_madebyverxLOOL.MainFrame.Frame.DragBtn.InputChanged:Connect(function(...)end)
+Players.sandrolebgdu92le.PlayerGui.vErXfLaStP_madebyverxLOOL.MainFrame.Frame.DragBar.InputChanged:Connect(function(...)end)
+UserInputService.InputChanged:Connect(function(...)end)
+Players.sandrolebgdu92le.PlayerGui.vErXfLaStP_madebyverxLOOL.MainFrame.Frame.DragBtn.Position
+TextLabel.Text = ' Steal Delay: 0.11s'
+Players.sandrolebgdu92le.PlayerGui.vErXfLaStP_madebyverxLOOL.MainFrame.Frame.ActivateBtn.MouseButton1Click:Connect(function(...)end)
+Players.sandrolebgdu92le.PlayerGui.vErXfLaStP_madebyverxLOOL.MainFrame.TextLabel.InputBegan:Connect(function(...)end)
+Players.sandrolebgdu92le.PlayerGui.vErXfLaStP_madebyverxLOOL.MainFrame.TextLabel.InputChanged:Connect(function(...)end)
+Players.sandrolebgdu92le.Backpack
+Players.sandrolebgdu92le.Backpack.ChildAdded:Connect(function(...)end)
+Players.sandrolebgdu92le.Character
+workspace.sandrolebgdu92le.ChildAdded:Connect(function(...)end)
+Players.sandrolebgdu92le.CharacterAdded:Connect(function(...)end)
+TextButton.Position = UDim2.new(0.435000002, 0, 0.779999971, 0)
+Players.sandrolebgdu92le:GetNetworkPing()
+a.Text = ' Ping: 129ms'
+ScreenGui.Enabled = true
+InputObject.UserInputType
+InputObject.Position
+Players.sandrolebgdu92le.PlayerGui.vErXfLaStP_madebyverxLOOL.MainFrame.Position
+InputObject.Changed:Connect(function(...)end)
+InputObject.UserInputState
+InputObject.Position
+Frame.Position = UDim2.new(0.323000014, 5, 0.501999974, 17)
+a.Position = UDim2.new(0.323000014, 5, 0.501999974, 17)
+InputObject.Position
+Frame.Position = UDim2.new(0.323000014, 5, 0.501999974, 31)
+a.Position = UDim2.new(0.323000014, 5, 0.501999974, 31)
+InputObject.Position
+Frame.Position = UDim2.new(0.323000014, 2, 0.501999974, 44)
+a.Position = UDim2.new(0.323000014, 2, 0.501999974, 44)
+TextLabel.Text = ' Ping: 129ms'
+InputObject.Position
+Frame.Position = UDim2.new(0.323000014, -2, 0.501999974, 58)
+a.Position = UDim2.new(0.323000014, -2, 0.501999974, 58)
+InputObject.Position
+Frame.Position = UDim2.new(0.323000014, -8, 0.501999974, 72)
+a.Position = UDim2.new(0.323000014, -8, 0.501999974, 72)
+InputObject.Position
+Frame.Position = UDim2.new(0.323000014, -13, 0.501999974, 86)
+a.Position = UDim2.new(0.323000014, -13, 0.501999974, 86)
+InputObject.Position
+Frame.Position = UDim2.new(0.323000014, -17, 0.501999974, 100)
+a.Position = UDim2.new(0.323000014, -17, 0.501999974, 100)
+InputObject.Position
+Frame.Position = UDim2.new(0.323000014, -21, 0.501999974, 116)
+a.Position = UDim2.new(0.323000014, -21, 0.501999974, 116)
+InputObject.Position
+Frame.Position = UDim2.new(0.323000014, -26, 0.501999974, 132)
+a.Position = UDim2.new(0.323000014, -26, 0.501999974, 132)
+InputObject.Position
+Frame.Position = UDim2.new(0.323000014, -33, 0.501999974, 150)
+a.Position = UDim2.new(0.323000014, -33, 0.501999974, 150)
+InputObject.Position
+Frame.Position = UDim2.new(0.323000014, -40, 0.501999974, 165)
+a.Position = UDim2.new(0.323000014, -40, 0.501999974, 165)
+InputObject.Position
+Frame.Position = UDim2.new(0.323000014, -46, 0.501999974, 176)
+a.Position = UDim2.new(0.323000014, -46, 0.501999974, 176)
+InputObject.Position
+Frame.Position = UDim2.new(0.323000014, -53, 0.501999974, 186)
+a.Position = UDim2.new(0.323000014, -53, 0.501999974, 186)
+InputObject.Position
+Frame.Position = UDim2.new(0.323000014, -56, 0.501999974, 192)
+a.Position = UDim2.new(0.323000014, -56, 0.501999974, 192)
+InputObject.Position
+Frame.Position = UDim2.new(0.323000014, -61, 0.501999974, 198)
+a.Position = UDim2.new(0.323000014, -61, 0.501999974, 198)
+InputObject.UserInputState
+TextLabel.Text = ' Ping: 123ms'
+a.Text = ' Ping: 123ms'
+TextLabel.Text = ' Ping: 112ms'
+a.Text = ' Ping: 112ms'
+a.BackgroundColor3 = Color3.new(0, 1, 0)
+game:Shutdown()

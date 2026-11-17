@@ -1,0 +1,1041 @@
+-----------------------------------
+-- CONFIGURATION / SETTINGS
+-----------------------------------
+local Settings = {
+	-- Timer Display Settings (Configured to Left & Slightly Below)
+	TimerSettings = {
+		Position = UDim2.new(0, 20, 0.7, 0), -- Screen Position (X Offset: 20px from left, Y Scale: 70% down)
+		Size = UDim2.new(0, 220, 0, 40),      -- Frame dimensions
+		TextSize = 24,                         -- Font size
+		Font = Enum.Font.FredokaOne,           -- UI Font
+		TextColor = Color3.fromRGB(255, 255, 255),
+		StrokeColor = Color3.fromRGB(0, 0, 0),
+		Alignment = Enum.TextXAlignment.Left   -- Alignment (Left, Center, Right)
+	},
+
+	-- General Toggles & Values
+	Speed = 500,            -- Speed in studs per second (s/s)
+	EnableHook = true,     -- Auto Hook active on launch (true/false)
+	AutoTreeFarm = false,   -- Auto Tree Farm active on launch (true/false)
+	
+	-- Auto Tree Farm Settings
+	TreeFarm = {
+		InteractInterval = 0.1, -- Delay between proximity prompt interactions (seconds)
+		ReTweenDistance = 30,    -- Distance threshold (studs) to re-tween if moved away
+		YOffset = -2,             -- Height offset above the target tree root part
+		SakuraFolderName = "SakuraBloomTrees", -- Specific workspace folder to target first
+		AutoEquipBat = true,     -- Automatically equip the bat tool when farming trees
+		BatNamePartial = "Bat",  -- Matches tools with "Bat" in the name (e.g. "Prehistoric Bat [X1]")
+		IntermediateTP = Vector3.new(3524.954, 70.767, -367.200) -- Midpoint TP before tree destination
+	},
+	
+	-- Animation Settings
+	JumpAnimationId = "rbxassetid://125750702", -- Replace with your desired Animation ID
+	
+	-- Intermediate Waypoint Settings
+	Waypoint = Vector3.new(510.092, 70.767, -364.085),
+	UseGroundDetection = true, -- Route through waypoint ONLY when inside workspace.__OBJECTS.Areas.Ground
+	
+	-- Keybinds
+	StopKey = Enum.KeyCode.Z,
+	ToggleUIKey = Enum.KeyCode.G,
+	
+	-- Delays (Seconds)
+	DropEggDelay = 0,
+	HookTweenDelay = 0.15,
+	PromptCheckDelay = 0.1,
+	
+	-- Drop Locations
+	DropLocations = {
+		Vector3.new(522.339, 70.767, -410.738),
+		Vector3.new(524.047, 70.767, -382.213),
+		Vector3.new(517.921, 70.767, -332.109),
+		Vector3.new(537.066, 70.767, -299.042),
+		Vector3.new(538.876, 70.767, -339.316),
+		Vector3.new(511.247, 70.767, -417.079)
+	},
+	
+	-- Map Teleport Locations with Custom Colors
+	MapLocations = {
+		{Name = "Base", Pos = Vector3.new(509.133, 70.767, -365.554), BgColor = Color3.fromRGB(0, 155, 235), StrokeColor = Color3.fromRGB(0, 95, 160), TextColor = Color3.fromRGB(255, 255, 255)},
+		{Name = "Snow", Pos = Vector3.new(1499.649, 70.767, -344.844), BgColor = Color3.fromRGB(240, 240, 245), StrokeColor = Color3.fromRGB(180, 180, 190), TextColor = Color3.fromRGB(40, 40, 50)},
+		{Name = "Volcano", Pos = Vector3.new(1875.949, 70.767, -381.494), BgColor = Color3.fromRGB(65, 65, 65), StrokeColor = Color3.fromRGB(40, 40, 40), TextColor = Color3.fromRGB(255, 255, 255)},
+		{Name = "Abyss Ocean", Pos = Vector3.new(2281.709, 70.767, -344.631), BgColor = Color3.fromRGB(10, 40, 90), StrokeColor = Color3.fromRGB(5, 20, 50), TextColor = Color3.fromRGB(255, 255, 255)},
+		{Name = "Prehistoric", Pos = Vector3.new(2815.450, 70.767, -377.142), BgColor = Color3.fromRGB(180, 75, 10), StrokeColor = Color3.fromRGB(110, 45, 5), TextColor = Color3.fromRGB(255, 255, 255)},
+		{Name = "Cosmic", Pos = Vector3.new(3388.949, 70.767, -339.276), BgColor = Color3.fromRGB(15, 15, 45), StrokeColor = Color3.fromRGB(5, 5, 25), TextColor = Color3.fromRGB(255, 255, 255)},
+		{Name = "Sakura", Pos = Vector3.new(4032.399, 70.767, -382.600), BgColor = Color3.fromRGB(140, 30, 80), StrokeColor = Color3.fromRGB(80, 15, 45), TextColor = Color3.fromRGB(255, 255, 255)}
+	}
+}
+
+-----------------------------------
+-- MAIN SERVICES & VARIABLES
+-----------------------------------
+local TweenService = game:GetService("TweenService")
+local Players = game:GetService("Players")
+local UserInputService = game:GetService("UserInputService")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local RunService = game:GetService("RunService")
+local player = Players.LocalPlayer
+
+local activeTween = nil
+local activeTweenConn = nil
+local toggleState = Settings.EnableHook
+local autoTreeState = Settings.AutoTreeFarm
+local savedWalkSpeed = nil
+
+local stopKey = Settings.StopKey
+local toggleUiKey = Settings.ToggleUIKey
+local isBinding = false
+
+-----------------------------------
+-- 1. HUMANOID CLONE DESYNC, ANIMATIONS & ANTI-RAGDOLL
+-----------------------------------
+local activeHumanoid = nil
+
+local function applyAntiRagdoll(character, humanoid)
+	if not character or not humanoid then return end
+	
+	humanoid:SetStateEnabled(Enum.HumanoidStateType.FallingDown, false)
+	humanoid:SetStateEnabled(Enum.HumanoidStateType.Ragdoll, false)
+	
+	for _, descendant in pairs(character:GetDescendants()) do
+		if descendant:IsA("Motor6D") then
+			descendant.Enabled = true
+		end
+	end
+end
+
+local function applyZombieDesync(character)
+	if not character then return end
+	savedWalkSpeed = nil
+	
+	local originalHumanoid = character:WaitForChild("Humanoid", 5)
+	if not originalHumanoid then return end
+	
+	local healthScript = character:FindFirstChild("Health")
+	if healthScript then healthScript:Destroy() end
+	
+	originalHumanoid.BreakJointsOnDeath = false
+	
+	local clonedHumanoid = originalHumanoid:Clone()
+	clonedHumanoid.Name = "Humanoid"
+	clonedHumanoid:SetStateEnabled(Enum.HumanoidStateType.Dead, false)
+	clonedHumanoid.Health = originalHumanoid.MaxHealth
+	
+	local animator = clonedHumanoid:FindFirstChildOfClass("Animator")
+	if not animator then
+		animator = Instance.new("Animator")
+		animator.Parent = clonedHumanoid
+	end
+	
+	if Settings.JumpAnimationId and Settings.JumpAnimationId ~= "" then
+		pcall(function()
+			local jumpAnim = Instance.new("Animation")
+			jumpAnim.AnimationId = Settings.JumpAnimationId
+			local jumpTrack = animator:LoadAnimation(jumpAnim)
+
+			clonedHumanoid.Jumping:Connect(function(isActive)
+				if isActive then
+					jumpTrack:Play()
+				end
+			end)
+		end)
+	end
+	
+	originalHumanoid:Destroy()
+	clonedHumanoid.Parent = character
+	activeHumanoid = clonedHumanoid
+	
+	applyAntiRagdoll(character, clonedHumanoid)
+	
+	local camera = workspace.CurrentCamera
+	if camera then camera.CameraSubject = clonedHumanoid end
+	
+	local animateScript = character:FindFirstChild("Animate")
+	if animateScript then
+		local animateClone = animateScript:Clone()
+		animateScript:Destroy()
+		animateClone.Parent = character
+		animateClone.Disabled = false
+	end
+end
+
+-- OPTIMIZED: Throttle Heartbeat check to run every ~0.1s to heavily decrease FPS drops
+local lastHbCheck = 0
+RunService.Heartbeat:Connect(function(dt)
+	lastHbCheck = lastHbCheck + dt
+	if lastHbCheck < 0.1 then return end
+	lastHbCheck = 0
+
+	local char = player.Character
+	if char and activeHumanoid then
+		for _, descendant in pairs(char:GetDescendants()) do
+			if descendant:IsA("Motor6D") and not descendant.Enabled then
+				descendant.Enabled = true
+			end
+		end
+		
+		local state = activeHumanoid:GetState()
+		if state == Enum.HumanoidStateType.Ragdoll or state == Enum.HumanoidStateType.FallingDown then
+			activeHumanoid:ChangeState(Enum.HumanoidStateType.GettingUp)
+		end
+	end
+end)
+
+if player.Character then task.spawn(function() applyZombieDesync(player.Character) end) end
+player.CharacterAdded:Connect(function(char) task.spawn(function() applyZombieDesync(char) end) end)
+
+-----------------------------------
+-- 2. HELPER FUNCTIONS & PROMPT INTERACTION
+-----------------------------------
+local function triggerIncubatorPrompt()
+	pcall(function()
+		local prompt = workspace:FindFirstChild("IncubatorBloomed")
+			and workspace.IncubatorBloomed:FindFirstChild("Root")
+			and workspace.IncubatorBloomed.Root:FindFirstChild("PromptAttachment")
+			and workspace.IncubatorBloomed.Root.PromptAttachment:FindFirstChildOfClass("ProximityPrompt")
+
+		if prompt then
+			prompt.HoldDuration = 0
+			prompt.RequiresLineOfSight = false
+			if fireproximityprompt then
+				fireproximityprompt(prompt)
+			end
+		end
+	end)
+end
+
+local function unequipTreadmill()
+	pcall(function()
+		local network = ReplicatedStorage:FindFirstChild("Network")
+		local unequipRemote = network and network:FindFirstChild("Treadmills: RequestUnequip")
+		if unequipRemote then
+			unequipRemote:InvokeServer()
+		end
+	end)
+end
+
+local function dropEggs()
+	task.spawn(function()
+		task.wait(Settings.DropEggDelay)
+		pcall(function()
+			local network = ReplicatedStorage:FindFirstChild("Network")
+			if network then
+				local dropRemote = network:FindFirstChild("Eggs: RequestAreaEggDrop")
+				if dropRemote then
+					dropRemote:InvokeServer({ Reason = "PlayerRequest" })
+				end
+			end
+		end)
+	end)
+end
+
+local function equipBat()
+	if not Settings.TreeFarm.AutoEquipBat then return end
+	
+	local character = player.Character
+	local humanoid = character and character:FindFirstChildOfClass("Humanoid")
+	if not character or not humanoid then return end
+
+	local currentTool = character:FindFirstChildWhichIsA("Tool")
+	if currentTool and currentTool.Name:lower():find(Settings.TreeFarm.BatNamePartial:lower()) then
+		return
+	end
+
+	local backpack = player:FindFirstChild("Backpack")
+	if backpack then
+		for _, tool in ipairs(backpack:GetChildren()) do
+			if tool:IsA("Tool") and tool.Name:lower():find(Settings.TreeFarm.BatNamePartial:lower()) then
+				humanoid:EquipTool(tool)
+				break
+			end
+		end
+	end
+end
+
+-----------------------------------
+-- ALL DEBRIS TOUCHINTEREST REMOVER
+-----------------------------------
+task.spawn(function()
+	local workspace = game:GetService("Workspace")
+
+	local function clearAllDebrisTouchInterests()
+		pcall(function()
+			local debris = workspace:FindFirstChild("__DEBRIS")
+			if not debris then return end
+
+			-- Search through every single object in __DEBRIS
+			for _, descendant in ipairs(debris:GetDescendants()) do
+				if descendant:IsA("TouchTransmitter") or descendant.Name == "TouchInterest" then
+					descendant:Destroy()
+				end
+			end
+		end)
+	end
+
+	-- Run immediately for existing debris
+	clearAllDebrisTouchInterests()
+
+	-- Continuously destroy any new TouchInterests as traps spawn in __DEBRIS
+	local debris = workspace:FindFirstChild("__DEBRIS")
+	if debris then
+		debris.DescendantAdded:Connect(function(descendant)
+			if descendant:IsA("TouchTransmitter") or descendant.Name == "TouchInterest" then
+				task.wait(0.01)
+				descendant:Destroy()
+			end
+		end)
+	end
+end)
+
+-----------------------------------
+-- 4. CARTOON THEMED GUI & TIMER
+-----------------------------------
+local screenGui = Instance.new("ScreenGui")
+screenGui.Name = "MasterAutoGui"
+screenGui.ResetOnSpawn = false
+screenGui.Parent = player:WaitForChild("PlayerGui")
+
+-- ALWAYS VISIBLE TIMER DISPLAY
+local timerDisplay = Instance.new("TextLabel")
+timerDisplay.Size = Settings.TimerSettings.Size
+timerDisplay.Position = Settings.TimerSettings.Position
+timerDisplay.BackgroundTransparency = 1
+timerDisplay.Font = Settings.TimerSettings.Font
+timerDisplay.Text = "🌸 in 0m 0s"
+timerDisplay.TextColor3 = Settings.TimerSettings.TextColor
+timerDisplay.TextSize = Settings.TimerSettings.TextSize
+timerDisplay.TextStrokeColor3 = Settings.TimerSettings.StrokeColor
+timerDisplay.TextStrokeTransparency = 0
+timerDisplay.TextXAlignment = Settings.TimerSettings.Alignment
+timerDisplay.Parent = screenGui
+
+-- HORIZONTAL MAIN CONTROL MENU FRAME
+local mainFrame = Instance.new("Frame")
+mainFrame.Size = UDim2.new(0, 800, 0, 200) 
+mainFrame.Position = UDim2.new(0.5, -400, 0.5, -100)
+mainFrame.BackgroundColor3 = Color3.fromRGB(50, 50, 55)
+mainFrame.BorderSizePixel = 0
+mainFrame.Active = true
+mainFrame.Draggable = true
+mainFrame.ClipsDescendants = true 
+mainFrame.Parent = screenGui
+
+local mainCorner = Instance.new("UICorner") mainCorner.CornerRadius = UDim.new(0, 6) mainCorner.Parent = mainFrame
+local mainStroke = Instance.new("UIStroke") mainStroke.Color = Color3.fromRGB(30, 30, 35) mainStroke.Thickness = 3 mainStroke.Parent = mainFrame
+
+-- TOP BAR
+local topBar = Instance.new("Frame")
+topBar.Size = UDim2.new(1, 0, 0, 36)
+topBar.Position = UDim2.new(0, 0, 0, 0)
+topBar.BackgroundTransparency = 1
+topBar.Parent = mainFrame
+
+local topTitle = Instance.new("TextLabel")
+topTitle.Size = UDim2.new(1, -70, 1, 0)
+topTitle.Position = UDim2.new(0, 14, 0, 0)
+topTitle.BackgroundTransparency = 1
+topTitle.Font = Enum.Font.FredokaOne
+topTitle.Text = "CONTROL MENU [" .. toggleUiKey.Name .. "]"
+topTitle.TextColor3 = Color3.fromRGB(255, 255, 255)
+topTitle.TextSize = 14
+topTitle.TextStrokeColor3 = Color3.fromRGB(20, 20, 25)
+topTitle.TextStrokeTransparency = 0
+topTitle.TextXAlignment = Enum.TextXAlignment.Left
+topTitle.Parent = topBar
+
+local btnMinimize = Instance.new("TextButton")
+btnMinimize.Size = UDim2.new(0, 24, 0, 24)
+btnMinimize.Position = UDim2.new(1, -56, 0, 6)
+btnMinimize.BackgroundColor3 = Color3.fromRGB(70, 70, 75)
+btnMinimize.Font = Enum.Font.FredokaOne
+btnMinimize.Text = "-"
+btnMinimize.TextColor3 = Color3.fromRGB(255, 255, 255)
+btnMinimize.TextSize = 16
+btnMinimize.Parent = topBar
+local minCorner = Instance.new("UICorner") minCorner.CornerRadius = UDim.new(0, 4) minCorner.Parent = btnMinimize
+local minStroke = Instance.new("UIStroke") minStroke.Color = Color3.fromRGB(35, 35, 40) minStroke.Thickness = 2 minStroke.Parent = btnMinimize
+
+local btnExit = Instance.new("TextButton")
+btnExit.Size = UDim2.new(0, 24, 0, 24)
+btnExit.Position = UDim2.new(1, -28, 0, 6)
+btnExit.BackgroundColor3 = Color3.fromRGB(225, 40, 50)
+btnExit.Font = Enum.Font.FredokaOne
+btnExit.Text = "✕"
+btnExit.TextColor3 = Color3.fromRGB(255, 255, 255)
+btnExit.TextSize = 12
+btnExit.Parent = topBar
+local exitCorner = Instance.new("UICorner") exitCorner.CornerRadius = UDim.new(0, 4) exitCorner.Parent = btnExit
+local exitStroke = Instance.new("UIStroke") exitStroke.Color = Color3.fromRGB(130, 15, 20) exitStroke.Thickness = 2 exitStroke.Parent = btnExit
+
+-- HORIZONTAL SECTIONS CONTAINER
+local contentContainer = Instance.new("Frame")
+contentContainer.Size = UDim2.new(1, -20, 1, -44)
+contentContainer.Position = UDim2.new(0, 10, 0, 38)
+contentContainer.BackgroundTransparency = 1
+contentContainer.Parent = mainFrame
+
+local listLayout = Instance.new("UIListLayout")
+listLayout.FillDirection = Enum.FillDirection.Horizontal
+listLayout.HorizontalAlignment = Enum.HorizontalAlignment.Left
+listLayout.SortOrder = Enum.SortOrder.LayoutOrder
+listLayout.Padding = UDim.new(0, 10)
+listLayout.Parent = contentContainer
+
+local function createSectionFrame(titleText, layoutOrder)
+	local secFrame = Instance.new("Frame")
+	secFrame.Size = UDim2.new(0.25, -8, 1, 0)
+	secFrame.BackgroundColor3 = Color3.fromRGB(42, 42, 47)
+	secFrame.LayoutOrder = layoutOrder
+	secFrame.Parent = contentContainer
+
+	local sCorner = Instance.new("UICorner") sCorner.CornerRadius = UDim.new(0, 5) sCorner.Parent = secFrame
+	local sStroke = Instance.new("UIStroke") sStroke.Color = Color3.fromRGB(30, 30, 35) sStroke.Thickness = 1.5 sStroke.Parent = secFrame
+
+	local sTitle = Instance.new("TextLabel")
+	sTitle.Size = UDim2.new(1, 0, 0, 22)
+	sTitle.Position = UDim2.new(0, 0, 0, 4)
+	sTitle.BackgroundTransparency = 1
+	sTitle.Font = Enum.Font.FredokaOne
+	sTitle.Text = string.upper(titleText)
+	sTitle.TextColor3 = Color3.fromRGB(255, 255, 255)
+	sTitle.TextSize = 11
+	sTitle.TextStrokeColor3 = Color3.fromRGB(20, 20, 25)
+	sTitle.TextStrokeTransparency = 0
+	sTitle.Parent = secFrame
+
+	local innerContainer = Instance.new("Frame")
+	innerContainer.Size = UDim2.new(1, -12, 1, -30)
+	innerContainer.Position = UDim2.new(0, 6, 0, 26)
+	innerContainer.BackgroundTransparency = 1
+	innerContainer.Parent = secFrame
+
+	return innerContainer
+end
+
+local function createToggleRow(parent, labelText, posY, initialState)
+	local container = Instance.new("TextButton")
+	container.Size = UDim2.new(1, 0, 0, 30)
+	container.Position = UDim2.new(0, 0, 0, posY)
+	container.BackgroundColor3 = Color3.fromRGB(65, 65, 70)
+	container.AutoButtonColor = false
+	container.Text = ""
+	container.Parent = parent
+	
+	local cCorner = Instance.new("UICorner") cCorner.CornerRadius = UDim.new(0, 4) cCorner.Parent = container
+	local cStroke = Instance.new("UIStroke") cStroke.Color = Color3.fromRGB(35, 35, 40) cStroke.Thickness = 1.5 cStroke.Parent = container
+
+	local lbl = Instance.new("TextLabel")
+	lbl.Size = UDim2.new(0.65, 0, 1, 0)
+	lbl.Position = UDim2.new(0, 8, 0, 0)
+	lbl.BackgroundTransparency = 1
+	lbl.Font = Enum.Font.FredokaOne
+	lbl.Text = labelText
+	lbl.TextColor3 = Color3.fromRGB(255, 255, 255)
+	lbl.TextSize = 11
+	lbl.TextXAlignment = Enum.TextXAlignment.Left
+	lbl.Parent = container
+
+	local swBg = Instance.new("Frame")
+	swBg.Size = UDim2.new(0, 32, 0, 18)
+	swBg.Position = UDim2.new(1, -38, 0.5, -9)
+	swBg.BackgroundColor3 = initialState and Color3.fromRGB(0, 220, 100) or Color3.fromRGB(40, 40, 45)
+	swBg.Parent = container
+	local swBgCorner = Instance.new("UICorner") swBgCorner.CornerRadius = UDim.new(0.5, 0) swBgCorner.Parent = swBg
+	local swBgStroke = Instance.new("UIStroke") swBgStroke.Color = Color3.fromRGB(25, 25, 30) swBgStroke.Thickness = 1 swBgStroke.Parent = swBg
+
+	local swKnob = Instance.new("Frame")
+	swKnob.Size = UDim2.new(0, 14, 0, 14)
+	swKnob.Position = initialState and UDim2.new(1, -15, 0.5, -7) or UDim2.new(0, 1, 0.5, -7)
+	swKnob.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+	swKnob.Parent = swBg
+	
+	local swKnobCorner = Instance.new("UICorner") 
+	swKnobCorner.CornerRadius = UDim.new(0.5, 0) 
+	swKnobCorner.Parent = swKnob
+
+	return container, swBg, swKnob
+end
+
+-----------------------------------
+-- SECTION 1: AUTO FARM
+-----------------------------------
+local sec1 = createSectionFrame("Auto Farm", 1)
+
+local toggleContainer, switchBg, switchKnob = createToggleRow(sec1, "Enable Hook", 0, toggleState)
+local treeContainer, treeSwitchBg, treeSwitchKnob = createToggleRow(sec1, "Farm Tree", 36, autoTreeState)
+
+local speedBg = Instance.new("Frame")
+speedBg.Size = UDim2.new(1, 0, 0, 30)
+speedBg.Position = UDim2.new(0, 0, 0, 72)
+speedBg.BackgroundColor3 = Color3.fromRGB(65, 65, 70)
+speedBg.Parent = sec1
+local speedBgCorner = Instance.new("UICorner") speedBgCorner.CornerRadius = UDim.new(0, 4) speedBgCorner.Parent = speedBg
+local speedStroke = Instance.new("UIStroke") speedStroke.Color = Color3.fromRGB(35, 35, 40) speedStroke.Thickness = 1.5 speedStroke.Parent = speedBg
+
+local speedLabel = Instance.new("TextLabel")
+speedLabel.Size = UDim2.new(0.6, 0, 1, 0)
+speedLabel.Position = UDim2.new(0, 8, 0, 0)
+speedLabel.BackgroundTransparency = 1
+speedLabel.Font = Enum.Font.FredokaOne
+speedLabel.Text = "Speed (s/s):"
+speedLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+speedLabel.TextSize = 11
+speedLabel.TextXAlignment = Enum.TextXAlignment.Left
+speedLabel.Parent = speedBg
+
+local speedInput = Instance.new("TextBox")
+speedInput.Size = UDim2.new(0.35, -4, 1, 0)
+speedInput.Position = UDim2.new(0.65, -4, 0, 0)
+speedInput.BackgroundTransparency = 1
+speedInput.Font = Enum.Font.FredokaOne
+speedInput.Text = tostring(Settings.Speed)
+speedInput.TextColor3 = Color3.fromRGB(255, 255, 255)
+speedInput.TextSize = 12
+speedInput.TextXAlignment = Enum.TextXAlignment.Right
+speedInput.Parent = speedBg
+
+-----------------------------------
+-- SECTION 2: MAP TELEPORT
+-----------------------------------
+local sec2 = createSectionFrame("Map Teleport", 2)
+
+local mapScroll = Instance.new("ScrollingFrame")
+mapScroll.Size = UDim2.new(1, 0, 1, 0)
+mapScroll.Position = UDim2.new(0, 0, 0, 0)
+mapScroll.BackgroundTransparency = 1
+mapScroll.BorderSizePixel = 0
+mapScroll.ScrollBarThickness = 3
+mapScroll.ScrollBarImageColor3 = Color3.fromRGB(80, 80, 85)
+mapScroll.CanvasSize = UDim2.new(0, 0, 0, 0)
+mapScroll.AutomaticCanvasSize = Enum.AutomaticSize.Y
+mapScroll.Parent = sec2
+
+local mapGrid = Instance.new("UIGridLayout")
+mapGrid.CellSize = UDim2.new(1, -6, 0, 26)
+mapGrid.CellPadding = UDim2.new(0, 0, 0, 5)
+mapGrid.Parent = mapScroll
+
+-----------------------------------
+-- SECTION 3: INCUBATOR
+-----------------------------------
+local sec3 = createSectionFrame("Incubator", 3)
+
+local incubatorBtn = Instance.new("TextButton")
+incubatorBtn.Size = UDim2.new(1, 0, 0, 36)
+incubatorBtn.Position = UDim2.new(0, 0, 0, 0)
+incubatorBtn.BackgroundColor3 = Color3.fromRGB(0, 155, 235)
+incubatorBtn.Font = Enum.Font.FredokaOne
+incubatorBtn.Text = "Open Incubator"
+incubatorBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+incubatorBtn.TextSize = 12
+incubatorBtn.Parent = sec3
+local incCorner = Instance.new("UICorner") incCorner.CornerRadius = UDim.new(0, 4) incCorner.Parent = incubatorBtn
+local incStroke = Instance.new("UIStroke") incStroke.Color = Color3.fromRGB(0, 95, 160) incStroke.Thickness = 2 incStroke.Parent = incubatorBtn
+
+incubatorBtn.MouseButton1Click:Connect(function()
+	triggerIncubatorPrompt()
+end)
+
+-----------------------------------
+-- SECTION 4: MISC
+-----------------------------------
+local sec4 = createSectionFrame("Misc", 4)
+
+local stopTweenBg = Instance.new("Frame")
+stopTweenBg.Size = UDim2.new(1, 0, 0, 36)
+stopTweenBg.Position = UDim2.new(0, 0, 0, 0)
+stopTweenBg.BackgroundColor3 = Color3.fromRGB(65, 65, 70)
+stopTweenBg.Parent = sec4
+local stopTweenCorner = Instance.new("UICorner") stopTweenCorner.CornerRadius = UDim.new(0, 4) stopTweenCorner.Parent = stopTweenBg
+local stopTweenStroke = Instance.new("UIStroke") stopTweenStroke.Color = Color3.fromRGB(35, 35, 40) stopTweenStroke.Thickness = 1.5 stopTweenStroke.Parent = stopTweenBg
+
+local btnStopTween = Instance.new("TextButton")
+btnStopTween.Size = UDim2.new(0.55, 0, 1, 0)
+btnStopTween.Position = UDim2.new(0, 6, 0, 0)
+btnStopTween.BackgroundTransparency = 1
+btnStopTween.Font = Enum.Font.FredokaOne
+btnStopTween.Text = "Stop Tween"
+btnStopTween.TextColor3 = Color3.fromRGB(255, 90, 95)
+btnStopTween.TextSize = 11
+btnStopTween.TextXAlignment = Enum.TextXAlignment.Left
+btnStopTween.Parent = stopTweenBg
+
+local btnBind = Instance.new("TextButton")
+btnBind.Size = UDim2.new(0.4, -6, 0, 22)
+btnBind.Position = UDim2.new(0.6, 0, 0.5, -11)
+btnBind.BackgroundColor3 = Color3.fromRGB(45, 45, 50)
+btnBind.Font = Enum.Font.FredokaOne
+btnBind.Text = "[ " .. stopKey.Name .. " ]"
+btnBind.TextColor3 = Color3.fromRGB(255, 255, 255)
+btnBind.TextSize = 10
+btnBind.Parent = stopTweenBg
+local btnBindCorner = Instance.new("UICorner") btnBindCorner.CornerRadius = UDim.new(0, 4) btnBindCorner.Parent = btnBind
+local btnBindStroke = Instance.new("UIStroke") btnBindStroke.Color = Color3.fromRGB(30, 30, 35) btnBindStroke.Thickness = 1 btnBindStroke.Parent = btnBind
+
+-----------------------------------
+-- 5. ACCURATE INCUBATOR TIMER UPDATE SYSTEM
+-----------------------------------
+task.spawn(function()
+	while true do
+		pcall(function()
+			local countdownText = nil
+
+			local targetObj = workspace:FindFirstChild("IncubatorBloomed")
+				and workspace.IncubatorBloomed:FindFirstChild("Root")
+				and workspace.IncubatorBloomed.Root:FindFirstChild("IncubatorBillboard")
+				and workspace.IncubatorBloomed.Root.IncubatorBillboard:FindFirstChild("Countdown")
+
+			if targetObj and targetObj:IsA("TextLabel") and targetObj.Text ~= "" then
+				countdownText = targetObj.Text
+			end
+
+			if not countdownText then
+				local incubator = workspace:FindFirstChild("IncubatorBloomed")
+				if incubator then
+					for _, descendant in ipairs(incubator:GetDescendants()) do
+						if descendant:IsA("TextLabel") and descendant.Text:find("%d+:%d+") then
+							countdownText = descendant.Text
+							break
+						end
+					end
+				end
+			end
+
+			if countdownText then
+				local mins, secs = string.match(countdownText, "(%d+):(%d+)")
+				if mins and secs then
+					timerDisplay.Text = string.format("🌸 in %dm %ds", tonumber(mins), tonumber(secs))
+				else
+					timerDisplay.Text = "🌸 " .. countdownText
+				end
+			else
+				timerDisplay.Text = "🌸 Searching..."
+			end
+		end)
+		task.wait(1)
+	end
+end)
+
+-----------------------------------
+-- 6. AREA DETECTION & TWEEN HELPERS
+-----------------------------------
+local function isPlayerInGroundArea(rootPart)
+	local groundArea = workspace:FindFirstChild("__OBJECTS")
+		and workspace.__OBJECTS:FindFirstChild("Areas")
+		and workspace.__OBJECTS.Areas:FindFirstChild("Ground")
+
+	if not groundArea then return false end
+
+	if groundArea:IsA("Model") then
+		local cf, size = groundArea:GetBoundingBox()
+		local localPos = cf:PointToObjectSpace(rootPart.Position)
+		return math.abs(localPos.X) <= (size.X / 2)
+			and math.abs(localPos.Y) <= (size.Y / 2 + 20)
+			and math.abs(localPos.Z) <= (size.Z / 2)
+	elseif groundArea:IsA("BasePart") then
+		local localPos = groundArea.CFrame:PointToObjectSpace(rootPart.Position)
+		return math.abs(localPos.X) <= (groundArea.Size.X / 2)
+			and math.abs(localPos.Y) <= (groundArea.Size.Y / 2 + 20)
+			and math.abs(localPos.Z) <= (groundArea.Size.Z / 2)
+	end
+
+	return false
+end
+
+-- Checks if player is standing on workspace.__OBJECTS.Build.CherryBlossomZone["1"].BOTTOMS.Part
+local function isPlayerOnCherryBlossomBottom(rootPart)
+	local cherryPart = workspace:FindFirstChild("__OBJECTS")
+		and workspace.__OBJECTS:FindFirstChild("Build")
+		and workspace.__OBJECTS.Build:FindFirstChild("CherryBlossomZone")
+		and workspace.__OBJECTS.Build.CherryBlossomZone:FindFirstChild("1")
+		and workspace.__OBJECTS.Build.CherryBlossomZone["1"]:FindFirstChild("BOTTOMS")
+		and workspace.__OBJECTS.Build.CherryBlossomZone["1"].BOTTOMS:FindFirstChild("Part")
+
+	if not cherryPart or not cherryPart:IsA("BasePart") then return false end
+
+	local localPos = cherryPart.CFrame:PointToObjectSpace(rootPart.Position)
+	return math.abs(localPos.X) <= (cherryPart.Size.X / 2)
+		and math.abs(localPos.Y) <= (cherryPart.Size.Y / 2 + 20)
+		and math.abs(localPos.Z) <= (cherryPart.Size.Z / 2)
+end
+
+local function restoreWalkSpeed()
+	local character = player.Character
+	local humanoid = character and character:FindFirstChildOfClass("Humanoid")
+	if humanoid and savedWalkSpeed then
+		humanoid.WalkSpeed = savedWalkSpeed
+		savedWalkSpeed = nil
+	end
+end
+
+local function stopCurrentTween(shouldDropEgg)
+	if activeTweenConn then activeTweenConn:Disconnect() activeTweenConn = nil end
+	if activeTween then activeTween:Cancel() activeTween = nil end
+	
+	local character = player.Character
+	local rootPart = character and character:FindFirstChild("HumanoidRootPart")
+	if rootPart then rootPart.AssemblyLinearVelocity = Vector3.zero end
+	
+	restoreWalkSpeed()
+	if shouldDropEgg then dropEggs() end
+end
+
+local function tweenToTarget(targetPos)
+	local character = player.Character
+	local rootPart = character and character:FindFirstChild("HumanoidRootPart")
+	local humanoid = character and character:FindFirstChildOfClass("Humanoid")
+
+	if rootPart then
+		if isPlayerInGroundArea(rootPart) then
+			unequipTreadmill()
+		end
+
+		local speed = tonumber(speedInput.Text) or Settings.Speed
+		stopCurrentTween(false)
+
+		if humanoid then
+			if humanoid.WalkSpeed > 0 then savedWalkSpeed = humanoid.WalkSpeed end
+			humanoid.WalkSpeed = 0
+		end
+
+		local function doTweenStep(destination, onComplete)
+			local dist = (destination - rootPart.Position).Magnitude
+			if dist < 2 then
+				if onComplete then onComplete() end
+				return
+			end
+
+			local tweenInfo = TweenInfo.new(dist / speed, Enum.EasingStyle.Linear)
+			local tween = TweenService:Create(rootPart, tweenInfo, {CFrame = CFrame.new(destination)})
+			activeTween = tween
+
+			activeTweenConn = tween.Completed:Connect(function(state)
+				if activeTween == tween then
+					activeTween = nil
+					if activeTweenConn then activeTweenConn:Disconnect() activeTweenConn = nil end
+					if state == Enum.PlaybackState.Completed then
+						rootPart.AssemblyLinearVelocity = Vector3.zero
+						character:PivotTo(CFrame.new(destination))
+						if onComplete then onComplete() end
+					end
+				end
+			end)
+
+			tween:Play()
+		end
+
+		local waypoint = Settings.Waypoint
+		local targetIsWaypoint = (targetPos - waypoint).Magnitude < 2
+
+		if Settings.UseGroundDetection and isPlayerInGroundArea(rootPart) and not targetIsWaypoint then
+			doTweenStep(waypoint, function()
+				doTweenStep(targetPos, function()
+					restoreWalkSpeed()
+				end)
+			end)
+		else
+			doTweenStep(targetPos, function()
+				restoreWalkSpeed()
+			end)
+		end
+	end
+end
+
+for _, mapInfo in ipairs(Settings.MapLocations) do
+	local mBtn = Instance.new("TextButton")
+	mBtn.BackgroundColor3 = mapInfo.BgColor
+	mBtn.Font = Enum.Font.FredokaOne
+	mBtn.Text = mapInfo.Name
+	mBtn.TextColor3 = mapInfo.TextColor
+	mBtn.TextSize = 11
+	mBtn.Parent = mapScroll
+
+	local mBtnCorner = Instance.new("UICorner") mBtnCorner.CornerRadius = UDim.new(0, 4) mBtnCorner.Parent = mBtn
+	local mBtnStroke = Instance.new("UIStroke") mBtnStroke.Color = mapInfo.StrokeColor mBtnStroke.Thickness = 1.5 mBtnStroke.Parent = mBtn
+
+	mBtn.MouseButton1Click:Connect(function()
+		tweenToTarget(mapInfo.Pos)
+	end)
+end
+
+-----------------------------------
+-- 7. AUTO TREE FARM LOOP (SINGLE INTERMEDIATE TP)
+-----------------------------------
+local function findNearestTree(rootPart)
+	local nearestPrompt, nearestPart, nearestObject = nil, nil, nil
+	local shortestDistance = math.huge
+
+	local sakuraFolder = workspace:FindFirstChild(Settings.TreeFarm.SakuraFolderName)
+	if sakuraFolder then
+		for _, tree in ipairs(sakuraFolder:GetChildren()) do
+			local prompt = tree:FindFirstChildWhichIsA("ProximityPrompt", true)
+			local part = tree:IsA("BasePart") and tree or tree:FindFirstChildWhichIsA("BasePart", true)
+			if part then
+				local dist = (part.Position - rootPart.Position).Magnitude
+				if dist < shortestDistance then
+					shortestDistance = dist
+					nearestPrompt, nearestPart, nearestObject = prompt, part, tree
+				end
+			end
+		end
+	end
+
+	if nearestPart then return nearestPrompt, nearestPart, nearestObject end
+
+	for _, obj in ipairs(workspace:GetChildren()) do
+		local nameLower = obj.Name:lower()
+		if nameLower:find("tree") or nameLower:find("wood") or nameLower:find("plant") then
+			local prompt = obj:FindFirstChildWhichIsA("ProximityPrompt", true)
+			local part = obj:IsA("BasePart") and obj or obj:FindFirstChildWhichIsA("BasePart", true)
+			if part then
+				local dist = (part.Position - rootPart.Position).Magnitude
+				if dist < shortestDistance then
+					shortestDistance = dist
+					nearestPrompt, nearestPart, nearestObject = prompt, part, obj
+				end
+			end
+		end
+	end
+
+	return nearestPrompt, nearestPart, nearestObject
+end
+
+local function startTreeFarmLoop()
+	task.spawn(function()
+		while autoTreeState do
+			local character = player.Character
+			local rootPart = character and character:FindFirstChild("HumanoidRootPart")
+
+			if rootPart then
+				local nearestPrompt, nearestPart, nearestObject = findNearestTree(rootPart)
+
+				if nearestPart and nearestObject then
+					equipBat()
+
+					-- Route to intermediate coordinate only ONCE if not already on the platform
+					if not isPlayerOnCherryBlossomBottom(rootPart) and Settings.TreeFarm.IntermediateTP then
+						tweenToTarget(Settings.TreeFarm.IntermediateTP)
+						while activeTween do task.wait(0.1) end
+					end
+
+					-- Directly tween to the targeted tree
+					if autoTreeState and nearestObject and nearestObject.Parent then
+						local targetPos = nearestPart.Position + Vector3.new(0, Settings.TreeFarm.YOffset, 0)
+						tweenToTarget(targetPos)
+
+						while autoTreeState and nearestObject and nearestObject.Parent do
+							local currentCharacter = player.Character
+							local currentRoot = currentCharacter and currentCharacter:FindFirstChild("HumanoidRootPart")
+
+							if currentRoot and nearestPart and nearestPart.Parent then
+								equipBat()
+								local distToTree = (nearestPart.Position - currentRoot.Position).Magnitude
+								if distToTree > Settings.TreeFarm.ReTweenDistance and not activeTween then
+									tweenToTarget(nearestPart.Position + Vector3.new(0, Settings.TreeFarm.YOffset, 0))
+								end
+							end
+
+							if nearestPrompt and nearestPrompt.Parent and fireproximityprompt then
+								fireproximityprompt(nearestPrompt)
+							end
+
+							task.wait(Settings.TreeFarm.InteractInterval)
+						end
+					end
+
+					if activeTween then stopCurrentTween(false) end
+				else
+					task.wait(0.5)
+				end
+			else
+				task.wait(0.5)
+			end
+		end
+	end)
+end
+
+if autoTreeState then startTreeFarmLoop() end
+
+-----------------------------------
+-- 8. INTERACTION LOGIC & KEYBINDS
+-----------------------------------
+local isMinimized = false
+
+btnMinimize.MouseButton1Click:Connect(function()
+	isMinimized = not isMinimized
+	if isMinimized then
+		TweenService:Create(mainFrame, TweenInfo.new(0.25, Enum.EasingStyle.Cubic, Enum.EasingDirection.Out), {Size = UDim2.new(0, 800, 0, 36)}):Play()
+		btnMinimize.Text = "+"
+	else
+		TweenService:Create(mainFrame, TweenInfo.new(0.25, Enum.EasingStyle.Cubic, Enum.EasingDirection.Out), {Size = UDim2.new(0, 800, 0, 200)}):Play()
+		btnMinimize.Text = "-"
+	end
+end)
+
+btnExit.MouseButton1Click:Connect(function()
+	toggleState = false
+	autoTreeState = false
+	stopCurrentTween(true)
+	screenGui:Destroy() 
+end)
+
+toggleContainer.MouseButton1Click:Connect(function()
+	toggleState = not toggleState
+	local targetColor = toggleState and Color3.fromRGB(0, 220, 100) or Color3.fromRGB(40, 40, 45)
+	TweenService:Create(switchBg, TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {BackgroundColor3 = targetColor}):Play()
+	local targetPos = toggleState and UDim2.new(1, -15, 0.5, -7) or UDim2.new(0, 1, 0.5, -7)
+	TweenService:Create(switchKnob, TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {Position = targetPos}):Play()
+
+	if not toggleState then stopCurrentTween(true) end
+end)
+
+treeContainer.MouseButton1Click:Connect(function()
+	autoTreeState = not autoTreeState
+	local targetColor = autoTreeState and Color3.fromRGB(0, 220, 100) or Color3.fromRGB(40, 40, 45)
+	TweenService:Create(treeSwitchBg, TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {BackgroundColor3 = targetColor}):Play()
+	local targetPos = autoTreeState and UDim2.new(1, -15, 0.5, -7) or UDim2.new(0, 1, 0.5, -7)
+	TweenService:Create(treeSwitchKnob, TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {Position = targetPos}):Play()
+
+	if autoTreeState then startTreeFarmLoop() else stopCurrentTween(true) end
+end)
+
+btnStopTween.MouseButton1Click:Connect(function() stopCurrentTween(true) end)
+
+btnBind.MouseButton1Click:Connect(function()
+	isBinding = true
+	btnBind.Text = "[ ... ]"
+end)
+
+UserInputService.InputBegan:Connect(function(input, gameProcessed)
+	if isBinding and input.UserInputType == Enum.UserInputType.Keyboard then
+		stopKey = input.KeyCode
+		btnBind.Text = "[ " .. stopKey.Name .. " ]"
+		isBinding = false
+		return
+	end
+	
+	if not gameProcessed and input.UserInputType == Enum.UserInputType.Keyboard then
+		if input.KeyCode == toggleUiKey then
+			mainFrame.Visible = not mainFrame.Visible
+		elseif input.KeyCode == stopKey then
+			stopCurrentTween(true)
+		elseif input.KeyCode == Enum.KeyCode.Space then
+			local char = player.Character
+			local root = char and char:FindFirstChild("HumanoidRootPart")
+			if root and isPlayerInGroundArea(root) then
+				unequipTreadmill()
+			end
+		end
+	end
+end)
+
+-----------------------------------
+-- 9. METATABLE HOOK
+-----------------------------------
+local oldNamecall
+oldNamecall = hookmetamethod(game, "__namecall", newcclosure(function(self, ...)
+	local method = getnamecallmethod()
+	
+	if toggleState and method == "InvokeServer" and self.Name == "Eggs: RequestAreaEggCarry" then
+		task.spawn(function()
+			task.wait(Settings.HookTweenDelay)
+			if not toggleState then return end
+			
+			local character = player.Character
+			local rootPart = character and character:FindFirstChild("HumanoidRootPart")
+			
+			if rootPart then
+				local randomPos = Settings.DropLocations[math.random(1, #Settings.DropLocations)]
+				tweenToTarget(randomPos)
+			end
+		end)
+		
+		local remoteResult = oldNamecall(self, ...)
+		if remoteResult == false then stopCurrentTween(true) end
+		return remoteResult
+	end
+	
+	return oldNamecall(self, ...)
+end))
+-- Instant E Prompt Script
+-- Makes all ProximityPrompts activate instantly without holding
+
+local Players = game:GetService("Players")
+local player = Players.LocalPlayer
+
+-- Function to make a proximity prompt instant
+local function makePromptInstant(prompt)
+    if prompt:IsA("ProximityPrompt") then
+        -- Set hold duration to 0 (instant activation)
+        prompt.HoldDuration = 0
+        
+        -- Make it easier to activate
+        prompt.MaxActivationDistance = math.max(prompt.MaxActivationDistance, 10)
+        
+        -- Remove any requirement for line of sight
+        prompt.RequiresLineOfSight = false
+    end
+end
+
+-- Make all existing prompts instant
+for _, descendant in pairs(workspace:GetDescendants()) do
+    makePromptInstant(descendant)
+end
+
+-- Make new prompts instant when they're added
+workspace.DescendantAdded:Connect(function(descendant)
+    if descendant:IsA("ProximityPrompt") then
+        task.wait(0.05)
+        makePromptInstant(descendant)
+    end
+end)
+
+-- Monitor if prompts get reset and re-apply
+workspace.DescendantAdded:Connect(function(descendant)
+    if descendant:IsA("ProximityPrompt") then
+        descendant:GetPropertyChangedSignal("HoldDuration"):Connect(function()
+            if descendant.HoldDuration > 0 then
+                descendant.HoldDuration = 0
+            end
+        end)
+    end
+end)
+
+-- Apply to existing prompts with property change monitoring
+for _, descendant in pairs(workspace:GetDescendants()) do
+    if descendant:IsA("ProximityPrompt") then
+        descendant:GetPropertyChangedSignal("HoldDuration"):Connect(function()
+            if descendant.HoldDuration > 0 then
+                descendant.HoldDuration = 0
+            end
+        end)
+    end
+end
+
+print("Instant E Prompt loaded!")
+print("All ProximityPrompts are now instant!")
+print("No holding required!")
+
+local UserInputService = game:GetService("UserInputService")
+local Players = game:GetService("Players")
+
+local player = Players.LocalPlayer
+
+UserInputService.InputBegan:Connect(function(input, gameProcessed)
+	-- Ignore input if the player is typing in chat or using a menu UI
+	if gameProcessed then return end
+
+	-- Check if the pressed key is the Spacebar
+	if input.KeyCode == Enum.KeyCode.Space then
+		local character = player.Character
+		if character then
+			local humanoid = character:FindFirstChildOfClass("Humanoid")
+			if humanoid then
+				humanoid.Jump = true
+			end
+		end
+	end
+end)
+
+print("Jump loaded")

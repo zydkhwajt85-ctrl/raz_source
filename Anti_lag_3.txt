@@ -1,0 +1,306 @@
+local Players = game:GetService("Players")
+local TweenService = game:GetService("TweenService")
+local UserInputService = game:GetService("UserInputService")
+local RunService = game:GetService("RunService")
+local HttpService = game:GetService("HttpService")
+local Workspace = game:GetService("Workspace")
+local Lighting = game:GetService("Lighting")
+local Player = Players.LocalPlayer
+local PlayerGui = Player:WaitForChild("PlayerGui")
+local Camera = workspace.CurrentCamera
+local ScreenGui = Instance.new("ScreenGui")
+ScreenGui.Name = "FunnyHubPerformance"
+ScreenGui.ResetOnSpawn = false
+ScreenGui.Parent = PlayerGui
+local Frame = Instance.new("Frame")
+Frame.BackgroundTransparency = 0.4
+Frame.Position = UDim2.new(0, 30, 0, 137)
+Frame.ClipsDescendants = true
+Frame.Active = true
+Frame.BackgroundColor3 = Color3.fromRGB(255, 140, 0)
+Frame.Size = UDim2.new(0, 220, 0, 135)
+Frame.Parent = ScreenGui
+local UICorner = Instance.new("UICorner")
+UICorner.CornerRadius = UDim.new(0, 10)
+UICorner.Parent = Frame
+local UIStroke = Instance.new("UIStroke")
+UIStroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
+UIStroke.Thickness = 2
+UIStroke.Color = Color3.new(1, 1, 1)
+UIStroke.Parent = Frame
+local Gradient = Instance.new("UIGradient")
+Gradient.Color = ColorSequence.new({
+	ColorSequenceKeypoint.new(0, Color3.fromRGB(255, 120, 0)),
+	ColorSequenceKeypoint.new(0.5, Color3.fromRGB(255, 170, 0)),
+	ColorSequenceKeypoint.new(1, Color3.fromRGB(255, 220, 120))
+})
+Gradient.Parent = UIStroke
+task.spawn(function()
+	while task.wait() do
+		Gradient.Rotation = (Gradient.Rotation + 1) % 360
+	end
+end)
+local TitleLabel = Instance.new("TextLabel")
+TitleLabel.TextXAlignment = Enum.TextXAlignment.Left
+TitleLabel.Font = Enum.Font.GothamBlack
+TitleLabel.BackgroundTransparency = 1
+TitleLabel.Position = UDim2.new(0, 10, 0, 5)
+TitleLabel.TextColor3 = Color3.new(1, 1, 1)
+TitleLabel.Text = "Funny Hub"
+TitleLabel.TextSize = 16
+TitleLabel.Size = UDim2.new(1, -45, 0, 20)
+TitleLabel.Parent = Frame
+local TitleGradient = Instance.new("UIGradient")
+TitleGradient.Color = ColorSequence.new({
+	ColorSequenceKeypoint.new(0, Color3.fromRGB(255, 120, 0)),
+	ColorSequenceKeypoint.new(0.5, Color3.fromRGB(255, 170, 0)),
+	ColorSequenceKeypoint.new(1, Color3.fromRGB(255, 220, 120))
+})
+TitleGradient.Parent = TitleLabel
+task.spawn(function()
+	while task.wait() do
+		TitleGradient.Rotation = (TitleGradient.Rotation + 1.2) % 360
+	end
+end)
+local SubLabel = Instance.new("TextLabel")
+SubLabel.BackgroundTransparency = 1
+SubLabel.TextXAlignment = Enum.TextXAlignment.Left
+SubLabel.Font = Enum.Font.GothamMedium
+SubLabel.TextTransparency = 0.3
+SubLabel.TextColor3 = Color3.new(1, 1, 1)
+SubLabel.Text = "⚡ Performance Booster"
+SubLabel.Position = UDim2.new(0, 10, 0, 23)
+SubLabel.TextSize = 11
+SubLabel.Size = UDim2.new(1, -20, 0, 15)
+SubLabel.Parent = Frame
+local MinimizeBtn = Instance.new("TextButton")
+MinimizeBtn.Font = Enum.Font.GothamBlack
+MinimizeBtn.BackgroundColor3 = Color3.fromRGB(255, 165, 0)
+MinimizeBtn.Position = UDim2.new(1, -32, 0, 8)
+MinimizeBtn.TextColor3 = Color3.new(1, 1, 1)
+MinimizeBtn.Text = "-"
+MinimizeBtn.TextSize = 14
+MinimizeBtn.Size = UDim2.new(0, 24, 0, 24)
+MinimizeBtn.Parent = Frame
+local MinCorner = Instance.new("UICorner")
+MinCorner.CornerRadius = UDim.new(0, 6)
+MinCorner.Parent = MinimizeBtn
+local MinStroke = Instance.new("UIStroke")
+MinStroke.Thickness = 2
+MinStroke.Color = Color3.fromRGB(255, 220, 120)
+MinStroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
+MinStroke.Parent = MinimizeBtn
+local FpsButton = Instance.new("TextButton")
+FpsButton.Position = UDim2.new(0, 10, 0, 50)
+FpsButton.Size = UDim2.new(1, -20, 0, 32)
+FpsButton.BackgroundColor3 = Color3.fromRGB(255, 165, 0)
+FpsButton.TextColor3 = Color3.new(1, 1, 1)
+FpsButton.Font = Enum.Font.GothamBlack
+FpsButton.Text = "FPS BOOST: OFF"
+FpsButton.TextSize = 14
+FpsButton.Parent = Frame
+local FpsCorner = Instance.new("UICorner")
+FpsCorner.CornerRadius = UDim.new(0, 8)
+FpsCorner.Parent = FpsButton
+local FpsStroke = Instance.new("UIStroke")
+FpsStroke.Thickness = 1.5
+FpsStroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
+FpsStroke.Color = Color3.new(1, 1, 1)
+FpsStroke.Parent = FpsButton
+local FpsGradient = Instance.new("UIGradient")
+FpsGradient.Color = ColorSequence.new({
+	ColorSequenceKeypoint.new(0, Color3.fromRGB(255, 120, 0)),
+	ColorSequenceKeypoint.new(0.5, Color3.fromRGB(255, 170, 0)),
+	ColorSequenceKeypoint.new(1, Color3.fromRGB(255, 220, 120))
+})
+FpsGradient.Parent = FpsStroke
+task.spawn(function()
+	while task.wait() do
+		FpsGradient.Rotation = (FpsGradient.Rotation + 1.4) % 360
+	end
+end)
+local PingButton = Instance.new("TextButton")
+PingButton.Position = UDim2.new(0, 10, 0, 88)
+PingButton.Size = UDim2.new(1, -20, 0, 32)
+PingButton.BackgroundColor3 = Color3.fromRGB(255, 165, 0)
+PingButton.TextColor3 = Color3.new(1, 1, 1)
+PingButton.Font = Enum.Font.GothamBlack
+PingButton.Text = "PING BOOST: OFF"
+PingButton.TextSize = 14
+PingButton.Parent = Frame
+local PingCorner = Instance.new("UICorner")
+PingCorner.CornerRadius = UDim.new(0, 8)
+PingCorner.Parent = PingButton
+local PingStroke = Instance.new("UIStroke")
+PingStroke.Thickness = 1.5
+PingStroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
+PingStroke.Color = Color3.new(1, 1, 1)
+PingStroke.Parent = PingButton
+local PingGradient = Instance.new("UIGradient")
+PingGradient.Color = ColorSequence.new({
+	ColorSequenceKeypoint.new(0, Color3.fromRGB(255, 120, 0)),
+	ColorSequenceKeypoint.new(0.5, Color3.fromRGB(255, 170, 0)),
+	ColorSequenceKeypoint.new(1, Color3.fromRGB(255, 220, 120))
+})
+PingGradient.Parent = PingStroke
+task.spawn(function()
+	while task.wait() do
+		PingGradient.Rotation = (PingGradient.Rotation + 1.4) % 360
+	end
+end)
+local dragging = false
+local dragStart
+local startPos
+local minimized = false
+local originalSize = UDim2.new(0, 220, 0, 135)
+local minimizedSize = UDim2.new(0, 220, 0, 40)
+local function clampPosition(pos)
+	local screenSize = Camera.ViewportSize
+	local guiSize = Frame.AbsoluteSize
+	local maxX = screenSize.X - guiSize.X
+	local maxY = screenSize.Y - guiSize.Y
+	local x = math.clamp(pos.X.Offset, 0, math.max(0, maxX))
+	local y = math.clamp(pos.Y.Offset, 0, math.max(0, maxY))
+	return UDim2.new(0, x, 0, y)
+end
+Frame.InputBegan:Connect(function(input)
+	if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+		dragging = true
+		dragStart = input.Position
+		startPos = Frame.Position
+	end
+end)
+UserInputService.InputChanged:Connect(function(input)
+	if dragging and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then
+		local delta = input.Position - dragStart
+		local newPos = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
+		Frame.Position = clampPosition(newPos)
+	end
+end)
+UserInputService.InputEnded:Connect(function(input)
+	if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+		dragging = false
+	end
+end)
+MinimizeBtn.MouseButton1Click:Connect(function()
+	minimized = not minimized
+	local targetSize = minimized and minimizedSize or originalSize
+	local targetText = minimized and "+" or "-"
+	TweenService:Create(Frame, TweenInfo.new(0.35, Enum.EasingStyle.Quint, Enum.EasingDirection.Out), {Size = targetSize}):Play()
+	MinimizeBtn.Text = targetText
+end)
+FpsButton.MouseEnter:Connect(function()
+	TweenService:Create(FpsButton, TweenInfo.new(0.12), {BackgroundColor3 = Color3.fromRGB(255, 190, 50)}):Play()
+end)
+FpsButton.MouseLeave:Connect(function()
+	if not FpsBoost then
+		TweenService:Create(FpsButton, TweenInfo.new(0.12), {BackgroundColor3 = Color3.fromRGB(255, 165, 0)}):Play()
+	end
+end)
+PingButton.MouseEnter:Connect(function()
+	TweenService:Create(PingButton, TweenInfo.new(0.12), {BackgroundColor3 = Color3.fromRGB(255, 190, 50)}):Play()
+end)
+PingButton.MouseLeave:Connect(function()
+	if not PingBoost then
+		TweenService:Create(PingButton, TweenInfo.new(0.12), {BackgroundColor3 = Color3.fromRGB(255, 165, 0)}):Play()
+	end
+end)
+local FpsBoost = false
+local PingBoost = false
+local function setMaxFPS()
+	local UserSettings = UserSettings()
+	local GameSettings = UserSettings:GetService("UserGameSettings")
+	if GameSettings then
+		pcall(function()
+			GameSettings:SetFpsCap(1000)
+		end)
+	end
+end
+local function resetFPS()
+	local UserSettings = UserSettings()
+	local GameSettings = UserSettings:GetService("UserGameSettings")
+	if GameSettings then
+		pcall(function()
+			GameSettings:SetFpsCap(60)
+		end)
+	end
+end
+FpsButton.MouseButton1Click:Connect(function()
+	FpsBoost = not FpsBoost
+	if FpsBoost then
+		FpsButton.Text = "FPS BOOST: ON"
+		FpsButton.BackgroundColor3 = Color3.fromRGB(76, 175, 80)
+		setMaxFPS()
+		Lighting.GlobalShadows = false
+		Lighting.FogEnd = 1000
+		for _, v in pairs(Workspace:GetDescendants()) do
+			if v:IsA("Part") or v:IsA("MeshPart") then
+				pcall(function()
+					if v.Material ~= Enum.Material.Plastic then
+						v.Material = Enum.Material.Plastic
+					end
+				end)
+			end
+		end
+		collectgarbage("collect")
+	else
+		FpsButton.Text = "FPS BOOST: OFF"
+		FpsButton.BackgroundColor3 = Color3.fromRGB(255, 165, 0)
+		resetFPS()
+	end
+end)
+PingButton.MouseButton1Click:Connect(function()
+	PingBoost = not PingBoost
+	if PingBoost then
+		PingButton.Text = "PING BOOST: ON"
+		PingButton.BackgroundColor3 = Color3.fromRGB(76, 175, 80)
+		pcall(function()
+			HttpService:SetThrottlingEnabled(false)
+		end)
+		Workspace:SetAttribute("ReplicationPriority", 10)
+		local character = Player.Character
+		if character then
+			local root = character:FindFirstChild("HumanoidRootPart")
+			if root then
+				root:SetNetworkOwner(nil)
+			end
+		end
+	else
+		PingButton.Text = "PING BOOST: OFF"
+		PingButton.BackgroundColor3 = Color3.fromRGB(255, 165, 0)
+	end
+end)
+RunService.Heartbeat:Connect(function()
+	if FpsBoost then
+		setMaxFPS()
+	end
+end)
+RunService.Heartbeat:Connect(function()
+	if PingBoost then
+		pcall(function()
+			local character = Player.Character
+			if character then
+				local root = character:FindFirstChild("HumanoidRootPart")
+				if root then
+					root:SetNetworkOwner(nil)
+				end
+			end
+		end)
+	end
+end)
+Player.CharacterAdded:Connect(function()
+	wait(0.5)
+	if FpsBoost then
+		setMaxFPS()
+	end
+	if PingBoost then
+		local character = Player.Character
+		if character then
+			local root = character:FindFirstChild("HumanoidRootPart")
+			if root then
+				root:SetNetworkOwner(nil)
+			end
+		end
+	end
+end)
+print("⚡Funny Hub anti lag back loaded successfully if ur wifi is very shit it might not work alr?")

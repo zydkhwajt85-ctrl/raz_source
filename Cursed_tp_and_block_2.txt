@@ -1,0 +1,252 @@
+
+local Players           = game:GetService("Players")
+local RunService        = game:GetService("RunService")
+local UserInputService  = game:GetService("UserInputService")
+local StarterGui        = game:GetService("StarterGui")
+local ProximityPromptService = game:GetService("ProximityPromptService")
+
+local LocalPlayer = Players.LocalPlayer
+local PlayerGui   = LocalPlayer:WaitForChild("PlayerGui")
+
+-- â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+--  GUI Creation
+-- â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+
+local screen = Instance.new("ScreenGui")
+screen.Name = "PredatorHub"
+screen.ResetOnSpawn = false
+screen.Parent = PlayerGui
+
+local mainFrame = Instance.new("Frame")
+mainFrame.Size               = UDim2.new(0, 220, 0, 360)
+mainFrame.Position           = UDim2.new(0.5, -110, 0.5, -165)
+mainFrame.BackgroundColor3   = Color3.fromRGB(2, 2, 2)
+mainFrame.Active             = true
+mainFrame.Draggable          = true
+mainFrame.BorderSizePixel    = 0
+mainFrame.ClipsDescendants   = true
+mainFrame.Parent             = screen
+
+local corner = Instance.new("UICorner")
+corner.CornerRadius = UDim.new(0, 15)
+corner.Parent = mainFrame
+
+local stroke = Instance.new("UIStroke")
+stroke.Color     = Color3.fromRGB(0, 0, 255)
+stroke.Thickness = 1
+stroke.Parent    = mainFrame
+
+local title = Instance.new("TextLabel")
+title.Size               = UDim2.new(1, -20, 0, 35)
+title.Position           = UDim2.new(0, 10, 0, 10)
+title.BackgroundTransparency = 1
+title.Text               = "Cxrsxd TP Made By Cxrsxd"
+title.TextColor3         = Color3.new(1,1,1)
+title.Font               = Enum.Font.GothamBold
+title.TextSize           = 18
+title.TextXAlignment     = Enum.TextXAlignment.Center
+title.Parent             = mainFrame
+
+-- Decorative moving dots (reduced from 60+ to ~20 for performance)
+local particles = {}
+local particlePositions = {
+    {0.36, 0.45}, {0.44, 0.97}, {0.18, 0.36}, {0.90, 0.72},
+    {0.52, 0.01}, {0.29, 0.68}, {0.31, 0.19}, {0.51, 0.30},
+    {0.74, 0.66}, {0.25, 0.62}, {0.80, 0.10}, {0.56, 0.26},
+    {0.47, 0.99}, {0.10, 0.46}, {0.91, 0.87}, {0.50, 0.30},
+    {0.21, 0.65}, {0.03, 0.80}, {0.62, 0.58}, {0.45, 0.58}
+}
+
+for i, pos in ipairs(particlePositions) do
+    local dot = Instance.new("Frame")
+    dot.Size               = UDim2.new(0, 4, 0, 4)
+    dot.Position           = UDim2.new(pos[1], 0, pos[2], 0)
+    dot.BackgroundColor3   = Color3.fromRGB(255, 255, 255)
+    dot.BackgroundTransparency = 0.6
+    dot.BorderSizePixel    = 0
+    dot.Parent             = mainFrame
+
+    local dotCorner = Instance.new("UICorner")
+    dotCorner.CornerRadius = UDim.new(1, 0)
+    dotCorner.Parent = dot
+
+    table.insert(particles, {frame = dot, baseX = pos[1], baseY = pos[2], vx = math.random(-4,4)/10000, vy = math.random(-4,4)/10000})
+end
+
+-- Animate particles gently (much lighter than original)
+RunService.RenderStepped:Connect(function(delta)
+    for _, p in ipairs(particles) do
+        local f = p.frame
+        local x = p.baseX + math.sin(tick() * 2 + p.baseX * 10) * 0.008
+        local y = p.baseY + math.cos(tick() * 2 + p.baseY * 10) * 0.008
+        x = math.clamp(x, 0, 1)
+        y = math.clamp(y, 0, 1)
+        f.Position = UDim2.new(x, 0, y, 0)
+    end
+end)
+
+-- Buttons
+
+local btnTeleport = Instance.new("TextButton")
+btnTeleport.Size               = UDim2.new(0, 180, 0, 45)
+btnTeleport.Position           = UDim2.new(0, 20, 0, 60)
+btnTeleport.Text               = "Teleport"
+btnTeleport.TextColor3         = Color3.fromRGB(0,0,255)
+btnTeleport.Font               = Enum.Font.GothamBold
+btnTeleport.TextSize           = 16
+btnTeleport.BackgroundColor3   = Color3.fromRGB(230,230,230)
+btnTeleport.BorderSizePixel    = 0
+btnTeleport.Parent             = mainFrame
+do local c = Instance.new("UICorner", btnTeleport) c.CornerRadius = UDim.new(0,10) end
+
+local btnKeybind = Instance.new("TextButton")
+btnKeybind.Size               = UDim2.new(0, 180, 0, 45)
+btnKeybind.Position           = UDim2.new(0, 20, 0, 115)
+btnKeybind.Text               = "Keybind: [F]"
+btnKeybind.TextColor3         = Color3.fromRGB(0,0,255)
+btnKeybind.Font               = Enum.Font.GothamBold
+btnKeybind.TextSize           = 16
+btnKeybind.BackgroundColor3   = Color3.fromRGB(230,230,230)
+btnKeybind.BorderSizePixel    = 0
+btnKeybind.Parent             = mainFrame
+do local c = Instance.new("UICorner", btnKeybind) c.CornerRadius = UDim.new(0,10) end
+
+local btnToggleFriends = Instance.new("TextButton")
+btnToggleFriends.Size               = UDim2.new(0, 180, 0, 45)
+btnToggleFriends.Position           = UDim2.new(0, 20, 0, 170)
+btnToggleFriends.Text               = "Toggle Friends"
+btnToggleFriends.TextColor3         = Color3.fromRGB(255,255,255)
+btnToggleFriends.Font               = Enum.Font.GothamBold
+btnToggleFriends.TextSize           = 16
+btnToggleFriends.BackgroundColor3   = Color3.fromRGB(200,0,0)
+btnToggleFriends.BorderSizePixel    = 0
+btnToggleFriends.Parent             = mainFrame
+do local c = Instance.new("UICorner", btnToggleFriends) c.CornerRadius = UDim.new(0,10) end
+
+local lblDelay = Instance.new("TextLabel")
+lblDelay.Size               = UDim2.new(0, 180, 0, 20)
+lblDelay.Position           = UDim2.new(0, 20, 0, 225)
+lblDelay.BackgroundTransparency = 1
+lblDelay.Text               = "Block Delay"
+lblDelay.TextColor3         = Color3.fromRGB(255,255,255)
+lblDelay.Font               = Enum.Font.GothamBold
+lblDelay.TextSize           = 14
+lblDelay.TextXAlignment     = Enum.TextXAlignment.Left
+lblDelay.Parent             = mainFrame
+
+local txtDelay = Instance.new("TextBox")
+txtDelay.Size               = UDim2.new(0, 90, 0, 35)
+txtDelay.Position           = UDim2.new(0, 20, 0, 250)
+txtDelay.Text               = "0.7"
+txtDelay.Font               = Enum.Font.GothamBold
+txtDelay.TextSize           = 16
+txtDelay.BackgroundColor3   = Color3.fromRGB(230,230,230)
+txtDelay.TextColor3         = Color3.fromRGB(0,0,0)
+txtDelay.BorderSizePixel    = 0
+txtDelay.Parent             = mainFrame
+do local c = Instance.new("UICorner", txtDelay) c.CornerRadius = UDim.new(0,8) end
+
+local btnSetDelay = Instance.new("TextButton")
+btnSetDelay.Size               = UDim2.new(0, 80, 0, 35)
+btnSetDelay.Position           = UDim2.new(0, 120, 0, 250)
+btnSetDelay.Text               = "Set"
+btnSetDelay.Font               = Enum.Font.GothamBold
+btnSetDelay.TextSize           = 16
+btnSetDelay.BackgroundColor3   = Color3.fromRGB(230,230,230)
+btnSetDelay.TextColor3         = Color3.fromRGB(0,0,255)
+btnSetDelay.BorderSizePixel    = 0
+btnSetDelay.Parent             = mainFrame
+do local c = Instance.new("UICorner", btnSetDelay) c.CornerRadius = UDim.new(0,8) end
+
+local btnBlockAll = Instance.new("TextButton")
+btnBlockAll.Size               = UDim2.new(0, 180, 0, 45)
+btnBlockAll.Position           = UDim2.new(0, 20, 0, 295)
+btnBlockAll.Text               = "Block All"
+btnBlockAll.TextColor3         = Color3.fromRGB(0,0,255)
+btnBlockAll.Font               = Enum.Font.GothamBold
+btnBlockAll.TextSize           = 16
+btnBlockAll.BackgroundColor3   = Color3.fromRGB(230,230,230)
+btnBlockAll.BorderSizePixel    = 0
+btnBlockAll.Parent             = mainFrame
+do local c = Instance.new("UICorner", btnBlockAll) c.CornerRadius = UDim.new(0,10) end
+
+-- â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+--  Logic
+-- â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+
+local blockDelay = 0.7
+
+btnSetDelay.MouseButton1Click:Connect(function()
+    local num = tonumber(txtDelay.Text)
+    if num and num > 0 then
+        blockDelay = num
+        txtDelay.Text = tostring(blockDelay)
+    else
+        txtDelay.Text = tostring(blockDelay)
+    end
+end)
+
+-- Block All Players (with delay)
+btnBlockAll.MouseButton1Click:Connect(function()
+    for _, player in ipairs(Players:GetPlayers()) do
+        if player ~= LocalPlayer and player.UserId > 0 then
+            pcall(function()
+                StarterGui:SetCore("PromptBlockPlayer", player)
+            end)
+            task.wait(blockDelay)
+        end
+    end
+end)
+
+-- Toggle Friends via Proximity Prompts
+local friendsToggled = false
+btnToggleFriends.MouseButton1Click:Connect(function()
+    friendsToggled = not friendsToggled
+    btnToggleFriends.BackgroundColor3 = friendsToggled and Color3.fromRGB(0,200,0) or Color3.fromRGB(200,0,0)
+
+    for _, obj in ipairs(workspace:GetDescendants()) do
+        if obj:IsA("ProximityPrompt") then
+            local action = (obj.ActionText or ""):lower()
+            local object = (obj.ObjectText or ""):lower()
+            if action:find("friend") or object:find("friend") then
+                pcall(function()
+                    fireproximityprompt(obj, 1)  -- trigger once
+                end)
+            end
+        end
+    end
+end)
+
+-- Teleport / Flying Carpet spam (likely glitch attempt â€” very likely patched)
+btnTeleport.MouseButton1Click:Connect(function()
+    local char = LocalPlayer.Character
+    if not char then return end
+
+    local humanoid = char:FindFirstChildOfClass("Humanoid")
+    if not humanoid then return end
+
+    local carpet = char:FindFirstChild("Flying Carpet") or LocalPlayer.Backpack:FindFirstChild("Flying Carpet")
+    if not carpet then
+        btnTeleport.Text = "No carpet!"
+        task.delay(2, function() btnTeleport.Text = "Teleport" end)
+        return
+    end
+
+    btnTeleport.Text = "Spamming..."
+    task.spawn(function()
+        for i = 1, 30 do
+            humanoid:UnequipTools()
+            task.wait(0.04)
+            humanoid:EquipTool(carpet)
+            task.wait(0.04)
+        end
+        btnTeleport.Text = "Done"
+        task.delay(2, function() btnTeleport.Text = "Teleport" end)
+    end)
+end)
+
+-- Keybind placeholder (F) â€” incomplete in original
+btnKeybind.MouseButton1Click:Connect(function()
+    btnKeybind.Text = "Press a key..."
+    -- Would need InputBegan listener to capture new key â€” not implemented in original
+end)

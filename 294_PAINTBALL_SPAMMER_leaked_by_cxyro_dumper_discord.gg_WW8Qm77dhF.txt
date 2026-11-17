@@ -1,0 +1,104 @@
+-- cxyro dumper: https://discord.gg/WW8Qm77dhF
+
+local CoreGui          = game:GetService("CoreGui")
+local Players          = game:GetService("Players")
+local RunService       = game:GetService("RunService")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+
+local LocalPlayer      = Players.LocalPlayer
+local Packages         = ReplicatedStorage:WaitForChild("Packages")
+local UseItemRemote    = Packages:WaitForChild("Net"):WaitForChild("RE/UseItem")
+
+-- Remove old UI if exists
+if CoreGui:FindFirstChild("PaintballUI") then
+    CoreGui.PaintballUI:Destroy()
+end
+
+-- Create new floating GUI
+local ScreenGui = Instance.new("ScreenGui")
+ScreenGui.Name = "PaintballUI"
+ScreenGui.Parent = CoreGui
+ScreenGui.ResetOnSpawn = false
+
+local ToggleButton = Instance.new("TextButton")
+ToggleButton.Name = "Button"
+ToggleButton.Size = UDim2.new(0, 200, 0, 50)
+ToggleButton.Position = UDim2.new(0, 100, 0, 200)
+ToggleButton.Text = "PAINTBALL: OFF"
+ToggleButton.Font = Enum.Font.GothamBold
+ToggleButton.TextSize = 18
+ToggleButton.BackgroundColor3 = Color3.fromRGB(180, 60, 60)
+ToggleButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+ToggleButton.Active = true
+ToggleButton.Draggable = true
+ToggleButton.Parent = ScreenGui
+
+local corner = Instance.new("UICorner")
+corner.CornerRadius = UDim.new(0, 12)
+corner.Parent = ToggleButton
+
+local isActive = false
+local connection
+
+local function stopSpam()
+    if connection then
+        connection:Disconnect()
+        connection = nil
+    end
+end
+
+local function startSpam()
+    stopSpam() -- clean previous connection first
+
+    connection = RunService.Heartbeat:Connect(function()
+        -- Very aggressive spam attempt to equip & use paintball gun every frame
+        local backpack = LocalPlayer:FindFirstChild("Backpack")
+        if not backpack then return end
+
+        local gun = backpack:FindFirstChild("Paintball Gun")
+        if not gun then return end
+
+        local character = LocalPlayer.Character
+        if not character then return end
+
+        local humanoid = character:FindFirstChildWhichIsA("Humanoid")
+        if not humanoid then return end
+
+        -- Try to equip
+        humanoid:EquipTool(gun)
+
+        -- Try to fire/use (most likely the actual exploit part)
+        pcall(function()
+            UseItemRemote:FireServer()   -- â† this is probably the main exploit action
+        end)
+    end)
+end
+
+-- Toggle button logic
+ToggleButton.MouseButton1Click:Connect(function()
+    isActive = not isActive
+
+    if isActive then
+        ToggleButton.Text = "PAINTBALL: ON"
+        ToggleButton.BackgroundColor3 = Color3.fromRGB(60, 180, 90)
+        startSpam()
+        print("Paintball spam â†’ ON")
+    else
+        ToggleButton.Text = "PAINTBALL: OFF"
+        ToggleButton.BackgroundColor3 = Color3.fromRGB(180, 60, 60)
+        stopSpam()
+        print("Paintball spam â†’ OFF")
+    end
+end)
+
+-- Re-apply on character respawn
+LocalPlayer.CharacterAdded:Connect(function(character)
+    task.wait(0.8) -- small delay to let character fully load
+    
+    if isActive then
+        startSpam()
+        print("Paintball restarted after respawn")
+    end
+end)
+
+print("Paintball exploit UI loaded")

@@ -1,0 +1,104 @@
+-- deobsfucated by cxyro deobsfucater 
+
+local TweenService = game:GetService("TweenService")
+local Players = game:GetService("Players")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+
+local LocalPlayer = Players.LocalPlayer
+local PlayerGui = LocalPlayer:WaitForChild("PlayerGui")
+
+-- Fullscreen Intro Overlay
+local IntroGui = Instance.new("ScreenGui")
+IntroGui.Name = "XZX_HUB"
+IntroGui.ResetOnSpawn = false
+IntroGui.IgnoreGuiInset = true
+IntroGui.Parent = PlayerGui
+
+local Overlay = Instance.new("Frame")
+Overlay.Size = UDim2.new(1, 0, 1, 0)
+Overlay.Position = UDim2.new(0.5, 0, 0.5, 0)
+Overlay.AnchorPoint = Vector2.new(0.5, 0.5)
+Overlay.BackgroundColor3 = Color3.new(0, 0, 0)
+Overlay.BackgroundTransparency = 1
+Overlay.ZIndex = 100
+Overlay.Parent = IntroGui
+
+local TitleLabel = Instance.new("TextLabel")
+TitleLabel.Size = UDim2.new(1, 0, 0.4, 0)
+TitleLabel.Position = UDim2.new(0.5, 0, 0.5, 0)
+TitleLabel.AnchorPoint = Vector2.new(0.5, 0.5)
+TitleLabel.BackgroundTransparency = 1
+TitleLabel.TextTransparency = 1
+TitleLabel.Text = "XZX HUB 👿\ndiscord.gg/PtAcD9Km9n"
+TitleLabel.Font = Enum.Font.GothamBlack
+TitleLabel.TextScaled = true
+TitleLabel.TextColor3 = Color3.new(1, 1, 1)
+TitleLabel.ZIndex = 101
+TitleLabel.Parent = Overlay
+
+-- Fade In Animation
+local FadeInOverlay = TweenService:Create(Overlay, TweenInfo.new(1.7, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
+    BackgroundTransparency = 0
+})
+local FadeInText = TweenService:Create(TitleLabel, TweenInfo.new(1.7, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
+    TextTransparency = 0
+})
+
+FadeInOverlay:Play()
+FadeInText:Play()
+
+-- Fade Out After Intro
+FadeInText.Completed:Wait()
+
+local FadeOutOverlay = TweenService:Create(Overlay, TweenInfo.new(1.5, Enum.EasingStyle.Quad, Enum.EasingDirection.In), {
+    BackgroundTransparency = 1
+})
+local FadeOutText = TweenService:Create(TitleLabel, TweenInfo.new(1.5, Enum.EasingStyle.Quad, Enum.EasingDirection.In), {
+    TextTransparency = 1
+})
+
+FadeOutOverlay:Play()
+FadeOutText:Play()
+
+-- Remove intro after fade out
+FadeOutOverlay.Completed:Wait()
+IntroGui:Destroy() -- Clean up the intro
+
+-- Friends-Only Plot Toggle Button
+local ToggleButton = Instance.new("TextButton")
+ToggleButton.Size = UDim2.new(0, 160, 0, 50)
+ToggleButton.Position = UDim2.new(1, -170, 0, 10)
+ToggleButton.BackgroundColor3 = Color3.fromRGB(200, 0, 0)
+ToggleButton.BorderSizePixel = 0
+ToggleButton.Font = Enum.Font.GothamBlack
+ToggleButton.TextScaled = true
+ToggleButton.TextColor3 = Color3.new(1, 1, 1)
+ToggleButton.Text = "Allow/Disallow"
+ToggleButton.Parent = PlayerGui
+
+local Corner = Instance.new("UICorner")
+Corner.CornerRadius = UDim.new(0, 10)
+Corner.Parent = ToggleButton
+
+-- Toggle Functionality
+ToggleButton.MouseButton1Click:Connect(function()
+    local success, err = pcall(function()
+        local PlotService = ReplicatedStorage
+            :WaitForChild("Packages")
+            :WaitForChild("Net")
+            :WaitForChild("RE/PlotService/ToggleFriends")
+
+        PlotService:FireServer()
+    end)
+
+    if success then
+        -- Visual feedback
+        ToggleButton.BackgroundColor3 = Color3.fromRGB(0, 170, 0)
+        task.wait(0.3)
+        ToggleButton.BackgroundColor3 = Color3.fromRGB(200, 0, 0)
+    else
+        warn("Failed to toggle friends-only: " .. tostring(err))
+    end
+end)
+
+print("XZX Hub Loaded - Friends-Only Toggle Ready")

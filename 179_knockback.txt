@@ -1,0 +1,137 @@
+-- Chunk: nil
+
+game:GetService("StarterGui"):SetCore("SendNotification",{
+	Title = "Kurd hub", -- Required
+	Text = "You need to have Rainbow Sword!!", -- Required
+	Icon = "rbxassetid://h" -- Optional
+})
+
+local autoSwordEnabled = false
+local lastUsed = 0
+local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local LocalPlayer = Players.LocalPlayer
+local UserInputService = game:GetService("UserInputService")
+
+-- Create simple GUI
+local gui = Instance.new("ScreenGui")
+gui.Name = "KnockbackAuraGUI"
+gui.ResetOnSpawn = false
+gui.Parent = game:GetService("CoreGui") or LocalPlayer:WaitForChild("PlayerGui")
+
+local button = Instance.new("TextButton")
+button.Name = "ToggleButton"
+button.Size = UDim2.new(0, 100, 0, 30)
+button.Position = UDim2.new(0, 10, 0, 10)
+button.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
+button.BorderColor3 = Color3.fromRGB(255, 0, 0)
+button.Text = "Aura⚔️: OFF"
+button.TextColor3 = Color3.fromRGB(255, 255, 255)
+button.Parent = gui
+
+-- Make button draggable
+local dragging
+local dragInput
+local dragStart
+local startPos
+
+button.InputBegan:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseButton1 then
+        dragging = true
+        dragStart = input.Position
+        startPos = button.Position
+        
+        input.Changed:Connect(function()
+            if input.UserInputState == Enum.UserInputState.End then
+                dragging = false
+            end
+        end)
+    end
+end)
+
+button.InputChanged:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseMovement then
+        dragInput = input
+    end
+end)
+
+UserInputService.InputChanged:Connect(function(input)
+    if input == dragInput and dragging then
+        local delta = input.Position - dragStart
+        button.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
+    end
+end)
+
+-- Toggle function
+button.MouseButton1Click:Connect(function()
+    autoSwordEnabled = not autoSwordEnabled
+    if autoSwordEnabled then
+        button.Text = "Aura⚔️: ON"
+        button.BorderColor3 = Color3.fromRGB(0, 255, 0)
+        
+        -- Try to purchase sword if not already owned
+        task.spawn(function()
+            local args = { [1] = "Rainbowrath Sword" }
+            local remote = ReplicatedStorage:FindFirstChild("Packages")
+                :FindFirstChild("Net")
+                :FindFirstChild("RF/CoinsShopService/RequestBuy")
+            if remote then
+                pcall(function()
+                    remote:InvokeServer(unpack(args))
+                end)
+            end
+        end)
+    else
+        button.Text = "Aura⚔️: OFF"
+        button.BorderColor3 = Color3.fromRGB(255, 0, 0)
+    end
+end)
+
+-- Knockback logic
+RunService.Heartbeat:Connect(function()
+    if not autoSwordEnabled then return end
+
+    local char = LocalPlayer.Character
+    local hrp = char and char:FindFirstChild("HumanoidRootPart")
+    local backpack = LocalPlayer:FindFirstChild("Backpack")
+    if not (char and hrp and backpack) then return end
+
+    -- Find nearest player
+    local nearest, dist
+    for _, pl in ipairs(Players:GetPlayers()) do
+        if pl ~= LocalPlayer and pl.Character and pl.Character:FindFirstChild("HumanoidRootPart") then
+            local d = (hrp.Position - pl.Character.HumanoidRootPart.Position).Magnitude
+            if not nearest or d < dist then
+                nearest, dist = pl, d
+            end
+        end
+    end
+
+    -- Attack if player is nearby
+    if nearest and dist <= 17 then
+        local targetHRP = nearest.Character:FindFirstChild("HumanoidRootPart")
+        hrp.CFrame = CFrame.lookAt(hrp.Position, Vector3.new(targetHRP.Position.X, hrp.Position.Y, targetHRP.Position.Z))
+
+        if tick() - lastUsed >= 1 then
+            for _, tool in ipairs(backpack:GetChildren()) do
+                if tool:IsA("Tool") and tool.Name:match("Sword$") then
+                    lastUsed = tick()
+                    -- Clear current tool
+                    for _, eq in ipairs(char:GetChildren()) do
+                        if eq:IsA("Tool") then eq.Parent = backpack end
+                    end
+                    -- Use sword
+                    tool.Parent = char
+                    tool:Activate()
+                    task.delay(0.3, function()
+                        if tool.Parent == char then
+                            tool.Parent = backpack
+                        end
+                    end)
+                    break
+                end
+            end
+        end
+    end
+end)

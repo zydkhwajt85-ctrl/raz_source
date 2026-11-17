@@ -1,0 +1,269 @@
+--// ===============================
+--// COREX HUB | WINDUI
+--// ===============================
+
+--// SERVICES
+local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+
+local LocalPlayer = Players.LocalPlayer
+
+--// WINDUI LOAD
+local cloneref = (cloneref or clonereference or function(i) return i end)
+local WindUI = loadstring(game:HttpGet("https://raw.githubusercontent.com/Footagesus/WindUI/main/dist/main.lua"))()
+
+--// WINDOW
+local Window = WindUI:CreateWindow({
+    Title = "Corex Hub",
+    Folder = "corexhub",
+    NewElements = true,
+})
+
+--// ===============================
+--// CONFIG USAGE (KEPT)
+--// ===============================
+local ConfigUsageSection = Window:Section({
+    Title = "Config Usage",
+})
+
+--// CONFIG ELEMENTS TAB
+local ConfigElementsTab = ConfigUsageSection:Tab({
+    Title = "Config Elements",
+    Border = true,
+})
+
+ConfigElementsTab:Toggle({
+    Flag = "ExampleToggle",
+    Title = "Example Toggle",
+    Value = false,
+})
+
+ConfigElementsTab:Slider({
+    Flag = "ExampleSlider",
+    Title = "Example Slider",
+    Value = {
+        Min = 0,
+        Max = 100,
+        Default = 50,
+    },
+})
+
+--// CONFIG MANAGER TAB
+local ConfigTab = ConfigUsageSection:Tab({
+    Title = "Configs",
+    Border = true,
+})
+
+local ConfigManager = Window.ConfigManager
+local ConfigName = "default"
+
+ConfigTab:Input({
+    Title = "Config Name",
+    Callback = function(value)
+        ConfigName = value
+    end
+})
+
+ConfigTab:Button({
+    Title = "Save Config",
+    Justify = "Center",
+    Callback = function()
+        Window.CurrentConfig = ConfigManager:Config(ConfigName)
+        Window.CurrentConfig:Save()
+    end
+})
+
+ConfigTab:Button({
+    Title = "Load Config",
+    Justify = "Center",
+    Callback = function()
+        Window.CurrentConfig = ConfigManager:CreateConfig(ConfigName)
+        Window.CurrentConfig:Load()
+    end
+})
+
+--// ===============================
+--// TECH TAB
+--// ===============================
+local TechTab = Window:Tab({
+    Title = "Tech",
+    Icon = "zap",
+})
+
+--// ===============================
+--// LETHAL DASH (TOGGLE)
+--// ===============================
+
+-- SETTINGS
+local TARGET_ANIMATION = "rbxassetid://12296113986"
+
+local BOOST_POWER = 64
+local AIM_DURATION = 0.74
+local PREDICTION_MULTIPLIER = 0.22
+
+local DASH_KEY = Enum.KeyCode.Q
+local MOVE_KEY = Enum.KeyCode.W
+
+-- STATE
+local Enabled = false
+local AnimationConnection
+local CharacterConnection
+
+--// ===============================
+--// CORE FUNCTIONS
+--// ===============================
+
+local function BoostUp(character)
+    local hrp = character:FindFirstChild("HumanoidRootPart")
+    if hrp then
+        hrp.AssemblyLinearVelocity = Vector3.new(0, BOOST_POWER, 0)
+    end
+end
+
+local function GetClosestTarget(character)
+    local hrp = character:FindFirstChild("HumanoidRootPart")
+    if not hrp then return nil end
+
+    local closest, shortest = nil, math.huge
+
+    for _, obj in ipairs(workspace:GetDescendants()) do
+        if obj:IsA("Model") and obj ~= character then
+            local hum = obj:FindFirstChildOfClass("Humanoid")
+            local targetHRP = obj:FindFirstChild("HumanoidRootPart")
+
+            if hum and hum.Health > 0 and targetHRP then
+                local dist = (hrp.Position - targetHRP.Position).Magnitude
+                if dist < shortest then
+                    shortest = dist
+                    closest = obj
+                end
+            end
+        end
+    end
+
+    return closest
+end
+
+local function AimAtTarget(character)
+    local humanoid = character:FindFirstChildOfClass("Humanoid")
+    local hrp = character:FindFirstChild("HumanoidRootPart")
+    if not humanoid or not hrp then return end
+
+    humanoid.AutoRotate = false
+
+    local lock
+    lock = humanoid:GetPropertyChangedSignal("AutoRotate"):Connect(function()
+        humanoid.AutoRotate = false
+    end)
+
+    local target = GetClosestTarget(character)
+    if not target then
+        humanoid.AutoRotate = true
+        lock:Disconnect()
+        return
+    end
+
+    local startTime = tick()
+    local conn
+
+    conn = RunService.RenderStepped:Connect(function()
+        if not Enabled then
+            conn:Disconnect()
+            lock:Disconnect()
+            humanoid.AutoRotate = true
+            return
+        end
+
+        if tick() - startTime <= AIM_DURATION then
+            local targetHRP = target:FindFirstChild("HumanoidRootPart")
+            if targetHRP then
+                local predicted =
+                    targetHRP.Position +
+                    targetHRP.AssemblyLinearVelocity * PREDICTION_MULTIPLIER
+
+                hrp.CFrame = CFrame.lookAt(
+                    hrp.Position,
+                    Vector3.new(predicted.X, hrp.Position.Y, predicted.Z)
+                )
+            end
+        else
+            conn:Disconnect()
+            lock:Disconnect()
+            humanoid.AutoRotate = true
+        end
+    end)
+end
+
+--// ===============================
+--// CHARACTER SETUP
+--// ===============================
+
+local function SetupCharacter(character)
+    if AnimationConnection then
+        AnimationConnection:Disconnect()
+        AnimationConnection = nil
+    end
+
+    local humanoid = character:WaitForChild("Humanoid")
+
+    AnimationConnection = humanoid.AnimationPlayed:Connect(function(anim)
+        if not Enabled then return end
+        if anim.Animation and anim.Animation.AnimationId == TARGET_ANIMATION then
+            task.wait(1.7)
+
+            BoostUp(character)
+            AimAtTarget(character)
+
+            local args = {
+                {
+                    Dash = MOVE_KEY,
+                    Key = DASH_KEY,
+                    Goal = "KeyPress",
+                },
+            }
+
+            local comm = character:FindFirstChild("Communicate")
+            if comm then
+                comm:FireServer(unpack(args))
+            end
+        end
+    end)
+end
+
+--// RESPAWN HANDLING
+local function EnableSystem(state)
+    Enabled = state
+
+    if state then
+        if LocalPlayer.Character then
+            SetupCharacter(LocalPlayer.Character)
+        end
+
+        CharacterConnection = LocalPlayer.CharacterAdded:Connect(function(char)
+            task.wait(0.5)
+            SetupCharacter(char)
+        end)
+    else
+        if AnimationConnection then
+            AnimationConnection:Disconnect()
+            AnimationConnection = nil
+        end
+        if CharacterConnection then
+            CharacterConnection:Disconnect()
+            CharacterConnection = nil
+        end
+    end
+end
+
+--// ===============================
+--// TECH UI
+--// ===============================
+TechTab:Toggle({
+    Title = "Lethal Dash",
+    Desc = "Lethal Dash",
+    Value = false,
+    Callback = function(state)
+        EnableSystem(state)
+    end
+})

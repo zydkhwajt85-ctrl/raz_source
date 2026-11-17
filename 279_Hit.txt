@@ -1,0 +1,148 @@
+-- //HitBastão - Modificado com keybind
+
+local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
+local UserInputService = game:GetService("UserInputService")
+local player = Players.LocalPlayer
+
+-- gui
+local gui = Instance.new("ScreenGui")
+gui.Name = "BorralhoHitGui"
+gui.ResetOnSpawn = false
+gui.Parent = player:WaitForChild("PlayerGui")
+
+-- draggable
+local button = Instance.new("TextButton")
+button.Size = UDim2.new(0,90,0,36) -- tamanho ajustado
+button.Position = UDim2.new(0.5,-45,0.5,-18)
+button.BackgroundColor3 = Color3.fromRGB(30,30,30)
+button.Text = ""
+button.Active = true
+button.Draggable = true
+button.Parent = gui
+
+-- estilo
+local corner = Instance.new("UICorner", button)
+corner.CornerRadius = UDim.new(0,8)
+
+local stroke = Instance.new("UIStroke", button)
+stroke.Color = Color3.new(1,1,1)
+stroke.Thickness = 2
+
+-- texto
+local text = Instance.new("TextLabel")
+text.Size = UDim2.new(1,0,1,0)
+text.BackgroundTransparency = 1
+text.Text = "HIT (X)"
+text.Font = Enum.Font.Arcade
+text.TextSize = 12 -- PAR = nítido
+text.TextColor3 = Color3.new(1,1,1)
+text.TextXAlignment = Enum.TextXAlignment.Center
+text.TextYAlignment = Enum.TextYAlignment.Center
+text.TextScaled = false
+text.Parent = button
+
+-- =========================
+-- função de hit
+-- =========================
+local function executeHit()
+	local char = player.Character
+	if not char then return end
+
+	local hum = char:FindFirstChildOfClass("Humanoid")
+	if not hum then return end
+
+	-- galaxy slap
+	local galaxy = char:FindFirstChild("Galaxy Slap") or player.Backpack:FindFirstChild("Galaxy Slap")
+	if galaxy then
+		hum:EquipTool(galaxy)
+		RunService.Heartbeat:Wait()
+		pcall(function()
+			galaxy:Activate(0.00000000000001)
+		end)
+	end
+
+	-- Bat (fica na mão)
+	local bat = char:FindFirstChild("Bat") or player.Backpack:FindFirstChild("Bat")
+	if bat then
+		RunService.Heartbeat:Wait()
+		hum:EquipTool(bat)
+		pcall(function()
+			bat:Activate()
+		end)
+	end
+end
+
+-- =========================
+-- keybind (tecla X)
+-- =========================
+local keybindConnection
+local keybindActive = true
+
+local function setupKeybind()
+	if keybindConnection then
+		keybindConnection:Disconnect()
+	end
+	
+	keybindConnection = UserInputService.InputBegan:Connect(function(input, gameProcessed)
+		if gameProcessed then return end
+		
+		if input.KeyCode == Enum.KeyCode.X then
+			executeHit()
+		end
+	end)
+end
+
+-- Ativar/desativar keybind com clique no botão
+local function toggleKeybind()
+	keybindActive = not keybindActive
+	
+	if keybindActive then
+		setupKeybind()
+		text.Text = "HIT (X)"
+		button.BackgroundColor3 = Color3.fromRGB(30,30,30)
+		stroke.Color = Color3.new(1,1,1)
+	else
+		if keybindConnection then
+			keybindConnection:Disconnect()
+			keybindConnection = nil
+		end
+		text.Text = "HIT (OFF)"
+		button.BackgroundColor3 = Color3.fromRGB(60,30,30)
+		stroke.Color = Color3.new(1,0.5,0.5)
+	end
+end
+
+-- =========================
+-- conexões
+-- =========================
+button.MouseButton1Click:Connect(executeHit)
+button.MouseButton2Click:Connect(toggleKeybind) -- Botão direito alterna keybind
+
+-- Tooltip para mostrar instruções
+local tooltip = Instance.new("TextLabel")
+tooltip.Size = UDim2.new(1,0,0,20)
+tooltip.Position = UDim2.new(0,0,1,5)
+tooltip.BackgroundTransparency = 1
+tooltip.Text = "Clique: Ativar | Botão direito: Alternar keybind (X)"
+tooltip.Font = Enum.Font.SourceSans
+tooltip.TextSize = 10
+tooltip.TextColor3 = Color3.new(0.8,0.8,0.8)
+tooltip.Visible = false
+tooltip.Parent = button
+
+button.MouseEnter:Connect(function()
+	tooltip.Visible = true
+end)
+
+button.MouseLeave:Connect(function()
+	tooltip.Visible = false
+end)
+
+-- Inicializar keybind
+setupKeybind()
+
+-- Conectar para quando o jogador respawnar
+player.CharacterAdded:Connect(function()
+	setupKeybind()
+end)

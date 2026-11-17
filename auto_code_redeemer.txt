@@ -1,0 +1,177 @@
+-- ==========================================
+-- AUTO REDEEMER V6.7 (FIXED TEXT CONCATENATION)
+-- DIBUAT OLEH: ZIRTZROBLOXX
+-- ==========================================
+
+local Player = game:GetService("Players").LocalPlayer
+local PlayerGui = Player:WaitForChild("PlayerGui")
+local UserInputService = game:GetService("UserInputService")
+
+-- Bersihkan UI lama jika ada
+if PlayerGui:FindFirstChild("AutoRedeemMobileUI") then
+    PlayerGui:FindFirstChild("AutoRedeemMobileUI"):Destroy()
+end
+
+-- Setup UI
+local ScreenGui = Instance.new("ScreenGui")
+local MainFrame = Instance.new("Frame")
+local UICorner = Instance.new("UICorner")
+local TitleBar = Instance.new("Frame")
+local TitleLabel = Instance.new("TextLabel")
+local ToggleBtn = Instance.new("TextButton")
+local StatusLabel = Instance.new("TextLabel")
+local CloseBtn = Instance.new("TextButton")
+local CreditLabel = Instance.new("TextLabel")
+
+ScreenGui.Name = "AutoRedeemMobileUI"
+ScreenGui.Parent = PlayerGui
+ScreenGui.ResetOnSpawn = false
+
+MainFrame.Name = "MainFrame"
+MainFrame.Parent = ScreenGui
+MainFrame.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
+MainFrame.Position = UDim2.new(0.5, -110, 0.4, -70)
+MainFrame.Size = UDim2.new(0, 220, 0, 145)
+MainFrame.Active = true
+MainFrame.ClipsDescendants = true
+
+UICorner.Parent = MainFrame
+UICorner.CornerRadius = UDim.new(0, 8)
+
+TitleBar.Name = "TitleBar"
+TitleBar.Parent = MainFrame
+TitleBar.BackgroundColor3 = Color3.fromRGB(35, 35, 35)
+TitleBar.Size = UDim2.new(1, 0, 0, 30)
+TitleBar.Active = true
+
+TitleLabel.Parent = TitleBar
+TitleLabel.Text = "Auto Redeemer V1"
+TitleLabel.TextColor3 = Color3.new(1,1,1)
+TitleLabel.Size = UDim2.new(1, -40, 1, 0)
+TitleLabel.BackgroundTransparency = 1
+TitleLabel.Font = Enum.Font.SourceSansBold
+
+CloseBtn.Name = "CloseBtn"
+CloseBtn.Parent = TitleBar
+CloseBtn.Position = UDim2.new(1, -35, 0, 4)
+CloseBtn.Size = UDim2.new(0, 30, 0, 22)
+CloseBtn.Text = "-"
+CloseBtn.BackgroundColor3 = Color3.fromRGB(45, 45, 45)
+
+ToggleBtn.Name = "ToggleBtn"
+ToggleBtn.Parent = MainFrame
+ToggleBtn.Position = UDim2.new(0, 15, 0, 45)
+ToggleBtn.Size = UDim2.new(0, 190, 0, 40)
+ToggleBtn.Text = "STATUS: MATI"
+ToggleBtn.BackgroundColor3 = Color3.fromRGB(180, 50, 50)
+ToggleBtn.TextColor3 = Color3.new(1,1,1)
+
+StatusLabel.Parent = MainFrame
+StatusLabel.Position = UDim2.new(0, 0, 0, 95)
+StatusLabel.Size = UDim2.new(1, 0, 0, 20)
+StatusLabel.Text = "Auto Redeem dinonaktifkan."
+StatusLabel.TextColor3 = Color3.fromRGB(150, 150, 150)
+StatusLabel.BackgroundTransparency = 1
+
+CreditLabel.Parent = MainFrame
+CreditLabel.Position = UDim2.new(0, 0, 0, 118)
+CreditLabel.Size = UDim2.new(1, 0, 0, 20)
+CreditLabel.Text = "Made By ZirtzRobloxx"
+CreditLabel.TextColor3 = Color3.fromRGB(0, 180, 255)
+CreditLabel.BackgroundTransparency = 1
+
+-- FUNGSI DRAG
+local dragging, dragStart, startPos
+TitleBar.InputBegan:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+        dragging = true
+        dragStart = input.Position
+        startPos = MainFrame.Position
+    end
+end)
+
+UserInputService.InputChanged:Connect(function(input)
+    if dragging and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then
+        local delta = input.Position - dragStart
+        MainFrame.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
+    end
+end)
+
+UserInputService.InputEnded:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+        dragging = false
+    end
+end)
+
+-- LOGIKA MINIMIZE
+local isMinimized = false
+CloseBtn.MouseButton1Click:Connect(function()
+    isMinimized = not isMinimized
+    MainFrame:TweenSize(isMinimized and UDim2.new(0, 220, 0, 30) or UDim2.new(0, 220, 0, 145), "Out", "Quad", 0.2, true)
+    ToggleBtn.Visible = not isMinimized
+    StatusLabel.Visible = not isMinimized
+    CreditLabel.Visible = not isMinimized
+    CloseBtn.Text = isMinimized and "+" or "-"
+end)
+
+-- LOGIKA UTAMA AUTO REDEEM
+_G.AutoRedeem = false
+local teksTerakhir = {}
+
+local function dapatkanTextBoxGame()
+    for _, gui in pairs(PlayerGui:GetChildren()) do
+        if gui:IsA("ScreenGui") and gui.Enabled and gui.Name ~= "AutoRedeemMobileUI" then
+            for _, descendant in pairs(gui:GetDescendants()) do
+                if descendant:IsA("TextBox") and (descendant.PlaceholderText == "Code Here..." or string.find(string.lower(descendant.PlaceholderText), "code")) then
+                    return descendant
+                end
+            end
+        end
+    end
+    return nil
+end
+
+local function isBlacklisted(text)
+    local blacklist = {"starting", "in:", "h ", "m ", "s ", "live", "now", "event", "start", "play", "claim", "code", "redeem", "health", "mana", "level", "lvl", "submit", "friend boost", "codes", "global", "transparency", "namelabel", "stroke", "expired", "invalid", "success", "here", "purchase", "buy", "price", "robux", "cost"}
+    for _, word in ipairs(blacklist) do
+        if string.find(string.lower(text), word) then return true end
+    end
+    return false
+end
+
+local function masukkanDanSubmitKode(codeText)
+    if not _G.AutoRedeem or teksTerakhir[codeText] then return end
+    teksTerakhir[codeText] = true
+    
+    local foundTextBox = dapatkanTextBoxGame()
+    if foundTextBox then
+        -- DI SINI PERUBAHANNYA: Menggunakan operator `..` untuk menggabungkan teks
+        foundTextBox.Text = foundTextBox.Text .. codeText
+        StatusLabel.Text = "Gabung kode: " .. foundTextBox.Text
+        
+        -- Beri jeda sedikit agar teks gabungan selesai diproses sebelum di-submit otomatis
+        task.wait(0.5)
+        foundTextBox:ReleaseFocus(true)
+    end
+    
+    task.delay(2, function() teksTerakhir[codeText] = nil end)
+end
+
+ToggleBtn.MouseButton1Click:Connect(function()
+    _G.AutoRedeem = not _G.AutoRedeem
+    ToggleBtn.BackgroundColor3 = _G.AutoRedeem and Color3.fromRGB(50, 180, 50) or Color3.fromRGB(180, 50, 50)
+    ToggleBtn.Text = _G.AutoRedeem and "STATUS: AKTIF" or "STATUS: MATI"
+    StatusLabel.Text = _G.AutoRedeem and "Mencari kode..." or "Auto Redeem dinonaktifkan."
+end)
+
+PlayerGui.DescendantAdded:Connect(function(d)
+    if _G.AutoRedeem and d:IsA("TextLabel") and d.Visible and not d:IsDescendantOf(ScreenGui) then
+        task.wait(0.1)
+        local t = d.Text
+        if t ~= "" and string.len(t) <= 15 and not isBlacklisted(t) then
+            masukkanDanSubmitKode(t)
+        end
+    end
+end)
+
+print("Auto Redeemer V6.7 - Made By ZirtzRobloxx Aktif (Fitur Gabung Teks Ready)!")

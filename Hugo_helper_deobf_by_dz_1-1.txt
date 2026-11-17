@@ -1,0 +1,367 @@
+local gal_l166 = game
+local Workspace = gal_l166:GetService("Workspace")
+local TweenService = game:GetService("TweenService")
+local TeleportService = game:GetService("TeleportService")
+local LocalPlayer = gal_l166:GetService("Players").LocalPlayer
+local PlayerGui = LocalPlayer:WaitForChild("PlayerGui")
+local Name = LocalPlayer.Name
+local DisplayName = LocalPlayer.DisplayName
+local RunService = game:GetService("RunService")
+local gal31 = {
+	BaseTimer = {
+		Enabled = false,
+		Data = {}
+	}
+}
+local gal35 = false
+local gal36 = 2
+local plotsFolder = workspace:FindFirstChild("Plots")
+local baseEspInstances = {}
+local espBaseThread
+local function createBaseESP(plot, mainPart)
+    if baseEspInstances[plot.Name] then
+        baseEspInstances[plot.Name]:Destroy()
+    end
+    local billboard = Instance.new("BillboardGui")
+    billboard.Name = "rznnq" .. plot.Name
+    billboard.Size = UDim2.new(0, 50, 0, 25)
+    billboard.StudsOffset = Vector3.new(0, 5, 0)
+    billboard.AlwaysOnTop = true
+    billboard.Adornee = mainPart
+    billboard.MaxDistance = 1000
+    billboard.Parent = plot
+    local label = Instance.new("TextLabel")
+    label.Size = UDim2.new(1, 0, 1, 0)
+    label.BackgroundTransparency = 1
+    label.TextScaled = true
+    label.Font = Enum.Font.Arcade
+    label.TextColor3 = Color3.fromRGB(255, 255, 0)
+    label.TextStrokeTransparency = 0
+    label.TextStrokeColor3 = Color3.new(0, 0, 0)
+    label.Parent = billboard
+    baseEspInstances[plot.Name] = billboard
+    return billboard
+end
+local function updateBaseESP()
+    if not gal31.BaseTimer.Enabled then return end
+    if not plotsFolder then return end
+    for _, plot in ipairs(plotsFolder:GetChildren()) do
+        local purchases = plot:FindFirstChild("Purchases")
+        local plotBlock = purchases and purchases:FindFirstChild("PlotBlock")
+        local mainPart = plotBlock and plotBlock:FindFirstChild("Main")
+        local billboard = baseEspInstances[plot.Name]
+        local timeLabel = mainPart
+            and mainPart:FindFirstChild("BillboardGui")
+            and mainPart.BillboardGui:FindFirstChild("RemainingTime")
+        if timeLabel and mainPart then
+            billboard = billboard or createBaseESP(plot, mainPart)
+            local label = billboard:FindFirstChildWhichIsA("TextLabel")
+            if label then
+                label.Text = timeLabel.Text
+            end
+        elseif billboard then
+            billboard:Destroy()
+            baseEspInstances[plot.Name] = nil
+        end
+    end
+end
+local function gal43()
+	local BaseTimer = gal31.BaseTimer
+	for gal_l13, gal_l14 in pairs(BaseTimer.Data) do
+		pcall(function()
+			gal_l14:Destroy()
+		end)
+	end
+	gal31.BaseTimer.Data = {}
+	-- Nettoyer aussi le nouveau timer
+	for _, instance in pairs(baseEspInstances) do
+		pcall(function()
+			instance:Destroy()
+		end)
+	end
+	baseEspInstances = {}
+	if espBaseThread then
+		espBaseThread:Disconnect()
+		espBaseThread = nil
+	end
+end
+local function gal45()
+	local Plots = Workspace:FindFirstChild("Plots")
+	if not Plots then
+		return nil
+	end
+	for _, plot in pairs(Plots:GetChildren()) do
+		local plotName = plot.Name
+		if plotName == Name or plotName == DisplayName then
+			return plot
+		end
+		local owner = plot:FindFirstChild("Owner")
+		if owner and owner:IsA("StringValue") and owner.Value == Name then
+			return plot
+		end
+		local player = plot:FindFirstChild("Player")
+		if player and player:IsA("ObjectValue") and player.Value and player.Value.Name == Name then
+			return plot
+		end
+	end
+	return nil
+end
+local function updateButtonStyle(button, stroke, state, textOn, textOff)
+	if state then
+		button.Text = textOn
+		TweenService:Create(button, TweenInfo.new(0.2, Enum.EasingStyle.Quad), {
+			BackgroundColor3 = Color3.fromRGB(60, 60, 60),
+			TextColor3 = Color3.fromRGB(255, 255, 255)
+		}):Play()
+		TweenService:Create(stroke, TweenInfo.new(0.2, Enum.EasingStyle.Quad), {
+			Color = Color3.fromRGB(100, 100, 100)
+		}):Play()
+	else
+		button.Text = textOff
+		TweenService:Create(button, TweenInfo.new(0.2, Enum.EasingStyle.Quad), {
+			BackgroundColor3 = Color3.fromRGB(20, 20, 20),
+			TextColor3 = Color3.fromRGB(150, 150, 150)
+		}):Play()
+		TweenService:Create(stroke, TweenInfo.new(0.2, Enum.EasingStyle.Quad), {
+			Color = Color3.fromRGB(50, 50, 50)
+		}):Play()
+	end
+end
+pcall(function()
+	if isfile and isfile("HugoScript_Config.txt") then
+		local success, data = pcall(readfile, "HugoScript_Config.txt")
+		if success then
+			local success2, config = pcall(game.HttpService.JSONDecode, game.HttpService, data)
+			if success2 and config.espEnabled ~= nil then
+				gal31.BaseTimer.Enabled = config.espEnabled
+			end
+		end
+	end
+end)
+for _, guiName in ipairs({"HugoHub_TimerKick"}) do
+	if PlayerGui:FindFirstChild(guiName) then
+		PlayerGui:FindFirstChild(guiName):Destroy()
+	end
+end
+local screenGui = Instance.new("ScreenGui")
+screenGui.Name = "HugoHub_TimerKick"
+screenGui.ResetOnSpawn = false
+screenGui.Parent = PlayerGui
+local mainFrame = Instance.new("Frame")
+mainFrame.Size = UDim2.new(0, 200, 0, 175)
+mainFrame.Position = UDim2.new(0.5, -100, 0.4, 0)
+mainFrame.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
+mainFrame.BorderSizePixel = 0
+mainFrame.Active = true
+mainFrame.Parent = screenGui
+local dragHandle = Instance.new("Frame")
+dragHandle.Size = UDim2.new(1, 0, 0, 30)
+dragHandle.Position = UDim2.new(0, 0, 0, 0)
+dragHandle.BackgroundTransparency = 1
+dragHandle.Parent = mainFrame
+local uiStroke = Instance.new("UIStroke")
+uiStroke.Thickness = 1.5
+uiStroke.Color = Color3.fromRGB(60, 60, 60)
+uiStroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
+uiStroke.Parent = mainFrame
+Instance.new("UICorner", mainFrame).CornerRadius = UDim.new(0, 10)
+local titleLabel = Instance.new("TextLabel")
+titleLabel.Text = "HUGO'S SCRIPT"
+titleLabel.Size = UDim2.new(1, 0, 0, 30)
+titleLabel.Position = UDim2.new(0, 0, 0, 0)
+titleLabel.BackgroundTransparency = 1
+titleLabel.TextColor3 = Color3.fromRGB(180, 180, 180)
+titleLabel.TextSize = 13
+titleLabel.Font = Enum.Font.GothamBold
+titleLabel.Parent = mainFrame
+local lineFrame = Instance.new("Frame")
+lineFrame.Size = UDim2.new(1, -20, 0, 1)
+lineFrame.Position = UDim2.new(0, 10, 0, 30)
+lineFrame.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
+lineFrame.BorderSizePixel = 0
+lineFrame.Parent = mainFrame
+local espButton = Instance.new("TextButton")
+espButton.Size = UDim2.new(1, -20, 0, 28)
+espButton.Position = UDim2.new(0, 10, 0, 40)
+espButton.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
+espButton.Text = gal31.BaseTimer.Enabled and "ESP TIMER: ON" or "ESP TIMER: OFF"
+espButton.TextColor3 = Color3.fromRGB(150, 150, 150)
+espButton.TextSize = 10
+espButton.Font = Enum.Font.GothamBold
+espButton.Parent = mainFrame
+Instance.new("UICorner", espButton).CornerRadius = UDim.new(0, 5)
+local espStroke = Instance.new("UIStroke")
+espStroke.Thickness = 1.2
+espStroke.Color = Color3.fromRGB(50, 50, 50)
+espStroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
+espStroke.Parent = espButton
+local leaveLabel = Instance.new("TextLabel")
+leaveLabel.Text = "LEAVE AT :"
+leaveLabel.Size = UDim2.new(0.6, -10, 0, 20)
+leaveLabel.Position = UDim2.new(0, 10, 0, 76)
+leaveLabel.BackgroundTransparency = 1
+leaveLabel.TextColor3 = Color3.fromRGB(140, 140, 140)
+leaveLabel.TextSize = 9
+leaveLabel.Font = Enum.Font.GothamBold
+leaveLabel.TextXAlignment = Enum.TextXAlignment.Left
+leaveLabel.Parent = mainFrame
+local leaveTimeBox = Instance.new("TextBox")
+leaveTimeBox.Size = UDim2.new(0.3, 0, 0, 20)
+leaveTimeBox.Position = UDim2.new(0.65, 0, 0, 76)
+leaveTimeBox.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
+leaveTimeBox.Text = tostring(gal36)
+leaveTimeBox.TextColor3 = Color3.fromRGB(180, 180, 180)
+leaveTimeBox.TextSize = 10
+leaveTimeBox.Font = Enum.Font.GothamBold
+leaveTimeBox.Parent = mainFrame
+Instance.new("UICorner", leaveTimeBox).CornerRadius = UDim.new(0, 4)
+local timeBoxStroke = Instance.new("UIStroke")
+timeBoxStroke.Thickness = 1.2
+timeBoxStroke.Color = Color3.fromRGB(50, 50, 50)
+timeBoxStroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
+timeBoxStroke.Parent = leaveTimeBox
+local autoLeaveButton = Instance.new("TextButton")
+autoLeaveButton.Size = UDim2.new(1, -20, 0, 28)
+autoLeaveButton.Position = UDim2.new(0, 10, 0, 102)
+autoLeaveButton.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
+autoLeaveButton.Text = gal35 and "ON" or "OFF"
+autoLeaveButton.TextColor3 = Color3.fromRGB(150, 150, 150)
+autoLeaveButton.TextSize = 10
+autoLeaveButton.Font = Enum.Font.GothamBold
+autoLeaveButton.Parent = mainFrame
+Instance.new("UICorner", autoLeaveButton).CornerRadius = UDim.new(0, 5)
+local autoLeaveStroke = Instance.new("UIStroke")
+autoLeaveStroke.Thickness = 1.2
+autoLeaveStroke.Color = Color3.fromRGB(50, 50, 50)
+autoLeaveStroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
+autoLeaveStroke.Parent = autoLeaveButton
+local leaveButton = Instance.new("TextButton")
+leaveButton.Size = UDim2.new(0.5, -15, 0, 26)
+leaveButton.Position = UDim2.new(0, 10, 0, 137)
+leaveButton.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
+leaveButton.Text = "LEAVE"
+leaveButton.TextColor3 = Color3.fromRGB(150, 150, 150)
+leaveButton.TextSize = 9
+leaveButton.Font = Enum.Font.GothamBold
+leaveButton.Parent = mainFrame
+Instance.new("UICorner", leaveButton).CornerRadius = UDim.new(0, 4)
+local leaveButtonStroke = Instance.new("UIStroke")
+leaveButtonStroke.Thickness = 1.1
+leaveButtonStroke.Color = Color3.fromRGB(50, 50, 50)
+leaveButtonStroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
+leaveButtonStroke.Parent = leaveButton
+local rejoinButton = Instance.new("TextButton")
+rejoinButton.Size = UDim2.new(0.5, -15, 0, 26)
+rejoinButton.Position = UDim2.new(0.5, 5, 0, 137)
+rejoinButton.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
+rejoinButton.Text = "REJOIN"
+rejoinButton.TextColor3 = Color3.fromRGB(150, 150, 150)
+rejoinButton.TextSize = 9
+rejoinButton.Font = Enum.Font.GothamBold
+rejoinButton.Parent = mainFrame
+Instance.new("UICorner", rejoinButton).CornerRadius = UDim.new(0, 4)
+local rejoinButtonStroke = Instance.new("UIStroke")
+rejoinButtonStroke.Thickness = 1.1
+rejoinButtonStroke.Color = Color3.fromRGB(50, 50, 50)
+rejoinButtonStroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
+rejoinButtonStroke.Parent = rejoinButton
+espButton.MouseButton1Click:Connect(function()
+	gal31.BaseTimer.Enabled = not gal31.BaseTimer.Enabled
+	if not gal31.BaseTimer.Enabled then
+		gal43()
+	else
+		-- Démarrer le nouveau timer ESP
+		if espBaseThread then espBaseThread:Disconnect() end
+		espBaseThread = RunService.RenderStepped:Connect(updateBaseESP)
+	end
+	updateButtonStyle(espButton, espStroke, gal31.BaseTimer.Enabled, "ESP TIMER: ON", "ESP TIMER: OFF")
+end)
+autoLeaveButton.MouseButton1Click:Connect(function()
+	gal35 = not gal35
+	updateButtonStyle(autoLeaveButton, autoLeaveStroke, gal35, "ON", "OFF")
+end)
+leaveButton.MouseButton1Click:Connect(function()
+	game:Shutdown()
+end)
+rejoinButton.MouseButton1Click:Connect(function()
+	TeleportService:Teleport(game.PlaceId, LocalPlayer)
+end)
+leaveTimeBox.FocusLost:Connect(function()
+	local num = tonumber(leaveTimeBox.Text)
+	if num then
+		gal36 = math.max(0, num)
+	end
+	leaveTimeBox.Text = tostring(gal36)
+end)
+RunService.Heartbeat:Connect(function()
+	if gal31.BaseTimer.Enabled then
+		-- Vérification auto-leave
+		if gal35 then
+			for _, plot in pairs(plotsFolder:GetChildren() or {}) do
+				local purchases = plot:FindFirstChild("Purchases")
+				local plotBlock = purchases and purchases:FindFirstChild("PlotBlock")
+				local mainPart = plotBlock and plotBlock:FindFirstChild("Main")
+				local timeLabel = mainPart
+					and mainPart:FindFirstChild("BillboardGui")
+					and mainPart.BillboardGui:FindFirstChild("RemainingTime")
+				if timeLabel and timeLabel.Text then
+					local text = timeLabel.Text:lower()
+					if text:find("leave") or text:find("0:0") then
+						TeleportService:Teleport(game.PlaceId, LocalPlayer)
+						return
+					end
+				end
+			end
+		end
+	end
+end)
+if gal31.BaseTimer.Enabled then
+	espBaseThread = RunService.RenderStepped:Connect(updateBaseESP)
+end
+local UserInputService = game:GetService("UserInputService")
+local dragging = false
+local dragStart = nil
+local startPos = nil
+local function updateDrag(input)
+    local delta = input.Position - dragStart
+    if delta then
+        mainFrame.Position = UDim2.new(
+            startPos.X.Scale, 
+            startPos.X.Offset + delta.X,
+            startPos.Y.Scale, 
+            startPos.Y.Offset + delta.Y
+        )
+    end
+end
+dragHandle.InputBegan:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseButton1 or 
+       input.UserInputType == Enum.UserInputType.Touch then
+        dragging = true
+        dragStart = input.Position
+        startPos = mainFrame.Position
+        -- Pour le touch mobile
+        if input.UserInputType == Enum.UserInputType.Touch then
+            local connection
+            connection = input.Changed:Connect(function()
+                if input.UserInputState == Enum.UserInputState.End then
+                    dragging = false
+                    dragStart = nil
+                    connection:Disconnect()
+                end
+            end)
+        end
+    end
+end)
+UserInputService.InputChanged:Connect(function(input)
+    if dragging and (input.UserInputType == Enum.UserInputType.MouseMovement or 
+                     input.UserInputType == Enum.UserInputType.Touch) then
+        updateDrag(input)
+    end
+end)
+UserInputService.InputEnded:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseButton1 or 
+       input.UserInputType == Enum.UserInputType.Touch then
+        dragging = false
+        dragStart = nil
+    end
+end)

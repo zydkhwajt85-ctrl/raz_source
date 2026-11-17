@@ -1,0 +1,282 @@
+
+
+local RunService = game:GetService("RunService")
+local Players = game:GetService("Players")
+local UserInputService = game:GetService("UserInputService")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+
+local player = Players.LocalPlayer
+local character = player.Character or player.CharacterAdded:Wait()
+
+local screenGui = Instance.new("ScreenGui", player.PlayerGui)
+screenGui.Name = "BLAutoBuy"
+screenGui.ResetOnSpawn = false
+
+-- Border Frame (borde BLANCO)
+local borderFrame = Instance.new("Frame")
+borderFrame.Size = UDim2.new(0, 206, 0, 270)
+borderFrame.Position = UDim2.new(0.5, -103, 0.5, -135)
+borderFrame.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+borderFrame.BorderSizePixel = 0
+borderFrame.Active = true
+borderFrame.Parent = screenGui
+
+local borderCorner = Instance.new("UICorner")
+borderCorner.CornerRadius = UDim.new(0, 17)
+borderCorner.Parent = borderFrame
+
+-- Main Frame (fondo NEGRO)
+local mainFrame = Instance.new("Frame")
+mainFrame.Size = UDim2.new(0, 200, 0, 264)
+mainFrame.Position = UDim2.new(0.5, -100, 0.5, -132)
+mainFrame.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
+mainFrame.BorderSizePixel = 0
+mainFrame.Active = true
+mainFrame.Parent = borderFrame
+
+local corner = Instance.new("UICorner")
+corner.CornerRadius = UDim.new(0, 15)
+corner.Parent = mainFrame
+
+-- Title con efecto de onda
+local title = Instance.new("TextLabel")
+title.Size = UDim2.new(1, 0, 0, 45)
+title.Text = "BL AUTO BUY"
+title.Font = Enum.Font.SourceSansBold
+title.TextSize = 16
+title.BackgroundTransparency = 1
+title.TextColor3 = Color3.fromRGB(255, 255, 255)
+title.TextStrokeColor3 = Color3.fromRGB(100, 100, 100)
+title.TextStrokeTransparency = 0
+title.Parent = mainFrame
+
+-- Link de Discord
+local discordLabel = Instance.new("TextLabel")
+discordLabel.Size = UDim2.new(1, 0, 0, 20)
+discordLabel.Position = UDim2.new(0, 0, 0, 45)
+discordLabel.Text = "discord.gg/vNSbEbjvA"
+discordLabel.Font = Enum.Font.GothamMedium
+discordLabel.TextSize = 11
+discordLabel.BackgroundTransparency = 1
+discordLabel.TextColor3 = Color3.fromRGB(150, 150, 150)
+discordLabel.TextXAlignment = Enum.TextXAlignment.Center
+discordLabel.Parent = mainFrame
+
+-- Button factory
+local function createButton(name, pos, color, textColor)
+	local btn = Instance.new("TextButton")
+	btn.Name = name
+	btn.Size = UDim2.new(0, 160, 0, 35)
+	btn.Position = pos
+	btn.BackgroundColor3 = color or Color3.fromRGB(40, 40, 40)
+	btn.Text = name
+	btn.TextColor3 = textColor or Color3.fromRGB(255, 255, 255)
+	btn.Font = Enum.Font.GothamSemibold
+	btn.TextSize = 13
+	btn.Parent = mainFrame
+
+	local btnCorner = Instance.new("UICorner")
+	btnCorner.CornerRadius = UDim.new(0, 8)
+	btnCorner.Parent = btn
+	return btn
+end
+
+-- Botones
+local autoBuyBtn = createButton("Auto Buy: OFF", UDim2.new(0.5, -80, 0, 75), Color3.fromRGB(40, 40, 40))
+local anchoredBtn = createButton("Anchored: OFF", UDim2.new(0.5, -80, 0, 120), Color3.fromRGB(40, 40, 40))
+local autoClickBtn = createButton("Auto Click: OFF", UDim2.new(0.5, -80, 0, 165), Color3.fromRGB(40, 40, 40))
+
+-- DINERO
+local moneyLabel = Instance.new("TextLabel")
+moneyLabel.Size = UDim2.new(1, 0, 0, 30)
+moneyLabel.Position = UDim2.new(0, 0, 0, 215)
+moneyLabel.Text = "$0"
+moneyLabel.Font = Enum.Font.GothamBold
+moneyLabel.TextSize = 14
+moneyLabel.BackgroundTransparency = 1
+moneyLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+moneyLabel.TextXAlignment = Enum.TextXAlignment.Center
+moneyLabel.Parent = mainFrame
+
+--- DRAGGING
+local isMobile = UserInputService.TouchEnabled and not UserInputService.KeyboardEnabled
+local dragging = false
+local dragStartPos = nil
+local frameStartPos = nil
+
+if isMobile then
+	title.InputBegan:Connect(function(input)
+		if input.UserInputType == Enum.UserInputType.Touch then
+			dragging = true
+			dragStartPos = input.Position
+			frameStartPos = borderFrame.Position
+		end
+	end)
+
+	title.InputChanged:Connect(function(input)
+		if dragging and input.UserInputType == Enum.UserInputType.Touch then
+			local delta = input.Position - dragStartPos
+			borderFrame.Position = UDim2.new(
+				frameStartPos.X.Scale,
+				frameStartPos.X.Offset + delta.X,
+				frameStartPos.Y.Scale,
+				frameStartPos.Y.Offset + delta.Y
+			)
+		end
+	end)
+
+	title.InputEnded:Connect(function(input)
+		if input.UserInputType == Enum.UserInputType.Touch then
+			dragging = false
+		end
+	end)
+else
+	title.InputBegan:Connect(function(input)
+		if input.UserInputType == Enum.UserInputType.MouseButton1 then
+			dragging = true
+			dragStartPos = input.Position
+			frameStartPos = borderFrame.Position
+		end
+	end)
+
+	UserInputService.InputChanged:Connect(function(input)
+		if dragging and dragStartPos and input.UserInputType == Enum.UserInputType.MouseMovement then
+			local delta = input.Position - dragStartPos
+			borderFrame.Position = UDim2.new(
+				frameStartPos.X.Scale,
+				frameStartPos.X.Offset + delta.X,
+				frameStartPos.Y.Scale,
+				frameStartPos.Y.Offset + delta.Y
+			)
+		end
+	end)
+
+	UserInputService.InputEnded:Connect(function(input)
+		if input.UserInputType == Enum.UserInputType.MouseButton1 then
+			dragging = false
+		end
+	end)
+end
+
+--- LOGICA
+local autoBuyActive = false
+local anchored = false
+local autoClickActive = false
+
+-- Auto Buy
+autoBuyBtn.MouseButton1Click:Connect(function()
+	autoBuyActive = not autoBuyActive
+	autoBuyBtn.Text = autoBuyActive and "Auto Buy: ON" or "Auto Buy: OFF"
+	autoBuyBtn.BackgroundColor3 = autoBuyActive and Color3.fromRGB(200, 200, 200) or Color3.fromRGB(40, 40, 40)
+	autoBuyBtn.TextColor3 = autoBuyActive and Color3.fromRGB(0, 0, 0) or Color3.fromRGB(255, 255, 255)
+end)
+
+RunService.Stepped:Connect(function()
+	if autoBuyActive then
+		for _, prompt in pairs(workspace:GetDescendants()) do
+			if prompt:IsA("ProximityPrompt") then
+				prompt.HoldDuration = 0
+				prompt:InputHoldBegin()
+				prompt:InputHoldEnd()
+			end
+		end
+	end
+end)
+
+-- Anchored
+anchoredBtn.MouseButton1Click:Connect(function()
+	anchored = not anchored
+	anchoredBtn.Text = anchored and "Anchored: ON" or "Anchored: OFF"
+	anchoredBtn.BackgroundColor3 = anchored and Color3.fromRGB(200, 200, 200) or Color3.fromRGB(40, 40, 40)
+	anchoredBtn.TextColor3 = anchored and Color3.fromRGB(0, 0, 0) or Color3.fromRGB(255, 255, 255)
+
+	local char = player.Character or player.CharacterAdded:Wait()
+	if char then
+		for _, part in pairs(char:GetDescendants()) do
+			if part:IsA("BasePart") then
+				part.Anchored = anchored
+			end
+		end
+	end
+end)
+
+-- Auto Click
+autoClickBtn.MouseButton1Click:Connect(function()
+	autoClickActive = not autoClickActive
+	autoClickBtn.Text = autoClickActive and "Auto Click: ON" or "Auto Click: OFF"
+	autoClickBtn.BackgroundColor3 = autoClickActive and Color3.fromRGB(200, 200, 200) or Color3.fromRGB(40, 40, 40)
+	autoClickBtn.TextColor3 = autoClickActive and Color3.fromRGB(0, 0, 0) or Color3.fromRGB(255, 255, 255)
+end)
+
+-- Función para hacer clic en la mesa de ping pong
+local function clickPingPong()
+	for _, obj in pairs(workspace:GetDescendants()) do
+		if obj:IsA("Part") and (obj.Name:lower():find("ping") or obj.Name:lower():find("pong") or obj.Name:lower():find("table")) then
+			local clickable = obj.Parent:FindFirstChild("ClickDetector")
+			if clickable then
+				clickable:Click()
+				return true
+			end
+		end
+	end
+	return false
+end
+
+-- Auto Click loop
+task.spawn(function()
+	while true do
+		task.wait(0.1)
+		if autoClickActive then
+			if not clickPingPong() then
+				for _, prompt in pairs(workspace:GetDescendants()) do
+					if prompt:IsA("ProximityPrompt") and (prompt.Name:lower():find("ping") or prompt.Name:lower():find("pong")) then
+						prompt.HoldDuration = 0
+						prompt:InputHoldBegin()
+						prompt:InputHoldEnd()
+					end
+				end
+			end
+		end
+	end
+end)
+
+-- FUNCIÓN PARA OBTENER DINERO REAL
+local function updateMoney()
+	local leaderstats = player:FindFirstChild("leaderstats")
+	if leaderstats then
+		local cash = leaderstats:FindFirstChild("Cash") or leaderstats:FindFirstChild("Money") or leaderstats:FindFirstChild("Brainrot") or leaderstats:FindFirstChild("Points")
+		if cash then
+			local amount = cash.Value
+			moneyLabel.Text = "$" .. amount
+		end
+	end
+end
+
+updateMoney()
+task.spawn(function()
+	while true do
+		task.wait(1)
+		updateMoney()
+	end
+end)
+
+-- EFECTO DE ONDA PARA EL TÍTULO (Blanco a Negro y viceversa)
+task.spawn(function()
+	local time = 0
+	while true do
+		task.wait(0.05)
+		time = time + 0.05
+		-- Calcular valor entre 0 y 1 usando seno para efecto de onda
+		local wave = (math.sin(time * 2) + 1) / 2
+		-- Interpolar entre blanco (255) y negro (0)
+		local colorValue = 255 * wave
+		title.TextColor3 = Color3.fromRGB(colorValue, colorValue, colorValue)
+	end
+end)
+
+-- Notificación
+game.StarterGui:SetCore("SendNotification", {
+	Title = "BL AUTO BUY",
+	Text = "Script cargado correctamente",
+	Duration = 3
+})

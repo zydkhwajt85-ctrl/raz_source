@@ -1,0 +1,237 @@
+local Players = game:GetService("Players")
+local Workspace = game:GetService("Workspace")
+local CoreGui = game:GetService("CoreGui")
+local RunService = game:GetService("RunService")
+local UserInputService = game:GetService("UserInputService")
+local LocalPlayer = Players.LocalPlayer
+local CONFIG = {
+    Names = {
+        ScreenGui = "zzzz_speed_lagger_gui",
+        MainFrame = "MainFrame",
+        ToggleButton = "ToggleButton"
+    },
+    Size = {
+        MainFrame = UDim2.new(0, 190, 0, 135),
+        FillBar = UDim2.new(0, 175, 0, 8),
+        Fill = UDim2.new(0, 0, 1, 0),
+        Knob = UDim2.new(0, 14, 0, 14),
+        ToggleButton = UDim2.new(0, 140, 0, 26)
+    },
+    Position = {
+        MainFrame = UDim2.new(0.5, 0, 0.5, 0),
+        TitleLabel = UDim2.new(0, 0, 0, 0),
+        LagBar = UDim2.new(0.5, -87, 0, 34),
+        SpeedBar = UDim2.new(0.5, -87, 0, 68),
+        ToggleButton = UDim2.new(0.5, -70, 0, 100)
+    },
+    Colors = {
+        MainFrame = Color3.fromRGB(10, 5, 18),
+        MainFrameTransparency = 0.08,
+        BarBackground = Color3.fromRGB(12, 16, 32),
+        Fill = Color3.fromRGB(0, 210, 255),
+        Knob = Color3.fromRGB(255, 255, 255),
+        ToggleButton = Color3.fromRGB(14, 20, 46),
+        Text = Color3.fromRGB(0, 210, 255),
+        TextDim = Color3.fromRGB(200, 220, 255),
+        Stroke = Color3.fromRGB(255, 255, 255)
+    },
+    Text = {
+        Title = "amir speed lagger",
+        LagPrefix = "LAG: ",
+        SpeedPrefix = "SPEED: ",
+        ToggleOff = "ENABLE: OFF",
+        ToggleOn = "ENABLE: ON"
+    },
+    Settings = {
+        StrokeThickness = 2,
+        CornerRadius = 10,
+        Font = Enum.Font.GothamBold,
+        TitleSize = 14,
+        LabelSize = 11,
+        ButtonSize = 12,
+        MinSpeed = 16,
+        MaxSpeed = 100,
+        MaxLag = 0.2 -- Maximum tick freeze time
+    }
+}
+local enabled = false
+local currentLagAmount = 0
+local currentSpeedAmount = 16
+local gradientRotation = 0
+local Gradient = nil
+local existingGui = CoreGui:FindFirstChild(CONFIG.Names.ScreenGui)
+if existingGui then existingGui:Destroy() end
+if gethui and gethui():FindFirstChild(CONFIG.Names.ScreenGui) then
+    gethui():FindFirstChild(CONFIG.Names.ScreenGui):Destroy()
+end
+local function updateGradientRotation()
+    gradientRotation = (gradientRotation + 2) % 360
+    if Gradient then
+        Gradient.Rotation = gradientRotation
+    end
+end
+local ScreenGui = Instance.new("ScreenGui")
+ScreenGui.Name = CONFIG.Names.ScreenGui
+ScreenGui.ResetOnSpawn = false
+if gethui then
+    ScreenGui.Parent = gethui()
+else
+    ScreenGui.Parent = CoreGui
+end
+local MainFrame = Instance.new("Frame")
+MainFrame.Name = CONFIG.Names.MainFrame
+MainFrame.Size = CONFIG.Size.MainFrame
+MainFrame.Position = CONFIG.Position.MainFrame
+MainFrame.AnchorPoint = Vector2.new(0.5, 0.5)
+MainFrame.BackgroundColor3 = CONFIG.Colors.MainFrame
+MainFrame.BackgroundTransparency = CONFIG.Colors.MainFrameTransparency
+MainFrame.BorderSizePixel = 0
+MainFrame.Active = true
+MainFrame.Draggable = true
+MainFrame.Parent = ScreenGui
+local Corner = Instance.new("UICorner")
+Corner.CornerRadius = UDim.new(0, CONFIG.Settings.CornerRadius)
+Corner.Parent = MainFrame
+local Stroke = Instance.new("UIStroke")
+Stroke.Thickness = CONFIG.Settings.StrokeThickness
+Stroke.Color = CONFIG.Colors.Stroke
+Stroke.Parent = MainFrame
+Gradient = Instance.new("UIGradient")
+Gradient.Color = ColorSequence.new{
+    ColorSequenceKeypoint.new(0, Color3.fromRGB(0, 0, 80)),
+    ColorSequenceKeypoint.new(0.5, Color3.fromRGB(0, 210, 255)),
+    ColorSequenceKeypoint.new(1, Color3.fromRGB(0, 0, 80))
+}
+Gradient.Rotation = 0
+Gradient.Parent = Stroke
+local TitleLabel = Instance.new("TextLabel")
+TitleLabel.Size = UDim2.new(1, 0, 0, 26)
+TitleLabel.Position = CONFIG.Position.TitleLabel
+TitleLabel.BackgroundTransparency = 1
+TitleLabel.Text = CONFIG.Text.Title
+TitleLabel.Font = CONFIG.Settings.Font
+TitleLabel.TextSize = CONFIG.Settings.TitleSize
+TitleLabel.TextColor3 = CONFIG.Colors.Text
+TitleLabel.Parent = MainFrame
+local function createSlider(yPos, prefix, initialPercent, isPercentage, callback)
+    local container = Instance.new("Frame")
+    container.Size = CONFIG.Size.FillBar
+    container.Position = UDim2.new(0.5, -87, 0, yPos)
+    container.BackgroundTransparency = 1
+    container.Parent = MainFrame
+    local TextLabel = Instance.new("TextLabel")
+    TextLabel.Size = UDim2.new(1, 0, 0, 12)
+    TextLabel.Position = UDim2.new(0, 0, 0, 0)
+    TextLabel.BackgroundTransparency = 1
+    TextLabel.TextSize = CONFIG.Settings.LabelSize
+    TextLabel.TextColor3 = CONFIG.Colors.TextDim
+    TextLabel.Font = CONFIG.Settings.Font
+    TextLabel.TextXAlignment = Enum.TextXAlignment.Left
+    TextLabel.Parent = container
+    local BarBg = Instance.new("Frame")
+    BarBg.Size = CONFIG.Size.FillBar
+    BarBg.Position = UDim2.new(0, 0, 0, 18)
+    BarBg.BackgroundColor3 = CONFIG.Colors.BarBackground
+    BarBg.BorderSizePixel = 0
+    BarBg.Parent = container
+    local BarCorner = Instance.new("UICorner")
+    BarCorner.CornerRadius = UDim.new(1, 0)
+    BarCorner.Parent = BarBg
+    local Fill = Instance.new("Frame")
+    Fill.Size = UDim2.new(initialPercent, 0, 1, 0)
+    Fill.BackgroundColor3 = CONFIG.Colors.Fill
+    Fill.BorderSizePixel = 0
+    Fill.Parent = BarBg
+    local FillCorner = Instance.new("UICorner")
+    FillCorner.CornerRadius = UDim.new(1, 0)
+    FillCorner.Parent = Fill
+    local Knob = Instance.new("Frame")
+    Knob.Size = CONFIG.Size.Knob
+    Knob.Position = UDim2.new(1, 0, 0.5, 0)
+    Knob.AnchorPoint = Vector2.new(0.5, 0.5)
+    Knob.BackgroundColor3 = CONFIG.Colors.Knob
+    Knob.BorderSizePixel = 0
+    Knob.Parent = Fill
+    local KnobCorner = Instance.new("UICorner")
+    KnobCorner.CornerRadius = UDim.new(1, 0)
+    KnobCorner.Parent = Knob
+    local function updateVisuals(percent)
+        Fill.Size = UDim2.new(percent, 0, 1, 0)
+        local displayValue = ""
+        if isPercentage then
+            displayValue = math.floor(percent * 100) .. "%"
+        else
+            displayValue = string.format("%.1f", CONFIG.Settings.MinSpeed + (percent * (CONFIG.Settings.MaxSpeed - CONFIG.Settings.MinSpeed)))
+        end
+        TextLabel.Text = prefix .. displayValue
+    end
+    updateVisuals(initialPercent)
+    local dragging = false
+    local function updateSlider(input)
+        local pos = math.clamp((input.Position.X - BarBg.AbsolutePosition.X) / BarBg.AbsoluteSize.X, 0, 1)
+        updateVisuals(pos)
+        callback(pos)
+    end
+    BarBg.InputBegan:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+            dragging = true
+            updateSlider(input)
+        end
+    end)
+    UserInputService.InputEnded:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+            dragging = false
+        end
+    end)
+    UserInputService.InputChanged:Connect(function(input)
+        if dragging and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then
+            updateSlider(input)
+        end
+    end)
+end
+createSlider(32, CONFIG.Text.LagPrefix, 0, true, function(val)
+    currentLagAmount = val * CONFIG.Settings.MaxLag
+end)
+createSlider(68, CONFIG.Text.SpeedPrefix, 0, false, function(val)
+    currentSpeedAmount = CONFIG.Settings.MinSpeed + (val * (CONFIG.Settings.MaxSpeed - CONFIG.Settings.MinSpeed))
+end)
+local ToggleButton = Instance.new("TextButton")
+ToggleButton.Name = CONFIG.Names.ToggleButton
+ToggleButton.Size = CONFIG.Size.ToggleButton
+ToggleButton.Position = CONFIG.Position.ToggleButton
+ToggleButton.BackgroundColor3 = CONFIG.Colors.ToggleButton
+ToggleButton.TextColor3 = CONFIG.Colors.Text
+ToggleButton.Font = CONFIG.Settings.Font
+ToggleButton.TextSize = CONFIG.Settings.ButtonSize
+ToggleButton.Text = CONFIG.Text.ToggleOff
+ToggleButton.Parent = MainFrame
+local ButtonCorner = Instance.new("UICorner")
+ButtonCorner.CornerRadius = UDim.new(0, 6)
+ButtonCorner.Parent = ToggleButton
+ToggleButton.MouseButton1Click:Connect(function()
+    enabled = not enabled
+    ToggleButton.Text = enabled and CONFIG.Text.ToggleOn or CONFIG.Text.ToggleOff
+end)
+RunService.RenderStepped:Connect(function()
+    updateGradientRotation()
+    if not enabled then return end
+    -- Velocity Speed Bypass logic
+    local char = LocalPlayer.Character
+    if char then
+        local hrp = char:FindFirstChild("HumanoidRootPart")
+        local hum = char:FindFirstChildOfClass("Humanoid")
+        if hrp and hum and hum.MoveDirection.Magnitude > 0 then
+            local dir = hum.MoveDirection.Unit
+            hrp.AssemblyLinearVelocity = Vector3.new(
+                dir.X * currentSpeedAmount,
+                hrp.AssemblyLinearVelocity.Y,
+                dir.Z * currentSpeedAmount
+            )
+        end
+    end
+    -- Thread Freezing Lag logic
+    if currentLagAmount > 0 then
+        local t = tick()
+        while tick() - t < currentLagAmount do end
+    end
+end)

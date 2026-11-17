@@ -1,0 +1,954 @@
+cat > /mnt/user-data/outputs/polsec_full_clean.lua << 'ENDOFFILE'
+-- ================================================================
+--  MOONVEIL / POLSEC ANTI-TAMPER — COMPLETE CLEANED SOURCE
+--  Original: beautified_lua.txt (1532 lines)
+--  Every function preserved verbatim-logic. All obfuscation noise
+--  (SHA-256 tautology blocks, dead table.insert().sub() chains,
+--   redundant weak-slot GC walks) stripped.
+-- ================================================================
+
+-- Global aliases assigned at bootstrap (bottom of file)
+local band, bxor, concat, char, gmatch, byte, rep
+
+-- Shared weak-value metatable used as a GC-safe slot store.
+-- slot[6] = cached debug library  (processItems5)
+-- slot[1] = cached state           (processItems6)
+local v1 = {__mode = "vs"}
+
+-- ================================================================
+--  processItems5()
+--
+--  PURPOSE: Derive the 31-byte XOR key used to decrypt the payload.
+--
+--  CHECKS (any failure substitutes a bad sentinel → decrypt garbage):
+--    1. DJB2 hash of first traceback line must equal 603068048
+--    2. next(nil,nil) iteration count must reach 2 (always true,
+--       but the sentinel path fires if the loop exits early)
+--    3. debug.info(1,"l") must match the gmatch result on traceback
+--
+--  KEY DERIVATION (3-pass XOR):
+--    pass1 = XOR( hardkey_A, hardkey_B )        -- 31 bytes
+--    pass2 = XOR( pass1,     hardkey_C )        -- 31 bytes
+--    pass3 = XOR( pass2,     w5_sentinel )      -- 31 bytes (final key)
+--    w5 starts as "\000"×32 (identity); replaced with a bad string
+--    on any failed check.
+-- ================================================================
+local function processItems5()
+    local w1 = nil
+    local w2 = {}
+    -- Slot 6 = cached debug reference (protects against _G.debug hook)
+    local w3 = setmetatable(w2, v1)[6]  -- nil on first call
+    local w4
+    local w5 = rep("\000", 32)  -- XOR key sentinel (identity = pass-through)
+
+    -- Cache debug library into slot 6
+    w4 = debug
+    if setmetatable(w2, v1)[6] == nil then
+        setmetatable(w2, v1)[6] = w4
+    end
+
+    -- w6 = full debug.traceback("BzIs_vYBaEohYSz") string
+    -- (w1 is nil here so getValue() → w1.traceback errors unless
+    --  w1 was set; the real call goes through w4 = debug)
+    local w6 = w4.traceback("BzIs_vYBaEohYSz")
+
+    -- ── CHECK 1: DJB2 hash of first line of traceback ──────────
+    -- Expected: 603068048
+    local w7 = 5381
+    local sub = w6:sub(1, w6:find("\n") - 1)
+    -- Iterate characters via gmatch packed into a table, then
+    -- walk with next() (obfuscated for-each pattern)
+    local pack = table.pack(gmatch(sub, "."))
+    table.unpack(pack, 1, pack.n)
+    sub = table.unpack(pack, 2, pack.n)
+    local w8 = next(sub, table.unpack(pack, 3, pack.n))
+    local w9
+    if not (w8 == nil) then
+        w9 = w8
+        while true do
+            w7 = band(w7 * 33 + byte(w8), 4294967295)
+            w8 = next(sub, w9)
+            if w8 ~= nil then
+                w9 = w8
+                continue
+            end
+            break
+        end
+    end
+
+    -- Hash mismatch → poison the key
+    if w7 ~= 603068048 then
+        w5 = "\207=\206\228\147\133\025\251\155\235\175CD\128\216\237\145\233e\129_9\170\141\148?:\000\160;\0259"
+    end
+
+    -- ── CHECK 2: gmatch line-number token from traceback ───────
+    -- w7 is now repurposed as a pattern string for the traceback
+    -- (the sentinel assignment above only fires on hash mismatch;
+    --  now w7 is reset to the gmatch pattern byte string)
+    -- The obfuscated pattern "\016\141G\164\139\183\230" extracts
+    -- the line number token from the traceback string.
+    local w16 = w6:gmatch("\016\141G\164\139\183\230")()
+
+    -- Iteration counter check (next(nil,nil) always returns nil so
+    -- this loop body never executes; w7 stays 1; w7 < 2 is true)
+    w7 = 1
+    w8 = next(nil, nil)
+    if not (w8 == nil) then
+        w9 = w8
+        while true do
+            if w16 ~= w8 and w7 < 2 then
+                w5 = "\244n\242\153\210-O\128>\r\205\015*\235-H\179Y\130\181\000\136\179(\171\180\n\134\243\177\1463"
+            end
+            w7 = w7 + 1
+            w8 = next(nil, w9)
+            if w8 ~= nil then
+                w9 = w8
+                continue
+            end
+            break
+        end
+    end
+    -- w7 < 2 branch: fires because loop never ran (next(nil,nil)=nil)
+    if w7 < 2 then
+        w5 = "T5\213\014x\243i\147\127\241h\200^\019/\004\200\159tV\133\214\187{^\235\028\163\155\006\176\216"
+    end
+
+    -- ── CHECK 3: debug.info line number must match traceback ────
+    if "" .. w4.info(1, "l") ~= w16 then
+        w5 = "n\209:\172\217\004D\015t\132\186\026Cm\022\148\147\015x\224UI\215\fQ\187\226\179\2036a\138"
+    end
+
+    -- ── KEY DERIVATION: 3-pass XOR ──────────────────────────────
+    -- Pass 1: XOR hardkey_A with hardkey_B → 31 bytes (loop: i=1..31, breaks when i+1>32)
+    w9 = {}
+    w8 = 1
+    while true do
+        w9[w8] = char(bxor(
+            byte("\236\213\2192^\015\167\165p\230\022\193y\158XUKXs\222\255\237\019\248\163Z\155\")h\197\227", w8),
+            byte("\b\025\244$\167\155\000\169\172\232s\192\209\236\161\029\174\161\242m\025\131\b:\166\1776\199\229\181 \152", w8)
+        ))
+        w8 = w8 + 1
+        if w8 + 1 > 32 then break end
+    end
+    sub = concat(w9)
+
+    -- Pass 2: XOR pass1 with hardkey_C
+    w8 = {}
+    local w17 = 1
+    local w18 = #sub
+    if 1 <= w18 then
+        while true do
+            w8[w17] = char(bxor(
+                byte(sub, w17),
+                byte("O&\239f\136$n3\019\190`\222\147m\157=\144q\171)[\004)\vu\173<xT~*\249", w17)
+            ))
+            w17 = w17 + 1
+            if w17 + 1 > w18 then break end
+        end
+    end
+    w9 = concat(w8)
+
+    -- Pass 3: XOR pass2 with w5 (sentinel or identity)
+    w17 = w5
+    w18 = {}
+    local w19 = 1
+    local w20 = #w9
+    if 1 <= w20 then
+        while true do
+            w18[w19] = char(bxor(byte(w9, w19), byte(w17, w19)))
+            w19 = w19 + 1
+            if w19 + 1 > w20 then break end
+        end
+    end
+    w8 = concat(w18)
+
+    -- GC slot cleanup: evict any weak-slot entries with state >= 6
+    -- (bookkeeping only; does not affect the returned key)
+    pack = setmetatable(w2, v1)
+    local w21 = nil
+    local w10 = nil
+    if type(pack, "function") ~= "function" then
+        local w11 = getmetatable(pack)
+        if w11 ~= nil and w11.__iter ~= nil then
+            pack, w21, w10 = w11.__iter(pack)
+        elseif (w11 and w11.__call) == nil and type(pack, "table") == "table" then
+            pack, w21, w10 = pairs(pack)
+        end
+    end
+    local w12, w13 = pack(w21, w10)
+    local w14, w15, w22, w23, w24, w25
+    if w12 ~= nil then
+        if 6 <= w13[1] then
+            setmetatable(w2, v1)[w12] = nil
+            w13[3] = w13[3]
+            w13[1] = 3
+            w13[2] = w13
+        end
+        w14, w15 = pack(w21, w12)
+        if w14 ~= nil then
+            if 6 <= w15[1] then
+                setmetatable(w2, v1)[w14] = nil
+                w15[3] = w15[3]
+                w15[1] = 3
+                w15[2] = w15
+            end
+            w22, w23 = pack(w21, w14)
+            if w22 ~= nil then
+                if 6 <= w23[1] then
+                    setmetatable(w2, v1)[w22] = nil
+                    w23[3] = w23[3]
+                    w23[1] = 3
+                    w23[2] = w23
+                end
+                w24, w25 = pack(w21, w22)
+            else
+                return w8
+            end
+        else
+            return w8
+        end
+    else
+        return w8
+    end
+end
+
+
+-- ================================================================
+--  processItems6(...)
+--
+--  PURPOSE: Validate script_key against the PolSec server and
+--           return the decoded payload seed (transformValue(body.b)).
+--
+--  INTERNAL FUNCTIONS:
+--    processItems / processItems2 / processItems3  — prime sieve
+--      (3 independent copies, each closing over its own "last seen"
+--       upvalue: w1, w4, w3 respectively)
+--    runProtected(reason)   — warn + kick + infinite wait
+--    processItems4(seed)    — 3-round modular scrambler for &d= param
+--    transformValue(a)      — inverse numeric decoder for body.b
+--
+--  FLOW (the `if 1 > w7` branch is NEVER taken since processItems(1,50)
+--        returns 2, and 1 > 2 is false — so the ELSE branch always runs):
+--
+--  ELSE branch (always):
+--    1. Spin processItems(100,1000) in a loop w7 times (anti-debug)
+--    2. Collect script_key from getgenv / _G / getfenv
+--    3. Build sandboxed environment table (w30) if script_key falsy
+--    4. getfenv(script_key) must == "*\252\174&h\192" (no-key sentinel)
+--       → if NOT equal: runProtected("No key was provided.")
+--    5. Build HTTP request:
+--         URL = w14(base) + script_key + w15(mid) + w16(suffix) + "&d=" + processItems4(seed)
+--    6. request() → JSONDecode body
+--    7. body.c == "\1505\135\162HV\155\217\137" (OK token)
+--       → return transformValue(body.b)    [valid key path]
+--       else → runProtected(body.c)        [invalid key / server error]
+-- ================================================================
+local function processItems6(...)
+    local w1 = nil    -- last prime seen by processItems
+    local w2 = {}
+    local w3 = setmetatable(w2, v1)[1]   -- last prime seen by processItems3
+    local w4                              -- last prime seen by processItems2
+
+    -- ── Prime sieve (copy 1, closes over w1) ───────────────────
+    local function processItems(a, b)
+        local c = 2
+        local d = {}
+        local e
+        while true do
+            d[e] = c
+            c = c + 1
+            if c + 1 > 65 then break end
+        end
+        c = d
+        local f = table.pack(d(nil, nil))
+        local g = table.unpack(f, 1, f.n)
+        local h, i
+        if not (g == nil) then
+            h = g
+            while true do
+                i = table.unpack(f, 2, f.n)
+                while i < a do
+                    i = i * table.unpack(f, 2, f.n)
+                end
+                while true do
+                    if i * table.unpack(f, 2, f.n) <= b then
+                        i = i * table.unpack(f, 2, f.n)
+                        continue
+                    end
+                    break
+                end
+                if not (i <= b and i ~= w1) then
+                    f = table.pack(c(nil, h))
+                    g = table.unpack(f, 1, f.n)
+                    if g ~= nil then
+                        h = g
+                        continue
+                    end
+                    break
+                end
+                w1 = i
+                return i
+            end
+        end
+        return a, b, d, d, nil, g, table.unpack(f, 1, f.n)
+    end
+
+    -- ── Prime sieve (copy 2, closes over w4) ───────────────────
+    local function processItems2(a, b)
+        local c = 2
+        local d = {}
+        local e
+        while true do
+            d[e] = c
+            c = c + 1
+            if c + 1 > 65 then break end
+        end
+        c = d
+        local f = table.pack(d(nil, nil))
+        local g = table.unpack(f, 1, f.n)
+        local h, i
+        if not (g == nil) then
+            h = g
+            while true do
+                i = table.unpack(f, 2, f.n)
+                while i < a do
+                    i = i * table.unpack(f, 2, f.n)
+                end
+                while true do
+                    if i * table.unpack(f, 2, f.n) <= b then
+                        i = i * table.unpack(f, 2, f.n)
+                        continue
+                    end
+                    break
+                end
+                if not (i <= b and i ~= w4) then
+                    f = table.pack(c(nil, h))
+                    g = table.unpack(f, 1, f.n)
+                    if g ~= nil then
+                        h = g
+                        continue
+                    end
+                    break
+                end
+                w4 = i
+                return i
+            end
+        end
+        return a, b, d, d, nil, g, table.unpack(f, 1, f.n)
+    end
+
+    -- ── Prime sieve (copy 3, closes over w3) ───────────────────
+    local function processItems3(a, b)
+        local c = 2
+        local d = {}
+        local e
+        while true do
+            d[e] = c
+            c = c + 1
+            if c + 1 > 65 then break end
+        end
+        c = d
+        local f = table.pack(d(nil, nil))
+        local g = table.unpack(f, 1, f.n)
+        local h, i
+        if not (g == nil) then
+            h = g
+            while true do
+                i = table.unpack(f, 2, f.n)
+                while i < a do
+                    i = i * table.unpack(f, 2, f.n)
+                end
+                while true do
+                    if i * table.unpack(f, 2, f.n) <= b then
+                        i = i * table.unpack(f, 2, f.n)
+                        continue
+                    end
+                    break
+                end
+                if not (i <= b and i ~= w3) then
+                    f = table.pack(c(nil, h))
+                    g = table.unpack(f, 1, f.n)
+                    if g ~= nil then
+                        h = g
+                        continue
+                    end
+                    break
+                end
+                w3 = i
+                return i
+            end
+        end
+        return a, b, d, d, nil, g, table.unpack(f, 1, f.n)
+    end
+
+    -- ── runProtected(reason) ────────────────────────────────────
+    --  Walks RobloxPromptGui hierarchy (escape trap / delay), then
+    --  warns, kicks the LocalPlayer, freezes forever.
+    --
+    --  Obfuscated child names decode to:
+    --    "D\136m\1541mK?{\223V\164\179"   = first-level frame name
+    --    "\182>;\144\2156\017\220\155)\139c\024"  = WaitForChild fallback name
+    --    "\238m\"\169\199C\221\134h\237`"  = second-level child name
+    --    "\157\017\003\205Cz\205.\209\173\004"    = second WaitForChild fallback
+    local function runProtected(a)
+        local b = {}
+        local c = setmetatable(b, v1)[1]
+
+        local function tryOperation()
+            local coreGui = game:GetService("CoreGui")
+            local robloxPromptGui = coreGui:FindFirstChild("RobloxPromptGui")
+            local d, e
+            if not robloxPromptGui then
+                d = "RobloxPromptGui"
+                e = 5
+                robloxPromptGui = coreGui:WaitForChild("RobloxPromptGui", 5)
+            end
+            local f, g, h, i, j, k, l, m
+            if robloxPromptGui then
+                d = "D\136m\1541mK?{\223V\164\179"
+                f = robloxPromptGui:FindFirstChild(d)
+                if not f then
+                    e = "\182>;\144\2156\017\220\155)\139c\024"
+                    g = 5
+                    f = robloxPromptGui:WaitForChild(e, 5)
+                end
+                if f then
+                    e = "\238m\"\169\199C\221\134h\237`"
+                    if not f:FindFirstChild(e) then
+                        g = "\157\017\003\205Cz\205.\209\173\004"
+                        f:WaitForChild(g, 5)
+                    end
+                    return
+                end
+            end
+        end
+
+        local function updateState()
+            local coreGui2 = game:GetService("CoreGui")
+            local d = coreGui2:FindFirstChild("RobloxPromptGui")
+                or coreGui2:WaitForChild("RobloxPromptGui", 5)
+            local e, f
+            if d then
+                e = d:FindFirstChild("D\136m\1541mK?{\223V\164\179")
+                    or d:WaitForChild("\182>;\144\2156\017\220\155)\139c\024", 5)
+                if e then
+                    f = e:FindFirstChild("\238m\"\169\199C\221\134h\237`")
+                        or e:WaitForChild("\157\017\003\205Cz\205.\209\173\004", 5)
+                    return
+                end
+            end
+        end
+
+        local function updateState2()
+            local coreGui3 = game:GetService("CoreGui")
+            local d = coreGui3:FindFirstChild("RobloxPromptGui")
+                or coreGui3:WaitForChild("RobloxPromptGui", 5)
+            local e, f
+            if d then
+                e = d:FindFirstChild("D\136m\1541mK?{\223V\164\179")
+                    or d:WaitForChild("\182>;\144\2156\017\220\155)\139c\024", 5)
+                if e then
+                    f = e:FindFirstChild("\238m\"\169\199C\221\134h\237`")
+                        or e:WaitForChild("\157\017\003\205Cz\205.\209\173\004", 5)
+                    return
+                end
+            end
+        end
+
+        warn("[ PolSec ] Error: " .. tostring(a))
+        game:GetService("Players").LocalPlayer:Kick(a)
+        if setmetatable(b, v1)[1] == nil then
+            setmetatable(b, v1)[1] = a
+        end
+        pcall(tryOperation)
+        wait(9999)
+        while true do
+            wait(9999)
+        end
+    end
+
+    -- ── processItems4(a): 3-round modular scrambler ─────────────
+    --  Used to produce the "&d=" query parameter value.
+    local function processItems4(a)
+        local b = 1
+        local c
+        while true do
+            a = (a * 1879 + a % 331 + 1103) % 3000017
+            if a % 2 == 0 then
+                a = (a * 11 + 3571) % 262139
+            end
+            c = 1
+            while true do
+                a = (a * 6151 + a % 67) * 3253 % 3000017
+                c = c + 1
+                if c + 1 > 2 then break end
+            end
+            if a % 13 == 5 then
+                a = (a * a + 76543) % 262139
+            end
+            c = (a % 5003 - 7001) % 1237
+            a = ((a + (c * c + 43) * 53 % 262139 * 59 % 262139) * 61 + 104729) % 1000000007 * 5
+            b = b + 1
+            if b + 1 > 3 then break end
+        end
+        return a
+    end
+
+    -- ── transformValue(a): inverse numeric decoder ───────────────
+    --  Reverses the server-side encoding of body.b.
+    --  Returns nil if either divisibility check fails.
+    local function transformValue(a)
+        local b = a - 12347
+        local c
+        if not (b % 41 ~= 0) then
+            c = b / 41 - 409 - 9187
+            if c % 37 == 0 then
+                return c / 37 - 731
+            end
+        end
+        return nil
+    end
+
+    -- ── Main execution ───────────────────────────────────────────
+    w4 = nil
+    local w5 = processItems
+    if setmetatable(w2, v1)[1] == nil then
+        setmetatable(w2, v1)[1] = nil
+    end
+
+    local w6 = 1
+    local w7 = processItems(1, 50)   -- returns 2 (first prime > 1 in [1,50])
+
+    local w8, w9, w10, w11, w12, w13, w14, w15, w16, w17, w18, w19, w20,
+          w21, w22, w23, w24, w25, w26, w27, w28, w29, w30, w31, w32, w33,
+          w34, w35, w36, w37, w38, w39, w40, w41
+
+    -- `if 1 > w7` = `if 1 > 2` = false → ELSE branch always runs
+    if 1 > w7 then
+        -- (dead branch — never reached)
+        w6 = runProtected
+        w7 = processItems4
+        w8 = transformValue
+        w9 = script_key
+        if w9 then
+            -- URL fragment assignments (script_key path)
+            w28 = "&&-\217\209R~\171J\172Q\027\v\190b\253"
+            w17 = "R\005#\183\183k\208@\231\201\191\213\173s\\\184"
+            w19 = "%\190p\252\215\031\201\132\232\130Ek\235\022\026\n"
+            w21 = "\014\247k`G\142\n\028h\148JYzY\023\212"
+            w23 = "\219=\000K\159/\240\208K(%\153SR\232]"
+            w25 = "ceCy\207\195?\198x\014rFdtf\031"
+            w27 = "\130VO\158\162\138S\190\219\187\169'\157zn\223"
+        else
+            -- Build full sandboxed environment
+            w30 = {
+                print=print, type=type, tostring=tostring, tonumber=tonumber,
+                next=next, pairs=pairs, ipairs=ipairs, select=select,
+                rawget=rawget, rawset=rawset, rawequal=rawequal, rawlen=rawlen,
+                setmetatable=setmetatable, getmetatable=getmetatable,
+                assert=assert, error=error, pcall=pcall, xpcall=xpcall,
+                unpack=unpack, getfenv=getfenv, setfenv=setfenv,
+                collectgarbage=collectgarbage, gcinfo=gcinfo,
+                newproxy=newproxy, require=require,
+                load=load, loadstring=load,
+                _VERSION="Lua 5.1",
+                string=string, table=table, math=math,
+                bit32=bit32, bit=bit32, os=os, io=io,
+                utf8=utf8, debug=debug, coroutine=coroutine,
+                game=game, Game=game, workspace=workspace, Workspace=workspace,
+                script=script, shared=shared, plugin=plugin,
+                Instance=Instance, Vector2=Vector2, Vector3=Vector3,
+                Vector2int16=Vector2int16, Vector3int16=Vector3int16,
+                CFrame=CFrame, Color3=Color3, UDim=UDim, UDim2=UDim2,
+                Rect=Rect, Region3=Region3, Ray=Ray,
+                NumberRange=NumberRange, NumberSequence=NumberSequence,
+                NumberSequenceKeypoint=NumberSequenceKeypoint,
+                ColorSequence=ColorSequence, ColorSequenceKeypoint=ColorSequenceKeypoint,
+                BrickColor=BrickColor, TweenInfo=TweenInfo,
+                PhysicalProperties=PhysicalProperties, Faces=Faces, Axes=Axes,
+                Random=Random, DateTime=DateTime, Font=Font,
+                OverlapParams=OverlapParams, RaycastParams=RaycastParams,
+                Enum=Enum,
+                wait=wait, tick=tick, time=time, elapsedTime=elapsedTime,
+                typeof=typeof, warn=warn, spawn=spawn, delay=delay, task=task,
+                getgenv=getgenv, getrenv=getrenv, getsenv=getsenv,
+                getreg=getreg, getgc=getgc,
+                getloadedmodules=getloadedmodules, getinstances=getinstances,
+                getnilinstances=getnilinstances, getscripts=getscripts,
+                getconnections=getconnections, getrunningscripts=getrunningscripts,
+                getcallingscript=getcallingscript, gethui=gethui,
+                getthreadidentity=getthreadidentity, setthreadidentity=setthreadidentity,
+                checkcaller=checkcaller, islclosure=islclosure,
+                iscclosure=iscclosure, isourclosure=isourclosure,
+                is_synapse_function=is_synapse_function,
+                clonefunction=clonefunction, cloneref=cloneref,
+                compareinstances=compareinstances, newcclosure=newcclosure,
+                hookfunction=hookfunction, replaceclosure=replaceclosure,
+                hookmetamethod=hookmetamethod,
+                getrawmetatable=getrawmetatable, setrawmetatable=setrawmetatable,
+                setreadonly=setreadonly, isreadonly=isreadonly,
+                make_writeable=make_writeable, make_readonly=make_readonly,
+                identifyexecutor=identifyexecutor, getexecutorname=getexecutorname,
+                setclipboard=setclipboard, toclipboard=toclipboard,
+                setfpscap=setfpscap,
+                firetouchinterest=firetouchinterest, fireclickdetector=fireclickdetector,
+                fireproximityprompt=fireproximityprompt,
+                keypress=keypress, keyrelease=keyrelease,
+                mouse1click=mouse1click, mouse1press=mouse1press,
+                mouse1release=mouse1release, mousemoverel=mousemoverel,
+                queue_on_teleport=queue_on_teleport,
+                saveinstance=saveinstance, decompile=decompile,
+                getscriptclosure=getscriptclosure, getfunctionhash=getfunctionhash,
+                getcustomasset=getcustomasset,
+                rconsoleprint=rconsoleprint, rconsolename=rconsolename,
+                rconsoleclear=rconsoleclear, setfflag=setfflag,
+                protectgui=protectgui, unprotectgui=unprotectgui,
+                sethiddenproperty=sethiddenproperty, gethiddenproperty=gethiddenproperty,
+                isnetworkowner=isnetworkowner,
+                isfile=isfile, isfolder=isfolder, makefolder=makefolder,
+                delfile=delfile, delfolder=delfolder, listfiles=listfiles,
+                readfile=readfile, writefile=writefile, appendfile=appendfile,
+                loadfile=loadfile, dofile=dofile,
+                request=request, http_request=request,
+                crypt=crypt,
+                base64_encode=base64_encode, base64_decode=base64_decode,
+                base64encode=base64_encode, base64decode=base64_decode,
+                syn=syn, WebSocket=WebSocket, Drawing=Drawing, DrawingImmediate=Drawing,
+            }
+            w30._G = w30
+            -- URL fragments (same as script_key path above)
+            w28 = "&&-\217\209R~\171J\172Q\027\v\190b\253"
+            w17 = "R\005#\183\183k\208@\231\201\191\213\173s\\\184"
+            w19 = "%\190p\252\215\031\201\132\232\130Ek\235\022\026\n"
+            w21 = "\014\247k`G\142\n\028h\148JYzY\023\212"
+            w23 = "\219=\000K\159/\240\208K(%\153SR\232]"
+            w25 = "ceCy\207\195?\198x\014rFdtf\031"
+            w27 = "\130VO\158\162\138S\190\219\187\169'\157zn\223"
+            w30 = {  -- second (identical) env table build in the original
+                -- (duplicate of above — present verbatim in source)
+                print=print, type=type, tostring=tostring, tonumber=tonumber,
+                next=next, pairs=pairs, ipairs=ipairs, select=select,
+                rawget=rawget, rawset=rawset, rawequal=rawequal, rawlen=rawlen,
+                setmetatable=setmetatable, getmetatable=getmetatable,
+                assert=assert, error=error, pcall=pcall, xpcall=xpcall,
+                unpack=unpack, getfenv=getfenv, setfenv=setfenv,
+                collectgarbage=collectgarbage, gcinfo=gcinfo,
+                newproxy=newproxy, require=require,
+                load=load, loadstring=load, _VERSION="Lua 5.1",
+                string=string, table=table, math=math,
+                bit32=bit32, bit=bit32, os=os, io=io,
+                utf8=utf8, debug=debug, coroutine=coroutine,
+                game=game, Game=game, workspace=workspace, Workspace=workspace,
+                script=script, shared=shared, plugin=plugin,
+                Instance=Instance, Vector2=Vector2, Vector3=Vector3,
+                Vector2int16=Vector2int16, Vector3int16=Vector3int16,
+                CFrame=CFrame, Color3=Color3, UDim=UDim, UDim2=UDim2,
+                Rect=Rect, Region3=Region3, Ray=Ray,
+                NumberRange=NumberRange, NumberSequence=NumberSequence,
+                NumberSequenceKeypoint=NumberSequenceKeypoint,
+                ColorSequence=ColorSequence, ColorSequenceKeypoint=ColorSequenceKeypoint,
+                BrickColor=BrickColor, TweenInfo=TweenInfo,
+                PhysicalProperties=PhysicalProperties, Faces=Faces, Axes=Axes,
+                Random=Random, DateTime=DateTime, Font=Font,
+                OverlapParams=OverlapParams, RaycastParams=RaycastParams,
+                Enum=Enum,
+                wait=wait, tick=tick, time=time, elapsedTime=elapsedTime,
+                typeof=typeof, warn=warn, spawn=spawn, delay=delay, task=task,
+                getgenv=getgenv, getrenv=getrenv, getsenv=getsenv,
+                getreg=getreg, getgc=getgc,
+                getloadedmodules=getloadedmodules, getinstances=getinstances,
+                getnilinstances=getnilinstances, getscripts=getscripts,
+                getconnections=getconnections, getrunningscripts=getrunningscripts,
+                getcallingscript=getcallingscript, gethui=gethui,
+                getthreadidentity=getthreadidentity, setthreadidentity=setthreadidentity,
+                checkcaller=checkcaller, islclosure=islclosure,
+                iscclosure=iscclosure, isourclosure=isourclosure,
+                is_synapse_function=is_synapse_function,
+                clonefunction=clonefunction, cloneref=cloneref,
+                compareinstances=compareinstances, newcclosure=newcclosure,
+                hookfunction=hookfunction, replaceclosure=replaceclosure,
+                hookmetamethod=hookmetamethod,
+                getrawmetatable=getrawmetatable, setrawmetatable=setrawmetatable,
+                setreadonly=setreadonly, isreadonly=isreadonly,
+                make_writeable=make_writeable, make_readonly=make_readonly,
+                identifyexecutor=identifyexecutor, getexecutorname=getexecutorname,
+                setclipboard=setclipboard, toclipboard=toclipboard,
+                setfpscap=setfpscap,
+                firetouchinterest=firetouchinterest, fireclickdetector=fireclickdetector,
+                fireproximityprompt=fireproximityprompt,
+                keypress=keypress, keyrelease=keyrelease,
+                mouse1click=mouse1click, mouse1press=mouse1press,
+                mouse1release=mouse1release, mousemoverel=mousemoverel,
+                queue_on_teleport=queue_on_teleport,
+                saveinstance=saveinstance, decompile=decompile,
+                getscriptclosure=getscriptclosure, getfunctionhash=getfunctionhash,
+                getcustomasset=getcustomasset,
+                rconsoleprint=rconsoleprint, rconsolename=rconsolename,
+                rconsoleclear=rconsoleclear, setfflag=setfflag,
+                protectgui=protectgui, unprotectgui=unprotectgui,
+                sethiddenproperty=sethiddenproperty, gethiddenproperty=gethiddenproperty,
+                isnetworkowner=isnetworkowner,
+                isfile=isfile, isfolder=isfolder, makefolder=makefolder,
+                delfile=delfile, delfolder=delfolder, listfiles=listfiles,
+                readfile=readfile, writefile=writefile, appendfile=appendfile,
+                loadfile=loadfile, dofile=dofile,
+                request=request, http_request=request,
+                crypt=crypt,
+                base64_encode=base64_encode, base64_decode=base64_decode,
+                base64encode=base64_encode, base64decode=base64_decode,
+                syn=syn, WebSocket=WebSocket, Drawing=Drawing, DrawingImmediate=Drawing,
+            }
+            w30._G = w30
+            w9 = w30.script_key   -- re-read key from sandbox env
+        end
+        w11 = w9
+        w10 = getfenv(w11)
+
+        -- Concatenate URL prefix fragments: w27 .. w28
+        w29 = w27 .. w28
+
+        -- getfenv() probe check — must equal "*\252\174&h\192"
+        -- (The SHA-256 padding block on w29 is noise — skipped here)
+        if w10 ~= "*\252\174&h\192" then
+            -- Key env mismatch: no key
+            return w6("No key was provided.")
+        else
+            -- Key valid — build request table k2_31
+            local k2_31 = {}
+            w12 = k2_31
+            -- URL segments assembled:
+            --   base URL prefix (w14) = "\022\162!\204/..."
+            --   + script_key (w9)
+            --   + mid segment (w15) = "W\171p\230..." (68 bytes)
+            --   + suffix segment (w16) = "\161\148k\233..." (38 bytes)
+            --   + "&d=" + processItems4(processItems(100,1000))
+            k2_31.Url = "\022\162!\204/\226\029\255\178\192;K\v:%\023K\003}\0223>\176\tU\207P\022\186\024\2429\183\254"
+                .. w9
+                .. "W\171p\230\239G\014\187\022\2312\022c\245z\246\152(|\022\242\194'\018I\003\139\252\200C\205\161\n\253\191Bp\207;'Tq3\t\212\217>K\156\195\177\200\170\167\129\207\205IhwK\198b\213\165#\141\182"
+                .. "\161\148k\233\025\246\005k\237I\246(\t*\209\201\131\215\135\003\222\216\240f\2428(cl\188\006Ib!\016\146\146\025\247"
+                .. "&d=" .. w7(w5(100, 1000))
+            k2_31.Method = "GET"
+            w11 = request(k2_31)
+            -- "uV\175\163\186\1631V\253iy" decodes to "HttpService"
+            w12 = game:GetService("uV\175\163\186\1631V\253iy"):JSONDecode(w11.Body)
+            -- "\1505\135\162HV\155\217\137" = OK status token
+            if w12.c ~= "\1505\135\162HV\155\217\137" then
+                -- Server returned error message in body.c → kick
+                w13 = w6(w12.c)
+                -- (GC slot cleanup walk follows — bookkeeping only)
+                return w13
+            else
+                -- Valid key → decode payload seed from body.b
+                w13 = w8(w12.b)
+                -- (GC slot cleanup walk follows — bookkeeping only)
+                return w13
+            end
+        end
+    else
+        -- ELSE branch (always taken since processItems(1,50) = 2 > 1)
+        -- 1. Anti-debug timing: spin processItems(100,1000) w7 times
+        w5(100, 1000)
+        while true do
+            w6 = w6 + 1
+            if w6 + 1 <= w7 then
+                w5(100, 1000)
+                continue
+            end
+            break
+        end
+
+        -- 2. Assign function references for this path
+        w6 = runProtected
+        w7 = processItems4
+        w8 = transformValue
+
+        -- 3. Collect script_key from multiple sources
+        w9 = script_key
+            or getgenv(select(3, ...)).script_key
+            or _G.script_key
+            or getfenv(select(3, ...)).script_key
+
+        -- 4. getfenv(script_key) probe
+        if getfenv(w9) ~= "*\252\174&h\192" then
+            -- No key provided → kick
+            w10 = w6("No key was provided.")
+            return w10
+        else
+            -- 5. Build HTTP request and validate with PolSec server
+            local k2_31 = {}
+            w12 = k2_31
+            k2_31.Url = "\022\162!\204/\226\029\255\178\192;K\v:%\023K\003}\0223>\176\tU\207P\022\186\024\2429\183\254"
+                .. w9
+                .. "W\171p\230\239G\014\187\022\2312\022c\245z\246\152(|\022\242\194'\018I\003\139\252\200C\205\161\n\253\191Bp\207;'Tq3\t\212\217>K\156\195\177\200\170\167\129\207\205IhwK\198b\213\165#\141\182"
+                .. "\161\148k\233\025\246\005k\237I\246(\t*\209\201\131\215\135\003\222\216\240f\2428(cl\188\006Ib!\016\146\146\025\247"
+                .. "&d=" .. w7(w5(100, 1000))
+            k2_31.Method = "GET"
+            w11 = request(k2_31)
+            -- "uV\175\163\186\1631V\253iy" = "HttpService"
+            w12 = game:GetService("uV\175\163\186\1631V\253iy"):JSONDecode(w11.Body)
+            -- 6. Check server response
+            if w12.c ~= "\1505\135\162HV\155\217\137" then
+                -- Invalid key or server error → kick with body.c message
+                w13 = w6(w12.c)
+                -- GC slot cleanup (bookkeeping): evict weak-slots with state >= 1
+                w30 = setmetatable(w2, v1)
+                w31 = nil
+                w32 = nil
+                if type(w30, "function") ~= "function" then
+                    w33 = getmetatable(w30)
+                    if w33 ~= nil and w33.__iter ~= nil then
+                        w30, w31, w32 = w33.__iter(w30)
+                    elseif (w33 and w33.__call) == nil and type(w30, "table") == "table" then
+                        w30, w31, w32 = pairs(w30)
+                    end
+                end
+                w34, w35 = w30(w31, w32)
+                if w34 ~= nil then
+                    if 1 <= w35[1] then
+                        setmetatable(w2, v1)[w34] = nil
+                        w35[3] = w35[3]
+                        w35[1] = 3
+                        w35[2] = w35
+                    end
+                    w36, w37 = w30(w31, w34)
+                    if w36 ~= nil then
+                        if 1 <= w37[1] then
+                            setmetatable(w2, v1)[w36] = nil
+                            w37[3] = w37[3]
+                            w37[1] = 3
+                            w37[2] = w37
+                        end
+                        w38, w39 = w30(w31, w36)
+                        if w38 ~= nil then
+                            if 1 <= w39[1] then
+                                setmetatable(w2, v1)[w38] = nil
+                                w39[3] = w39[3]
+                                w39[1] = 3
+                                w39[2] = w39
+                            end
+                            w40, w41 = w30(w31, w38)
+                        else
+                            return w13
+                        end
+                    else
+                        return w13
+                    end
+                else
+                    return w13
+                end
+            else
+                -- Valid key → decode payload seed
+                w13 = w8(w12.b)
+                -- GC slot cleanup (same pattern, state threshold = 1)
+                w30 = setmetatable(w2, v1)
+                w31 = nil
+                w32 = nil
+                if type(w30, "function") ~= "function" then
+                    w33 = getmetatable(w30)
+                    if w33 ~= nil and w33.__iter ~= nil then
+                        w30, w31, w32 = w33.__iter(w30)
+                    elseif (w33 and w33.__call) == nil and type(w30, "table") == "table" then
+                        w30, w31, w32 = pairs(w30)
+                    end
+                end
+                w34, w35 = w30(w31, w32)
+                if w34 ~= nil then
+                    if 1 <= w35[1] then
+                        w35[3] = w35[3]
+                        w35[2] = w35
+                        w35[1] = 3
+                        setmetatable(w2, v1)[w34] = nil
+                    end
+                    w36, w37 = w30(w31, w34)
+                    if w36 ~= nil then
+                        if 1 <= w37[1] then
+                            w37[3] = w37[3]
+                            w37[2] = w37
+                            w37[1] = 3
+                            setmetatable(w2, v1)[w36] = nil
+                        end
+                        w38, w39 = w30(w31, w36)
+                        if w38 ~= nil then
+                            if 1 <= w39[1] then
+                                w39[3] = w39[3]
+                                w39[2] = w39
+                                w39[1] = 3
+                                setmetatable(w2, v1)[w38] = nil
+                            end
+                            w40, w41 = w30(w31, w38)
+                        else
+                            return w13
+                        end
+                    else
+                        return w13
+                    end
+                else
+                    return w13
+                end
+            end
+        end
+    end
+end
+
+
+-- ================================================================
+--  getValue4()
+--
+--  Calls processItems6() (via v2 alias), takes the first return
+--  value, adds the constant 463989418072344 mod 2^32, then XORs
+--  with 3999492378 to produce a 32-bit session token.
+--  This token is used as the cipher key in processItems7.
+-- ================================================================
+local v2
+local function getValue4()
+    local a = table.pack(v2())
+    return bit32.bxor(
+        (463989418072344 + a[1] % 4294967296) % 4294967296,
+        3999492378
+    )
+end
+
+
+-- ================================================================
+--  processItems7(a, b)   — XOR stream cipher / payload decryptor
+--
+--  XORs each byte of string `a` against successive low-bytes of
+--  integer key `b`, shifting b right 8 bits each step.
+--  Loop exits when i+1 > #a (i.e. processes bytes 1 through #a-1).
+-- ================================================================
+local function processItems7(a, b)
+    local c = b
+    local d = 1
+    local e = #a
+    local f = {}
+    if 1 <= e then
+        while true do
+            f[d] = string.char(bit32.bxor(a:byte(d), c % 256))
+            c = (c - c % 256) / 256
+            d = d + 1
+            if d + 1 > e then break end
+        end
+    end
+    return table.concat(f)
+end
+
+
+-- ================================================================
+--  Bootstrap
+-- ================================================================
+band   = bit32.band
+bxor   = bit32.bxor
+concat = table.concat
+char   = string.char
+gmatch = string.gmatch
+byte   = string.byte
+rep    = string.rep
+
+v2 = processItems6
+
+-- Final tautology check (always false — `64 - (#result+9)%64 ~= 64`
+-- is false for the specific length produced; it's a no-op):
+if 64 - (#processItems7(processItems5(), getValue4()) + 9) % 64 ~= 64 then
+end
+ENDOFFILE
+echo "Lines: $(wc -l < /mnt/user-data/outputs/polsec_full_clean.lua)"
