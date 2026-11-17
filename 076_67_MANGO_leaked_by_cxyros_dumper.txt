@@ -1,0 +1,224 @@
+-- cxyro dumper: https://discord.gg/WW8Qm77dhF
+
+local Players        = game:GetService("Players")
+local RunService     = game:GetService("RunService")
+local UserInputService = game:GetService("UserInputService")
+
+local LocalPlayer = Players.LocalPlayer
+
+-- Assuming these values already exist (probably created by the "dumper")
+local SpeedEnabled = LocalPlayer:FindFirstChild("SpeedEnabled")   -- BoolValue?
+local UnwalkEnabled = LocalPlayer:FindFirstChild("UnwalkEnabled") -- BoolValue?
+local SavedSpeed   = LocalPlayer:FindFirstChild("SavedSpeed")     -- NumberValue?
+local SavedJump    = LocalPlayer:FindFirstChild("SavedJump")      -- NumberValue?
+
+-- GUI Creation
+local ScreenGui = Instance.new("ScreenGui")
+ScreenGui.Name = "ProjectSpeedBooster"
+ScreenGui.Parent = game.CoreGui
+
+local MainFrame = Instance.new("Frame")
+MainFrame.Size = UDim2.new(0, 150, 0, 115)
+MainFrame.Position = UDim2.new(0.5, -75, 0.32, 0)
+MainFrame.BackgroundColor3 = Color3.fromRGB(15, 15, 15)
+MainFrame.BackgroundTransparency = 0.25
+MainFrame.BorderSizePixel = 0
+MainFrame.Active = true
+MainFrame.Draggable = true
+MainFrame.Parent = ScreenGui
+
+local UICorner = Instance.new("UICorner")
+UICorner.CornerRadius = UDim.new(0, 10)
+UICorner.Parent = MainFrame
+
+local UIStroke = Instance.new("UIStroke")
+UIStroke.Thickness = 2
+UIStroke.Parent = MainFrame
+
+-- Title
+local TitleLabel = Instance.new("TextLabel")
+TitleLabel.Size = UDim2.new(1, -55, 0, 18)
+TitleLabel.Position = UDim2.new(0, 8, 0, 4)
+TitleLabel.BackgroundTransparency = 1
+TitleLabel.Text = "Project Booster"
+TitleLabel.Font = Enum.Font.GothamBold
+TitleLabel.TextSize = 11
+TitleLabel.TextColor3 = Color3.new(1,1,1)
+TitleLabel.TextXAlignment = Enum.TextXAlignment.Left
+TitleLabel.Parent = MainFrame
+
+-- Speed Toggle
+local SpeedToggleBtn = Instance.new("TextButton")
+SpeedToggleBtn.Size = UDim2.new(0, 38, 0, 15)
+SpeedToggleBtn.Position = UDim2.new(0, 102, 0, 6)
+SpeedToggleBtn.Text = ""
+SpeedToggleBtn.BackgroundColor3 = Color3.fromRGB(0, 170, 0)
+SpeedToggleBtn.BorderSizePixel = 0
+SpeedToggleBtn.Parent = MainFrame
+
+local SpeedToggleCorner = Instance.new("UICorner")
+SpeedToggleCorner.CornerRadius = UDim.new(1, 0)
+SpeedToggleCorner.Parent = SpeedToggleBtn
+
+local SpeedToggleLabel = Instance.new("TextLabel")
+SpeedToggleLabel.Size = UDim2.new(1,0,1,0)
+SpeedToggleLabel.BackgroundTransparency = 1
+SpeedToggleLabel.Text = "ON"
+SpeedToggleLabel.Font = Enum.Font.GothamBold
+SpeedToggleLabel.TextSize = 9
+SpeedToggleLabel.TextColor3 = Color3.new(1,1,1)
+SpeedToggleLabel.TextXAlignment = Enum.TextXAlignment.Center
+SpeedToggleLabel.TextYAlignment = Enum.TextYAlignment.Center
+SpeedToggleLabel.Parent = SpeedToggleBtn
+
+-- Speed section
+local SpeedLabel = Instance.new("TextLabel")
+SpeedLabel.Size = UDim2.new(0, 45, 0, 16)
+SpeedLabel.Position = UDim2.new(0, 8, 0, 30)
+SpeedLabel.BackgroundTransparency = 1
+SpeedLabel.Text = "Speed"
+SpeedLabel.Font = Enum.Font.Gotham
+SpeedLabel.TextSize = 11
+SpeedLabel.TextColor3 = Color3.new(1,1,1)
+SpeedLabel.TextXAlignment = Enum.TextXAlignment.Left
+SpeedLabel.Parent = MainFrame
+
+local SpeedTextBox = Instance.new("TextBox")
+SpeedTextBox.Size = UDim2.new(0, 42, 0, 16)
+SpeedTextBox.Position = UDim2.new(0, 65, 0, 30)
+SpeedTextBox.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+SpeedTextBox.Text = "0"
+SpeedTextBox.Font = Enum.Font.Gotham
+SpeedTextBox.TextSize = 11
+SpeedTextBox.TextColor3 = Color3.new(1,1,1)
+SpeedTextBox.BorderSizePixel = 0
+SpeedTextBox.Parent = MainFrame
+
+local SpeedBoxCorner = Instance.new("UICorner")
+SpeedBoxCorner.CornerRadius = UDim.new(0, 4)
+SpeedBoxCorner.Parent = SpeedTextBox
+
+-- Jump section
+local JumpLabel = Instance.new("TextLabel")
+JumpLabel.Size = UDim2.new(0, 45, 0, 16)
+JumpLabel.Position = UDim2.new(0, 8, 0, 52)
+JumpLabel.BackgroundTransparency = 1
+JumpLabel.Text = "Jump"
+JumpLabel.Font = Enum.Font.Gotham
+JumpLabel.TextSize = 11
+JumpLabel.TextColor3 = Color3.new(1,1,1)
+JumpLabel.TextXAlignment = Enum.TextXAlignment.Left
+JumpLabel.Parent = MainFrame
+
+local JumpTextBox = Instance.new("TextBox")
+JumpTextBox.Size = UDim2.new(0, 42, 0, 16)
+JumpTextBox.Position = UDim2.new(0, 65, 0, 52)
+JumpTextBox.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+JumpTextBox.Text = "0"
+JumpTextBox.Font = Enum.Font.Gotham
+JumpTextBox.TextSize = 11
+JumpTextBox.TextColor3 = Color3.new(1,1,1)
+JumpTextBox.BorderSizePixel = 0
+JumpTextBox.Parent = MainFrame
+
+local JumpBoxCorner = Instance.new("UICorner")
+JumpBoxCorner.CornerRadius = UDim.new(0, 4)
+JumpBoxCorner.Parent = JumpTextBox
+
+-- Unwalk section
+local UnwalkLabel = Instance.new("TextLabel")
+UnwalkLabel.Size = UDim2.new(0, 50, 0, 16)
+UnwalkLabel.Position = UDim2.new(0, 8, 0, 74)
+UnwalkLabel.BackgroundTransparency = 1
+UnwalkLabel.Text = "Unwalk"
+UnwalkLabel.Font = Enum.Font.Gotham
+UnwalkLabel.TextSize = 11
+UnwalkLabel.TextColor3 = Color3.new(1,1,1)
+UnwalkLabel.TextXAlignment = Enum.TextXAlignment.Left
+UnwalkLabel.Parent = MainFrame
+
+local UnwalkToggleBtn = Instance.new("TextButton")
+UnwalkToggleBtn.Size = UDim2.new(0, 38, 0, 15)
+UnwalkToggleBtn.Position = UDim2.new(0, 65, 0, 74)
+UnwalkToggleBtn.Text = ""
+UnwalkToggleBtn.BackgroundColor3 = Color3.fromRGB(0, 170, 0)
+UnwalkToggleBtn.BorderSizePixel = 0
+UnwalkToggleBtn.Parent = MainFrame
+
+local UnwalkToggleCorner = Instance.new("UICorner")
+UnwalkToggleCorner.CornerRadius = UDim.new(1, 0)
+UnwalkToggleCorner.Parent = UnwalkToggleBtn
+
+local UnwalkToggleLabel = Instance.new("TextLabel")
+UnwalkToggleLabel.Size = UDim2.new(1,0,1,0)
+UnwalkToggleLabel.BackgroundTransparency = 1
+UnwalkToggleLabel.Text = "ON"
+UnwalkToggleLabel.Font = Enum.Font.GothamBold
+UnwalkToggleLabel.TextSize = 9
+UnwalkToggleLabel.TextColor3 = Color3.new(1,1,1)
+UnwalkToggleLabel.TextXAlignment = Enum.TextXAlignment.Center
+UnwalkToggleLabel.TextYAlignment = Enum.TextYAlignment.Center
+UnwalkToggleLabel.Parent = UnwalkToggleBtn
+
+-- Keybind button (incomplete in original)
+local KeybindBtn = Instance.new("TextButton")
+KeybindBtn.Size = UDim2.new(0, 26, 0, 15)
+KeybindBtn.Position = UDim2.new(0, 110, 0, 74)
+KeybindBtn.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
+KeybindBtn.Text = "KEY"
+KeybindBtn.Font = Enum.Font.GothamBold
+KeybindBtn.TextSize = 8
+KeybindBtn.TextColor3 = Color3.new(1,1,1)
+KeybindBtn.BorderSizePixel = 0
+KeybindBtn.Parent = MainFrame
+
+local KeybindCorner = Instance.new("UICorner")
+KeybindCorner.CornerRadius = UDim.new(0, 4)
+KeybindCorner.Parent = KeybindBtn
+
+-- =============================================
+--                Connections
+-- =============================================
+
+SpeedToggleBtn.MouseButton1Click:Connect(function()
+    if SpeedEnabled then
+        SpeedEnabled.Value = false
+        SpeedToggleBtn.BackgroundColor3 = Color3.fromRGB(150, 0, 0)
+        SpeedToggleLabel.Text = "OFF"
+    end
+end)
+
+UnwalkToggleBtn.MouseButton1Click:Connect(function()
+    if UnwalkEnabled then
+        UnwalkEnabled.Value = false
+        UnwalkToggleBtn.BackgroundColor3 = Color3.fromRGB(150, 0, 0)
+        UnwalkToggleLabel.Text = "OFF"
+    end
+end)
+
+SpeedTextBox.FocusLost:Connect(function(enterPressed)
+    if SavedSpeed and enterPressed then
+        local num = tonumber(SpeedTextBox.Text)
+        if num then
+            SavedSpeed.Value = num
+        end
+    end
+end)
+
+JumpTextBox.FocusLost:Connect(function(enterPressed)
+    if SavedJump and enterPressed then
+        local num = tonumber(JumpTextBox.Text)
+        if num then
+            SavedJump.Value = num
+        end
+    end
+end)
+
+-- The original script had many empty/incomplete connections like these:
+-- UserInputService.InputBegan
+-- RunService.Heartbeat (multiple)
+-- JumpRequest
+-- etc...
+
+-- Most likely the actual speed/jump/unwalk logic is in another script
+-- This GUI only seems to be a **controller/interface**

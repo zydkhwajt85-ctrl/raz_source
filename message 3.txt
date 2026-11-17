@@ -1,0 +1,446 @@
+task.wait(1)
+local LocalPlayer = game:GetService("Players").LocalPlayer
+local Backpack = LocalPlayer:WaitForChild("Backpack")
+local Lighting = game:GetService("Lighting")
+local CoreGui = game:GetService("CoreGui")
+
+-- Configurações de qualidade (corrigido)
+local _ = pcall(function()
+    local UserGameSettings = UserSettings():GetService("UserGameSettings")
+    UserGameSettings.SavedQualityLevel = Enum.SavedQualitySetting.QualityLevel1
+    UserGameSettings.GraphicsQualityLevel = 1
+end)
+
+-- Configurações de renderização (corrigido)
+local _ = pcall(function()
+    settings().Rendering.QualityLevel = Enum.QualityLevel.Level01
+end)
+
+-- Configurações de iluminação
+Lighting.GlobalShadows = false
+Lighting.EnvironmentDiffuseScale = 0
+Lighting.EnvironmentSpecularScale = 0
+
+-- Desativar efeitos pós-processamento
+for _, v in ipairs(Lighting:GetChildren()) do
+    if v:IsA("PostEffect") then
+        v.Enabled = false
+    end
+end
+
+-- Desativar emissores de partículas
+for _, v in ipairs(workspace:GetDescendants()) do
+    if v:IsA("ParticleEmitter") then
+        v.Enabled = false
+    end
+end
+
+-- Remover acessórios (corrigido)
+for _, v in ipairs(workspace:GetDescendants()) do
+    if v:IsA("Humanoid") then
+        local Parent = v.Parent
+        if Parent then
+            for _, accessory in ipairs(Parent:GetChildren()) do
+                if accessory:IsA("Accessory") then
+                    accessory:Destroy()
+                end
+            end
+            Parent.ChildAdded:Connect(function(child)
+                if child:IsA("Accessory") then
+                    child:Destroy()
+                end
+            end)
+        end
+    end
+end
+
+-- Conexão para novos descendentes
+local Connection
+Connection = workspace.DescendantAdded:Connect(function(Descendant)
+    if Descendant:IsA("Humanoid") then
+        local Parent = Descendant.Parent
+        if Parent then
+            for _, accessory in ipairs(Parent:GetChildren()) do
+                if accessory:IsA("Accessory") then
+                    accessory:Destroy()
+                end
+            end
+            Parent.ChildAdded:Connect(function(child)
+                if child:IsA("Accessory") then
+                    child:Destroy()
+                end
+            end)
+        end
+    end
+end)
+
+-- UI SK FPS DEVOUR
+local SKFPSDevourUI = Instance.new("ScreenGui")
+SKFPSDevourUI.Name = "SKFPSDevourUI"
+SKFPSDevourUI.Parent = CoreGui
+SKFPSDevourUI.ResetOnSpawn = false
+
+-- Frame principal (aumentado)
+local Frame = Instance.new("Frame")
+Frame.Parent = SKFPSDevourUI
+Frame.Size = UDim2.new(0, 340, 0, 280)
+Frame.Position = UDim2.new(0.5, -170, 0.5, -140)
+Frame.BackgroundColor3 = Color3.fromRGB(10, 10, 10)
+Frame.BorderColor3 = Color3.fromRGB(255, 0, 0)
+Frame.BorderSizePixel = 3
+Frame.Active = true
+Frame.Draggable = true
+
+-- Cantos arredondados
+local UICorner = Instance.new("UICorner")
+UICorner.Parent = Frame
+UICorner.CornerRadius = UDim.new(0, 18)
+
+-- Título
+local TextLabel = Instance.new("TextLabel")
+TextLabel.Parent = Frame
+TextLabel.Size = UDim2.new(1, -20, 0, 40)
+TextLabel.Position = UDim2.new(0, 10, 0, 10)
+TextLabel.BackgroundTransparency = 1
+TextLabel.Text = "SK FPS DEVOUR - LAG OTHERS"
+TextLabel.Font = Enum.Font.GothamBlack
+TextLabel.TextSize = 18
+TextLabel.TextXAlignment = Enum.TextXAlignment.Left
+TextLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+
+-- Botão FPS Devour
+local TextButton = Instance.new("TextButton")
+TextButton.Parent = Frame
+TextButton.Size = UDim2.new(1, -40, 0, 45)
+TextButton.Position = UDim2.new(0, 20, 0, 60)
+TextButton.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
+TextButton.BorderColor3 = Color3.fromRGB(255, 0, 0)
+TextButton.BorderSizePixel = 2
+TextButton.Text = "FPS Devour (need auras)"
+TextButton.Font = Enum.Font.GothamBold
+TextButton.TextSize = 14
+TextButton.TextColor3 = Color3.new(1, 1, 1)
+TextButton.BorderSizePixel = 0
+TextButton.AutoButtonColor = true
+
+local UICorner_2 = Instance.new("UICorner")
+UICorner_2.Parent = TextButton
+UICorner_2.CornerRadius = UDim.new(0, 12)
+
+-- Label de Velocidade
+local SpeedLabel = Instance.new("TextLabel")
+SpeedLabel.Parent = Frame
+SpeedLabel.Size = UDim2.new(1, -40, 0, 25)
+SpeedLabel.Position = UDim2.new(0, 20, 0, 115)
+SpeedLabel.BackgroundTransparency = 1
+SpeedLabel.Text = "LAG POWER: 0% (LAG OTHERS EXTREME)"
+SpeedLabel.Font = Enum.Font.GothamBold
+SpeedLabel.TextSize = 13
+SpeedLabel.TextColor3 = Color3.fromRGB(255, 0, 0)
+SpeedLabel.TextXAlignment = Enum.TextXAlignment.Left
+
+-- Input de Velocidade
+local SpeedInput = Instance.new("TextBox")
+SpeedInput.Parent = Frame
+SpeedInput.Size = UDim2.new(0, 100, 0, 35)
+SpeedInput.Position = UDim2.new(0, 20, 0, 145)
+SpeedInput.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
+SpeedInput.BorderColor3 = Color3.fromRGB(255, 0, 0)
+SpeedInput.BorderSizePixel = 2
+SpeedInput.Text = "0"
+SpeedInput.Font = Enum.Font.GothamBold
+SpeedInput.TextSize = 16
+SpeedInput.TextColor3 = Color3.new(1, 1, 1)
+SpeedInput.PlaceholderText = "0-100"
+
+local UICorner_3 = Instance.new("UICorner")
+UICorner_3.Parent = SpeedInput
+UICorner_3.CornerRadius = UDim.new(0, 10)
+
+-- Botão POWER
+local PowerButton = Instance.new("TextButton")
+PowerButton.Parent = Frame
+PowerButton.Size = UDim2.new(0, 200, 0, 35)
+PowerButton.Position = UDim2.new(0, 130, 0, 145)
+PowerButton.BackgroundColor3 = Color3.fromRGB(255, 0, 0)
+PowerButton.BorderSizePixel = 0
+PowerButton.Text = "▶ LAG OTHERS"
+PowerButton.Font = Enum.Font.GothamBlack
+PowerButton.TextSize = 15
+PowerButton.TextColor3 = Color3.new(1, 1, 1)
+PowerButton.AutoButtonColor = true
+
+local UICorner_4 = Instance.new("UICorner")
+UICorner_4.Parent = PowerButton
+UICorner_4.CornerRadius = UDim.new(0, 10)
+
+-- Status Label
+local StatusLabel = Instance.new("TextLabel")
+StatusLabel.Parent = Frame
+StatusLabel.Size = UDim2.new(1, -40, 0, 50)
+StatusLabel.Position = UDim2.new(0, 20, 0, 190)
+StatusLabel.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
+StatusLabel.BorderColor3 = Color3.fromRGB(255, 0, 0)
+StatusLabel.BorderSizePixel = 2
+StatusLabel.Text = "Status: Aguardando..."
+StatusLabel.Font = Enum.Font.GothamBold
+StatusLabel.TextSize = 13
+StatusLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+StatusLabel.TextWrapped = true
+
+local UICorner_5 = Instance.new("UICorner")
+UICorner_5.Parent = StatusLabel
+UICorner_5.CornerRadius = UDim.new(0, 10)
+
+-- Variáveis do sistema POWER
+local PowerActive = false
+local CurrentSpeed = 0
+local PowerThreads = {}
+
+-- Função para atualizar label de velocidade
+local function UpdateSpeedLabel(speed)
+    if speed == 0 then
+        SpeedLabel.Text = "LAG POWER: 0% (LAG OTHERS EXTREME) 💀"
+        SpeedLabel.TextColor3 = Color3.fromRGB(255, 0, 0)
+    elseif speed <= 20 then
+        SpeedLabel.Text = "LAG POWER: "..speed.."% (OTHERS MEGA LAG) 🔥"
+        SpeedLabel.TextColor3 = Color3.fromRGB(255, 50, 0)
+    elseif speed <= 40 then
+        SpeedLabel.Text = "LAG POWER: "..speed.."% (OTHERS SUPER LAG) ⚡"
+        SpeedLabel.TextColor3 = Color3.fromRGB(255, 100, 0)
+    elseif speed <= 60 then
+        SpeedLabel.Text = "LAG POWER: "..speed.."% (OTHERS LAG MÉDIO) 💫"
+        SpeedLabel.TextColor3 = Color3.fromRGB(255, 200, 0)
+    elseif speed <= 80 then
+        SpeedLabel.Text = "LAG POWER: "..speed.."% (OTHERS LAG LEVE) ✨"
+        SpeedLabel.TextColor3 = Color3.fromRGB(200, 255, 0)
+    else
+        SpeedLabel.Text = "LAG POWER: "..speed.."% (SEM EFEITO) ✅"
+        SpeedLabel.TextColor3 = Color3.fromRGB(100, 255, 100)
+    end
+end
+
+-- Atualizar velocidade quando input mudar
+SpeedInput.FocusLost:Connect(function()
+    local value = tonumber(SpeedInput.Text)
+    if value and value >= 0 and value <= 100 then
+        CurrentSpeed = value
+        UpdateSpeedLabel(CurrentSpeed)
+    else
+        SpeedInput.Text = tostring(CurrentSpeed)
+        StatusLabel.Text = "Status: Valor inválido! Use 0-100"
+        StatusLabel.TextColor3 = Color3.fromRGB(255, 100, 100)
+        task.wait(2)
+        StatusLabel.Text = "Status: Aguardando..."
+        StatusLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+    end
+end)
+
+-- Função POWER EXTREMO (causar lag nos OUTROS jogadores SEM lagar você)
+local function StartPowerMode()
+    local Character = LocalPlayer.Character
+    if not Character then
+        StatusLabel.Text = "Status: Personagem não encontrado!"
+        return false
+    end
+    
+    local Humanoid = Character:FindFirstChildOfClass("Humanoid")
+    if not Humanoid then
+        StatusLabel.Text = "Status: Humanoide não encontrado!"
+        return false
+    end
+    
+    local Quantum_Cloner = Backpack:FindFirstChild("Quantum Cloner")
+    if not Quantum_Cloner then
+        StatusLabel.Text = "Status: Quantum Cloner não encontrado!"
+        return false
+    end
+    
+    -- Equipar Quantum Cloner
+    Humanoid:EquipTool(Quantum_Cloner)
+    task.wait(0.1)
+    
+    -- Calcular delay e ativações baseado na velocidade
+    -- SEMPRE 12 THREADS independente da porcentagem
+    -- 0% = 12 threads com delay ULTRA mínimo, MUITAS ativações
+    -- 100% = 12 threads com delay alto, poucas ativações
+    local threadCount = 16 -- FIXO em 12 threads sempre
+    local baseDelay = 0.0001 + (CurrentSpeed / 100) * 0.4999 -- 0.0001s (0.1ms) a 0.5s
+    local activations = math.floor(50 - (CurrentSpeed / 100) * 48) -- 50 a 2 ativações
+    
+    StatusLabel.Text = "Status: 16 THREADS ATIVAS! "..activations.."x 🔥💀⚡"
+    StatusLabel.TextColor3 = Color3.fromRGB(0, 255, 100)
+    
+    -- Criar 12 threads (SEMPRE)
+    for i = 1, threadCount do
+        local thread = task.spawn(function()
+            while PowerActive do
+                local Character = LocalPlayer.Character
+                if Character and Character:FindFirstChildOfClass("Humanoid") then
+                    -- Pegar todos os tools do backpack
+                    local tools = {}
+                    for _, v in ipairs(Backpack:GetChildren()) do
+                        if v:IsA("Tool") and PowerActive then
+                            table.insert(tools, v)
+                        end
+                    end
+                    
+                    -- Loop rápido de equipar/desequipar (replica para servidor)
+                    for _, tool in ipairs(tools) do
+                        if PowerActive and tool then
+                            -- Equipar
+                            pcall(function()
+                                tool.Parent = Character
+                            end)
+                            task.wait(baseDelay)
+                            
+                            -- Desequipar
+                            pcall(function()
+                                tool.Parent = Backpack
+                            end)
+                            task.wait(baseDelay)
+                            
+                            -- Equipar novamente
+                            pcall(function()
+                                tool.Parent = Character
+                            end)
+                            task.wait(baseDelay)
+                        end
+                    end
+                    
+                    -- ATIVAR QUANTUM CLONER MÚLTIPLAS VEZES ULTRA RÁPIDO (isso DESTROI os outros!)
+                    for _ = 1, activations do
+                        if Quantum_Cloner and Quantum_Cloner.Parent == Character and PowerActive then
+                            pcall(function()
+                                Quantum_Cloner:Activate()
+                            end)
+                            -- Delay MÍNIMO para não travar você
+                            if baseDelay > 0.001 then
+                                task.wait(baseDelay)
+                            end
+                        end
+                    end
+                    
+                    -- Desequipar todos
+                    for _, tool in ipairs(tools) do
+                        if PowerActive and tool then
+                            pcall(function()
+                                tool.Parent = Backpack
+                            end)
+                        end
+                    end
+                    
+                    -- Delay mínimo entre ciclos
+                    task.wait(baseDelay * 2)
+                else
+                    break
+                end
+            end
+        end)
+        
+        table.insert(PowerThreads, thread)
+    end
+    
+    return true
+end
+
+-- Função para parar POWER
+local function StopPowerMode()
+    PowerActive = false
+    
+    -- Cancelar todos os threads
+    for _, thread in ipairs(PowerThreads) do
+        task.cancel(thread)
+    end
+    PowerThreads = {}
+    
+    StatusLabel.Text = "Status: POWER MODE DESATIVADO"
+    StatusLabel.TextColor3 = Color3.fromRGB(255, 200, 100)
+    task.wait(2)
+    StatusLabel.Text = "Status: Aguardando..."
+    StatusLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+end
+
+-- Botão POWER
+PowerButton.MouseButton1Click:Connect(function()
+    if not PowerActive then
+        PowerActive = true
+        PowerButton.Text = "⏸ STOP LAG"
+        PowerButton.BackgroundColor3 = Color3.fromRGB(200, 50, 50)
+        
+        if not StartPowerMode() then
+            PowerActive = false
+            PowerButton.Text = "▶ LAG OTHERS"
+            PowerButton.BackgroundColor3 = Color3.fromRGB(255, 0, 0)
+        end
+    else
+        StopPowerMode()
+        PowerButton.Text = "▶ LAG OTHERS"
+        PowerButton.BackgroundColor3 = Color3.fromRGB(255, 0, 0)
+    end
+end)
+
+-- Função do botão FPS Devour (única execução)
+local Connection_2
+Connection_2 = TextButton.MouseButton1Click:Connect(function()
+    TextButton.Text = "WORKING..."
+    TextButton.AutoButtonColor = false
+    
+    local Character = LocalPlayer.Character
+    if Character then
+        local Humanoid = Character:FindFirstChildOfClass("Humanoid")
+        
+        if Humanoid then
+            local Quantum_Cloner = Backpack:FindFirstChild("Quantum Cloner")
+            
+            if Quantum_Cloner then
+                Humanoid:EquipTool(Quantum_Cloner)
+                task.wait()
+                
+                -- Equipar todas as ferramentas
+                local tools = {}
+                for _, v in ipairs(Backpack:GetChildren()) do
+                    if v:IsA("Tool") then
+                        v.Parent = Character
+                        table.insert(tools, v)
+                    end
+                end
+                
+                task.wait()
+                
+                -- Ativar o Quantum Cloner
+                Quantum_Cloner:Activate()
+                
+                StatusLabel.Text = "Status: FPS Devour executado com sucesso!"
+                StatusLabel.TextColor3 = Color3.fromRGB(100, 255, 100)
+                task.wait(2)
+                StatusLabel.Text = "Status: Aguardando..."
+                StatusLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+            else
+                TextButton.Text = "Quantum Cloner não encontrado!"
+                StatusLabel.Text = "Status: Quantum Cloner não encontrado!"
+            end
+        else
+            TextButton.Text = "Humanoide não encontrado!"
+            StatusLabel.Text = "Status: Humanoide não encontrado!"
+        end
+    else
+        TextButton.Text = "Personagem não encontrado!"
+        StatusLabel.Text = "Status: Personagem não encontrado!"
+    end
+    
+    -- Resetar o botão após 0.5 segundos
+    task.delay(0.5, function()
+        TextButton.Text = "SK Devour (need auras)"
+        TextButton.AutoButtonColor = true
+    end)
+end)
+
+-- Parar POWER quando o jogador morrer
+LocalPlayer.CharacterAdded:Connect(function()
+    if PowerActive then
+        StopPowerMode()
+        PowerButton.Text = "▶ LAG OTHERS"
+        PowerButton.BackgroundColor3 = Color3.fromRGB(255, 0, 0)
+    end
+end)

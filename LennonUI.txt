@@ -1,0 +1,349 @@
+local Jogadores = game:GetService("Players")
+local JogadorLocal = Jogadores.LocalPlayer
+
+local guiPrincipal = Instance.new("ScreenGui", JogadorLocal:WaitForChild("PlayerGui"))
+guiPrincipal.Name = "InterfacePrincipal"
+guiPrincipal.ResetOnSpawn = false
+
+local COR_FUNDO = Color3.fromRGB(0, 0, 0)
+local COR_BORDA = Color3.fromRGB(46, 139, 87)
+local COR_BOTAO_DESATIVADO = Color3.fromRGB(60, 60, 60)
+local COR_BOTAO_ATIVO = Color3.fromRGB(0, 190, 0)
+local COR_TEXTO = Color3.fromRGB(255, 255, 255)
+
+local LARGURA_PAINEL = 200
+local ALTURA_PAINEL = 240
+local ALTURA_TITULO = 30
+local MARGEM = 7
+local TOPO = 1
+local RODAPE = 10
+local ESPACO = 6
+
+local painelPrincipal = Instance.new("Frame", guiPrincipal)
+painelPrincipal.Size = UDim2.new(0, LARGURA_PAINEL, 0, ALTURA_PAINEL)
+painelPrincipal.Position = UDim2.new(0.5, -LARGURA_PAINEL/2, 0.5, -ALTURA_PAINEL/2)
+painelPrincipal.BackgroundColor3 = COR_FUNDO
+painelPrincipal.BackgroundTransparency = 0.4
+painelPrincipal.Active = true
+painelPrincipal.Draggable = true
+painelPrincipal.Visible = false
+Instance.new("UICorner", painelPrincipal).CornerRadius = UDim.new(0, 15)
+
+local tituloPrincipal = Instance.new("TextLabel", painelPrincipal)
+tituloPrincipal.Size = UDim2.new(1, 0, 0, ALTURA_TITULO)
+tituloPrincipal.Text = "ttk: @sleytrhub"
+tituloPrincipal.TextSize = 16
+tituloPrincipal.Font = Enum.Font.Arcade
+tituloPrincipal.TextColor3 = COR_BOTAO_ATIVO
+tituloPrincipal.TextXAlignment = Enum.TextXAlignment.Center
+tituloPrincipal.BackgroundTransparency = 1
+
+local botaoFlutuante = Instance.new("ImageButton", guiPrincipal)
+botaoFlutuante.Size = UDim2.new(0, 58, 0, 58)
+botaoFlutuante.Position = UDim2.new(0, 10, 0.5, -29)
+botaoFlutuante.BackgroundTransparency = 0
+botaoFlutuante.BackgroundColor3 = COR_BOTAO_ATIVO
+botaoFlutuante.Image = "rbxassetid://124111453230698"
+botaoFlutuante.Active = true
+botaoFlutuante.Draggable = true
+
+Instance.new("UICorner", botaoFlutuante).CornerRadius = UDim.new(1, 0)
+
+botaoFlutuante.MouseButton1Click:Connect(function()
+    painelPrincipal.Visible = not painelPrincipal.Visible
+end)
+
+local function criarBotao(y, texto, altura, funcao)
+    local botao = Instance.new("TextButton", painelPrincipal)
+    botao.Size = UDim2.new(1, -(MARGEM*2), 0, altura)
+    botao.Position = UDim2.new(0, MARGEM, 0, y)
+    botao.BackgroundColor3 = COR_BOTAO_DESATIVADO
+    botao.Text = texto or ""
+    botao.TextSize = 14
+    botao.Font = Enum.Font.Arcade
+    botao.TextColor3 = COR_TEXTO
+    botao.TextYAlignment = Enum.TextYAlignment.Center
+    botao.BorderSizePixel = 0
+    
+    Instance.new("UICorner", botao).CornerRadius = UDim.new(0,9)
+    
+    local borda = Instance.new("UIStroke", botao)
+    borda.Color = Color3.fromRGB(0, 0, 0)
+    borda.Thickness = 1.2
+    borda.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
+    
+    local ativo = false
+    botao.MouseButton1Click:Connect(function()
+        ativo = not ativo
+        botao.BackgroundColor3 = ativo and COR_BOTAO_ATIVO or COR_BOTAO_DESATIVADO
+        if funcao then funcao() end
+    end)
+end
+
+local function criarParBotoes(y, texto1, texto2, altura)
+    local metadeLargura = math.floor((LARGURA_PAINEL - (MARGEM*2 + ESPACO)) / 2)
+    
+    local function criarBotaoUnico(x, texto)
+        local botao = Instance.new("TextButton", painelPrincipal)
+        botao.Size = UDim2.new(0, metadeLargura, 0, altura)
+        botao.Position = UDim2.new(0, x, 0, y)
+        botao.BackgroundColor3 = COR_BOTAO_DESATIVADO
+        botao.Text = texto or ""
+        botao.TextSize = 14
+        botao.Font = Enum.Font.Arcade
+        botao.TextColor3 = COR_TEXTO
+        botao.TextYAlignment = Enum.TextYAlignment.Center
+        botao.BorderSizePixel = 0
+        
+        Instance.new("UICorner", botao).CornerRadius = UDim.new(0,9)
+        
+        local borda = Instance.new("UIStroke", botao)
+        borda.Color = Color3.fromRGB(0, 0, 0)
+        borda.Thickness = 1.2
+        borda.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
+        
+        local ativo = false
+        botao.MouseButton1Click:Connect(function()
+            ativo = not ativo
+            botao.BackgroundColor3 = ativo and COR_BOTAO_ATIVO or COR_BOTAO_DESATIVADO
+        end)
+    end
+    
+    criarBotaoUnico(MARGEM, texto1)
+    criarBotaoUnico(MARGEM + metadeLargura + ESPACO, texto2)
+end
+
+local function criarPrimeiraLinhaBotoes(y, altura)
+    local tercoLargura = math.floor((LARGURA_PAINEL - (MARGEM*2 + ESPACO*2)) / 3)
+    local paresBotoes = {
+        {"ESP", "BEST"},
+        {"ESP", "PLAYER"},
+        {"ESP", "BASE"}
+    }
+    
+    for i, par in ipairs(paresBotoes) do
+        local botao = Instance.new("TextButton", painelPrincipal)
+        botao.Size = UDim2.new(0, tercoLargura, 0, altura)
+        botao.Position = UDim2.new(0, MARGEM + (tercoLargura+ESPACO)*(i-1), 0, y)
+        botao.BackgroundColor3 = COR_BOTAO_DESATIVADO
+        botao.Text = par[1] .. "\n" .. par[2]
+        botao.TextSize = 12
+        botao.Font = Enum.Font.Arcade
+        botao.TextColor3 = COR_TEXTO
+        botao.TextYAlignment = Enum.TextYAlignment.Center
+        botao.BorderSizePixel = 0
+        botao.TextWrapped = true
+        
+        Instance.new("UICorner", botao).CornerRadius = UDim.new(0,9)
+        
+        local borda = Instance.new("UIStroke", botao)
+        borda.Color = Color3.fromRGB(0, 0, 0)
+        borda.Thickness = 1.2
+        borda.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
+        
+        local ativo = false
+        botao.MouseButton1Click:Connect(function()
+            ativo = not ativo
+            botao.BackgroundColor3 = ativo and COR_BOTAO_ATIVO or COR_BOTAO_DESATIVADO
+        end)
+    end
+end
+
+local posicaoY = ALTURA_TITULO + TOPO
+local alturaDisponivel = ALTURA_PAINEL - ALTURA_TITULO - TOPO - RODAPE
+local alturaLinha = math.floor((alturaDisponivel - ESPACO*5) / 6)
+
+criarPrimeiraLinhaBotoes(posicaoY, alturaLinha)
+posicaoY = posicaoY + alturaLinha + ESPACO
+
+criarParBotoes(posicaoY, "X-RAY", "FPS BOOST", alturaLinha)
+posicaoY = posicaoY + alturaLinha + ESPACO
+
+criarParBotoes(posicaoY, "UNWALK", "HIDE SKIN", alturaLinha)
+posicaoY = posicaoY + alturaLinha + ESPACO
+
+local botaoMenuLateral = Instance.new("TextButton", painelPrincipal)
+botaoMenuLateral.Size = UDim2.new(1, -(MARGEM*2), 0, alturaLinha)
+botaoMenuLateral.Position = UDim2.new(0, MARGEM, 0, posicaoY)
+botaoMenuLateral.BackgroundColor3 = COR_BOTAO_DESATIVADO
+botaoMenuLateral.Text = "MENU LATERAL"
+botaoMenuLateral.TextSize = 14
+botaoMenuLateral.Font = Enum.Font.Arcade
+botaoMenuLateral.TextColor3 = COR_TEXTO
+botaoMenuLateral.TextYAlignment = Enum.TextYAlignment.Center
+botaoMenuLateral.BorderSizePixel = 0
+
+Instance.new("UICorner", botaoMenuLateral).CornerRadius = UDim.new(0,9)
+
+local bordaMenu = Instance.new("UIStroke", botaoMenuLateral)
+bordaMenu.Color = Color3.fromRGB(0, 0, 0)
+bordaMenu.Thickness = 1.2
+bordaMenu.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
+
+posicaoY = posicaoY + alturaLinha + ESPACO
+
+criarParBotoes(posicaoY, "ANTI RAGDOLL", "AUTO KICK", alturaLinha)
+posicaoY = posicaoY + alturaLinha + ESPACO
+
+criarParBotoes(posicaoY, "NEREAST", "ANTI DEBUFF", alturaLinha)
+
+local guiLateral = Instance.new("ScreenGui", JogadorLocal:WaitForChild("PlayerGui"))
+guiLateral.Name = "InterfaceLateral"
+guiLateral.ResetOnSpawn = false
+
+local LARGURA_LATERAL = 150
+local ALTURA_LATERAL = 220
+local ALTURA_TITULO_LATERAL = 26
+local MARGEM_LATERAL = 7
+local TOPO_LATERAL = 1
+local RODAPE_LATERAL = 10
+local ESPACO_LATERAL = 6
+local COR_SETA = Color3.fromRGB(65, 65, 65)
+
+local painelLateral = Instance.new("Frame", guiLateral)
+painelLateral.Size = UDim2.new(0, LARGURA_LATERAL, 0, ALTURA_LATERAL)
+painelLateral.Position = UDim2.new(1, -LARGURA_LATERAL - 10, 0.5, -ALTURA_LATERAL/2)
+painelLateral.BackgroundColor3 = COR_FUNDO
+painelLateral.BackgroundTransparency = 0.4
+painelLateral.Active = true
+painelLateral.Draggable = true
+painelLateral.Visible = false
+
+Instance.new("UICorner", painelLateral).CornerRadius = UDim.new(0, 15)
+
+local tituloLateral = Instance.new("TextLabel", painelLateral)
+tituloLateral.Size = UDim2.new(1, -30, 0, ALTURA_TITULO_LATERAL)
+tituloLateral.Position = UDim2.new(0, 35, 0, 2)
+tituloLateral.Text = "SLEYTR HUB V2"
+tituloLateral.TextSize = 14
+tituloLateral.Font = Enum.Font.Arcade
+tituloLateral.TextColor3 = COR_BOTAO_ATIVO
+tituloLateral.TextXAlignment = Enum.TextXAlignment.Left
+tituloLateral.BackgroundTransparency = 1
+
+local iconeBolinha = Instance.new("ImageLabel", painelLateral)
+iconeBolinha.Size = UDim2.new(0, 17, 0, 17)
+iconeBolinha.Position = UDim2.new(0, 8, 0, 4)
+iconeBolinha.BackgroundTransparency = 1
+iconeBolinha.Image = "rbxassetid://124111453230698"
+
+Instance.new("UICorner", iconeBolinha).CornerRadius = UDim.new(1, 0)
+
+local function criarBotaoLateral(y, informacao)
+    local container = Instance.new("Frame", painelLateral)
+    container.Size = UDim2.new(1, -(MARGEM_LATERAL*2), 0, informacao.altura)
+    container.Position = UDim2.new(0, MARGEM_LATERAL, 0, y)
+    container.BackgroundTransparency = 1
+    
+    local botao = Instance.new("TextButton", container)
+    botao.Size = informacao.temSeta and UDim2.new(0.75, -4, 1, 0) or UDim2.new(1, 0, 1, 0)
+    botao.Position = UDim2.new(0, 0, 0, 0)
+    botao.BackgroundColor3 = COR_BOTAO_DESATIVADO
+    botao.Text = informacao.nome1
+    botao.TextSize = 14
+    botao.Font = Enum.Font.Arcade
+    botao.TextColor3 = COR_TEXTO
+    botao.TextYAlignment = Enum.TextYAlignment.Center
+    botao.BorderSizePixel = 0
+    
+    Instance.new("UICorner", botao).CornerRadius = UDim.new(0,9)
+    
+    local borda = Instance.new("UIStroke", botao)
+    borda.Color = Color3.fromRGB(0, 0, 0)
+    borda.Thickness = 1.2
+    borda.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
+    
+    local ativo = false
+    local modo = 1
+    
+    botao.MouseButton1Click:Connect(function()
+        ativo = not ativo
+        botao.BackgroundColor3 = ativo and COR_BOTAO_ATIVO or COR_BOTAO_DESATIVADO
+    end)
+    
+    if informacao.temSeta then
+        local seta = Instance.new("TextButton", container)
+        seta.Size = UDim2.new(0.25, -4, 1, 0)
+        seta.Position = UDim2.new(0.75, 4, 0, 0)
+        seta.BackgroundColor3 = COR_SETA
+        seta.Text = "⇄"
+        seta.Font = Enum.Font.Arcade
+        seta.TextSize = 15
+        seta.TextColor3 = COR_TEXTO
+        seta.TextYAlignment = Enum.TextYAlignment.Center
+        seta.BorderSizePixel = 0
+        
+        Instance.new("UICorner", seta).CornerRadius = UDim.new(0,9)
+        
+        local bordaSeta = Instance.new("UIStroke", seta)
+        bordaSeta.Color = Color3.fromRGB(0, 0, 0)
+        bordaSeta.Thickness = 1.2
+        bordaSeta.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
+        
+        seta.MouseButton1Click:Connect(function()
+            modo = (modo == 1 and 2 or 1)
+            botao.Text = (modo == 1) and informacao.nome1 or informacao.nome2
+            ativo = false
+            botao.BackgroundColor3 = COR_BOTAO_DESATIVADO
+        end)
+    end
+end
+
+local function criarParBotoesLateral(y, informacao1, informacao2, altura)
+    local metadeLargura = math.floor((LARGURA_LATERAL - (MARGEM_LATERAL*2 + ESPACO_LATERAL)) / 2)
+    
+    local function criarBotaoUnico(x, informacao)
+        local botao = Instance.new("TextButton", painelLateral)
+        botao.Size = UDim2.new(0, metadeLargura, 0, altura)
+        botao.Position = UDim2.new(0, x, 0, y)
+        botao.BackgroundColor3 = COR_BOTAO_DESATIVADO
+        botao.Text = informacao.nome1
+        botao.TextSize = 12
+        botao.Font = Enum.Font.Arcade
+        botao.TextColor3 = COR_TEXTO
+        botao.TextYAlignment = Enum.TextYAlignment.Center
+        botao.BorderSizePixel = 0
+        
+        Instance.new("UICorner", botao).CornerRadius = UDim.new(0,9)
+        
+        local borda = Instance.new("UIStroke", botao)
+        borda.Color = Color3.fromRGB(0, 0, 0)
+        borda.Thickness = 1.2
+        borda.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
+        
+        local ativo = false
+        botao.MouseButton1Click:Connect(function()
+            ativo = not ativo
+            botao.BackgroundColor3 = ativo and COR_BOTAO_ATIVO or COR_BOTAO_DESATIVADO
+        end)
+    end
+    
+    criarBotaoUnico(MARGEM_LATERAL, informacao1)
+    criarBotaoUnico(MARGEM_LATERAL + metadeLargura + ESPACO_LATERAL, informacao2)
+end
+
+local posicaoYLateral = ALTURA_TITULO_LATERAL + TOPO_LATERAL
+local alturaDisponivelLateral = ALTURA_LATERAL - ALTURA_TITULO_LATERAL - TOPO_LATERAL - RODAPE_LATERAL
+local alturaLinhaLateral = math.floor((alturaDisponivelLateral - ESPACO_LATERAL*4) / 5)
+
+criarParBotoesLateral(posicaoYLateral, {nome1 = "DEVOURER"}, {nome1 = "DESYNC"}, alturaLinhaLateral)
+posicaoYLateral = posicaoYLateral + alturaLinhaLateral + ESPACO_LATERAL
+
+criarBotaoLateral(posicaoYLateral, {nome1 = "FLY TO BEST", nome2 = "TP TO BEST", temSeta = true, altura = alturaLinhaLateral})
+posicaoYLateral = posicaoYLateral + alturaLinhaLateral + ESPACO_LATERAL
+
+criarParBotoesLateral(posicaoYLateral, {nome1 = "SPEED"}, {nome1 = "INF JUMP"}, alturaLinhaLateral)
+posicaoYLateral = posicaoYLateral + alturaLinhaLateral + ESPACO_LATERAL
+
+criarBotaoLateral(posicaoYLateral, {nome1 = "STEAL FLOOR", nome2 = "FLOOR V2", temSeta = true, altura = alturaLinhaLateral})
+posicaoYLateral = posicaoYLateral + alturaLinhaLateral + ESPACO_LATERAL
+
+criarBotaoLateral(posicaoYLateral, {nome1 = "FLY V2", temSeta = false, altura = alturaLinhaLateral})
+
+local menuLateralAtivo = false
+
+botaoMenuLateral.MouseButton1Click:Connect(function()
+    menuLateralAtivo = not menuLateralAtivo
+    botaoMenuLateral.BackgroundColor3 = menuLateralAtivo and COR_BOTAO_ATIVO or COR_BOTAO_DESATIVADO
+    painelLateral.Visible = menuLateralAtivo
+end)

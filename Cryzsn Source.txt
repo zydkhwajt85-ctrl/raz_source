@@ -1,0 +1,192 @@
+local CoreGui = game:GetService("CoreGui")
+local camera = workspace.CurrentCamera
+local Lighting = game:GetService("Lighting")
+local Players = game:GetService("Players")
+local HttpService = game:GetService("HttpService")
+local RunService = game:GetService("RunService")
+
+local player = Players.LocalPlayer
+local FILE_NAME = "CryzsnConfig.json"
+
+-- UI Setup
+local screenGui = Instance.new("ScreenGui")
+screenGui.Name = "CryzsnSystem"
+screenGui.ResetOnSpawn = false
+-- Fallback for executors like Delta that might restrict CoreGui
+local success, err = pcall(function() screenGui.Parent = CoreGui:FindFirstChild("RobloxGui") or CoreGui end)
+if not success then screenGui.Parent = player:WaitForChild("PlayerGui") end
+
+local mainFrame = Instance.new("Frame")
+mainFrame.Size = UDim2.new(0, 160, 0, 220) 
+mainFrame.Position = UDim2.new(0.5, -80, 0.3, 0)
+mainFrame.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
+mainFrame.Active = true
+mainFrame.Draggable = true 
+mainFrame.Parent = screenGui
+Instance.new("UICorner", mainFrame).CornerRadius = UDim.new(0, 10)
+Instance.new("UIStroke", mainFrame).Color = Color3.fromRGB(160, 32, 240)
+
+local titleLabel = Instance.new("TextLabel")
+titleLabel.Size = UDim2.new(1, 0, 0, 35)
+titleLabel.Position = UDim2.new(0, 0, 0, 2)
+titleLabel.BackgroundTransparency = 1
+titleLabel.Text = "CRYZSN DUEL HELPER"
+titleLabel.TextColor3 = Color3.fromRGB(190, 100, 255)
+titleLabel.TextSize = 14
+titleLabel.Font = Enum.Font.LuckiestGuy
+titleLabel.Parent = mainFrame
+
+local function createBtn(text, pos, isSave)
+    local btn = Instance.new("TextButton")
+    btn.Size = UDim2.new(0.85, 0, 0, 28)
+    btn.Position = pos
+    btn.BackgroundColor3 = isSave and Color3.fromRGB(0, 80, 0) or Color3.fromRGB(45, 0, 70)
+    btn.Text = text
+    btn.TextColor3 = Color3.new(1, 1, 1)
+    btn.Font = Enum.Font.LuckiestGuy
+    btn.TextSize = 13
+    btn.Parent = mainFrame
+    Instance.new("UICorner", btn).CornerRadius = UDim.new(0, 6)
+    return btn
+end
+
+local fovBtn = createBtn("FOV: OFF", UDim2.new(0.075, 0, 0.18, 0))
+local galaxyBtn = createBtn("GALAXY MODE: OFF", UDim2.new(0.075, 0, 0.33, 0))
+local antiBatBtn = createBtn("ANTI BAT: OFF", UDim2.new(0.075, 0, 0.48, 0)) 
+local antiFlingBtn = createBtn("ANTI-FLING: OFF", UDim2.new(0.075, 0, 0.63, 0))
+local saveBtn = createBtn("SAVE CONFIG", UDim2.new(0.075, 0, 0.82, 0), true)
+
+--- LOGIC VARIABLES ---
+local fovOn, galaxyOn, antiBatOn, antiFlingOn = false, false, false, false
+local detectDistance = 15
+local defBrightness, defClock, defAmbient = Lighting.Brightness, Lighting.ClockTime, Lighting.OutdoorAmbient
+
+local function updateAntiFling()
+    antiFlingBtn.Text = antiFlingOn and "ANTI-FLING: ON" or "ANTI-FLING: OFF"
+    antiFlingBtn.BackgroundColor3 = antiFlingOn and Color3.fromRGB(160, 32, 240) or Color3.fromRGB(45, 0, 70)
+end
+
+local function updateGalaxy()
+    galaxyBtn.Text = galaxyOn and "GALAXY MODE: ON" or "GALAXY MODE: OFF"
+    galaxyBtn.BackgroundColor3 = galaxyOn and Color3.fromRGB(160, 32, 240) or Color3.fromRGB(45, 0, 70)
+    if galaxyOn then
+        local sky = Lighting:FindFirstChild("GalaxySky") or Instance.new("Sky")
+        sky.Name = "GalaxySky"
+        sky.SkyboxBk, sky.SkyboxDn, sky.SkyboxFt, sky.SkyboxLf, sky.SkyboxRt, sky.SkyboxUp = "rbxassetid://159454299", "rbxassetid://159454296", "rbxassetid://159454293", "rbxassetid://159454286", "rbxassetid://159454289", "rbxassetid://159454291"
+        sky.Parent = Lighting
+        Lighting.Brightness, Lighting.ClockTime, Lighting.ExposureCompensation = 0, 0, -2
+        Lighting.OutdoorAmbient = Color3.fromRGB(0, 0, 0)
+    else
+        if Lighting:FindFirstChild("GalaxySky") then Lighting.GalaxySky:Destroy() end
+        Lighting.Brightness, Lighting.ClockTime, Lighting.ExposureCompensation = defBrightness, defClock, 0
+        Lighting.OutdoorAmbient = defAmbient
+    end
+end
+
+-- Toggles
+fovBtn.MouseButton1Click:Connect(function()
+    fovOn = not fovOn
+    camera.FieldOfView = fovOn and 100 or 70
+    fovBtn.Text = fovOn and "FOV: ON" or "FOV: OFF"
+    fovBtn.BackgroundColor3 = fovOn and Color3.fromRGB(160, 32, 240) or Color3.fromRGB(45, 0, 70)
+end)
+
+galaxyBtn.MouseButton1Click:Connect(function()
+    galaxyOn = not galaxyOn
+    updateGalaxy()
+end)
+
+antiBatBtn.MouseButton1Click:Connect(function()
+    antiBatOn = not antiBatOn
+    antiBatBtn.Text = antiBatOn and "ANTI BAT: ON" or "ANTI BAT: OFF"
+    antiBatBtn.BackgroundColor3 = antiBatOn and Color3.fromRGB(160, 32, 240) or Color3.fromRGB(45, 0, 70)
+end)
+
+antiFlingBtn.MouseButton1Click:Connect(function()
+    antiFlingOn = not antiFlingOn
+    updateAntiFling()
+end)
+
+-- Loops
+RunService.Stepped:Connect(function()
+    if antiFlingOn and player.Character then
+        for _, obj in pairs(player.Character:GetDescendants()) do
+            if obj:IsA("BasePart") then obj.CanCollide = false end
+        end
+    end
+end)
+
+RunService.Heartbeat:Connect(function()
+    local char = player.Character
+    local root = char and char:FindFirstChild("HumanoidRootPart")
+    local hum = char and char:FindFirstChild("Humanoid")
+    
+    if not root or not hum then return end
+
+    -- BAT CHECK: Detects if you are holding a tool with "Bat" in the name
+    local currentTool = char:FindFirstChildOfClass("Tool")
+    local holdingBat = currentTool and currentTool.Name:lower():find("bat")
+
+    -- EXIT CONDITIONS: If feature is OFF OR if you are currently holding your bat
+    if not antiBatOn or holdingBat then 
+        local spin = root:FindFirstChild("CryzsnForce")
+        if spin then 
+            spin:Destroy() 
+            hum.AutoRotate = true 
+        end
+        return 
+    end
+    
+    -- THREAT DETECTION
+    local threat = false
+    for _, other in pairs(Players:GetPlayers()) do
+        if other ~= player and other.Character and other.Character:FindFirstChild("HumanoidRootPart") then
+            if (root.Position - other.Character.HumanoidRootPart.Position).Magnitude <= detectDistance then
+                threat = true 
+                break
+            end
+        end
+    end
+    
+    -- SPIN EXECUTION
+    local spin = root:FindFirstChild("CryzsnForce")
+    if threat then
+        if not spin then
+            local bv = Instance.new("BodyAngularVelocity")
+            bv.Name = "CryzsnForce"
+            bv.MaxTorque = Vector3.new(0, math.huge, 0)
+            bv.AngularVelocity = Vector3.new(0, 50, 0)
+            bv.Parent = root
+            hum.AutoRotate = false
+        end
+    elseif spin then
+        spin:Destroy()
+        hum.AutoRotate = true
+    end
+end)
+
+-- Save Config
+saveBtn.MouseButton1Click:Connect(function()
+    if writefile then
+        local data = {
+            FOV = fovOn, Galaxy = galaxyOn, AntiBat = antiBatOn, AntiFling = antiFlingOn,
+            PosX = mainFrame.Position.X.Scale, OffsetX = mainFrame.Position.X.Offset,
+            PosY = mainFrame.Position.Y.Scale, OffsetY = mainFrame.Position.Y.Offset
+        }
+        writefile(FILE_NAME, HttpService:JSONEncode(data))
+        saveBtn.Text = "SAVED!" task.wait(0.5) saveBtn.Text = "SAVE CONFIG"
+    end
+end)
+
+-- Load Config
+if isfile and isfile(FILE_NAME) then
+    local s, d = pcall(function() return HttpService:JSONDecode(readfile(FILE_NAME)) end)
+    if s and d then
+        if d.PosX then mainFrame.Position = UDim2.new(d.PosX, d.OffsetX, d.PosY, d.OffsetY) end
+        fovOn, galaxyOn, antiBatOn, antiFlingOn = d.FOV or false, d.Galaxy or false, d.AntiBat or false, d.AntiFling or false
+        if fovOn then camera.FieldOfView = 100 fovBtn.Text = "FOV: ON" fovBtn.BackgroundColor3 = Color3.fromRGB(160, 32, 240) end
+        if antiBatOn then antiBatBtn.Text = "ANTI BAT: ON" antiBatBtn.BackgroundColor3 = Color3.fromRGB(160, 32, 240) end
+        updateGalaxy()
+        updateAntiFling()
+    end
+end
