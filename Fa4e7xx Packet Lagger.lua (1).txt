@@ -1,0 +1,447 @@
+-- This File Has Clean by Prince Bot | .gg/freesource
+print("[Fa4e7xx] Packet Lagger loaded (unpatched)")
+
+local Players = game:GetService("Players")
+local UIS = game:GetService("UserInputService")
+local TweenService = game:GetService("TweenService")
+local RS = game:GetService("ReplicatedStorage")
+local HttpService = game:GetService("HttpService")
+
+local LP = Players.LocalPlayer
+local CONFIG_FILE = "Fa4e7xx_Lagger_Config.json"
+local BG_FILE = "fa4e7xx_bg.jpg"
+local BG_B64 = "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"
+
+local BG      = Color3.fromRGB(4, 10, 28)
+local INPUT   = Color3.fromRGB(10, 22, 48)
+local BLUE    = Color3.fromRGB(30, 140, 255)
+local BLUE2   = Color3.fromRGB(0, 190, 255)
+local GREEN   = Color3.fromRGB(40, 220, 100)
+local WHITE   = Color3.fromRGB(240, 248, 255)
+local DIM     = Color3.fromRGB(120, 160, 210)
+
+local function tween(obj, props, t)
+	TweenService:Create(obj, TweenInfo.new(t or 0.14, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), props):Play()
+end
+local function corner(o, r)
+	local c = Instance.new("UICorner")
+	c.CornerRadius = UDim.new(0, r)
+	c.Parent = o
+end
+local function stroke(o, col, th, tr)
+	local s = Instance.new("UIStroke")
+	s.Color = col
+	s.Thickness = th or 1.5
+	s.Transparency = tr or 0.15
+	s.Parent = o
+	return s
+end
+
+pcall(function()
+	local pg = LP:FindFirstChild("PlayerGui")
+	if pg then
+		for _, n in ipairs({"QWRPacketLagger", "VenotPacketLagger", "Fa4e7xxPacketLagger"}) do
+			local old = pg:FindFirstChild(n)
+			if old then old:Destroy() end
+		end
+	end
+	if gethui then
+		for _, g in ipairs(gethui():GetChildren()) do
+			if g.Name == "Fa4e7xxPacketLagger" then g:Destroy() end
+		end
+	end
+end)
+
+local gui = Instance.new("ScreenGui")
+gui.Name = "Fa4e7xxPacketLagger"
+gui.ResetOnSpawn = false
+gui.IgnoreGuiInset = true
+gui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+gui.DisplayOrder = 999
+pcall(function() if gethui then gui.Parent = gethui() end end)
+if not gui.Parent then gui.Parent = LP:WaitForChild("PlayerGui") end
+
+local W, H = 260, 300
+local Main = Instance.new("Frame")
+Main.Name = "Main"
+Main.Size = UDim2.new(0, W, 0, H)
+Main.Position = UDim2.new(0.5, -W/2, 0.5, -H/2)
+Main.BackgroundColor3 = BG
+Main.BackgroundTransparency = 0
+Main.BorderSizePixel = 0
+Main.ClipsDescendants = true
+Main.Active = true
+Main.Parent = gui
+corner(Main, 28)
+
+local uiScale = Instance.new("UIScale", Main)
+uiScale.Scale = 0.84
+
+local bgImg = Instance.new("ImageLabel")
+bgImg.Name = "BG"
+bgImg.Size = UDim2.new(1, 0, 1, 0)
+bgImg.BackgroundColor3 = Color3.fromRGB(4, 10, 28)
+bgImg.BackgroundTransparency = 0
+bgImg.ImageTransparency = 0
+bgImg.ScaleType = Enum.ScaleType.Crop
+bgImg.ZIndex = 1
+bgImg.Parent = Main
+corner(bgImg, 28)
+
+task.spawn(function()
+	local function dec(data)
+		if crypt and crypt.base64decode then return crypt.base64decode(data) end
+		if base64_decode then return base64_decode(data) end
+		local b="ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/"
+		data=data:gsub("[^"..b.."=]","")
+		local out,pad={},0
+		if data:sub(-2)=="==" then pad=2 elseif data:sub(-1)=="=" then pad=1 end
+		for i=1,#data,4 do
+			local function ix(c) local p=b:find(c,1,true); return p and p-1 or 0 end
+			local n=bit32.lshift(ix(data:sub(i,i)),18)+bit32.lshift(ix(data:sub(i+1,i+1)),12)+bit32.lshift(ix(data:sub(i+2,i+2)),6)+ix(data:sub(i+3,i+3))
+			out[#out+1]=string.char(bit32.band(bit32.rshift(n,16),255))
+			if pad<2 then out[#out+1]=string.char(bit32.band(bit32.rshift(n,8),255)) end
+			if pad<1 then out[#out+1]=string.char(bit32.band(n,255)) end
+		end
+		return table.concat(out)
+	end
+	pcall(function()
+		if writefile then
+			local bin=dec(BG_B64)
+			if bin and #bin>50 then writefile(BG_FILE,bin) end
+		end
+		local a=nil
+		if getcustomasset and isfile and isfile(BG_FILE) then a=getcustomasset(BG_FILE)
+		elseif getsynasset and isfile and isfile(BG_FILE) then a=getsynasset(BG_FILE) end
+		if a then bgImg.Image=a else bgImg.Image="rbxassetid://121979253002862" end
+	end)
+end)
+
+local overlay = Instance.new("Frame")
+overlay.Size = UDim2.new(1, 0, 1, 0)
+overlay.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
+overlay.BackgroundTransparency = 0.5
+overlay.BorderSizePixel = 0
+overlay.ZIndex = 2
+overlay.Parent = Main
+corner(overlay, 28)
+
+local MainStroke = stroke(Main, BLUE2, 2, 0.1)
+
+local glow = Instance.new("Frame")
+glow.AnchorPoint = Vector2.new(0.5, 0.5)
+glow.Position = UDim2.new(0.5, 0, 0.5, 0)
+glow.Size = UDim2.new(1, 14, 1, 14)
+glow.BackgroundColor3 = BLUE
+glow.BackgroundTransparency = 0.82
+glow.ZIndex = 0
+glow.Parent = Main
+corner(glow, 32)
+
+local Title = Instance.new("TextLabel")
+Title.BackgroundTransparency = 1
+Title.Position = UDim2.new(0, 12, 0, 14)
+Title.Size = UDim2.new(1, -24, 0, 22)
+Title.Text = "Fa4e7xx packet lagger"
+Title.Font = Enum.Font.GothamBlack
+Title.TextSize = 15
+Title.TextColor3 = WHITE
+Title.ZIndex = 5
+Title.Parent = Main
+local titleStroke = Instance.new("UIStroke")
+titleStroke.Color = BLUE2
+titleStroke.Thickness = 1.2
+titleStroke.Transparency = 0.3
+titleStroke.Parent = Title
+
+local Discord = Instance.new("TextLabel")
+Discord.BackgroundTransparency = 1
+Discord.Position = UDim2.new(0, 12, 0, 36)
+Discord.Size = UDim2.new(1, -24, 0, 16)
+Discord.Text = "Discord.gg/fa4e7xx"
+Discord.Font = Enum.Font.GothamBold
+Discord.TextSize = 11
+Discord.TextColor3 = BLUE2
+Discord.ZIndex = 5
+Discord.Parent = Main
+
+local PowerLbl = Instance.new("TextLabel")
+PowerLbl.BackgroundTransparency = 1
+PowerLbl.Position = UDim2.new(0, 16, 0, 70)
+PowerLbl.Size = UDim2.new(1, -32, 0, 14)
+PowerLbl.Text = "POWER  ·  15K - 1M"
+PowerLbl.Font = Enum.Font.GothamBold
+PowerLbl.TextSize = 10
+PowerLbl.TextColor3 = DIM
+PowerLbl.ZIndex = 5
+PowerLbl.Parent = Main
+
+local PowerBox = Instance.new("TextBox")
+PowerBox.Position = UDim2.new(0, 16, 0, 90)
+PowerBox.Size = UDim2.new(1, -32, 0, 42)
+PowerBox.BackgroundColor3 = INPUT
+PowerBox.BackgroundTransparency = 0.15
+PowerBox.BorderSizePixel = 0
+PowerBox.Text = "40000"
+PowerBox.PlaceholderText = "power"
+PowerBox.Font = Enum.Font.GothamBlack
+PowerBox.TextSize = 20
+PowerBox.TextColor3 = WHITE
+PowerBox.PlaceholderColor3 = DIM
+PowerBox.ClearTextOnFocus = false
+PowerBox.ZIndex = 5
+PowerBox.Parent = Main
+corner(PowerBox, 10)
+stroke(PowerBox, BLUE2, 1.4, 0.25)
+
+local KeyLbl = Instance.new("TextLabel")
+KeyLbl.BackgroundTransparency = 1
+KeyLbl.Position = UDim2.new(0, 16, 0, 148)
+KeyLbl.Size = UDim2.new(1, -32, 0, 14)
+KeyLbl.Text = "TOGGLE KEYBIND"
+KeyLbl.Font = Enum.Font.GothamBold
+KeyLbl.TextSize = 10
+KeyLbl.TextColor3 = DIM
+KeyLbl.ZIndex = 5
+KeyLbl.Parent = Main
+
+local KeyBtn = Instance.new("TextButton")
+KeyBtn.Position = UDim2.new(0, 16, 0, 168)
+KeyBtn.Size = UDim2.new(1, -32, 0, 42)
+KeyBtn.BackgroundColor3 = INPUT
+KeyBtn.BackgroundTransparency = 0.15
+KeyBtn.BorderSizePixel = 0
+KeyBtn.Text = "V"
+KeyBtn.Font = Enum.Font.GothamBlack
+KeyBtn.TextSize = 18
+KeyBtn.TextColor3 = WHITE
+KeyBtn.AutoButtonColor = false
+KeyBtn.ZIndex = 5
+KeyBtn.Parent = Main
+corner(KeyBtn, 10)
+stroke(KeyBtn, BLUE2, 1.4, 0.25)
+
+local StartBtn = Instance.new("TextButton")
+StartBtn.Name = "ToggleBtn"
+StartBtn.Position = UDim2.new(0, 16, 0, 230)
+StartBtn.Size = UDim2.new(1, -32, 0, 48)
+StartBtn.BackgroundColor3 = Color3.fromRGB(120, 200, 255) 
+StartBtn.BorderSizePixel = 0
+StartBtn.Text = "Active"
+StartBtn.Font = Enum.Font.GothamBlack
+StartBtn.TextSize = 16
+StartBtn.TextColor3 = WHITE
+StartBtn.AutoButtonColor = false
+StartBtn.ZIndex = 50
+StartBtn.Parent = Main
+corner(StartBtn, 8)
+local stStroke = stroke(StartBtn, Color3.fromRGB(120, 210, 255), 1.6, 0.1)
+local stGrad = Instance.new("UIGradient")
+stGrad.Color = ColorSequence.new({
+	ColorSequenceKeypoint.new(0, Color3.fromRGB(60, 170, 255)),
+	ColorSequenceKeypoint.new(1, Color3.fromRGB(20, 110, 255)),
+})
+stGrad.Rotation = 90
+stGrad.Parent = StartBtn
+
+local lagging = false
+local lagThread = nil
+local intensity = 40000
+local toggleKey = Enum.KeyCode.V
+local toggleKeyName = "V"
+local listeningForKey = false
+local clickLock = false
+local dragging, dragStart, startPos = false, nil, nil
+
+local function clampPower(v)
+	v = tonumber(v)
+	if not v then return intensity end
+	return math.clamp(math.floor(v), 15000, 1000000)
+end
+
+local function updatePower()
+	intensity = clampPower(PowerBox.Text)
+	PowerBox.Text = tostring(intensity)
+end
+
+local function applyKeybind(name)
+	toggleKeyName = name or "V"
+	local ok, key = pcall(function() return Enum.KeyCode[toggleKeyName] end)
+	toggleKey = (ok and key) or Enum.KeyCode.V
+	KeyBtn.Text = toggleKeyName
+end
+
+local function saveConfig()
+	updatePower()
+	pcall(function()
+		if writefile then
+			writefile(CONFIG_FILE, HttpService:JSONEncode({
+				Power = intensity,
+				Keybind = toggleKeyName,
+				PX_S = Main.Position.X.Scale, PX_O = Main.Position.X.Offset,
+				PY_S = Main.Position.Y.Scale, PY_O = Main.Position.Y.Offset,
+			}))
+		end
+	end)
+end
+
+local function loadConfig()
+	if not (readfile and isfile and isfile(CONFIG_FILE)) then return end
+	local ok, cfg = pcall(function() return HttpService:JSONDecode(readfile(CONFIG_FILE)) end)
+	if not (ok and type(cfg) == "table") then return end
+	if tonumber(cfg.Power) then
+		intensity = clampPower(cfg.Power)
+		PowerBox.Text = tostring(intensity)
+	end
+	if type(cfg.Keybind) == "string" and cfg.Keybind ~= "" then
+		applyKeybind(cfg.Keybind)
+	end
+	if cfg.PX_S then
+		Main.Position = UDim2.new(cfg.PX_S, cfg.PX_O or 0, cfg.PY_S or 0.5, cfg.PY_O or 0)
+	end
+end
+
+local Event
+local function resolveEvent()
+	local ok, net = pcall(function()
+		local packages = RS:FindFirstChild("Packages") or RS:WaitForChild("Packages", 2)
+		if not packages then return nil end
+		return packages:FindFirstChild("Net") or packages:WaitForChild("Net", 2)
+	end)
+	if ok and net then
+		local children = net:GetChildren()
+		Event = children[230]
+		if not Event then
+			for _, c in ipairs(children) do
+				if c:IsA("RemoteEvent") then Event = c break end
+			end
+		end
+	end
+	return Event
+end
+resolveEvent()
+
+local function paintOn()
+	StartBtn.Text = "Active"
+	StartBtn.TextColor3 = Color3.fromRGB(10, 40, 20)
+	StartBtn.BackgroundColor3 = GREEN
+	stGrad.Color = ColorSequence.new({
+		ColorSequenceKeypoint.new(0, Color3.fromRGB(80, 255, 140)),
+		ColorSequenceKeypoint.new(1, Color3.fromRGB(20, 180, 80)),
+	})
+	stStroke.Color = Color3.fromRGB(120, 255, 170)
+	stStroke.Transparency = 0.05
+end
+
+local function paintOff()
+	StartBtn.Text = "Active"
+	StartBtn.TextColor3 = Color3.fromRGB(10, 30, 50)
+	StartBtn.BackgroundColor3 = Color3.fromRGB(120, 200, 255)
+	stGrad.Color = ColorSequence.new({
+		ColorSequenceKeypoint.new(0, Color3.fromRGB(150, 220, 255)),
+		ColorSequenceKeypoint.new(1, Color3.fromRGB(70, 160, 240)),
+	})
+	stStroke.Color = Color3.fromRGB(180, 230, 255)
+	stStroke.Transparency = 0.08
+end
+
+local function startLagging()
+	if lagging then return end
+	updatePower()
+	lagging = true
+	paintOn()
+	if not Event then resolveEvent() end
+	local payload = table.create(intensity, function() end)
+	lagThread = task.spawn(function()
+		while lagging do
+			for _ = 1, 3 do
+				if Event then pcall(function() Event:FireServer(payload) end) end
+			end
+			task.wait(0.01)
+		end
+	end)
+end
+
+local function stopLagging()
+	if not lagging then return end
+	lagging = false
+	if lagThread then pcall(task.cancel, lagThread); lagThread = nil end
+	paintOff()
+end
+
+local function toggleLag()
+	if clickLock then return end
+	clickLock = true
+	if lagging then stopLagging() else startLagging() end
+	task.delay(0.12, function() clickLock = false end)
+end
+
+PowerBox.FocusLost:Connect(function()
+	updatePower()
+	saveConfig()
+end)
+
+StartBtn.MouseButton1Click:Connect(toggleLag)
+StartBtn.Activated:Connect(toggleLag)
+
+KeyBtn.MouseButton1Click:Connect(function()
+	if listeningForKey then return end
+	listeningForKey = true
+	KeyBtn.Text = "..."
+end)
+
+UIS.InputBegan:Connect(function(input, gpe)
+	if listeningForKey then
+		if input.UserInputType == Enum.UserInputType.Keyboard then
+			listeningForKey = false
+			applyKeybind(input.KeyCode.Name)
+			saveConfig()
+		end
+		return
+	end
+	if gpe then return end
+	if input.KeyCode == toggleKey then
+		toggleLag()
+	end
+end)
+
+Title.InputBegan:Connect(function(input)
+	if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+		dragging = true
+		dragStart = input.Position
+		startPos = Main.Position
+	end
+end)
+UIS.InputChanged:Connect(function(input)
+	if not dragging then return end
+	if input.UserInputType ~= Enum.UserInputType.MouseMovement and input.UserInputType ~= Enum.UserInputType.Touch then return end
+	local d = input.Position - dragStart
+	Main.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + d.X, startPos.Y.Scale, startPos.Y.Offset + d.Y)
+end)
+UIS.InputEnded:Connect(function(input)
+	if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+		if dragging then
+			dragging = false
+			saveConfig()
+		end
+	end
+end)
+
+task.spawn(function()
+	while gui.Parent do
+		local t = tick()
+		local pulse = 0.5 + 0.5 * math.sin(t * 2.5)
+		MainStroke.Transparency = 0.05 + 0.15 * pulse
+		glow.BackgroundTransparency = 0.75 + 0.12 * pulse
+		titleStroke.Transparency = 0.2 + 0.25 * (1 - pulse)
+		task.wait(0.04)
+	end
+end)
+
+task.defer(function()
+	loadConfig()
+	paintOff()
+end)
+
+paintOff()
+print("[Fa4e7xx] Ready · unpatched · scale 84% · key=" .. toggleKeyName)

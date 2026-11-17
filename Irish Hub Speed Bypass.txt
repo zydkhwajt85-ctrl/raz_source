@@ -1,0 +1,746 @@
+-- leak by https://discord.gg/7Ar8QGZB2j
+
+local Players           = game:GetService("Players")
+local UserInputService  = game:GetService("UserInputService")
+local RunService        = game:GetService("RunService")
+
+local LocalPlayer = Players.LocalPlayer
+
+local function applyFont(guiObject, weight)
+	weight = weight or Enum.FontWeight.Regular
+	local ok = pcall(function()
+		guiObject.FontFace = Font.new(
+			"rbxasset://fonts/families/GothamSSm.json",
+			weight,
+			Enum.FontStyle.Normal
+		)
+	end)
+	if not ok then
+		guiObject.Font = (weight == Enum.FontWeight.Bold)
+			and Enum.Font.GothamBold
+			or  Enum.Font.Gotham
+	end
+end
+
+local IrishSpeedBypass = Instance.new("ScreenGui")
+IrishSpeedBypass.Name = "IrishSpeedBypass"
+IrishSpeedBypass.ResetOnSpawn = false
+IrishSpeedBypass.DisplayOrder = 999
+IrishSpeedBypass.IgnoreGuiInset = true
+pcall(function()
+	IrishSpeedBypass.ScreenInsets = Enum.ScreenInsets.DeviceSafeInsets
+end)
+
+local Main = Instance.new("Frame")
+Main.Name = "Main"
+Main.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
+Main.BorderSizePixel = 0
+Main.Position = UDim2.new(0, 32, 0, 41)
+Main.Size = UDim2.new(0, 460, 0, 360)
+Main.Active = true
+Main.Parent = IrishSpeedBypass
+
+local UICorner = Instance.new("UICorner")
+UICorner.CornerRadius = UDim.new(0, 12)
+UICorner.Parent = Main
+
+local UIStroke = Instance.new("UIStroke")
+UIStroke.Color = Color3.fromRGB(20, 110, 45)
+UIStroke.Thickness = 1.5
+UIStroke.Transparency = 0.2
+UIStroke.Parent = Main
+
+local UIScale = Instance.new("UIScale")
+UIScale.Scale = 0.7
+UIScale.Parent = Main
+
+local BG = Instance.new("ImageLabel")
+BG.Name = "BG"
+BG.BackgroundTransparency = 1
+BG.BorderSizePixel = 0
+BG.Size = UDim2.new(1, 0, 1, 0)
+BG.Image = "rbxassetid://78094456792780"
+BG.ImageTransparency = 0.35
+BG.ScaleType = Enum.ScaleType.Crop
+BG.Parent = Main
+
+local UICorner_2 = Instance.new("UICorner")
+UICorner_2.CornerRadius = UDim.new(0, 12)
+UICorner_2.Parent = BG
+
+local Header = Instance.new("Frame")
+Header.Name = "Header"
+Header.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
+Header.BackgroundTransparency = 0.4
+Header.BorderSizePixel = 0
+Header.Position = UDim2.new(0, 12, 0, 12)
+Header.Size = UDim2.new(1, -24, 0, 48)
+Header.ZIndex = 2
+Header.Active = true
+Header.Parent = Main
+
+local UICorner_3 = Instance.new("UICorner")
+UICorner_3.CornerRadius = UDim.new(0, 10)
+UICorner_3.Parent = Header
+
+local UIStroke_2 = Instance.new("UIStroke")
+UIStroke_2.Color = Color3.fromRGB(20, 110, 45)
+UIStroke_2.Transparency = 0.6
+UIStroke_2.Parent = Header
+
+local Frame = Instance.new("Frame")
+Frame.BackgroundColor3 = Color3.fromRGB(30, 200, 80)
+Frame.BorderSizePixel = 0
+Frame.Position = UDim2.new(0, 10, 0, 11)
+Frame.Size = UDim2.new(0, 3, 0, 26)
+Frame.ZIndex = 3
+Frame.Parent = Header
+
+local UICorner_4 = Instance.new("UICorner")
+UICorner_4.CornerRadius = UDim.new(0, 2)
+UICorner_4.Parent = Frame
+
+local TextLabel = Instance.new("TextLabel")
+TextLabel.BackgroundTransparency = 1
+TextLabel.Position = UDim2.new(0, 20, 0, 6)
+TextLabel.Size = UDim2.new(0, 200, 0, 20)
+TextLabel.ZIndex = 3
+TextLabel.Text = "Irish Hub Speed Bypass"
+TextLabel.TextColor3 = Color3.fromRGB(30, 200, 80)
+TextLabel.TextSize = 15
+TextLabel.TextXAlignment = Enum.TextXAlignment.Left
+TextLabel.Parent = Header
+applyFont(TextLabel, Enum.FontWeight.Bold)
+
+local TextLabel_2 = Instance.new("TextLabel")
+TextLabel_2.BackgroundTransparency = 1
+TextLabel_2.Position = UDim2.new(0, 20, 0, 28)
+TextLabel_2.Size = UDim2.new(0, 200, 0, 12)
+TextLabel_2.ZIndex = 3
+TextLabel_2.Text = "discord.gg/irsh"
+TextLabel_2.TextColor3 = Color3.fromRGB(150, 150, 150)
+TextLabel_2.TextSize = 10
+TextLabel_2.TextXAlignment = Enum.TextXAlignment.Left
+TextLabel_2.Parent = Header
+applyFont(TextLabel_2, Enum.FontWeight.Regular)
+
+local TextLabel_3 = Instance.new("TextLabel")
+TextLabel_3.BackgroundTransparency = 1
+TextLabel_3.Position = UDim2.new(1, -70, 0, 8)
+TextLabel_3.Size = UDim2.new(0, 60, 0, 12)
+TextLabel_3.ZIndex = 3
+TextLabel_3.Text = "Ping: --"
+TextLabel_3.TextColor3 = Color3.fromRGB(150, 150, 150)
+TextLabel_3.TextSize = 10
+TextLabel_3.TextXAlignment = Enum.TextXAlignment.Right
+TextLabel_3.Parent = Header
+applyFont(TextLabel_3, Enum.FontWeight.Bold)
+
+local TextLabel_4 = Instance.new("TextLabel")
+TextLabel_4.BackgroundTransparency = 1
+TextLabel_4.Position = UDim2.new(1, -70, 0, 24)
+TextLabel_4.Size = UDim2.new(0, 60, 0, 12)
+TextLabel_4.ZIndex = 3
+TextLabel_4.Text = "FPS: --"
+TextLabel_4.TextColor3 = Color3.fromRGB(150, 150, 150)
+TextLabel_4.TextSize = 10
+TextLabel_4.TextXAlignment = Enum.TextXAlignment.Right
+TextLabel_4.Parent = Header
+applyFont(TextLabel_4, Enum.FontWeight.Bold)
+
+local ScaleBar = Instance.new("Frame")
+ScaleBar.Name = "ScaleBar"
+ScaleBar.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
+ScaleBar.BackgroundTransparency = 0.4
+ScaleBar.BorderSizePixel = 0
+ScaleBar.Position = UDim2.new(0, 12, 0, 68)
+ScaleBar.Size = UDim2.new(0, 70, 0, 30)
+ScaleBar.ZIndex = 2
+ScaleBar.Parent = Main
+
+local UICorner_5 = Instance.new("UICorner")
+UICorner_5.Parent = ScaleBar
+
+local UIStroke_3 = Instance.new("UIStroke")
+UIStroke_3.Color = Color3.fromRGB(20, 110, 45)
+UIStroke_3.Transparency = 0.6
+UIStroke_3.Parent = ScaleBar
+
+local TextButton = Instance.new("TextButton")
+TextButton.BackgroundTransparency = 1
+TextButton.Size = UDim2.new(0, 22, 1, 0)
+TextButton.ZIndex = 3
+TextButton.AutoButtonColor = false
+TextButton.Text = "-"
+TextButton.TextColor3 = Color3.fromRGB(240, 240, 240)
+TextButton.TextSize = 14
+TextButton.Parent = ScaleBar
+applyFont(TextButton, Enum.FontWeight.Bold)
+
+local TextLabel_5 = Instance.new("TextLabel")
+TextLabel_5.BackgroundTransparency = 1
+TextLabel_5.Position = UDim2.new(0, 22, 0, 0)
+TextLabel_5.Size = UDim2.new(0, 26, 1, 0)
+TextLabel_5.ZIndex = 3
+TextLabel_5.Text = "70%"
+TextLabel_5.TextColor3 = Color3.fromRGB(240, 240, 240)
+TextLabel_5.TextSize = 10
+TextLabel_5.Parent = ScaleBar
+applyFont(TextLabel_5, Enum.FontWeight.Bold)
+
+local TextButton_2 = Instance.new("TextButton")
+TextButton_2.BackgroundTransparency = 1
+TextButton_2.Position = UDim2.new(1, -22, 0, 0)
+TextButton_2.Size = UDim2.new(0, 22, 1, 0)
+TextButton_2.ZIndex = 3
+TextButton_2.AutoButtonColor = false
+TextButton_2.Text = "+"
+TextButton_2.TextColor3 = Color3.fromRGB(240, 240, 240)
+TextButton_2.TextSize = 14
+TextButton_2.Parent = ScaleBar
+applyFont(TextButton_2, Enum.FontWeight.Bold)
+
+local Sidebar = Instance.new("Frame")
+Sidebar.Name = "Sidebar"
+Sidebar.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
+Sidebar.BackgroundTransparency = 0.4
+Sidebar.BorderSizePixel = 0
+Sidebar.Position = UDim2.new(0, 12, 0, 106)
+Sidebar.Size = UDim2.new(0, 70, 1, -166)
+Sidebar.ZIndex = 2
+Sidebar.Parent = Main
+
+local UICorner_6 = Instance.new("UICorner")
+UICorner_6.CornerRadius = UDim.new(0, 10)
+UICorner_6.Parent = Sidebar
+
+local UIStroke_4 = Instance.new("UIStroke")
+UIStroke_4.Color = Color3.fromRGB(20, 110, 45)
+UIStroke_4.Transparency = 0.6
+UIStroke_4.Parent = Sidebar
+
+local TextLabel_6 = Instance.new("TextLabel")
+TextLabel_6.BackgroundTransparency = 1
+TextLabel_6.Position = UDim2.new(0, 8, 0, 10)
+TextLabel_6.Size = UDim2.new(1, -16, 0, 14)
+TextLabel_6.ZIndex = 3
+TextLabel_6.Text = "MODE"
+TextLabel_6.TextColor3 = Color3.fromRGB(150, 150, 150)
+TextLabel_6.TextSize = 9
+TextLabel_6.Parent = Sidebar
+applyFont(TextLabel_6, Enum.FontWeight.Bold)
+
+local function makeModeButton(name, yOffset)
+	local btn = Instance.new("TextButton")
+	btn.Name = name
+	btn.BackgroundColor3 = Color3.fromRGB(12, 12, 12)
+	btn.BackgroundTransparency = 0.3
+	btn.Position = UDim2.new(0, 7, 0, yOffset)
+	btn.Size = UDim2.new(1, -14, 0, 40)
+	btn.ZIndex = 3
+	btn.AutoButtonColor = false
+	btn.Text = name
+	btn.TextColor3 = Color3.fromRGB(150, 150, 150)
+	btn.TextSize = 14
+	btn.Parent = Sidebar
+	applyFont(btn, Enum.FontWeight.Bold)
+
+	local c = Instance.new("UICorner")
+	c.Parent = btn
+
+	local s = Instance.new("UIStroke")
+	s.Color = Color3.fromRGB(20, 110, 45)
+	s.Transparency = 0.6
+	s.Parent = btn
+
+	return btn, s
+end
+
+local V1, StrokeV1 = makeModeButton("V1", 30)
+local V2, StrokeV2 = makeModeButton("V2", 76)
+local V3, StrokeV3 = makeModeButton("V3", 122)
+
+local Body = Instance.new("Frame")
+Body.Name = "Body"
+Body.BackgroundTransparency = 1
+Body.ClipsDescendants = true
+Body.Position = UDim2.new(0, 94, 0, 106)
+Body.Size = UDim2.new(1, -106, 1, -130)
+Body.ZIndex = 2
+Body.Parent = Main
+
+local UIListLayout = Instance.new("UIListLayout")
+UIListLayout.Padding = UDim.new(0, 8)
+UIListLayout.SortOrder = Enum.SortOrder.LayoutOrder
+UIListLayout.Parent = Body
+
+local Frame_2 = Instance.new("Frame")
+Frame_2.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
+Frame_2.BackgroundTransparency = 0.4
+Frame_2.BorderSizePixel = 0
+Frame_2.LayoutOrder = 1
+Frame_2.Size = UDim2.new(1, 0, 0, 70)
+Frame_2.Parent = Body
+
+local UICorner_10 = Instance.new("UICorner")
+UICorner_10.Parent = Frame_2
+
+local UIStroke_8 = Instance.new("UIStroke")
+UIStroke_8.Color = Color3.fromRGB(20, 110, 45)
+UIStroke_8.Transparency = 0.6
+UIStroke_8.Parent = Frame_2
+
+local TextLabel_7 = Instance.new("TextLabel")
+TextLabel_7.BackgroundTransparency = 1
+TextLabel_7.Position = UDim2.new(0, 12, 0, 8)
+TextLabel_7.Size = UDim2.new(0, 100, 0, 14)
+TextLabel_7.Text = "POWER"
+TextLabel_7.TextColor3 = Color3.fromRGB(150, 150, 150)
+TextLabel_7.TextSize = 10
+TextLabel_7.TextXAlignment = Enum.TextXAlignment.Left
+TextLabel_7.Parent = Frame_2
+applyFont(TextLabel_7, Enum.FontWeight.Bold)
+
+local TextLabel_8 = Instance.new("TextLabel")
+TextLabel_8.BackgroundTransparency = 1
+TextLabel_8.Position = UDim2.new(0, 12, 0, 22)
+TextLabel_8.Size = UDim2.new(0, 100, 0, 22)
+TextLabel_8.Text = "100.0K"
+TextLabel_8.TextColor3 = Color3.fromRGB(30, 200, 80)
+TextLabel_8.TextSize = 18
+TextLabel_8.TextXAlignment = Enum.TextXAlignment.Left
+TextLabel_8.Parent = Frame_2
+applyFont(TextLabel_8, Enum.FontWeight.Bold)
+
+local TextBox = Instance.new("TextBox")
+TextBox.BackgroundColor3 = Color3.fromRGB(12, 12, 12)
+TextBox.BackgroundTransparency = 0.2
+TextBox.Position = UDim2.new(1, -92, 0, 22)
+TextBox.Size = UDim2.new(0, 80, 0, 28)
+TextBox.Text = "100000"
+TextBox.TextColor3 = Color3.fromRGB(240, 240, 240)
+TextBox.TextSize = 12
+TextBox.ClearTextOnFocus = false
+TextBox.Parent = Frame_2
+applyFont(TextBox, Enum.FontWeight.Bold)
+
+local UICorner_11 = Instance.new("UICorner")
+UICorner_11.CornerRadius = UDim.new(0, 6)
+UICorner_11.Parent = TextBox
+
+local UIStroke_9 = Instance.new("UIStroke")
+UIStroke_9.Color = Color3.fromRGB(20, 110, 45)
+UIStroke_9.Transparency = 0.4
+UIStroke_9.Parent = TextBox
+
+local Frame_3 = Instance.new("Frame")
+Frame_3.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+Frame_3.BackgroundTransparency = 0.2
+Frame_3.BorderSizePixel = 0
+Frame_3.Position = UDim2.new(0, 12, 1, -18)
+Frame_3.Size = UDim2.new(1, -24, 0, 6)
+Frame_3.Parent = Frame_2
+
+local UICorner_12 = Instance.new("UICorner")
+UICorner_12.CornerRadius = UDim.new(0, 3)
+UICorner_12.Parent = Frame_3
+
+local Frame_4 = Instance.new("Frame")
+Frame_4.BackgroundColor3 = Color3.fromRGB(30, 200, 80)
+Frame_4.BorderSizePixel = 0
+Frame_4.Size = UDim2.new(0.1176, 0, 1, 0)
+Frame_4.Parent = Frame_3
+
+local UICorner_13 = Instance.new("UICorner")
+UICorner_13.CornerRadius = UDim.new(0, 3)
+UICorner_13.Parent = Frame_4
+
+local Frame_5 = Instance.new("Frame")
+Frame_5.AnchorPoint = Vector2.new(0.5, 0.5)
+Frame_5.BackgroundColor3 = Color3.fromRGB(240, 240, 240)
+Frame_5.BorderSizePixel = 0
+Frame_5.Position = UDim2.new(0.1176, 0, 0.5, 0)
+Frame_5.Size = UDim2.new(0, 16, 0, 16)
+Frame_5.ZIndex = 2
+Frame_5.Parent = Frame_3
+
+local UICorner_14 = Instance.new("UICorner")
+UICorner_14.Parent = Frame_5
+
+local UIStroke_10 = Instance.new("UIStroke")
+UIStroke_10.Color = Color3.fromRGB(30, 200, 80)
+UIStroke_10.Thickness = 2
+UIStroke_10.Parent = Frame_5
+
+local Frame_6 = Instance.new("Frame")
+Frame_6.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
+Frame_6.BackgroundTransparency = 0.4
+Frame_6.BorderSizePixel = 0
+Frame_6.LayoutOrder = 2
+Frame_6.Size = UDim2.new(1, 0, 0, 40)
+Frame_6.Parent = Body
+
+local UICorner_15 = Instance.new("UICorner")
+UICorner_15.Parent = Frame_6
+
+local UIStroke_11 = Instance.new("UIStroke")
+UIStroke_11.Color = Color3.fromRGB(20, 110, 45)
+UIStroke_11.Transparency = 0.6
+UIStroke_11.Parent = Frame_6
+
+local Frame_7 = Instance.new("Frame")
+Frame_7.BackgroundColor3 = Color3.fromRGB(90, 90, 90)
+Frame_7.BorderSizePixel = 0
+Frame_7.Position = UDim2.new(0, 12, 0.5, -5)
+Frame_7.Size = UDim2.new(0, 10, 0, 10)
+Frame_7.Parent = Frame_6
+
+local UICorner_16 = Instance.new("UICorner")
+UICorner_16.CornerRadius = UDim.new(0, 5)
+UICorner_16.Parent = Frame_7
+
+local TextLabel_9 = Instance.new("TextLabel")
+TextLabel_9.BackgroundTransparency = 1
+TextLabel_9.Position = UDim2.new(0, 28, 0, 0)
+TextLabel_9.Size = UDim2.new(0, 70, 1, 0)
+TextLabel_9.Text = "IDLE"
+TextLabel_9.TextColor3 = Color3.fromRGB(150, 150, 150)
+TextLabel_9.TextSize = 12
+TextLabel_9.TextXAlignment = Enum.TextXAlignment.Left
+TextLabel_9.Parent = Frame_6
+applyFont(TextLabel_9, Enum.FontWeight.Bold)
+
+local TextLabel_10 = Instance.new("TextLabel")
+TextLabel_10.BackgroundTransparency = 1
+TextLabel_10.Position = UDim2.new(0.5, -30, 0, 0)
+TextLabel_10.Size = UDim2.new(0, 60, 1, 0)
+TextLabel_10.Text = "00:00"
+TextLabel_10.TextColor3 = Color3.fromRGB(150, 150, 150)
+TextLabel_10.TextSize = 12
+TextLabel_10.Parent = Frame_6
+applyFont(TextLabel_10, Enum.FontWeight.Medium)
+
+local TextButton_3 = Instance.new("TextButton")
+TextButton_3.BackgroundColor3 = Color3.fromRGB(12, 12, 12)
+TextButton_3.BackgroundTransparency = 0.2
+TextButton_3.Position = UDim2.new(1, -58, 0.5, -13)
+TextButton_3.Size = UDim2.new(0, 46, 0, 26)
+TextButton_3.AutoButtonColor = false
+TextButton_3.Text = "?"
+TextButton_3.TextColor3 = Color3.fromRGB(240, 240, 240)
+TextButton_3.TextSize = 11
+TextButton_3.Parent = Frame_6
+applyFont(TextButton_3, Enum.FontWeight.Bold)
+
+local UICorner_17 = Instance.new("UICorner")
+UICorner_17.CornerRadius = UDim.new(0, 6)
+UICorner_17.Parent = TextButton_3
+
+local UIStroke_12 = Instance.new("UIStroke")
+UIStroke_12.Color = Color3.fromRGB(20, 110, 45)
+UIStroke_12.Transparency = 0.4
+UIStroke_12.Parent = TextButton_3
+
+local TextButton_4 = Instance.new("TextButton")
+TextButton_4.BackgroundColor3 = Color3.fromRGB(30, 200, 80)
+TextButton_4.BackgroundTransparency = 0.15
+TextButton_4.LayoutOrder = 3
+TextButton_4.Size = UDim2.new(1, 0, 0, 44)
+TextButton_4.AutoButtonColor = false
+TextButton_4.Text = "START"
+TextButton_4.TextColor3 = Color3.fromRGB(240, 240, 240)
+TextButton_4.TextSize = 15
+TextButton_4.Parent = Body
+applyFont(TextButton_4, Enum.FontWeight.Bold)
+
+local UICorner_18 = Instance.new("UICorner")
+UICorner_18.Parent = TextButton_4
+
+local UIStroke_13 = Instance.new("UIStroke")
+UIStroke_13.Color = Color3.fromRGB(30, 200, 80)
+UIStroke_13.Thickness = 1.5
+UIStroke_13.Transparency = 0.3
+UIStroke_13.Parent = TextButton_4
+
+local Frame_8 = Instance.new("Frame")
+Frame_8.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
+Frame_8.BackgroundTransparency = 0.4
+Frame_8.BorderSizePixel = 0
+Frame_8.LayoutOrder = 4
+Frame_8.Size = UDim2.new(1, 0, 0, 44)
+Frame_8.Parent = Body
+
+local UICorner_19 = Instance.new("UICorner")
+UICorner_19.Parent = Frame_8
+
+local UIStroke_14 = Instance.new("UIStroke")
+UIStroke_14.Color = Color3.fromRGB(20, 110, 45)
+UIStroke_14.Transparency = 0.6
+UIStroke_14.Parent = Frame_8
+
+local TextLabel_11 = Instance.new("TextLabel")
+TextLabel_11.BackgroundTransparency = 1
+TextLabel_11.Position = UDim2.new(0, 12, 0, 0)
+TextLabel_11.Size = UDim2.new(1, -80, 1, 0)
+TextLabel_11.Text = "auto enable on steal"
+TextLabel_11.TextColor3 = Color3.fromRGB(240, 240, 240)
+TextLabel_11.TextSize = 12
+TextLabel_11.TextXAlignment = Enum.TextXAlignment.Left
+TextLabel_11.Parent = Frame_8
+applyFont(TextLabel_11, Enum.FontWeight.Bold)
+
+local Frame_9 = Instance.new("Frame")
+Frame_9.AnchorPoint = Vector2.new(1, 0.5)
+Frame_9.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+Frame_9.BackgroundTransparency = 0.2
+Frame_9.BorderSizePixel = 0
+Frame_9.Position = UDim2.new(1, -12, 0.5, 0)
+Frame_9.Size = UDim2.new(0, 48, 0, 24)
+Frame_9.Active = true
+Frame_9.Parent = Frame_8
+
+local UICorner_20 = Instance.new("UICorner")
+UICorner_20.CornerRadius = UDim.new(0, 12)
+UICorner_20.Parent = Frame_9
+
+local UIStroke_15 = Instance.new("UIStroke")
+UIStroke_15.Color = Color3.fromRGB(20, 110, 45)
+UIStroke_15.Transparency = 0.5
+UIStroke_15.Parent = Frame_9
+
+local Frame_10 = Instance.new("Frame")
+Frame_10.BackgroundColor3 = Color3.fromRGB(30, 200, 80)
+Frame_10.BackgroundTransparency = 1
+Frame_10.BorderSizePixel = 0
+Frame_10.Size = UDim2.new(1, 0, 1, 0)
+Frame_10.Parent = Frame_9
+
+local UICorner_21 = Instance.new("UICorner")
+UICorner_21.CornerRadius = UDim.new(0, 12)
+UICorner_21.Parent = Frame_10
+
+local Frame_11 = Instance.new("Frame")
+Frame_11.AnchorPoint = Vector2.new(0.5, 0.5)
+Frame_11.BackgroundColor3 = Color3.fromRGB(150, 150, 150)
+Frame_11.BorderSizePixel = 0
+Frame_11.Position = UDim2.new(0, 12, 0.5, 0)
+Frame_11.Size = UDim2.new(0, 18, 0, 18)
+Frame_11.ZIndex = 2
+Frame_11.Parent = Frame_9
+
+local UICorner_22 = Instance.new("UICorner")
+UICorner_22.CornerRadius = UDim.new(0, 9)
+UICorner_22.Parent = Frame_11
+
+local UIStroke_16 = Instance.new("UIStroke")
+UIStroke_16.Color = Color3.fromRGB(20, 110, 45)
+UIStroke_16.Transparency = 0.3
+UIStroke_16.Parent = Frame_11
+
+
+local dragging, dragInput, dragStart, startPos
+
+Header.InputBegan:Connect(function(input)
+	if input.UserInputType == Enum.UserInputType.MouseButton1
+	or input.UserInputType == Enum.UserInputType.Touch then
+		dragging  = true
+		dragStart = input.Position
+		startPos  = Main.Position
+
+		input.Changed:Connect(function()
+			if input.UserInputState == Enum.UserInputState.End then
+				dragging = false
+			end
+		end)
+	end
+end)
+
+Header.InputChanged:Connect(function(input)
+	if input.UserInputType == Enum.UserInputType.MouseMovement
+	or input.UserInputType == Enum.UserInputType.Touch then
+		dragInput = input
+	end
+end)
+
+UserInputService.InputChanged:Connect(function(input)
+	if dragging and input == dragInput then
+		local delta = input.Position - dragStart
+		Main.Position = UDim2.new(
+			startPos.X.Scale,
+			startPos.X.Offset + delta.X,
+			startPos.Y.Scale,
+			startPos.Y.Offset + delta.Y
+		)
+	end
+end)
+
+local ACTIVE_BG     = Color3.fromRGB(20, 110, 45)
+local INACTIVE_BG   = Color3.fromRGB(12, 12, 12)
+local ACTIVE_TEXT   = Color3.fromRGB(240, 240, 240)
+local INACTIVE_TEXT = Color3.fromRGB(150, 150, 150)
+local ACTIVE_STROKE = Color3.fromRGB(30, 200, 80)
+local INACTIVE_STROKE = Color3.fromRGB(20, 110, 45)
+
+local modeButtons = {
+	{ Button = V1, Stroke = StrokeV1 },
+	{ Button = V2, Stroke = StrokeV2 },
+	{ Button = V3, Stroke = StrokeV3 },
+}
+
+local currentMode = V3
+
+local function setMode(selected)
+	for _, entry in ipairs(modeButtons) do
+		local btn = entry.Button
+		local isActive = (btn == selected)
+
+		btn.BackgroundColor3 = isActive and ACTIVE_BG or INACTIVE_BG
+		btn.TextColor3       = isActive and ACTIVE_TEXT or INACTIVE_TEXT
+
+		entry.Stroke.Color        = isActive and ACTIVE_STROKE or INACTIVE_STROKE
+		entry.Stroke.Transparency = isActive and 0.1 or 0.6
+	end
+
+	currentMode = selected
+	print("[Irish Bypass] Mode ->", selected.Name)
+end
+
+for _, entry in ipairs(modeButtons) do
+	entry.Button.MouseButton1Click:Connect(function()
+		if currentMode ~= entry.Button then
+			setMode(entry.Button)
+		end
+	end)
+end
+
+setMode(currentMode)
+
+local autoEnable = false
+
+local function setAutoEnable(state)
+	autoEnable = state
+
+	if state then
+		Frame_9.BackgroundColor3       = Color3.fromRGB(30, 200, 80)
+		Frame_10.BackgroundTransparency = 0
+		Frame_11.Position              = UDim2.new(1, -12, 0.5, 0)
+		Frame_11.BackgroundColor3      = Color3.fromRGB(240, 240, 240)
+	else
+		Frame_9.BackgroundColor3       = Color3.fromRGB(30, 30, 30)
+		Frame_10.BackgroundTransparency = 1
+		Frame_11.Position              = UDim2.new(0, 12, 0.5, 0)
+		Frame_11.BackgroundColor3      = Color3.fromRGB(150, 150, 150)
+	end
+
+	print("[Irish Bypass] auto enable on steal ->", state)
+end
+
+Frame_9.InputBegan:Connect(function(input)
+	if input.UserInputType == Enum.UserInputType.MouseButton1
+	or input.UserInputType == Enum.UserInputType.Touch then
+		setAutoEnable(not autoEnable)
+	end
+end)
+
+setAutoEnable(false)
+
+local running    = false
+local elapsed    = 0
+local startClock = 0
+
+local function formatTime(seconds)
+	local m = math.floor(seconds / 60)
+	local s = math.floor(seconds % 60)
+	return string.format("%02d:%02d", m, s)
+end
+
+TextButton_4.MouseButton1Click:Connect(function()
+	running = not running
+
+	if running then
+		startClock = os.clock() - elapsed
+		TextButton_4.Text             = "STOP"
+		TextButton_4.BackgroundColor3 = Color3.fromRGB(200, 50, 50)
+		UIStroke_13.Color             = Color3.fromRGB(200, 50, 50)
+		Frame_7.BackgroundColor3      = Color3.fromRGB(30, 200, 80)
+		TextLabel_9.Text              = "ACTIVE"
+	else
+		TextButton_4.Text             = "START"
+		TextButton_4.BackgroundColor3 = Color3.fromRGB(30, 200, 80)
+		UIStroke_13.Color             = Color3.fromRGB(30, 200, 80)
+		Frame_7.BackgroundColor3      = Color3.fromRGB(90, 90, 90)
+		TextLabel_9.Text              = "IDLE"
+	end
+end)
+
+RunService.RenderStepped:Connect(function()
+	if running then
+		elapsed = os.clock() - startClock
+		TextLabel_10.Text = formatTime(elapsed)
+	end
+end)
+
+local scale = 0.7
+
+local function applyScale()
+	UIScale.Scale = scale
+	TextLabel_5.Text = math.floor(scale * 100 + 0.5) .. "%"
+end
+
+TextButton.MouseButton1Click:Connect(function()
+	scale = math.clamp(scale - 0.05, 0.4, 1.5)
+	applyScale()
+end)
+
+TextButton_2.MouseButton1Click:Connect(function()
+	scale = math.clamp(scale + 0.05, 0.4, 1.5)
+	applyScale()
+end)
+
+applyScale()
+
+TextBox.FocusLost:Connect(function()
+	local value = tonumber(TextBox.Text)
+
+	if value then
+		value = math.clamp(math.floor(value), 0, 1000000)
+		TextBox.Text = tostring(value)
+
+		if value >= 1000000 then
+			TextLabel_8.Text = string.format("%.1fM", value / 1000000)
+		elseif value >= 1000 then
+			TextLabel_8.Text = string.format("%.1fK", value / 1000)
+		else
+			TextLabel_8.Text = tostring(value)
+		end
+
+		local ratio = math.clamp(value / 1000000, 0, 1)
+		Frame_4.Size     = UDim2.new(ratio, 0, 1, 0)
+		Frame_5.Position = UDim2.new(ratio, 0, 0.5, 0)
+	else
+		TextBox.Text = "100000"
+	end
+end)
+
+TextButton_3.MouseButton1Click:Connect(function()
+	print(("[Irish Bypass] Mode: %s | Running: %s | AutoSteal: %s"):format(
+		currentMode.Name,
+		tostring(running),
+		tostring(autoEnable)
+	))
+end)
+
+task.spawn(function()
+	while IrishSpeedBypass.Parent do
+		local ok, stats = pcall(function()
+			return game:GetService("Stats").Network.ServerStatsItem["Data Ping"]:GetValue()
+		end)
+		if ok then
+			TextLabel_3.Text = ("Ping: %dms"):format(math.floor(stats))
+		end
+
+		TextLabel_4.Text = ("FPS: %d"):format(math.floor(1 / math.max(RunService.RenderStepped:Wait(), 1e-4)))
+	end
+end)
+
+IrishSpeedBypass.Parent = LocalPlayer:WaitForChild("PlayerGui")

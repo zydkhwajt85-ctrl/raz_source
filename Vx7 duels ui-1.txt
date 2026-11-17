@@ -1,0 +1,679 @@
+local Players = game:GetService("Players")
+local UIS = game:GetService("UserInputService")
+local TweenService = game:GetService("TweenService")
+local RunService = game:GetService("RunService")
+local LP = Players.LocalPlayer
+local existing = LP:FindFirstChild("PlayerGui") and LP.PlayerGui:FindFirstChild("VX7UI")
+if existing then existing:Destroy() end
+local gui = Instance.new("ScreenGui")
+gui.Name = "VX7UI"
+gui.ResetOnSpawn = false
+gui.IgnoreGuiInset = true
+gui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+gui.Parent = LP:WaitForChild("PlayerGui")
+
+local function new(class, props, children)
+	local o = Instance.new(class)
+	for k, v in pairs(props or {}) do o[k] = v end
+	for _, c in ipairs(children or {}) do c.Parent = o end
+	return o
+end
+local function corner(r) return new("UICorner", { CornerRadius = UDim.new(0, r) }) end
+local function stroke(c, t, trans)
+	return new("UIStroke", {
+		Color = c or Color3.fromRGB(45, 75, 125),
+		Thickness = t or 1,
+		Transparency = trans or 0.4,
+		ApplyStrokeMode = Enum.ApplyStrokeMode.Border
+	})
+end
+local function pad(l, r, t, b)
+	return new("UIPadding", {
+		PaddingLeft = UDim.new(0, l or 0), PaddingRight = UDim.new(0, r or 0),
+		PaddingTop = UDim.new(0, t or 0), PaddingBottom = UDim.new(0, b or 0)
+	})
+end
+
+local COL = {
+	bg = Color3.fromRGB(18, 40, 82),
+	panel = Color3.fromRGB(26, 54, 105),
+	panelAlt = Color3.fromRGB(31, 63, 120),
+	blue = Color3.fromRGB(56, 148, 255),
+	blueSoft = Color3.fromRGB(40, 105, 210),
+	midBlue = Color3.fromRGB(45, 95, 180),
+	darkBlue = Color3.fromRGB(30, 70, 140),
+	lightBlue = Color3.fromRGB(100, 180, 255),
+	text = Color3.fromRGB(240, 246, 255),
+	textDim = Color3.fromRGB(175, 196, 230),
+	textMuted = Color3.fromRGB(135, 160, 200),
+	border = Color3.fromRGB(52, 92, 155),
+	inputBg = Color3.fromRGB(21, 46, 92),
+	tabBg = Color3.fromRGB(16, 34, 70),
+	tabSel = Color3.fromRGB(45, 88, 160),
+}
+
+local MAIN_W, MAIN_H = 460, 650
+local main = new("Frame", {
+	Name = "Main", Parent = gui,
+	Size = UDim2.fromOffset(MAIN_W, MAIN_H),
+	Position = UDim2.new(0.5, -MAIN_W/2, 0.5, -MAIN_H/2),
+	BackgroundColor3 = COL.bg,
+	BorderSizePixel = 0, Active = true, ClipsDescendants = true,
+}, { corner(20), stroke(Color3.fromRGB(60, 105, 175), 1.5, 0.15) })
+
+local bgImage = new("ImageLabel", {
+	Parent = main,
+	Size = UDim2.fromScale(1, 1),
+	Position = UDim2.fromScale(0, 0),
+	BackgroundTransparency = 1,
+	Image = "rbxassetid://86316992692761",
+	ScaleType = Enum.ScaleType.Crop,
+	ZIndex = 0,
+}, { corner(20) })
+
+new("UIGradient", {
+	Parent = main,
+	Rotation = 90,
+	Color = ColorSequence.new{
+		ColorSequenceKeypoint.new(0, Color3.fromRGB(24, 50, 98)),
+		ColorSequenceKeypoint.new(1, Color3.fromRGB(14, 32, 68)),
+	},
+	Transparency = NumberSequence.new{
+		NumberSequenceKeypoint.new(0, 0.2),
+		NumberSequenceKeypoint.new(1, 0.35),
+	}
+})
+
+do
+	local dragging, dragStart, startPos
+	main.InputBegan:Connect(function(input)
+		if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+			dragging = true; dragStart = input.Position; startPos = main.Position
+			input.Changed:Connect(function()
+				if input.UserInputState == Enum.UserInputState.End then dragging = false end
+			end)
+		end
+	end)
+	UIS.InputChanged:Connect(function(input)
+		if dragging and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then
+			local d = input.Position - dragStart
+			main.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + d.X, startPos.Y.Scale, startPos.Y.Offset + d.Y)
+		end
+	end)
+end
+
+local header = new("Frame", {
+	Parent = main,
+	Size = UDim2.new(1, 0, 0, 70),
+	Position = UDim2.fromOffset(0, 0),
+	BackgroundColor3 = Color3.fromRGB(28, 58, 115),
+	BorderSizePixel = 0,
+	ZIndex = 3,
+}, { corner(20), stroke(COL.border, 1, 0.35) })
+
+new("UIGradient", {
+	Parent = header,
+	Rotation = 0,
+	Transparency = NumberSequence.new{
+		NumberSequenceKeypoint.new(0, 0.55),
+		NumberSequenceKeypoint.new(0.45, 0.25),
+		NumberSequenceKeypoint.new(1, 0.05),
+	}
+})
+
+local logo = new("Frame", {
+	Parent = header,
+	Size = UDim2.fromOffset(38, 38),
+	Position = UDim2.fromOffset(14, 16),
+	BackgroundColor3 = COL.blue,
+	BorderSizePixel = 0,
+	ZIndex = 4,
+}, { corner(11), stroke(Color3.fromRGB(120, 190, 255), 1.5, 0.2) })
+new("TextLabel", {
+	Parent = logo,
+	Size = UDim2.fromScale(1, 1),
+	BackgroundTransparency = 1,
+	Text = "VX7",
+	Font = Enum.Font.GothamBold,
+	TextSize = 14,
+	TextColor3 = Color3.fromRGB(0, 0, 0),
+	ZIndex = 5,
+})
+
+new("TextLabel", {
+	Parent = header,
+	Size = UDim2.fromOffset(130, 32),
+	Position = UDim2.fromOffset(60, 19),
+	BackgroundTransparency = 1,
+	Text = "VX7 DUELS",
+	Font = Enum.Font.GothamBold,
+	TextSize = 16,
+	TextColor3 = COL.lightBlue,
+	TextXAlignment = Enum.TextXAlignment.Left,
+	ZIndex = 4,
+})
+
+local fpsBox = new("Frame", {
+	Parent = header,
+	Size = UDim2.fromOffset(92, 36),
+	Position = UDim2.fromOffset(200, 17),
+	BackgroundColor3 = Color3.fromRGB(22, 48, 95),
+	BackgroundTransparency = 0.25,
+	BorderSizePixel = 0,
+	ZIndex = 4,
+}, { corner(10), stroke(Color3.fromRGB(55, 100, 170), 1, 0.45) })
+local fpsLabel = new("TextLabel", {
+	Parent = fpsBox,
+	Size = UDim2.new(1, -8, 0, 16),
+	Position = UDim2.fromOffset(6, 2),
+	BackgroundTransparency = 1,
+	Text = "FPS: --",
+	Font = Enum.Font.GothamMedium, TextSize = 12,
+	TextColor3 = COL.textDim,
+	TextXAlignment = Enum.TextXAlignment.Left,
+	ZIndex = 5,
+})
+local pingLabel = new("TextLabel", {
+	Parent = fpsBox,
+	Size = UDim2.new(1, -8, 0, 16),
+	Position = UDim2.fromOffset(6, 18),
+	BackgroundTransparency = 1,
+	Text = "Ping: --ms",
+	Font = Enum.Font.GothamMedium, TextSize = 12,
+	TextColor3 = COL.textDim,
+	TextXAlignment = Enum.TextXAlignment.Left,
+	ZIndex = 5,
+})
+do
+	local frames, last = 0, tick()
+	RunService.RenderStepped:Connect(function()
+		frames += 1
+		if tick() - last >= 1 then
+			local fps = frames; frames = 0; last = tick()
+			local ping = 0
+			pcall(function() ping = math.floor(LP:GetNetworkPing() * 1000) end)
+			fpsLabel.Text = string.format("FPS: %d", fps)
+			pingLabel.Text = string.format("Ping: %dms", ping)
+		end
+	end)
+end
+
+new("TextLabel", {
+	Parent = header,
+	Size = UDim2.fromOffset(44, 14),
+	Position = UDim2.new(1, -70, 0, 12),
+	BackgroundTransparency = 1,
+	Text = "Radius",
+	Font = Enum.Font.GothamMedium, TextSize = 11,
+	TextColor3 = COL.textMuted,
+	TextXAlignment = Enum.TextXAlignment.Left,
+	ZIndex = 4,
+})
+new("TextLabel", {
+	Parent = header,
+	Size = UDim2.fromOffset(28, 22),
+	Position = UDim2.new(1, -70, 0, 26),
+	BackgroundTransparency = 1,
+	Text = "62",
+	Font = Enum.Font.GothamBold, TextSize = 16,
+	TextColor3 = COL.text,
+	TextXAlignment = Enum.TextXAlignment.Right,
+	ZIndex = 4,
+})
+
+new("TextButton", {
+	Parent = header,
+	Size = UDim2.fromOffset(28, 28),
+	Position = UDim2.new(1, -40, 0, 21),
+	BackgroundColor3 = Color3.fromRGB(25, 52, 100),
+	Text = "−",
+	Font = Enum.Font.GothamBold, TextSize = 18,
+	TextColor3 = COL.textDim,
+	AutoButtonColor = false, BorderSizePixel = 0,
+	ZIndex = 5,
+}, { corner(8), stroke(Color3.fromRGB(55, 100, 170), 1, 0.4) })
+
+local headerLine = new("Frame", {
+	Parent = main,
+	Size = UDim2.new(1, 0, 0, 2),
+	Position = UDim2.fromOffset(0, 70),
+	BackgroundColor3 = Color3.fromRGB(70, 130, 210),
+	BackgroundTransparency = 0.35,
+	BorderSizePixel = 0,
+	ZIndex = 3,
+}, { corner(1) })
+
+local body = new("ScrollingFrame", {
+	Parent = main, Position = UDim2.fromOffset(0, 80),
+	Size = UDim2.new(1, -10, 1, -154),
+	BackgroundTransparency = 1,
+	BorderSizePixel = 0,
+	ScrollBarThickness = 4,
+	ScrollBarImageColor3 = Color3.fromRGB(80, 150, 230),
+	ScrollBarImageTransparency = 0.15,
+	CanvasSize = UDim2.new(), AutomaticCanvasSize = Enum.AutomaticSize.Y, ZIndex = 2,
+}, {
+	pad(18, 12, 6, 16),
+	new("UIListLayout", { Padding = UDim.new(0, 12), SortOrder = Enum.SortOrder.LayoutOrder })
+})
+
+local scrollTrack = new("Frame", {
+	Parent = main,
+	Size = UDim2.new(0, 3, 1, -154),
+	Position = UDim2.new(1, -7, 0, 80),
+	BackgroundColor3 = Color3.fromRGB(45, 90, 160),
+	BackgroundTransparency = 0.45,
+	BorderSizePixel = 0,
+	ZIndex = 4,
+}, { corner(1.5) })
+new("UIGradient", {
+	Parent = scrollTrack,
+	Rotation = 90,
+	Color = ColorSequence.new{
+		ColorSequenceKeypoint.new(0, Color3.fromRGB(60, 120, 210)),
+		ColorSequenceKeypoint.new(0.7, Color3.fromRGB(40, 90, 160)),
+		ColorSequenceKeypoint.new(1, Color3.fromRGB(50, 140, 100)),
+	},
+	Transparency = NumberSequence.new{
+		NumberSequenceKeypoint.new(0, 0.3),
+		NumberSequenceKeypoint.new(1, 0.5),
+	}
+})
+
+local listeningBtn = nil
+local keybindMap = {}
+UIS.InputBegan:Connect(function(input, gp)
+	if input.UserInputType ~= Enum.UserInputType.Keyboard then return end
+	if input.KeyCode == Enum.KeyCode.Escape and listeningBtn then
+		listeningBtn.btn.Text = listeningBtn.prev
+		listeningBtn.btn.TextColor3 = COL.text
+		listeningBtn = nil
+		return
+	end
+	if listeningBtn then listeningBtn.onKey(input.KeyCode); listeningBtn = nil; return end
+	local cb = keybindMap[input.KeyCode]
+	if cb then cb() end
+end)
+
+local function sectionHeader(text)
+	local f = new("Frame", {
+		Size = UDim2.new(1, 0, 0, 36),
+		BackgroundColor3 = COL.panel,
+		BackgroundTransparency = 0.45,
+		BorderSizePixel = 0,
+	}, { corner(12), stroke(COL.border, 1, 0.5) })
+
+	new("Frame", {
+		Parent = f, Size = UDim2.fromOffset(4, 18), Position = UDim2.fromOffset(12, 9),
+		BackgroundColor3 = COL.blue, BorderSizePixel = 0,
+	}, { corner(2) })
+	new("TextLabel", {
+		Parent = f, Size = UDim2.new(1, -40, 1, 0), Position = UDim2.fromOffset(26, 0),
+		BackgroundTransparency = 1, Text = string.upper(text),
+		Font = Enum.Font.GothamBold, TextSize = 14, TextColor3 = COL.text,
+		TextXAlignment = Enum.TextXAlignment.Left,
+	})
+
+	new("Frame", {
+		Parent = f,
+		Size = UDim2.fromOffset(32, 2),
+		Position = UDim2.new(1, -44, 0.5, -1),
+		BackgroundColor3 = Color3.fromRGB(80, 150, 230),
+		BackgroundTransparency = 0.35,
+		BorderSizePixel = 0,
+	}, { corner(1) })
+	return f
+end
+local function makeMethodSelector()
+	local container = new("Frame", {
+		Size = UDim2.new(1, 0, 0, 74), 
+		BackgroundColor3 = COL.panel, 
+		BackgroundTransparency = 0.4,
+		BorderSizePixel = 0,
+	}, { corner(14), stroke(COL.border, 1, 0.4) })
+	new("TextLabel", {
+		Parent = container, Size = UDim2.new(1, -24, 0, 18), Position = UDim2.fromOffset(16, 10),
+		BackgroundTransparency = 1, Text = "Speed Changed Method",
+		Font = Enum.Font.GothamMedium, TextSize = 13, TextColor3 = COL.textDim,
+		TextXAlignment = Enum.TextXAlignment.Left,
+	})
+	local switch = new("Frame", {
+		Parent = container, Size = UDim2.new(1, -32, 0, 30), Position = UDim2.fromOffset(16, 34),
+		BackgroundColor3 = COL.inputBg, 
+		BackgroundTransparency = 0.25,
+		BorderSizePixel = 0,
+	}, { corner(9), stroke(COL.border, 1, 0.4) })
+	local v1 = new("TextButton", {
+		Parent = switch, Size = UDim2.new(0.5, -4, 1, -6), Position = UDim2.fromOffset(3, 3),
+		BackgroundColor3 = COL.inputBg, Text = "V1",
+		Font = Enum.Font.GothamBold, TextSize = 13, TextColor3 = COL.textMuted,
+		AutoButtonColor = false, BorderSizePixel = 0,
+	}, { corner(7) })
+	local v2 = new("TextButton", {
+		Parent = switch, Size = UDim2.new(0.5, -4, 1, -6), Position = UDim2.new(0.5, 1, 0, 3),
+		BackgroundColor3 = COL.blue, Text = "V2",
+		Font = Enum.Font.GothamBold, TextSize = 13, TextColor3 = Color3.new(1, 1, 1),
+		AutoButtonColor = false, BorderSizePixel = 0,
+	}, { corner(7) })
+	v1.MouseButton1Click:Connect(function()
+		v1.BackgroundColor3 = COL.blue; v1.TextColor3 = Color3.new(1,1,1)
+		v2.BackgroundColor3 = COL.inputBg; v2.TextColor3 = COL.textMuted
+	end)
+	v2.MouseButton1Click:Connect(function()
+		v2.BackgroundColor3 = COL.blue; v2.TextColor3 = Color3.new(1,1,1)
+		v1.BackgroundColor3 = COL.inputBg; v1.TextColor3 = COL.textMuted
+	end)
+	return container
+end
+local function makeSpeedOption(opts)
+	local selected = opts.selected or false
+	local container = new("Frame", {
+		Size = UDim2.new(1, 0, 0, 70),
+		BackgroundColor3 = selected and COL.panelAlt or COL.panel, 
+		BackgroundTransparency = 0.4,
+		BorderSizePixel = 0,
+	}, { corner(14), stroke(selected and COL.blue or COL.border, 1.4, selected and 0.15 or 0.4) })
+	local radio = new("TextButton", {
+		Parent = container, Size = UDim2.fromOffset(22, 22), Position = UDim2.fromOffset(16, 24),
+		BackgroundColor3 = COL.inputBg, BackgroundTransparency = 0.3, Text = "",
+		AutoButtonColor = false, BorderSizePixel = 0,
+	}, { corner(11), stroke(selected and COL.blue or COL.border, 1.8, selected and 0 or 0.35) })
+	if selected then
+		new("Frame", {
+			Parent = radio, Name = "Dot", Size = UDim2.fromOffset(10, 10), Position = UDim2.fromOffset(6, 6),
+			BackgroundColor3 = COL.blue, BorderSizePixel = 0,
+		}, { corner(5) })
+	end
+	new("TextLabel", {
+		Parent = container, Size = UDim2.fromOffset(150, 20), Position = UDim2.fromOffset(48, 16),
+		BackgroundTransparency = 1, Text = opts.name,
+		Font = Enum.Font.GothamBold, TextSize = 15, TextColor3 = COL.text,
+		TextXAlignment = Enum.TextXAlignment.Left,
+	})
+	new("TextLabel", {
+		Parent = container, Size = UDim2.fromOffset(150, 16), Position = UDim2.fromOffset(48, 38),
+		BackgroundTransparency = 1, Text = opts.desc or "",
+		Font = Enum.Font.Gotham, TextSize = 12, TextColor3 = COL.textMuted,
+		TextXAlignment = Enum.TextXAlignment.Left,
+	})
+
+	new("Frame", {
+		Parent = container,
+		Size = UDim2.fromOffset(1, 44),
+		Position = UDim2.new(1, -170, 0.5, -22),
+		BackgroundColor3 = Color3.fromRGB(75, 140, 220),
+		BackgroundTransparency = 0.5,
+		BorderSizePixel = 0,
+		ZIndex = 2,
+	}, { corner(1) })
+	local keyBtn = new("TextButton", {
+		Parent = container, Size = UDim2.fromOffset(34, 30), Position = UDim2.new(1, -158, 0.5, -15),
+		BackgroundColor3 = COL.inputBg, Text = opts.key or "—",
+		Font = Enum.Font.GothamBold, TextSize = 14, TextColor3 = COL.text,
+		AutoButtonColor = false, BorderSizePixel = 0,
+	}, { corner(8), stroke(COL.border, 1, 0.35) })
+	local function numColumn(title, value, offX)
+		new("TextLabel", {
+			Parent = container, Size = UDim2.fromOffset(50, 12), Position = UDim2.new(1, offX, 0, 14),
+			BackgroundTransparency = 1, Text = title,
+			Font = Enum.Font.GothamMedium, TextSize = 9, TextColor3 = COL.textMuted,
+			TextXAlignment = Enum.TextXAlignment.Center,
+		})
+		return new("TextBox", {
+			Parent = container, Size = UDim2.fromOffset(50, 28), Position = UDim2.new(1, offX, 0, 30),
+			BackgroundColor3 = COL.inputBg, Text = tostring(value),
+			Font = Enum.Font.GothamBold, TextSize = 14, TextColor3 = COL.text,
+			TextXAlignment = Enum.TextXAlignment.Center, ClearTextOnFocus = false, BorderSizePixel = 0,
+		}, { corner(8), stroke(COL.border, 1, 0.35) })
+	end
+	numColumn("NORMAL", opts.normal or 50, -116)
+	numColumn("STEAL", opts.steal or 25, -62)
+	local boundKey = nil
+	keyBtn.MouseButton1Click:Connect(function()
+		local prev = keyBtn.Text
+		listeningBtn = {
+			btn = keyBtn, prev = prev,
+			onKey = function(kc)
+				if boundKey then keybindMap[boundKey] = nil end
+				boundKey = kc
+				local nm = kc.Name
+				keyBtn.Text = (#nm <= 3) and nm:upper() or nm:sub(1, 2):upper()
+				keyBtn.TextColor3 = COL.text
+			end
+		}
+		keyBtn.Text = ".."
+		keyBtn.TextColor3 = Color3.fromRGB(255, 200, 50)
+	end)
+	if opts.key and opts.key ~= "—" and opts.key ~= "+" then
+		for _, kc in pairs(Enum.KeyCode:GetEnumItems()) do
+			if kc.Name:lower() == opts.key:lower() then boundKey = kc break end
+		end
+	end
+	return container, radio
+end
+local function makeSpeedKeys()
+	local container = new("Frame", {
+		Size = UDim2.new(1, 0, 0, 58), 
+		BackgroundColor3 = COL.panel, 
+		BackgroundTransparency = 0.4,
+		BorderSizePixel = 0,
+	}, { corner(14), stroke(COL.border, 1, 0.4) })
+	new("TextLabel", {
+		Parent = container, Size = UDim2.new(1, -120, 1, 0), Position = UDim2.fromOffset(18, 0),
+		BackgroundTransparency = 1, Text = "Carry Speed Key",
+		Font = Enum.Font.GothamBold, TextSize = 15, TextColor3 = COL.text,
+		TextXAlignment = Enum.TextXAlignment.Left,
+	})
+	local function keyPill(letter, offsetX)
+		return new("TextButton", {
+			Parent = container, Size = UDim2.fromOffset(34, 30),
+			Position = UDim2.new(1, offsetX, 0.5, -15),
+			BackgroundColor3 = COL.inputBg, Text = letter,
+			Font = Enum.Font.GothamBold, TextSize = 15, TextColor3 = COL.text,
+			AutoButtonColor = false, BorderSizePixel = 0,
+		}, { corner(8), stroke(COL.border, 1, 0.3) })
+	end
+	keyPill("O", -90)
+	keyPill("X", -52)
+	return container
+end
+local function makeSimpleToggle(name, default, key)
+	local state = default
+	local r = new("Frame", {
+		Size = UDim2.new(1, 0, 0, 54), 
+		BackgroundColor3 = COL.panel, 
+		BackgroundTransparency = 0.4,
+		BorderSizePixel = 0,
+	}, { corner(14), stroke(COL.border, 1, 0.4) })
+	new("TextLabel", {
+		Parent = r, Size = UDim2.new(1, -110, 1, 0), Position = UDim2.fromOffset(18, 0),
+		BackgroundTransparency = 1, Text = name,
+		Font = Enum.Font.GothamBold, TextSize = 15, TextColor3 = COL.text,
+		TextXAlignment = Enum.TextXAlignment.Left,
+	})
+	if key then
+		new("TextButton", {
+			Parent = r, Size = UDim2.fromOffset(32, 26), Position = UDim2.new(1, -94, 0.5, -13),
+			BackgroundColor3 = COL.inputBg, Text = string.upper(key),
+			Font = Enum.Font.GothamBold, TextSize = 13, TextColor3 = COL.text,
+			AutoButtonColor = false, BorderSizePixel = 0,
+		}, { corner(7), stroke(COL.border, 1, 0.35) })
+	end
+	local sw = new("TextButton", {
+		Parent = r, Size = UDim2.fromOffset(48, 26), Position = UDim2.new(1, -58, 0.5, -13),
+		BackgroundColor3 = state and COL.blue or COL.inputBg, Text = "",
+		AutoButtonColor = false, BorderSizePixel = 0,
+	}, { corner(13) })
+	local dot = new("Frame", {
+		Parent = sw, Size = UDim2.fromOffset(20, 20),
+		Position = state and UDim2.new(1, -23, 0.5, -10) or UDim2.fromOffset(3, 3),
+		BackgroundColor3 = Color3.new(1, 1, 1), BorderSizePixel = 0,
+	}, { corner(10) })
+	sw.MouseButton1Click:Connect(function()
+		state = not state
+		TweenService:Create(sw, TweenInfo.new(0.15), { BackgroundColor3 = state and COL.blue or COL.inputBg }):Play()
+		TweenService:Create(dot, TweenInfo.new(0.15), {
+			Position = state and UDim2.new(1, -23, 0.5, -10) or UDim2.fromOffset(3, 3)
+		}):Play()
+	end)
+	return r
+end
+local function makeSliderRow(name, min, max, default)
+	local r = new("Frame", {
+		Size = UDim2.new(1, 0, 0, 54), 
+		BackgroundColor3 = COL.panel, 
+		BackgroundTransparency = 0.4,
+		BorderSizePixel = 0,
+	}, { corner(14), stroke(COL.border, 1, 0.4) })
+	new("TextLabel", {
+		Parent = r, Size = UDim2.new(1, -90, 1, 0), Position = UDim2.fromOffset(18, 0),
+		BackgroundTransparency = 1, Text = name,
+		Font = Enum.Font.GothamBold, TextSize = 15, TextColor3 = COL.text,
+		TextXAlignment = Enum.TextXAlignment.Left,
+	})
+	new("TextBox", {
+		Parent = r, Size = UDim2.fromOffset(58, 28), Position = UDim2.new(1, -74, 0.5, -14),
+		BackgroundColor3 = COL.inputBg, Text = tostring(default),
+		Font = Enum.Font.GothamBold, TextSize = 14, TextColor3 = COL.text,
+		TextXAlignment = Enum.TextXAlignment.Center, ClearTextOnFocus = false, BorderSizePixel = 0,
+	}, { corner(8), stroke(COL.border, 1, 0.35) })
+	return r
+end
+
+local function clearBody()
+	for _, c in ipairs(body:GetChildren()) do
+		if not c:IsA("UIPadding") and not c:IsA("UIListLayout") then c:Destroy() end
+	end
+end
+local function buildMovement()
+	sectionHeader("SPEED").Parent = body
+	makeMethodSelector().Parent = body
+	local opts = {
+		{ name = "Normal Speed", desc = "default mode", key = "Q", normal = 57, steal = 27, selected = true },
+		{ name = "Lagger Speed", desc = "use against lagger", key = "Z", normal = 39, steal = 20, selected = false },
+		{ name = "Custom Speed", desc = "use if Custom spd", key = "+", normal = 67, steal = 34, selected = false },
+	}
+	local radios = {}
+	for _, o in ipairs(opts) do
+		local row, radio = makeSpeedOption(o)
+		row.Parent = body
+		table.insert(radios, { row = row, radio = radio })
+	end
+	for i, item in ipairs(radios) do
+		item.radio.MouseButton1Click:Connect(function()
+			for j, other in ipairs(radios) do
+				local sel = (j == i)
+				other.radio.BackgroundColor3 = COL.inputBg
+				other.radio.BackgroundTransparency = 0.3
+				for _, ch in ipairs(other.radio:GetChildren()) do
+					if ch:IsA("Frame") then ch:Destroy() end
+				end
+				local rStroke = other.radio:FindFirstChildOfClass("UIStroke")
+				if rStroke then
+					rStroke.Color = sel and COL.blue or COL.border
+					rStroke.Transparency = sel and 0 or 0.35
+					rStroke.Thickness = sel and 1.8 or 1.5
+				end
+				if sel then
+					new("Frame", {
+						Parent = other.radio, Name = "Dot",
+						Size = UDim2.fromOffset(10, 10), Position = UDim2.fromOffset(6, 6),
+						BackgroundColor3 = COL.blue, BorderSizePixel = 0,
+					}, { corner(5) })
+				end
+				other.row.BackgroundColor3 = sel and COL.panelAlt or COL.panel
+				local s = other.row:FindFirstChildOfClass("UIStroke")
+				if s then
+					s.Color = sel and COL.blue or COL.border
+					s.Transparency = sel and 0.15 or 0.4
+				end
+			end
+		end)
+	end
+	sectionHeader("SPEED KEYS").Parent = body
+	makeSpeedKeys().Parent = body
+end
+local function buildCombat()
+	sectionHeader("COMBAT").Parent = body
+end
+local function buildVisuals()
+	sectionHeader("VISUALS").Parent = body
+end
+local function buildConfig()
+	sectionHeader("CONFIG").Parent = body
+end
+local builders = { MOVEMENT = buildMovement, COMBAT = buildCombat, VISUALS = buildVisuals, CONFIG = buildConfig }
+
+local tabBar = new("Frame", {
+	Parent = main, Position = UDim2.new(0, 14, 1, -58),
+	Size = UDim2.new(1, -28, 0, 46),
+	BackgroundColor3 = COL.tabBg,
+	BackgroundTransparency = 0.2,
+	BorderSizePixel = 0, ZIndex = 5,
+}, { corner(14), stroke(COL.border, 1, 0.2) })
+local topLine = new("Frame", {
+	Parent = main,
+	Size = UDim2.new(1, -40, 0, 3),
+	Position = UDim2.new(0, 20, 1, -68),
+	BackgroundColor3 = COL.darkBlue,
+	BorderSizePixel = 0,
+	ZIndex = 6,
+}, { corner(1) })
+local tabInner = new("Frame", {
+	Parent = tabBar, Size = UDim2.new(1, -10, 1, -10), Position = UDim2.fromOffset(5, 5),
+	BackgroundTransparency = 1, ZIndex = 6,
+})
+new("UIListLayout", {
+	Parent = tabInner, FillDirection = Enum.FillDirection.Horizontal,
+	HorizontalAlignment = Enum.HorizontalAlignment.Center,
+	VerticalAlignment = Enum.VerticalAlignment.Center,
+	Padding = UDim.new(0, 3), SortOrder = Enum.SortOrder.LayoutOrder,
+})
+local tabs = { "MOVEMENT", "COMBAT", "VISUALS", "CONFIG" }
+local tabButtons, tabFrames = {}, {}
+local function selectTab(name)
+	clearBody()
+	if builders[name] then builders[name]() end
+	for n, frame in pairs(tabFrames) do
+		local active = (n == name)
+		local btn = tabButtons[n]
+		local ind = frame:FindFirstChild("Indicator")
+		TweenService:Create(frame, TweenInfo.new(0.18), {
+			BackgroundTransparency = active and 0 or 1,
+			BackgroundColor3 = active and COL.tabSel or COL.tabBg,
+		}):Play()
+		if ind then
+			TweenService:Create(ind, TweenInfo.new(0.18), {
+				BackgroundTransparency = active and 0 or 0.6,
+			}):Play()
+		end
+		btn.TextColor3 = active and Color3.fromRGB(255, 255, 255) or COL.textMuted
+		btn.Font = active and Enum.Font.GothamBold or Enum.Font.GothamMedium
+	end
+end
+for i, name in ipairs(tabs) do
+	local frame = new("Frame", {
+		Parent = tabInner, Size = UDim2.new(0.25, -3, 1, 0),
+		BackgroundColor3 = COL.tabBg, BackgroundTransparency = 1,
+		BorderSizePixel = 0, LayoutOrder = i, ZIndex = 6,
+	}, { corner(10) })
+	local indicator = new("Frame", {
+		Parent = frame, Name = "Indicator",
+		Size = UDim2.new(1, -52, 0, 3),
+		Position = UDim2.fromOffset(26, 2),
+		BackgroundColor3 = COL.lightBlue,
+		BorderSizePixel = 0,
+		BackgroundTransparency = 0.6,
+		ZIndex = 8,
+	}, { corner(1) })
+	local b = new("TextButton", {
+		Parent = frame, Size = UDim2.new(1, 0, 1, 0), Position = UDim2.fromOffset(0, 0),
+		BackgroundTransparency = 1,
+		Text = name, Font = Enum.Font.GothamMedium, TextSize = 12,
+		TextColor3 = COL.textMuted, AutoButtonColor = false, ZIndex = 7,
+	})
+	tabFrames[name] = frame
+	tabButtons[name] = b
+	b.MouseButton1Click:Connect(function() selectTab(name) end)
+end
+selectTab("MOVEMENT")

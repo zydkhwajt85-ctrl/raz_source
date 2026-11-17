@@ -1,0 +1,341 @@
+-- Clean by Prince Bot | .gg/freesource
+local Players = game:GetService("Players")
+local localPlayer = Players.LocalPlayer
+
+local RAW_LUA_CODE = [==[
+local UserInputService = game:GetService("UserInputService")
+local acidCloneref
+do
+    local isMobile = UserInputService.TouchEnabled and not UserInputService.MouseEnabled
+    if isMobile then acidCloneref = function(x) return x end
+    elseif type(cloneref) == 'function' then acidCloneref = function(x) local ok, c = pcall(cloneref, x); return ok and c or x end
+    elseif type(clonereference) == 'function' then acidCloneref = function(x) local ok, c = pcall(clonereference, x); return ok and c or x end
+    else acidCloneref = function(x) return x end end
+end
+if type(setthreadidentity) == 'function' and not UserInputService.TouchEnabled then pcall(setthreadidentity, 8) end
+
+local Players = acidCloneref(game:GetService("Players"))
+local LocalPlayer = Players.LocalPlayer
+local _waitCount = 0
+while not LocalPlayer and _waitCount < 30 do task.wait(0.1); _waitCount = _waitCount + 1; LocalPlayer = Players.LocalPlayer end
+if not LocalPlayer then return end
+
+local TweenService = acidCloneref(game:GetService("TweenService"))
+local RunService = acidCloneref(game:GetService("RunService"))
+local HttpService = acidCloneref(game:GetService("HttpService"))
+local Lighting = acidCloneref(game:GetService("Lighting"))
+local ReplicatedStorage = acidCloneref(game:GetService("ReplicatedStorage"))
+local Workspace = acidCloneref(game:GetService("Workspace"))
+local VirtualUser = acidCloneref(game:GetService("VirtualUser"))
+
+pcall(function()
+    if getgenv().AcidFlyConn then getgenv().AcidFlyConn:Disconnect() end
+    if getgenv().AcidNoclipConn then getgenv().AcidNoclipConn:Disconnect() end
+    RunService:UnbindFromRenderStep("AcidFakePosCam")
+    RunService:UnbindFromRenderStep("AcidFakePosRestore")
+    RunService:UnbindFromRenderStep("AcidAntiAim")
+    RunService:UnbindFromRenderStep("AcidWallbang")
+    RunService:UnbindFromRenderStep("AcidRagebotSnap")
+    RunService:UnbindFromRenderStep("AcidRB2Cam")
+    RunService:UnbindFromRenderStep("AcidCamLock")
+end)
+getgenv().AcidFlyConn = nil
+getgenv().AcidNoclipConn = nil
+
+local Config = {
+    AuraEnabled = true, AuraIntensity = 25, AuraSize = 6,
+    AuraTransparency = 0.45, AuraSpeed = 1.8, AuraLifetime = 3.0, AuraGlowIntensity = 2,
+    WingsEnabled = true, WingsColorHex = "8C64FF", WingsSize = 5.0,
+    WingsSpread = 3.5, WingsHeight = 3.0, WingsFlapSpeed = 2.0,
+    WingsShowFeathers = true, WingsShowGlow = true,
+    ESPEnabled = true, ESPShowName = true, ESPShowHealth = true,
+    ESPShowDistance = true, ESPShowHealthBar = true, ESPBoxThickness = 1.5,
+    ESPColorHex = "FFFFFF", ESPTeamCheck = true,
+    OrbitEnabled = false, OrbitSpeed = 90, OrbitDist = 8, OrbitHeight = 0, OrbitLerp = 0.3, OrbitMode = "Circle", OrbitPredict = false, OrbitPredStrength = 0.2, OrbitFaceTarget = true, OrbitAutoLockDist = 50,
+    OverlayEnabled = true, OverlayTransparency = 0.55, OverlayColorHex = "140A2D",
+    FlyEnabled = false, FlySpeed = 50,
+    NoclipEnabled = false,
+    WalkSpeedEnabled = false, WalkSpeedMultiplier = 2,
+    SlidingEnabled = false, SlidingMultiplier = 10,
+    JumpPowerEnabled = false, JumpPowerMultiplier = 2,
+    InfDoubleJumpEnabled = false, InfDoubleJumpValue = 676767,
+    AntiAimEnabled = false, AntiAimMode = "Spin", AntiAimSpeed = 5000, AntiAimAngle = 90, AntiAimRandomSpeed = true,
+    WallbangEnabled = false,
+    SinkEnabled = false, SinkDepth = 5.8,
+    UpDownEnabled = false,
+    UpDownMode = "DownToMoreDown",
+    UpDownHeight = 5.0,
+    UpDownSpeed = 1.0,
+    FakePosEnabled = false,
+    FakePosPattern = "Walk", FakePosDistribution = "Random", FakePosAxisLock = "None",
+    FakePosRadius = 500, FakePosHeight = 0, FakePosSpeed = 50, FakePosCount = 5,
+    FakePosReverse = false, FakePosRandomRadius = false, FakePosHideClientPos = false,
+    PredictionEnabled = false, PredictionRadius = 20, PredictionDodgeDist = 30, PredictionCooldown = 0.3, PredictionThreshold = 800, PredictionMult = 1,
+    EvasionEnabled = false, EvasionIntensity = 3.0,
+    TPEnabled = false, TPMode = "Follow", TPDistance = 3, TPHeight = 3.5,
+    VoidEnabled = false, VoidX = 10000, VoidY = 10000, VoidZ = 10000,
+    RiotEnabled = false, RiotSpeed = 0.03, RiotRange = 50, RiotEvadeRange = 30, RiotSpinSpeed = 180,
+    RiotAbuseEnabled = false, RiotAbuseMode = "Stick", RiotAbuseHeight = 3, RiotAbuseForward = 0, RiotAbuseRight = 0, RiotAbuseDown = 0,
+    MainRagebotEnabled = false,
+    RagebotAutoAttack = true,
+    RagebotUnderDepth = 2.5,
+    RagebotHeight = 12,
+    RagebotPosMode = "Under",
+    RagebotVoid = true,
+    RagebotVoidMin = 150,
+    RagebotVoidSpread = 2000,
+    RagebotSpin = true,
+    RagebotSpinSpeed = 18,
+    RagebotWeapon = "Primary",
+    RagebotDistance = 0,
+    RagebotJitterStrength = 4.5,
+    RagebotOnlyOnAttack = false,
+    RagebotWaitGodEnd = false,
+    RagebotPauseOnReload = false,
+    RagebotAntiBait = true,
+    RagebotAvoidMelee = true,
+    RagebotSafeMargin = 100,
+    RagebotSnapReps = 6,
+    RagebotAttackInterval = 0.08,
+    RagebotTargetRange = 500,
+    RagebotClickBackup = true,
+    CameraLockEnabled = false,
+    CameraLockDistance = 8,
+    CameraLockHeight = 4,
+    WallHideEnabled = false,
+    WallHideMode = "Static",
+    WallHideDistance = 30,
+    WallHideOffset = 2.5,
+    WallHideHopInterval = 2,
+    WorldTintEnabled = false, WorldTintColorHex = "9C7CFF",
+    WorldBrightness = 0, WorldContrast = 0, WorldSaturation = 0,
+    AutoHealEnabled = false, AutoAmmoPickupEnabled = false,
+    AutoHealMinMissing = 25, AutoAmmoMinAmmo = 0,
+    AutoRespawnEnabled = false, AutoRespawnInterval = 1, AutoRespawnBurst = 5,
+    FakePosDepth = 5.8, FakePosWalkMode = true, FakePosSurfaceCamera = true,
+    FakePosAutoNoclip = true, FakePosAutoHandoff = true, FakePosVisualizer = true,
+    FakePosPanic = true, FakePosPanicMinX = -5, FakePosPanicMaxX = 5, FakePosPanicZ = true,
+    FakePosHideMeshes = true, FakePosAnimDesync = true, FakePosZeroVelocity = true,
+    FakePosCustomPitch = 0, FakePosCustomYaw = 0, FakePosInvertPitch = true,
+    LuaAutoLoadScripts = {},
+    UIScaleValue = 0.5,
+    SkipStartBtn = false,
+    SilentLoad = false,
+    SavedUIVisible = true,
+    SavedMenuBtnPosition = nil,
+    SavedUIPosition = {},
+    OldSliderStyle = false,
+    CounterEnabled = false,
+    CounterCooldown = 0.2,
+    CounterYDistance = 500,
+    NebuCounterEnabled = false,
+    NebuCounterMode = "UE",
+    NebuCounterHud = true,
+    NebuCounterCooldown = 0.15,
+    NebuCounterYDist = 450,
+    NebuCounterJitter = 3.0,
+    NebuCounterAutoTarget = true,
+    NebuCounterRange = 10000,
+    RagebotPredict = true,
+    RagebotPredictMult = 1.25,
+    RagebotPrioritizeLowHP = true,
+    RagebotMaxTargetsScan = 12,
+    RagebotSilentSnap = true,
+    RagebotVelocityComp = true,
+    NebuFPEnabled = false,
+    NebuFPMode = "Under",
+    NebuFPDepth = 2.8,
+    NebuFPDistance = 0,
+    NebuFPJitter = 2.5,
+    NebuFPSpeed = 12,
+    NebuFPOnlyOnRage = true,
+    NebuFPZeroVel = true,
+    W7TPEnabled = false,
+    W7KickEnabled = false,
+    W7VoidEnabled = false,
+    W7KickPosX = 9000,
+    W7KickPosY = 9000,
+    W7KickPosZ = 9000,
+    W7TPHold = 1.5,
+}
+
+local function colorToHex(c) return string.format("%02X%02X%02X", math.floor(c.R*255+0.5), math.floor(c.G*255+0.5), math.floor(c.B*255+0.5)) end
+local function hexToColor(h, fb) fb = fb or Color3.fromRGB(255,255,255); if type(h)~="string" or #h~=6 then return fb end; return Color3.fromRGB(tonumber(h:sub(1,2),16) or 255, tonumber(h:sub(3,4),16) or 255, tonumber(h:sub(5,6),16) or 255) end
+local function sanitizeConfigForJSON(cfg)
+    local out={};
+    local skip = {
+        CounterEnabled=true, CounterCooldown=true, CounterYDistance=true,
+        NebuCounterEnabled=true, NebuCounterMode=true, NebuCounterHud=true,
+        NebuCounterCooldown=true, NebuCounterYDist=true, NebuCounterJitter=true,
+        NebuCounterAutoTarget=true, NebuCounterRange=true,
+    }
+    for k,v in pairs(cfg) do
+        local vt=type(v);
+        if vt=="string" or vt=="number" or vt=="boolean" or vt=="table" then
+            if not skip[k] then out[k]=v end
+        end
+    end
+    return out
+end
+
+local ROOT_FOLDER = "acid the best femboy"
+local PROFILES_FOLDER = ROOT_FOLDER .. "/profiles"
+local GLOBAL_CFG_FILE = ROOT_FOLDER .. "/global_config.json"
+local ACTIVE_PROFILE_FILE = ROOT_FOLDER .. "/active_profile.txt"
+local LEGACY_CFG_FILE = "acid_pack_config.json"
+
+local function acidEnsureFolders()
+    local function mf(p) if type(isfolder)=="function" and type(makefolder)=="function" and not isfolder(p) then pcall(makefolder,p) end end
+    pcall(mf, ROOT_FOLDER); pcall(mf, PROFILES_FOLDER)
+end
+acidEnsureFolders()
+
+local function acidSafeWrite(p,c) return pcall(writefile,p,c) end
+local function acidSafeRead(p) local ok,d=pcall(readfile,p); return ok and d or nil end
+local function acidSafeDelete(p) pcall(delfile,p) end
+local function acidSafeExists(p) if type(isfile)~="function" then return false end; local ok,e=pcall(isfile,p); return ok and e end
+local function acidJSONEncode(t) ; local fn,err=ls(code); if not fn then notify("Lua","Compile error: "..tostring(err),3); return end; task.spawn(function() local ok,runErr=pcall(fn); if not ok then warn("[Lua] Runtime: "..tostring(runErr)); pcall(function() notify("Lua","Runtime error: "..tostring(runErr),3) end) end end); notify("Lua","Running: "..name,3) end))
+                TC(editAction.MouseButton1Click:Connect(function() if type(data)=="table" and type(data.Code)=="string" then luaNameBox.Text = name; luaCodeBox.Text = data.Code; notify("Lua","Loaded into editor: "..name, 3) end end))
+                TC(autoAction.MouseButton1Click:Connect(function() Config.LuaAutoLoadScripts = Config.LuaAutoLoadScripts or {}; if Config.LuaAutoLoadScripts[name] then Config.LuaAutoLoadScripts[name] = nil; notify("Lua","Autoload OFF: "..name, 2) else Config.LuaAutoLoadScripts[name] = true; notify("Lua","Autoload ON: "..name, 2) end; SaveConfig(); rebuildLuaScriptList() end))
+                TC(delAction.MouseButton1Click:Connect(function() LuaScriptStorage.Scripts[name]=nil; if Config.LuaAutoLoadScripts and Config.LuaAutoLoadScripts[name] then Config.LuaAutoLoadScripts[name]=nil end; LuaScriptStorageSave(); SaveConfig(); rebuildLuaScriptList(); notify("Lua","Deleted: "..name,3) end))
+            end
+            luaScrollList.CanvasSize=UDim2.new(0,0,0,math.max(luaListLayout.AbsoluteContentSize.Y+20,60))
+        end
+        local rowBtn = Instance.new("Frame"); rowBtn.Size=UDim2.new(1,0,0,30); rowBtn.BackgroundTransparency=1; rowBtn.ZIndex=9999; rowBtn.Parent=LuaTab; local rl = Instance.new("UIListLayout"); rl.FillDirection=Enum.FillDirection.Horizontal; rl.Padding=UDim.new(0,6); rl.Parent=rowBtn
+        local newLuaBtn = Instance.new("TextButton"); newLuaBtn.Size=UDim2.new(0.5,-3,1,0); newLuaBtn.BackgroundColor3=Color3.fromRGB(35,65,40); newLuaBtn.BorderColor3=Color3.fromRGB(90,160,90); newLuaBtn.BorderSizePixel=1; newLuaBtn.Font=Enum.Font.Code; newLuaBtn.Text="💾 SAVE"; newLuaBtn.TextColor3=Color3.fromRGB(150,255,150); newLuaBtn.TextSize=12; newLuaBtn.ZIndex=9999; newLuaBtn.Active=true; newLuaBtn.Modal=false; newLuaBtn.Parent=rowBtn; local nlC = Instance.new("UICorner"); nlC.CornerRadius=UDim.new(0,4); nlC.Parent=newLuaBtn
+        local overLuaBtn = Instance.new("TextButton"); overLuaBtn.Size=UDim2.new(0.5,-3,1,0); overLuaBtn.BackgroundColor3=Color3.fromRGB(70,40,100); overLuaBtn.BorderColor3=Color3.fromRGB(140,90,180); overLuaBtn.BorderSizePixel=1; overLuaBtn.Font=Enum.Font.Code; overLuaBtn.Text="✏️ OVERWRITE"; overLuaBtn.TextColor3=Color3.fromRGB(220,160,255); overLuaBtn.TextSize=12; overLuaBtn.ZIndex=9999; overLuaBtn.Active=true; overLuaBtn.Modal=false; overLuaBtn.Parent=rowBtn; local olC = Instance.new("UICorner"); olC.CornerRadius=UDim.new(0,4); olC.Parent=overLuaBtn
+        TC(newLuaBtn.MouseButton1Click:Connect(function() local name = luaNameBox.Text; local code = luaCodeBox.Text; if name=="" then notify("Lua","Enter a script name.",3); return end; if code=="" then notify("Lua","Enter script code.",3); return end; if LuaScriptStorage.Scripts[name] ~= nil then notify("Lua","Name exists — use OVERWRITE.",3); return end; LuaScriptStorage.Scripts[name]={Code=code}; LuaScriptStorageSave(); notify("Lua","Saved: "..name,3); luaNameBox.Text=""; luaCodeBox.Text=""; rebuildLuaScriptList() end))
+        TC(overLuaBtn.MouseButton1Click:Connect(function() local name = luaNameBox.Text; local code = luaCodeBox.Text; if name=="" then notify("Lua","Enter a script name.",3); return end; if code=="" then notify("Lua","Enter script code.",3); return end; if LuaScriptStorage.Scripts[name] == nil then notify("Lua","Nothing to overwrite — use SAVE.",3); return end; LuaScriptStorage.Scripts[name]={Code=code}; LuaScriptStorageSave(); notify("Lua","Overwritten: "..name,3); luaNameBox.Text=""; luaCodeBox.Text=""; rebuildLuaScriptList() end))
+        rebuildLuaScriptList()
+    end
+    do mkSection(SettingsTab,"Profile Manager"); local profNameBox=Instance.new("TextBox"); profNameBox.Size=UDim2.new(1,0,0,28); profNameBox.BackgroundColor3=Color3.fromRGB(22,22,30); profNameBox.BorderColor3=Color3.fromRGB(90,70,180); profNameBox.BorderSizePixel=1; profNameBox.Font=Enum.Font.Code; profNameBox.TextSize=11; profNameBox.TextColor3=Color3.fromRGB(230,220,255); profNameBox.PlaceholderText="Profile name"; profNameBox.PlaceholderColor3=Color3.fromRGB(150,140,180); profNameBox.Text=acidGetActive() or ""; profNameBox.ClearTextOnFocus=false; profNameBox.TextXAlignment=Enum.TextXAlignment.Left; profNameBox.ZIndex=9999; profNameBox.Active=true; profNameBox.Parent=SettingsTab
+        local profRow=Instance.new("Frame"); profRow.Size=UDim2.new(1,0,0,30); profRow.BackgroundTransparency=1; profRow.ZIndex=9999; profRow.Parent=SettingsTab; local prl=Instance.new("UIListLayout"); prl.FillDirection=Enum.FillDirection.Horizontal; prl.Padding=UDim.new(0,6); prl.Parent=profRow
+        local profSave=mkButton(profRow,"💾 SAVE",Color3.fromRGB(35,65,40),Color3.fromRGB(90,160,90),Color3.fromRGB(150,255,150)); profSave.Size=UDim2.new(0.5,-3,1,0)
+        local profOver=mkButton(profRow,"✏️ OVERWRITE",Color3.fromRGB(70,40,100),Color3.fromRGB(140,90,180),Color3.fromRGB(220,160,255)); profOver.Size=UDim2.new(0.5,-3,1,0)
+        TC(profSave.MouseButton1Click:Connect(function() local n=profNameBox.Text; if n=="" then notify("Profile","Enter a name.",3); return end; if acidProfileExists(n) then notify("Profile","Exists — use OVERWRITE.",3); return end; local ok,msg=acidSaveProfile(n); notify("Profile",msg,3); RebuildConfigInventory() end))
+        TC(profOver.MouseButton1Click:Connect(function() local n=profNameBox.Text; if n=="" then notify("Profile","Enter a name.",3); return end; if not acidProfileExists(n) then notify("Profile","Not found — use SAVE.",3); return end; local ok,msg=acidSaveProfile(n); notify("Profile",msg,3); RebuildConfigInventory() end))
+        local profScroll=Instance.new("ScrollingFrame"); profScroll.Size=UDim2.new(1,0,0,150); profScroll.BackgroundColor3=Color3.fromRGB(25,25,35); profScroll.BorderColor3=Color3.fromRGB(90,70,180); profScroll.BorderSizePixel=1; profScroll.ScrollBarThickness=6; profScroll.CanvasSize=UDim2.new(0,0,0,0); profScroll.ZIndex=9999; profScroll.Active=true; profScroll.ClipsDescendants=true; profScroll.Parent=SettingsTab; local profList=Instance.new("UIListLayout"); profList.SortOrder=Enum.SortOrder.Name; profList.Padding=UDim.new(0,4); profList.Parent=profScroll
+        RebuildConfigInventory=function()
+            for _,c in ipairs(profScroll:GetChildren()) do if c:IsA("Frame") then c:Destroy() end end
+            local names=acidListProfiles(); local active=acidGetActive()
+            for _,name in ipairs(names) do
+                local ef=Instance.new("Frame"); ef.Name=name; ef.Size=UDim2.new(1,-8,0,28); ef.BackgroundTransparency=1; ef.ZIndex=9999; ef.Parent=profScroll
+                local loadBtn=Instance.new("TextButton"); loadBtn.Size=UDim2.new(0.4,-2,1,0); loadBtn.BackgroundColor3=(active==name) and Color3.fromRGB(40,80,40) or Color3.fromRGB(45,45,45); loadBtn.TextColor3=(active==name) and Color3.fromRGB(120,255,120) or Color3.fromRGB(255,255,255); loadBtn.Text=name; loadBtn.Font=Enum.Font.Gotham; loadBtn.TextSize=11; loadBtn.ZIndex=9999; loadBtn.Parent=ef; local lc=Instance.new("UICorner"); lc.CornerRadius=UDim.new(0,4); lc.Parent=loadBtn
+                local editBtn=Instance.new("TextButton"); editBtn.Size=UDim2.new(0.2,0,1,0); editBtn.Position=UDim2.new(0.4,0,0,0); editBtn.BackgroundColor3=Color3.fromRGB(45,55,75); editBtn.TextColor3=Color3.fromRGB(180,210,255); editBtn.Text="✏"; editBtn.Font=Enum.Font.GothamBold; editBtn.TextSize=13; editBtn.ZIndex=9999; editBtn.Parent=ef; local ec=Instance.new("UICorner"); ec.CornerRadius=UDim.new(0,4); ec.Parent=editBtn
+                local isAuto=(active==name)
+                local autoBtn=Instance.new("TextButton"); autoBtn.Size=UDim2.new(0.2,0,1,0); autoBtn.Position=UDim2.new(0.6,0,0,0); autoBtn.BackgroundColor3=isAuto and Color3.fromRGB(40,80,40) or Color3.fromRGB(45,45,45); autoBtn.TextColor3=isAuto and Color3.fromRGB(120,255,120) or Color3.fromRGB(200,200,210); autoBtn.Text=isAuto and "A●" or "A"; autoBtn.Font=Enum.Font.GothamBold; autoBtn.TextSize=11; autoBtn.ZIndex=9999; autoBtn.Parent=ef; local ac=Instance.new("UICorner"); ac.CornerRadius=UDim.new(0,4); ac.Parent=autoBtn
+                local delBtn=Instance.new("TextButton"); delBtn.Size=UDim2.new(0.2,0,1,0); delBtn.Position=UDim2.new(0.8,0,0,0); delBtn.BackgroundColor3=Color3.fromRGB(70,40,40); delBtn.TextColor3=Color3.fromRGB(255,130,130); delBtn.Text="X"; delBtn.Font=Enum.Font.GothamBold; delBtn.TextSize=11; delBtn.ZIndex=9999; delBtn.Parent=ef; local dc=Instance.new("UICorner"); dc.CornerRadius=UDim.new(0,4); dc.Parent=delBtn
+                TC(editBtn.MouseButton1Click:Connect(function() profNameBox.Text=name; notify("Profile","Editing: "..name,2) end))
+                TC(autoBtn.MouseButton1Click:Connect(function() if acidGetActive()==name then acidSetActive(nil); notify("Profile","Autoload cleared.",2) else acidSetActive(name); notify("Profile","Autoload: "..name,2) end; RebuildConfigInventory() end))
+                local loadPending,loadTok=false,0
+                TC(loadBtn.MouseButton1Click:Connect(function() if loadPending then loadPending=false; loadTok=loadTok+1; loadBtn.Text=name; loadBtn.BackgroundColor3=(acidGetActive()==name) and Color3.fromRGB(40,80,40) or Color3.fromRGB(45,45,45); local ok,msg=acidLoadProfile(name); if ok then pcall(reapplyRuntimeState); refreshAllUI(); notify("Profile",msg,3) else notify("Profile",msg,3) end else loadPending=true; loadTok=loadTok+1; local my=loadTok; loadBtn.Text="CONFIRM?"; loadBtn.BackgroundColor3=PURPLE_CONFIRM; task.delay(0.5,function() if loadPending and loadTok==my then loadPending=false; loadBtn.Text=name; loadBtn.BackgroundColor3=(acidGetActive()==name) and Color3.fromRGB(40,80,40) or Color3.fromRGB(45,45,45) end end) end end))
+                local delPending,delTok=false,0
+                TC(delBtn.MouseButton1Click:Connect(function() if delPending then delPending=false; delTok=delTok+1; delBtn.Text="X"; delBtn.BackgroundColor3=Color3.fromRGB(70,40,40); acidDeleteProfile(name); notify("Profile","Deleted: "..name,3); RebuildConfigInventory() else delPending=true; delTok=delTok+1; local my=delTok; delBtn.Text="?"; delBtn.BackgroundColor3=PURPLE_CONFIRM; task.delay(0.5,function() if delPending and delTok==my then delPending=false; delBtn.Text="X"; delBtn.BackgroundColor3=Color3.fromRGB(70,40,40) end end) end end))
+            end
+            profScroll.CanvasSize=UDim2.new(0,0,0,math.max(profList.AbsoluteContentSize.Y+20,60))
+        end
+        RebuildConfigInventory()
+        mkSection(SettingsTab,"Overlay"); mkToggle(SettingsTab,"Enable Overlay",function() return Config.OverlayEnabled end,function(v) Config.OverlayEnabled=v; buildOverlay() end); mkSlider(SettingsTab,"Overlay Transparency",0,1,Config.OverlayTransparency,0.05,function(v) Config.OverlayTransparency=v; if Overlay then Overlay.BackgroundTransparency=v end end)
+        local UnloadBtn=Instance.new("TextButton"); UnloadBtn.Size=UDim2.new(1,0,0,34); UnloadBtn.BackgroundColor3=Color3.fromRGB(60,25,25); UnloadBtn.BorderColor3=Color3.fromRGB(120,50,50); UnloadBtn.BorderSizePixel=1; UnloadBtn.Font=Enum.Font.Code; UnloadBtn.Text="UNLOAD ALL"; UnloadBtn.TextColor3=Color3.fromRGB(255,120,120); UnloadBtn.TextSize=13; UnloadBtn.ZIndex=9999; UnloadBtn.Active=true; UnloadBtn.Modal=false; UnloadBtn.Parent=SettingsTab
+    end
+    local function AcidIsTargetGame() return game.GameId==6035872082 end
+    local function AcidGetTouchPart() local char=LocalPlayer.Character; if not char then return nil end; local hum=char:FindFirstChildOfClass("Humanoid"); if not hum or hum.Health<=0 then return nil end; return char:FindFirstChild("HitboxBody") or char:FindFirstChild("HumanoidRootPart") or char:FindFirstChildWhichIsA("BasePart") end
+    local function AcidKindOf(drop) if not drop or not drop:IsA("BasePart") or drop.Name~="_drop" then return nil end; if drop:FindFirstChild("Health") then return "Health" end; if drop:FindFirstChild("AmmoBalanced") or drop:FindFirstChild("Ammo") then return "Ammo" end; return nil end
+    local function AcidClearKinds(drop) if not drop then return end AcidPickup.DropsByKind.Health[drop]=nil; AcidPickup.DropsByKind.Ammo[drop]=nil end
+    local function AcidDisconnectObserver(drop) local obs=AcidPickup.Observers[drop]; if not obs then return end; pcall(function() if obs.added then obs.added:Disconnect() end end); pcall(function() if obs.removed then obs.removed:Disconnect() end end); AcidPickup.Observers[drop]=nil end
+    local function AcidRefreshDrop(drop) AcidClearKinds(drop); if not drop or drop.Parent~=Workspace then return end; if not drop:IsA("BasePart") or drop.Name~="_drop" then return end; local kind=AcidKindOf(drop); local hasTouch=drop:FindFirstChildOfClass("TouchTransmitter")~=nil; if kind and hasTouch then AcidPickup.DropsByKind[kind][drop]=true end end
+    local function AcidObserveDrop(drop) if not drop or not drop:IsA("BasePart") or drop.Name~="_drop" then return end; if AcidPickup.Observers[drop] then AcidRefreshDrop(drop); return end; local obs={}; AcidPickup.Observers[drop]=obs; obs.added=drop.ChildAdded:Connect(function() AcidRefreshDrop(drop) end); obs.removed=drop.ChildRemoved:Connect(function() AcidRefreshDrop(drop) end); AcidRefreshDrop(drop) end
+    local function AcidUnobserveDrop(drop) AcidClearKinds(drop); AcidDisconnectObserver(drop) end
+    local function AcidNearestDrop(kind,touchPart) if not touchPart or not touchPart.Parent then return nil end; local candidates=AcidPickup.DropsByKind[kind]; if not candidates then return nil end; local best,bestDist=nil,nil; for drop in pairs(candidates) do if drop.Parent~=Workspace then AcidClearKinds(drop); AcidDisconnectObserver(drop) else local stillKind=AcidKindOf(drop); local hasTouch=drop:FindFirstChildOfClass("TouchTransmitter")~=nil; if stillKind==kind and drop.CanTouch==true and hasTouch then local d=(drop.Position-touchPart.Position).Magnitude; if not bestDist or d<bestDist then best,bestDist=drop,d end end end end return best end
+    local function AcidTouchDrop(drop,touchPart) if not drop or not drop.Parent or not touchPart or not touchPart.Parent then return false end; if type(firetouchinterest)~="function" then return false end; firetouchinterest(touchPart,drop,0); task.defer(function() if drop.Parent and touchPart.Parent then pcall(firetouchinterest,touchPart,drop,1) end end); return true end
+    local function AcidCancelRetry() AcidPickup.RetryActive=false; AcidPickup.RetryNonce=AcidPickup.RetryNonce+1 end
+    local function AcidSyncRetry(shouldRetry) if not shouldRetry then AcidCancelRetry(); return end; if AcidPickup.RetryActive then return end; AcidPickup.RetryActive=true; AcidPickup.RetryNonce=AcidPickup.RetryNonce+1; local nonce=AcidPickup.RetryNonce; task.spawn(function() while AcidPickup.RetryActive and AcidPickup.RetryNonce==nonce do task.wait(AcidPickup.RetryDelay); if AcidPickup.RetryNonce~=nonce or not AcidPickup.RetryActive then return end; if not AcidUpdatePickup() then AcidPickup.RetryActive=false; return end end end) end
+    function AcidUpdatePickup() if not AcidIsTargetGame() then AcidCancelRetry(); return false end; if type(firetouchinterest)~="function" then AcidCancelRetry(); return false end; local char=LocalPlayer.Character; local hum=char and char:FindFirstChildOfClass("Humanoid"); if not hum or hum.Health<=0 then AcidCancelRetry(); return false end; local touchPart=AcidGetTouchPart(); if not touchPart then AcidCancelRetry(); return false end; local touched,shouldRetry=false,false; local missing=math.max(hum.MaxHealth-hum.Health,0); if Config.AutoHealEnabled and missing>=(Config.AutoHealMinMissing or 25) then shouldRetry=true; local drop=AcidNearestDrop("Health",touchPart); if drop then touched=AcidTouchDrop(drop,touchPart) end end; if not touched and Config.AutoAmmoPickupEnabled then local ammo=nil; pcall(function() local ps=LocalPlayer:FindFirstChild("PlayerScripts"); local ctrl=ps and ps:FindFirstChild("Controllers"); local fc=ctrl and ctrl:FindFirstChild("FighterController"); if not fc then return end; local mod=require(fc); local fighter=mod and mod.LocalFighter; local item=fighter and fighter.EquippedItem; if item and type(item.Get)=="function" then ammo=item:Get("Ammo") end end); if type(ammo)=="number" and ammo<=(Config.AutoAmmoMinAmmo or 0) then shouldRetry=true; local drop=AcidNearestDrop("Ammo",touchPart); if drop then touched=AcidTouchDrop(drop,touchPart) end end end; AcidSyncRetry(shouldRetry); return shouldRetry end
+    TC(Workspace.ChildAdded:Connect(function(child) if child:IsA("BasePart") and child.Name=="_drop" then AcidObserveDrop(child) end end))
+    TC(Workspace.ChildRemoved:Connect(function(child) if child:IsA("BasePart") and child.Name=="_drop" then AcidUnobserveDrop(child) end end))
+    for _,child in ipairs(Workspace:GetChildren()) do if child:IsA("BasePart") and child.Name=="_drop" then AcidObserveDrop(child) end end
+    local function AcidResolveRespawnRemote() local remotes=ReplicatedStorage:FindFirstChild("Remotes"); local duels=remotes and remotes:FindFirstChild("Duels"); local r=duels and duels:FindFirstChild("RespawnNow"); if r and r:IsA("RemoteEvent") then return r end; return nil end
+    local function AcidTryRespawn() if not Config.AutoRespawnEnabled then return end; if not AcidIsTargetGame() then return end; local char=LocalPlayer.Character; local hum=char and char:FindFirstChildOfClass("Humanoid"); if hum and hum.Health>0 then return end; local now=os.clock(); if now-AcidRespawn.LastFiredAt<(Config.AutoRespawnInterval or 1) then return end; local remote=AcidResolveRespawnRemote(); if not remote then return end; AcidRespawn.LastFiredAt=now; local count=math.max(1,math.floor(Config.AutoRespawnBurst or 5)); task.spawn(function() for i=1,count do pcall(function() remote:FireServer() end); if i<count then task.wait(AcidRespawn.BurstDelay) end end end) end
+    local _hbFrame=0
+    TC(RunService.Heartbeat:Connect(function(dt)
+        if isUnloaded then return end; _hbFrame=_hbFrame+1; if _hbFrame%3==0 then pcall(UpdateMovement,dt*3) end
+        pcall(UpdatePrediction, dt)
+        pcall(UpdateTP, dt)
+        pcall(UpdateAntiAim, dt)
+        pcall(UpdateRiot, dt)
+        pcall(UpdateRiotAbuse, dt)
+        pcall(UpdateOrbit, dt)
+        pcall(NebuCamTick)
+        pcall(UpdateW7, dt)
+        pcall(UpdateNebuFP, dt)
+        pcall(UpdateCounter, dt)
+        if FakePosState.Enabled then pcall(UpdateFakePos,dt) else pcall(UpdateSink,dt) end
+        pcall(UpdateEvasion, dt)
+        pcall(UpdateVoid, dt)
+        if _hbFrame%2==0 then pcall(AcidUpdatePickup); pcall(AcidTryRespawn) end
+    end))
+    task.spawn(function() while not isUnloaded do task.wait(2); if Config.InfDoubleJumpEnabled then local fighter=nil; pcall(function() local ps=LocalPlayer:FindFirstChild("PlayerScripts"); local ctrl=ps and ps:FindFirstChild("Controllers"); local fc=ctrl and ctrl:FindFirstChild("FighterController"); if fc then local mod=require(fc); fighter=mod and mod.LocalFighter end end); if fighter and type(rawget(fighter,"Items"))=="table" then InfJumpApplyAll() end end end end)
+    local function Unload()
+        if isUnloaded then return end; isUnloaded=true
+        pcall(function() RunService:UnbindFromRenderStep("AcidWallbang") end)
+        local snapshot=Connections; for i=#snapshot,1,-1 do local c=snapshot[i]; if c and type(c.Disconnect)=="function" then pcall(function() c:Disconnect() end) end; snapshot[i]=nil end
+        pcall(function() if table.clear then table.clear(Connections) end end)
+        pcall(clearAura); pcall(clearWings); pcall(destroyWT); pcall(SinkDeactivate,true); pcall(function() FakePosState.SetEnabled(false) end); pcall(FlyStop); pcall(NoclipStop); FlyState.Enabled=false; NoclipState.Enabled=false
+        pcall(function() RB2.Stop(); RB2State.Enabled=false end); pcall(NebuCamEnd)
+        WallHideState.CurrentWall=nil; WallHideState.LastHop=0; WallHideState.WarnedNoWall=false; WallHideState.WasActive=false
+        pcall(function() if Overlay and Overlay.Parent then Overlay:Destroy() end; Overlay=nil; OverlayGradient=nil end)
+        for p in pairs(Boxes or {}) do pcall(removeESP,p) end; pcall(function() if table.clear then table.clear(Boxes) end end)
+        if MovementState.WalkSpeedHookLoaded and MovementState.WalkSpeedHookGetter and MovementState.WalkSpeedHookUpvalueIndex and MovementState.WalkSpeedHookOldUpvalue then pcall(debug.setupvalue,MovementState.WalkSpeedHookGetter,MovementState.WalkSpeedHookUpvalueIndex,MovementState.WalkSpeedHookOldUpvalue) end
+        MovementState.WalkSpeedHookLoaded=false; MovementState.JumpPowerHookDestroyed=true
+        if Config.InfDoubleJumpEnabled then Config.InfDoubleJumpEnabled=false; for item,original in pairs(InfDoubleJump.OriginalItemInfo or {}) do local info=original and original.Info or nil; if type(info)=="table" then if original.HasMaxDoubleJumps then pcall(function() rawset(info,"MaxDoubleJumps",original.MaxDoubleJumps) end) else pcall(function() rawset(info,"MaxDoubleJumps",nil) end) end end end; InfDoubleJump.OriginalItemInfo=setmetatable({},{__mode="k"}) end
+        pcall(function() if ScreenGui and ScreenGui.Parent then ScreenGui:Destroy() end end); pcall(function() if collectgarbage then collectgarbage("collect") end end)
+    end
+    for _,child in ipairs(SettingsTab:GetChildren()) do if child:IsA("TextButton") and child.Text=="UNLOAD ALL" then TC(child.MouseButton1Click:Connect(function() pcall(Unload) end)) end end
+    task.defer(function()
+        if isUnloaded then return end; local autoName = acidGetActive()
+        if type(autoName)=="string" and autoName~="" and acidProfileExists(autoName) then local ok = acidLoadProfile(autoName); if ok then pcall(reapplyRuntimeState); refreshAllUI(); notify("Profile","Auto-loaded: "..autoName,3) end end
+        if isUnloaded then return end; task.wait(0.4); if isUnloaded then return end; runAllLuaAutoloads("start")
+    end)
+end
+
+local startPressed=false
+local function onStart()
+    if startPressed then return end
+    startPressed=true
+    if StartBtn then StartBtn:Destroy() end
+    BuildAll()
+end
+
+if Config.SilentLoad then
+    if StartBtn then StartBtn:Destroy() end
+    task.defer(function() onStart() end)
+elseif Config.SkipStartBtn then
+    if StartBtn then StartBtn.Visible = false end
+    task.defer(function() onStart() end)
+else
+    StartBtn.MouseButton1Down:Connect(onStart)
+    StartBtn.TouchTap:Connect(onStart)
+    StartBtn.MouseButton1Click:Connect(onStart)
+end
+]==]
+
+local function getLoadstring()
+    if type(loadstring)=="function" then return loadstring end
+    if type(load)=="function" then return load end
+    local env=getgenv and getgenv() or _G
+    if env and type(env.loadstring)=="function" then return env.loadstring end
+    if env and type(env.load)=="function" then return env.load end
+    return nil
+end
+
+local ls=getLoadstring()
+if not ls then warn("[Loader] No loadstring/load found in this executor.")
+else
+    local fn,compileErr=ls(RAW_LUA_CODE)
+    if not fn then warn("[Loader] Compile error: "..tostring(compileErr))
+    else
+        local ok,runErr=pcall(fn)
+        if not ok then warn("[Loader] Runtime error: "..tostring(runErr))
+        else print("[Loader] Executed.") end
+    end
+end
