@@ -1,0 +1,1257 @@
+
+
+local t1 = {}
+
+repeat
+	task.wait()
+	t1.value1 = game:IsLoaded()
+until t1.value1
+
+t1.value1 = game:GetService("Players")
+
+local t2 = {
+	value1 = game:GetService("RunService")
+}
+
+game:GetService("UserInputService")
+game:GetService("TweenService")
+t2.value2 = game:GetService("HttpService")
+t2.value3 = game:GetService("Stats")
+game:GetService("ReplicatedStorage")
+t2.value4 = t1.value1.LocalPlayer
+t2.value5 = t2.value4:WaitForChild("PlayerGui")
+t2.value6 = {
+	AutoStealEnabled = true,
+	StealRadius = 60,
+	StealDuration = 1.4,
+	Data = {}
+}
+t2.value7 = false
+t2.value8 = 9
+t2.value9 = {
+	autoSteal = nil,
+	statusUpdater = nil,
+	topBar = nil
+}
+t2.value10 = nil
+t2.value11 = nil
+t2.value12 = nil
+t2.value13 = nil
+t2.value14 = nil
+t2.value15 = nil
+t2.value16 = nil
+t2.value17 = {
+	Panel = Color3.fromRGB(18, 18, 20),
+	PanelStroke = Color3.fromRGB(0, 170, 0),
+	Green = Color3.fromRGB(0, 170, 0),
+	White = Color3.fromRGB(255, 255, 255),
+	BtnDark = Color3.fromRGB(32, 32, 36),
+	BarBg = Color3.fromRGB(15, 15, 15),
+	GreyText = Color3.fromRGB(190, 190, 195),
+	Orange = Color3.fromRGB(235, 160, 60),
+	OffGrey = Color3.fromRGB(60, 60, 66)
+}
+t2.value18 = {
+	Radius = 60,
+	Mode = 75,
+	IsLocked = true,
+	Position = nil,
+	AutoStealEnabled = true,
+	RagdollStealEnabled = false,
+	MedusaStealEnabled = false
+}
+
+function t2.value19()
+	local value15 = t2.value15
+
+	if not value15 then
+		v4 = value15 or nil
+		v5 = {
+			radius = t2.value18.Radius,
+			mode = t2.value18.Mode,
+			isLocked = t2.value18.IsLocked,
+			position = v4 and {
+				X = v4.X.Scale,
+				XOffset = v4.X.Offset,
+				Y = v4.Y.Scale,
+				YOffset = v4.Y.Offset
+			} or v4 or nil,
+			autoStealEnabled = t2.value18.AutoStealEnabled,
+			ragdollStealEnabled = t2.value18.RagdollStealEnabled,
+			medusaStealEnabled = t2.value18.MedusaStealEnabled
+		}
+		v6 = t2.value2:JSONEncode(v5)
+
+		if writefile then
+			writefile("VenoScarletSettings.json", v6)
+		else
+			_G.VenoScarletSettings = v5
+		end
+
+		return
+	end
+
+	value15 = t2.value15.Position
+
+	local v7 = value15 or nil
+	local venoScarletSettings = {
+		radius = t2.value18.Radius,
+		mode = t2.value18.Mode,
+		isLocked = t2.value18.IsLocked,
+		position = v7 and {
+			X = v7.X.Scale,
+			XOffset = v7.X.Offset,
+			Y = v7.Y.Scale,
+			YOffset = v7.Y.Offset
+		} or v7 or nil,
+		autoStealEnabled = t2.value18.AutoStealEnabled,
+		ragdollStealEnabled = t2.value18.RagdollStealEnabled,
+		medusaStealEnabled = t2.value18.MedusaStealEnabled
+	}
+	local json = t2.value2:JSONEncode(venoScarletSettings)
+
+	if writefile then
+		writefile("VenoScarletSettings.json", json)
+	else
+		_G.VenoScarletSettings = venoScarletSettings
+	end
+end
+
+(function()
+	local data = nil
+	local readfile_ = readfile
+	local json, v10
+
+	if not readfile_ then
+		if readfile_ then
+			json = readfile("VenoScarletSettings.json")
+
+			if json then
+				v10 = json ~= ""
+			else
+				v10 = json
+			end
+
+			if not v10 then
+				if data then
+					t2.value18.Radius = data.radius or 60
+					t2.value18.Mode = data.mode or 75
+					t2.value18.IsLocked = data.isLocked ~= false
+					t2.value18.Position = data.position
+					t2.value18.AutoStealEnabled = data.autoStealEnabled ~= false
+					t2.value18.RagdollStealEnabled = data.ragdollStealEnabled or false
+					t2.value18.MedusaStealEnabled = data.medusaStealEnabled or false
+				else
+					t2.value18.Radius = 60
+					t2.value18.Mode = 75
+					t2.value18.IsLocked = true
+					t2.value18.Position = nil
+					t2.value18.AutoStealEnabled = true
+					t2.value18.RagdollStealEnabled = false
+					t2.value18.MedusaStealEnabled = false
+				end
+
+				return
+			end
+
+			data = t2.value2:JSONDecode(json)
+		else
+			if not _G.VenoScarletSettings then
+				if data then
+					t2.value18.Radius = data.radius or 60
+					t2.value18.Mode = data.mode or 75
+					t2.value18.IsLocked = data.isLocked ~= false
+					t2.value18.Position = data.position
+					t2.value18.AutoStealEnabled = data.autoStealEnabled ~= false
+					t2.value18.RagdollStealEnabled = data.ragdollStealEnabled or false
+					t2.value18.MedusaStealEnabled = data.medusaStealEnabled or false
+				else
+					t2.value18.Radius = 60
+					t2.value18.Mode = 75
+					t2.value18.IsLocked = true
+					t2.value18.Position = nil
+					t2.value18.AutoStealEnabled = true
+					t2.value18.RagdollStealEnabled = false
+					t2.value18.MedusaStealEnabled = false
+				end
+
+				return
+			end
+
+			data = _G.VenoScarletSettings
+		end
+
+		if data then
+			t2.value18.Radius = data.radius or 60
+			t2.value18.Mode = data.mode or 75
+			t2.value18.IsLocked = data.isLocked ~= false
+			t2.value18.Position = data.position
+			t2.value18.AutoStealEnabled = data.autoStealEnabled ~= false
+			t2.value18.RagdollStealEnabled = data.ragdollStealEnabled or false
+			t2.value18.MedusaStealEnabled = data.medusaStealEnabled or false
+		else
+			t2.value18.Radius = 60
+			t2.value18.Mode = 75
+			t2.value18.IsLocked = true
+			t2.value18.Position = nil
+			t2.value18.AutoStealEnabled = true
+			t2.value18.RagdollStealEnabled = false
+			t2.value18.MedusaStealEnabled = false
+		end
+
+		return
+	end
+
+	readfile_ = isfile
+
+	if not readfile_ then
+		if readfile_ then
+			json = readfile("VenoScarletSettings.json")
+
+			if json then
+				v10 = json ~= ""
+			else
+				v10 = json
+			end
+
+			if not v10 then
+				if data then
+					t2.value18.Radius = data.radius or 60
+					t2.value18.Mode = data.mode or 75
+					t2.value18.IsLocked = data.isLocked ~= false
+					t2.value18.Position = data.position
+					t2.value18.AutoStealEnabled = data.autoStealEnabled ~= false
+					t2.value18.RagdollStealEnabled = data.ragdollStealEnabled or false
+					t2.value18.MedusaStealEnabled = data.medusaStealEnabled or false
+				else
+					t2.value18.Radius = 60
+					t2.value18.Mode = 75
+					t2.value18.IsLocked = true
+					t2.value18.Position = nil
+					t2.value18.AutoStealEnabled = true
+					t2.value18.RagdollStealEnabled = false
+					t2.value18.MedusaStealEnabled = false
+				end
+
+				return
+			end
+
+			data = t2.value2:JSONDecode(json)
+		else
+			if not _G.VenoScarletSettings then
+				if data then
+					t2.value18.Radius = data.radius or 60
+					t2.value18.Mode = data.mode or 75
+					t2.value18.IsLocked = data.isLocked ~= false
+					t2.value18.Position = data.position
+					t2.value18.AutoStealEnabled = data.autoStealEnabled ~= false
+					t2.value18.RagdollStealEnabled = data.ragdollStealEnabled or false
+					t2.value18.MedusaStealEnabled = data.medusaStealEnabled or false
+				else
+					t2.value18.Radius = 60
+					t2.value18.Mode = 75
+					t2.value18.IsLocked = true
+					t2.value18.Position = nil
+					t2.value18.AutoStealEnabled = true
+					t2.value18.RagdollStealEnabled = false
+					t2.value18.MedusaStealEnabled = false
+				end
+
+				return
+			end
+
+			data = _G.VenoScarletSettings
+		end
+
+		if data then
+			t2.value18.Radius = data.radius or 60
+			t2.value18.Mode = data.mode or 75
+			t2.value18.IsLocked = data.isLocked ~= false
+			t2.value18.Position = data.position
+			t2.value18.AutoStealEnabled = data.autoStealEnabled ~= false
+			t2.value18.RagdollStealEnabled = data.ragdollStealEnabled or false
+			t2.value18.MedusaStealEnabled = data.medusaStealEnabled or false
+		else
+			t2.value18.Radius = 60
+			t2.value18.Mode = 75
+			t2.value18.IsLocked = true
+			t2.value18.Position = nil
+			t2.value18.AutoStealEnabled = true
+			t2.value18.RagdollStealEnabled = false
+			t2.value18.MedusaStealEnabled = false
+		end
+
+		return
+	end
+
+	readfile_ = isfile("VenoScarletSettings.json")
+
+	if readfile_ then
+		json = readfile("VenoScarletSettings.json")
+
+		if json then
+			v10 = json ~= ""
+		else
+			v10 = json
+		end
+
+		if not v10 then
+			if data then
+				t2.value18.Radius = data.radius or 60
+				t2.value18.Mode = data.mode or 75
+				t2.value18.IsLocked = data.isLocked ~= false
+				t2.value18.Position = data.position
+				t2.value18.AutoStealEnabled = data.autoStealEnabled ~= false
+				t2.value18.RagdollStealEnabled = data.ragdollStealEnabled or false
+				t2.value18.MedusaStealEnabled = data.medusaStealEnabled or false
+			else
+				t2.value18.Radius = 60
+				t2.value18.Mode = 75
+				t2.value18.IsLocked = true
+				t2.value18.Position = nil
+				t2.value18.AutoStealEnabled = true
+				t2.value18.RagdollStealEnabled = false
+				t2.value18.MedusaStealEnabled = false
+			end
+
+			return
+		end
+
+		data = t2.value2:JSONDecode(json)
+	else
+		if not _G.VenoScarletSettings then
+			if data then
+				t2.value18.Radius = data.radius or 60
+				t2.value18.Mode = data.mode or 75
+				t2.value18.IsLocked = data.isLocked ~= false
+				t2.value18.Position = data.position
+				t2.value18.AutoStealEnabled = data.autoStealEnabled ~= false
+				t2.value18.RagdollStealEnabled = data.ragdollStealEnabled or false
+				t2.value18.MedusaStealEnabled = data.medusaStealEnabled or false
+			else
+				t2.value18.Radius = 60
+				t2.value18.Mode = 75
+				t2.value18.IsLocked = true
+				t2.value18.Position = nil
+				t2.value18.AutoStealEnabled = true
+				t2.value18.RagdollStealEnabled = false
+				t2.value18.MedusaStealEnabled = false
+			end
+
+			return
+		end
+
+		data = _G.VenoScarletSettings
+	end
+
+	if data then
+		t2.value18.Radius = data.radius or 60
+		t2.value18.Mode = data.mode or 75
+		t2.value18.IsLocked = data.isLocked ~= false
+		t2.value18.Position = data.position
+		t2.value18.AutoStealEnabled = data.autoStealEnabled ~= false
+		t2.value18.RagdollStealEnabled = data.ragdollStealEnabled or false
+		t2.value18.MedusaStealEnabled = data.medusaStealEnabled or false
+	else
+		t2.value18.Radius = 60
+		t2.value18.Mode = 75
+		t2.value18.IsLocked = true
+		t2.value18.Position = nil
+		t2.value18.AutoStealEnabled = true
+		t2.value18.RagdollStealEnabled = false
+		t2.value18.MedusaStealEnabled = false
+	end
+end)()
+t2.value6.StealRadius = t2.value18.Radius
+t2.value6.AutoStealEnabled = t2.value18.AutoStealEnabled
+
+function t2.value20()
+	local Mode = t2.value18.Mode or 0
+
+	if Mode == 0 then
+		return nil
+	else
+		return Mode / 100 * t2.value6.StealDuration
+	end
+end
+function t2.value21()
+	if t2.value9.topBar then
+		t2.value9.topBar:Disconnect()
+	end
+
+	local n1 = 60
+	local n2 = 0
+	local n3 = 0
+	local now = tick()
+
+	t2.value9.topBar = t2.value1.RenderStepped:Connect(function()
+		n3 = n3 + 1
+
+		if tick() - now >= 1 then
+			n1 = n3
+			tick()
+		end
+
+		pcall(function()
+			local Network = t2.value3:FindFirstChild("Network")
+			local ServerStatsItem
+
+			if Network then
+				ServerStatsItem = Network:FindFirstChild("ServerStatsItem")
+			else
+				ServerStatsItem = Network
+			end
+
+			local DataPing = ServerStatsItem and Network.ServerStatsItem:FindFirstChild("Data Ping")
+
+			if not DataPing then
+				return
+			end
+
+			local value = DataPing:GetValue()
+
+			n2 = math.floor(value)
+		end)
+
+		if not t2.value14 then
+			return
+		end
+
+		t2.value14.Text = "Veno hub | Ping: " .. n2 .. "ms | FPS: " .. n1
+	end)
+end
+function t2.value22()
+	local VenoHub = t2.value5:FindFirstChild("Veno hub")
+
+	if VenoHub then
+		VenoHub:Destroy()
+	end
+
+	local ScreenGui = Instance.new("ScreenGui")
+
+	ScreenGui.Name = "Veno hub"
+	ScreenGui.ResetOnSpawn = false
+	ScreenGui.DisplayOrder = 999
+	ScreenGui.Parent = t2.value5
+	t2.value15 = Instance.new("Frame")
+	t2.value15.Size = UDim2.new(0, 280, 0, 110)
+
+	if t2.value18.Position then
+		t2.value15.Position = UDim2.new(t2.value18.Position.X, t2.value18.Position.XOffset, t2.value18.Position.Y, t2.value18.Position.YOffset)
+	else
+		t2.value15.Position = UDim2.new(0.5, -140, 0, 35)
+	end
+
+	t2.value15.BackgroundColor3 = t2.value17.Panel
+	t2.value15.BackgroundTransparency = 0.1
+	t2.value15.BorderSizePixel = 0
+	t2.value15.ZIndex = 10
+	t2.value15.Active = true
+	t2.value15.Draggable = not t2.value18.IsLocked
+	t2.value15.Parent = ScreenGui
+	Instance.new("UICorner", t2.value15).CornerRadius = UDim.new(0, 10)
+
+	local UIStroke = Instance.new("UIStroke", t2.value15)
+
+	UIStroke.Color = t2.value17.PanelStroke
+	UIStroke.Thickness = 1.5
+
+	local signal = t2.value15:GetPropertyChangedSignal("Position")
+
+	local function v24()
+		t2.value18.Position = {
+			X = t2.value15.Position.X.Scale,
+			XOffset = t2.value15.Position.X.Offset,
+			Y = t2.value15.Position.Y.Scale,
+			YOffset = t2.value15.Position.Y.Offset
+		}
+		t2.value19()
+	end
+
+	signal.Connect(signal, v24)
+	t2.value13 = Instance.new("Frame")
+	t2.value13.Size = UDim2.new(1, -16, 0, 30)
+	t2.value13.Position = UDim2.new(0, 8, 0, 8)
+	t2.value13.BackgroundColor3 = t2.value17.Green
+	t2.value13.BackgroundTransparency = 0.85
+	t2.value13.BorderSizePixel = 0
+	t2.value13.ZIndex = 11
+	t2.value13.Parent = t2.value15
+	Instance.new("UICorner", t2.value13).CornerRadius = UDim.new(0, 8)
+
+	local UIStroke2 = Instance.new("UIStroke", t2.value13)
+
+	UIStroke2.Color = t2.value17.Green
+	UIStroke2.Thickness = 1.5
+	t2.value14 = Instance.new("TextLabel")
+	t2.value14.Size = UDim2.new(1, 0, 1, 0)
+	t2.value14.BackgroundTransparency = 1
+	t2.value14.Font = Enum.Font.GothamBold
+	t2.value14.TextSize = 13
+	t2.value14.TextColor3 = Color3.fromRGB(255, 255, 255)
+	t2.value14.Text = "Veno hub | Ping: 0ms | FPS: 0"
+	t2.value14.TextXAlignment = Enum.TextXAlignment.Center
+	t2.value14.ZIndex = 12
+	t2.value14.Parent = t2.value13
+
+	local Frame = Instance.new("Frame")
+
+	Frame.Size = UDim2.new(1, -16, 0, 26)
+	Frame.Position = UDim2.new(0, 8, 0, 44)
+	Frame.BackgroundTransparency = 1
+	Frame.ZIndex = 11
+	Frame.Parent = t2.value15
+
+	local TextButton = Instance.new("TextButton", Frame)
+
+	TextButton.Size = UDim2.new(0, 28, 0, 26)
+	TextButton.Position = UDim2.new(0, 0, 0, 0)
+	TextButton.BackgroundColor3 = t2.value17.BtnDark
+	TextButton.BorderSizePixel = 0
+	TextButton.Text = t2.value18.IsLocked and "🔒" or "🔓"
+	TextButton.TextColor3 = t2.value17.Orange
+	TextButton.Font = Enum.Font.GothamBold
+	TextButton.TextSize = 13
+	TextButton.ZIndex = 12
+	Instance.new("UICorner", TextButton).CornerRadius = UDim.new(0, 6)
+
+	local TextButton2 = Instance.new("TextButton", Frame)
+
+	TextButton2.Size = UDim2.new(0, 120, 0, 26)
+	TextButton2.Position = UDim2.new(0, 34, 0, 0)
+
+	local AutoStealEnabled = t2.value18.AutoStealEnabled
+
+	if AutoStealEnabled then
+		AutoStealEnabled = t2.value17.Green
+	end
+
+	TextButton2.BackgroundColor3 = AutoStealEnabled or t2.value17.OffGrey
+	TextButton2.BorderSizePixel = 0
+	TextButton2.Text = t2.value18.AutoStealEnabled and "AUTO: ON" or "AUTO: OFF"
+	TextButton2.TextColor3 = t2.value17.White
+	TextButton2.Font = Enum.Font.GothamBlack
+	TextButton2.TextSize = 11
+	TextButton2.ZIndex = 12
+	Instance.new("UICorner", TextButton2).CornerRadius = UDim.new(0, 6)
+
+	local TextButton3 = Instance.new("TextButton", Frame)
+
+	TextButton3.Size = UDim2.new(0, 28, 0, 26)
+	TextButton3.AnchorPoint = Vector2.new(1, 0)
+	TextButton3.Position = UDim2.new(1, 0, 0, 0)
+	TextButton3.BackgroundColor3 = t2.value17.BtnDark
+	TextButton3.BorderSizePixel = 0
+	TextButton3.Text = "⚙️"
+	TextButton3.TextColor3 = t2.value17.White
+	TextButton3.Font = Enum.Font.GothamBold
+	TextButton3.TextSize = 14
+	TextButton3.ZIndex = 12
+	Instance.new("UICorner", TextButton3).CornerRadius = UDim.new(0, 6)
+	t2.value10 = Instance.new("Frame")
+	t2.value10.Size = UDim2.new(1, -16, 0, 14)
+	t2.value10.Position = UDim2.new(0, 8, 0, 78)
+	t2.value10.BackgroundColor3 = t2.value17.BarBg
+	t2.value10.BackgroundTransparency = 0.25
+	t2.value10.ZIndex = 11
+	t2.value10.Parent = t2.value15
+	Instance.new("UICorner", t2.value10).CornerRadius = UDim.new(0, 8)
+	t2.value11 = Instance.new("Frame")
+	t2.value11.Size = UDim2.new(0, 0, 1, 0)
+	t2.value11.BackgroundColor3 = t2.value17.Green
+	t2.value11.ZIndex = 12
+	t2.value11.Parent = t2.value10
+	Instance.new("UICorner", t2.value11).CornerRadius = UDim.new(0, 8)
+	t2.value12 = Instance.new("TextLabel")
+	t2.value12.Size = UDim2.new(1, 0, 1, 0)
+	t2.value12.BackgroundTransparency = 1
+	t2.value12.Font = Enum.Font.GothamBold
+	t2.value12.TextSize = 11
+	t2.value12.TextColor3 = Color3.fromRGB(220, 220, 220)
+	t2.value12.Text = "0%"
+	t2.value12.ZIndex = 13
+	t2.value12.Parent = t2.value10
+	t2.value16 = Instance.new("Frame")
+	t2.value16.Size = UDim2.new(0, 280, 0, 185)
+	t2.value16.Position = UDim2.new(0, 0, 1, 6)
+	t2.value16.BackgroundColor3 = t2.value17.Panel
+	t2.value16.BackgroundTransparency = 0.05
+	t2.value16.BorderSizePixel = 0
+	t2.value16.ZIndex = 20
+	t2.value16.Visible = false
+	t2.value16.Parent = t2.value15
+	Instance.new("UICorner", t2.value16).CornerRadius = UDim.new(0, 10)
+
+	local UIStroke3 = Instance.new("UIStroke", t2.value16)
+
+	UIStroke3.Color = t2.value17.PanelStroke
+	UIStroke3.Thickness = 1.5
+
+	local Frame2 = Instance.new("Frame", t2.value16)
+
+	Frame2.Size = UDim2.new(1, -20, 0, 35)
+	Frame2.Position = UDim2.new(0, 10, 0, 10)
+	Frame2.BackgroundTransparency = 1
+	Frame2.ZIndex = 21
+
+	local TextLabel = Instance.new("TextLabel", Frame2)
+
+	TextLabel.Size = UDim2.new(0, 60, 1, 0)
+	TextLabel.BackgroundTransparency = 1
+	TextLabel.Text = "Radius:"
+	TextLabel.TextColor3 = t2.value17.GreyText
+	TextLabel.Font = Enum.Font.GothamMedium
+	TextLabel.TextSize = 14
+	TextLabel.TextXAlignment = Enum.TextXAlignment.Left
+	TextLabel.ZIndex = 22
+
+	local TextBox = Instance.new("TextBox", Frame2)
+
+	TextBox.Size = UDim2.new(0, 60, 1, -4)
+	TextBox.Position = UDim2.new(0, 70, 0, 2)
+	TextBox.BackgroundColor3 = t2.value17.BtnDark
+	TextBox.BorderSizePixel = 0
+
+	local Radius = t2.value18.Radius
+
+	TextBox.Text = tostring(Radius)
+	TextBox.TextColor3 = t2.value17.White
+	TextBox.Font = Enum.Font.GothamBold
+	TextBox.TextSize = 14
+	TextBox.TextXAlignment = Enum.TextXAlignment.Center
+	TextBox.ZIndex = 22
+	Instance.new("UICorner", TextBox).CornerRadius = UDim.new(0, 6)
+	TextBox.FocusLost:Connect(function()
+		local Text = TextBox.Text
+		local v37 = tonumber(Text)
+
+		if v37 then
+			local v38 = math.round(v37)
+			local v39 = v38 < 1 and 1 or v38
+			local radius = v39 > 200 and 200 or v39
+
+			t2.value18.Radius = radius
+			t2.value6.StealRadius = radius
+			TextBox.Text = tostring(radius)
+			t2.value19()
+		else
+			local v41 = TextBox
+			local Radius2 = t2.value18.Radius
+
+			v41.Text = tostring(Radius2)
+		end
+	end)
+
+	local Frame3 = Instance.new("Frame", t2.value16)
+
+	Frame3.Size = UDim2.new(1, -20, 0, 35)
+	Frame3.Position = UDim2.new(0, 10, 0, 50)
+	Frame3.BackgroundTransparency = 1
+	Frame3.ZIndex = 21
+
+	local TextLabel2 = Instance.new("TextLabel", Frame3)
+
+	TextLabel2.Size = UDim2.new(0, 60, 1, 0)
+	TextLabel2.BackgroundTransparency = 1
+	TextLabel2.Text = "Modes:"
+	TextLabel2.TextColor3 = t2.value17.GreyText
+	TextLabel2.Font = Enum.Font.GothamMedium
+	TextLabel2.TextSize = 14
+	TextLabel2.TextXAlignment = Enum.TextXAlignment.Left
+	TextLabel2.ZIndex = 22
+
+	local t3 = {}
+	local t4 = {
+		75,
+		80,
+		85,
+		90
+	}
+	local Mode = t2.value18.Mode
+
+	local function v48()
+		for i, v in ipairs(t3) do
+			if t4[i] == Mode then
+				v.BackgroundColor3 = t2.value17.Green
+				v.TextColor3 = t2.value17.White
+			else
+				v.BackgroundColor3 = t2.value17.BtnDark
+				v.TextColor3 = t2.value17.GreyText
+			end
+		end
+	end
+
+	local u51 = Mode
+
+	for i, v in ipairs(t4) do
+		local TextButton4 = Instance.new("TextButton", Frame3)
+
+		TextButton4.Size = UDim2.new(0, 36, 1, -4)
+		TextButton4.Position = UDim2.new(0, 70 + (i - 1) * 42, 0, 2)
+
+		local s1 = "BackgroundColor3"
+		local v56 = v == u51
+
+		if v56 then
+			v56 = t2.value17.Green
+		end
+
+		TextButton4[s1] = v56 or t2.value17.BtnDark
+		TextButton4.BorderSizePixel = 0
+		TextButton4.Text = tostring(v)
+
+		local s2 = "TextColor3"
+		local v58 = v == u51
+
+		if v58 then
+			v58 = t2.value17.White
+		end
+
+		TextButton4[s2] = v58 or t2.value17.GreyText
+		TextButton4.Font = Enum.Font.GothamBold
+		TextButton4.TextSize = 12
+		TextButton4.ZIndex = 22
+		Instance.new("UICorner", TextButton4).CornerRadius = UDim.new(0, 6)
+		TextButton4.MouseButton1Click:Connect(function()
+			local v59 = v
+
+			u51 = v59
+			t2.value18.Mode = v59
+			v48()
+			t2.value19()
+		end)
+		t3[i] = TextButton4
+	end
+
+	v48()
+
+	local Frame4 = Instance.new("Frame", t2.value16)
+
+	Frame4.Size = UDim2.new(1, -20, 0, 35)
+	Frame4.Position = UDim2.new(0, 10, 0, 90)
+	Frame4.BackgroundTransparency = 1
+	Frame4.ZIndex = 21
+
+	local TextLabel3 = Instance.new("TextLabel", Frame4)
+
+	TextLabel3.Size = UDim2.new(0, 120, 1, 0)
+	TextLabel3.BackgroundTransparency = 1
+	TextLabel3.Text = "Ragdoll Steal:"
+	TextLabel3.TextColor3 = t2.value17.GreyText
+	TextLabel3.Font = Enum.Font.GothamMedium
+	TextLabel3.TextSize = 14
+	TextLabel3.TextXAlignment = Enum.TextXAlignment.Left
+	TextLabel3.ZIndex = 22
+
+	local TextButton4 = Instance.new("TextButton", Frame4)
+
+	TextButton4.Size = UDim2.new(0, 52, 0, 26)
+	TextButton4.Position = UDim2.new(0, 130, 0, 4)
+
+	local RagdollStealEnabled = t2.value18.RagdollStealEnabled
+
+	if RagdollStealEnabled then
+		RagdollStealEnabled = t2.value17.Green
+	end
+
+	TextButton4.BackgroundColor3 = RagdollStealEnabled or t2.value17.OffGrey
+	TextButton4.BorderSizePixel = 0
+	TextButton4.Text = t2.value18.RagdollStealEnabled and "ON" or "OFF"
+	TextButton4.TextColor3 = t2.value17.White
+	TextButton4.Font = Enum.Font.GothamBlack
+	TextButton4.TextSize = 11
+	TextButton4.ZIndex = 22
+	Instance.new("UICorner", TextButton4).CornerRadius = UDim.new(1, 0)
+	TextButton4.MouseButton1Click:Connect(function()
+		t2.value18.RagdollStealEnabled = not t2.value18.RagdollStealEnabled
+		TextButton4.Text = t2.value18.RagdollStealEnabled and "ON" or "OFF"
+
+		local v64 = TextButton4
+		local RagdollStealEnabled2 = t2.value18.RagdollStealEnabled
+
+		if not RagdollStealEnabled2 then
+			v64.BackgroundColor3 = RagdollStealEnabled2 or t2.value17.OffGrey
+			t2.value19()
+
+			return
+		end
+
+		RagdollStealEnabled2 = t2.value17.Green
+		v64.BackgroundColor3 = RagdollStealEnabled2 or t2.value17.OffGrey
+		t2.value19()
+	end)
+
+	local Frame5 = Instance.new("Frame", t2.value16)
+
+	Frame5.Size = UDim2.new(1, -20, 0, 35)
+	Frame5.Position = UDim2.new(0, 10, 0, 130)
+	Frame5.BackgroundTransparency = 1
+	Frame5.ZIndex = 21
+
+	local TextLabel4 = Instance.new("TextLabel", Frame5)
+
+	TextLabel4.Size = UDim2.new(0, 120, 1, 0)
+	TextLabel4.BackgroundTransparency = 1
+	TextLabel4.Text = "Medusa Steal:"
+	TextLabel4.TextColor3 = t2.value17.GreyText
+	TextLabel4.Font = Enum.Font.GothamMedium
+	TextLabel4.TextSize = 14
+	TextLabel4.TextXAlignment = Enum.TextXAlignment.Left
+	TextLabel4.ZIndex = 22
+
+	local TextButton5 = Instance.new("TextButton", Frame5)
+
+	TextButton5.Size = UDim2.new(0, 52, 0, 26)
+	TextButton5.Position = UDim2.new(0, 130, 0, 4)
+
+	local MedusaStealEnabled = t2.value18.MedusaStealEnabled
+
+	if MedusaStealEnabled then
+		MedusaStealEnabled = t2.value17.Green
+	end
+
+	TextButton5.BackgroundColor3 = MedusaStealEnabled or t2.value17.OffGrey
+	TextButton5.BorderSizePixel = 0
+	TextButton5.Text = t2.value18.MedusaStealEnabled and "ON" or "OFF"
+	TextButton5.TextColor3 = t2.value17.White
+	TextButton5.Font = Enum.Font.GothamBlack
+	TextButton5.TextSize = 11
+	TextButton5.ZIndex = 22
+	Instance.new("UICorner", TextButton5).CornerRadius = UDim.new(1, 0)
+	TextButton5.MouseButton1Click:Connect(function()
+		t2.value18.MedusaStealEnabled = not t2.value18.MedusaStealEnabled
+		TextButton5.Text = t2.value18.MedusaStealEnabled and "ON" or "OFF"
+
+		local v70 = TextButton5
+		local MedusaStealEnabled2 = t2.value18.MedusaStealEnabled
+
+		if not MedusaStealEnabled2 then
+			v70.BackgroundColor3 = MedusaStealEnabled2 or t2.value17.OffGrey
+			t2.value19()
+
+			return
+		end
+
+		MedusaStealEnabled2 = t2.value17.Green
+		v70.BackgroundColor3 = MedusaStealEnabled2 or t2.value17.OffGrey
+		t2.value19()
+	end)
+	TextButton.MouseButton1Click:Connect(function()
+		t2.value18.IsLocked = not t2.value18.IsLocked
+		TextButton.Text = t2.value18.IsLocked and "🔒" or "🔓"
+		t2.value15.Draggable = not t2.value18.IsLocked
+		t2.value19()
+	end)
+
+	local function toggleVisible()
+		t2.value16.Visible = not t2.value16.Visible
+	end
+
+	TextButton3.MouseButton1Click:Connect(toggleVisible)
+	TextButton2.MouseButton1Click:Connect(function()
+		t2.value6.AutoStealEnabled = not t2.value6.AutoStealEnabled
+		t2.value18.AutoStealEnabled = t2.value6.AutoStealEnabled
+		t2.value19()
+
+		if t2.value6.AutoStealEnabled then
+			TextButton2.Text = "AUTO: ON"
+			TextButton2.BackgroundColor3 = t2.value17.Green
+		else
+			TextButton2.Text = "AUTO: OFF"
+			TextButton2.BackgroundColor3 = t2.value17.OffGrey
+		end
+	end)
+	t2.value21()
+end
+function t2.value23()
+	local Character = t2.value4.Character
+
+	if Character then
+		return Character:FindFirstChild("HumanoidRootPart") or (Character:FindFirstChild("Torso") or Character:FindFirstChild("UpperTorso"))
+	else
+		return nil
+	end
+end
+
+t2.value24 = nil
+
+function t2.value24(p1)
+	local Plots = workspace:FindFirstChild("Plots")
+
+	if Plots then
+		local v75 = Plots:FindFirstChild(p1)
+
+		if v75 then
+			local PlotSign = v75:FindFirstChild("PlotSign")
+
+			if PlotSign then
+				local YourBase = PlotSign:FindFirstChild("YourBase")
+				local isBillboardGui
+
+				if YourBase then
+					isBillboardGui = YourBase:IsA("BillboardGui")
+				else
+					isBillboardGui = YourBase
+				end
+
+				if isBillboardGui then
+					return YourBase.Enabled == true
+				else
+					return false
+				end
+			else
+				return false
+			end
+		else
+			return false
+		end
+	else
+		return false
+	end
+end
+function t2.value25()
+	local v79 = t2.value23()
+
+	if v79 then
+		local Plots = workspace:FindFirstChild("Plots")
+
+		if Plots then
+			local huge = math.huge
+			local v82 = nil
+
+			for _, child in ipairs(Plots:GetChildren()) do
+				if not t2.value24(child.Name) then
+					local AnimalPodiums = child:FindFirstChild("AnimalPodiums")
+
+					if AnimalPodiums then
+						local GetChildren = AnimalPodiums.GetChildren
+
+						for _, v in ipairs(GetChildren(AnimalPodiums)) do
+							local Base = v:FindFirstChild("Base")
+
+							if Base then
+								local Spawn = Base:FindFirstChild("Spawn")
+
+								if Spawn then
+									local Magnitude = (Spawn.Position - v79.Position).Magnitude
+									local v92
+
+									if Magnitude <= t2.value6.StealRadius then
+										v92 = Magnitude < huge
+									else
+										v92 = false
+									end
+
+									if v92 then
+										local PromptAttachment = Spawn:FindFirstChild("PromptAttachment")
+
+										if PromptAttachment then
+											local GetChildren2 = PromptAttachment.GetChildren
+											local ipairs_ = ipairs
+
+											for _, v2 in ipairs_(GetChildren2(PromptAttachment)) do
+												local isProximityPrompt = v2:IsA("ProximityPrompt")
+
+												if isProximityPrompt then
+													isProximityPrompt = v2.ActionText
+
+													if isProximityPrompt then
+														isProximityPrompt = v2.ActionText:find("Steal")
+													end
+												end
+
+												if isProximityPrompt then
+													v82 = v2
+													huge = Magnitude
+													ipairs_ = v82
+
+													local v99 = v82
+
+													v82 = ipairs_
+													v99 = ipairs_
+												end
+											end
+										end
+									end
+								end
+							end
+						end
+					end
+				end
+			end
+
+			return v82
+		else
+			return nil
+		end
+	else
+		return nil
+	end
+end
+
+t2.value26 = nil
+
+function t2.value26(p2)
+	if t2.value11 then
+		t2.value11.Size = UDim2.new(p2, 0, 1, 0)
+	end
+
+	if not t2.value12 then
+		return
+	end
+
+	local value12 = t2.value12
+	local v101 = p2 * 100
+
+	value12.Text = math.floor(v101) .. "%"
+end
+function t2.value27(p3)
+	if t2.value7 then
+		return
+	end
+
+	if not t2.value6.Data[p3] then
+		t2.value6.Data[p3] = {
+			hold = {},
+			trigger = {},
+			ready = true
+		}
+
+		if getconnections then
+			local function v102()
+				local v103, v104, v105 = ipairs(getconnections(p3.PromptButtonHoldBegan))
+
+				while true do
+					local v106
+
+					v105, v106 = v103(v104, v105)
+
+					if not v105 then
+						break
+					end
+
+					if v106.Function then
+						local hold = t2.value6.Data[p3].hold
+						local Function = v106.Function
+
+						table.insert(hold, Function)
+					end
+				end
+
+				for _, v in ipairs(getconnections(p3.Triggered)) do
+					if v.Function then
+						local trigger = t2.value6.Data[p3].trigger
+						local Function = v.Function
+
+						table.insert(trigger, Function)
+					end
+				end
+			end
+
+			pcall(v102)
+		end
+	end
+
+	local v113 = t2.value6.Data[p3]
+
+	if not (v113 and v113.ready) then
+		return
+	end
+
+	v113.ready = false
+	t2.value7 = true
+
+	local v114 = t2.value20()
+	local now = tick()
+
+	task.spawn(function()
+		local ipairs_ = ipairs
+		local v117, v118, v119 = ipairs_(v113.hold)
+
+		while true do
+			local v120
+
+			v119, v120 = v117(v118, v119)
+
+			if not v119 then
+				break
+			end
+
+			ipairs_ = pcall
+			ipairs_(v120)
+		end
+
+		local v121 = v114
+
+		if v121 then
+			v121 = v114 > 0
+		end
+
+		if v121 then
+			local v122 = v114 / t2.value6.StealDuration
+
+			while true do
+				local value7 = t2.value7
+
+				if value7 then
+					value7 = t2.value6.AutoStealEnabled
+				end
+
+				if not value7 then
+					break
+				end
+
+				local v124 = tick() - now
+				local v125 = v124 / t2.value6.StealDuration
+				local v126 = math.min(v125, v122)
+
+				t2.value26(v126)
+
+				if v114 <= v124 then
+					break
+				end
+
+				task.wait()
+			end
+
+			t2.value26(v122)
+
+			local now2 = tick()
+			local v128 = false
+
+			while true do
+				local value7 = t2.value7
+
+				if value7 then
+					value7 = t2.value6.AutoStealEnabled
+				end
+
+				if not value7 or tick() - now2 >= 2.99 then
+					break
+				end
+
+				local v130 = t2.value23()
+				local Parent
+
+				if v130 then
+					Parent = p3.Parent
+
+					if Parent then
+						Parent = p3.Parent.Parent
+					end
+				else
+					Parent = v130
+				end
+
+				if Parent then
+					local Magnitude = (v130.Position - p3.Parent.Parent.Position).Magnitude
+
+					if Magnitude <= t2.value8 then
+						v128 = true
+
+						break
+					end
+
+					if t2.value6.StealRadius < Magnitude then
+						break
+					end
+				end
+
+				task.wait()
+			end
+
+			if not v128 then
+				t2.value26(0)
+				v113.ready = true
+				t2.value7 = false
+
+				return
+			end
+
+			local now3 = tick()
+			local v134 = t2.value6.StealDuration - v114
+
+			while true do
+				local value7 = t2.value7
+
+				if value7 then
+					value7 = t2.value6.AutoStealEnabled
+				end
+
+				if not value7 then
+					break
+				end
+
+				local v136 = v122 + (tick() - now3) / v134 * (1 - v122)
+				local v137 = math.min(v136, 1)
+
+				t2.value26(v137)
+
+				if v137 >= 1 then
+					break
+				end
+
+				task.wait()
+			end
+		else
+			while true do
+				local v138 = tick() - now < t2.value6.StealDuration
+
+				if v138 then
+					v138 = t2.value7
+
+					if v138 then
+						v138 = t2.value6.AutoStealEnabled
+					end
+				end
+
+				if not v138 then
+					break
+				end
+
+				local v139 = (tick() - now) / t2.value6.StealDuration
+				local v140 = math.clamp(v139, 0, 1)
+
+				t2.value26(v140)
+				task.wait()
+			end
+		end
+
+		t2.value26(1)
+
+		for _, v in ipairs(v113.trigger) do
+			pcall(v)
+		end
+
+		local function v143()
+			fireproximityprompt(p3, 0)
+		end
+
+		pcall(v143)
+		task.wait(0.05)
+		t2.value26(0)
+		v113.ready = true
+		t2.value7 = false
+	end)
+end
+
+t2.value28 = nil
+t2.value22()
+
+if t2.value28 then
+	return
+end
+
+t2.value1.Heartbeat:Connect(function()
+	if not t2.value6.AutoStealEnabled or t2.value7 then
+		return
+	end
+
+	local ok, result = pcall(t2.value25)
+
+	if not (ok and result) then
+		return
+	end
+
+	pcall(t2.value27, result)
+end)

