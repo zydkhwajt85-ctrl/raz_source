@@ -1,0 +1,436 @@
+-- // 1 (Services) //
+local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
+local TweenService = game:GetService("TweenService")
+local UserInputService = game:GetService("UserInputService")
+local CoreGui = game:GetService("CoreGui")
+local HttpService = game:GetService("HttpService")
+
+-- // 2 (Player + state) //
+local lp = Players.LocalPlayer
+local activated = false
+local keybind = Enum.KeyCode.E
+local waitingForKey = false
+local power = 97000
+local lagAmount = 0.12
+local lagConn = nil
+
+-- // 3 (Boost state – always enabled) //
+local boostEnabled = true
+local boostSpeed = 34
+local boostConn = nil
+
+-- // 4 (Map power to lag amount) //
+local function applyPower(val)
+power = math.clamp(val, 10000, 500000)
+local t = (power - 10000) / 490000
+lagAmount = t * 0.2
+end
+applyPower(power)
+
+-- // 5 (Boost logic) //
+local function startBoost()
+if boostConn then boostConn:Disconnect() end
+boostConn = RunService.RenderStepped:Connect(function()
+if not boostEnabled then return end
+local char = lp.Character
+if not char then return end
+local hum = char:FindFirstChildOfClass("Humanoid")
+local hrp = char:FindFirstChild("HumanoidRootPart")
+if not hum or not hrp then return end
+
+local st = hum:GetState()
+if st == Enum.HumanoidStateType.Physics or
+st == Enum.HumanoidStateType.Ragdoll or
+st == Enum.HumanoidStateType.FallingDown then
+return
+end
+
+local md = hum.MoveDirection
+if md.Magnitude > 0 then
+hrp.Velocity = Vector3.new(md.X * boostSpeed, hrp.Velocity.Y, md.Z * boostSpeed)
+end
+end)
+end
+
+-- // 6 (Apply boost speed) //
+local function applyBoostSpeed(val)
+boostSpeed = math.clamp(val, 1, 500)
+saveConfig()
+end
+
+-- // 7 (Start / stop lag) //
+local function startLag()
+if lagConn then lagConn:Disconnect() end
+lagConn = RunService.RenderStepped:Connect(function()
+if not activated then return end
+if lagAmount > 0 then
+local t = tick()
+while tick() - t < lagAmount do end
+end
+end)
+end
+local function stopLag()
+activated = false
+if lagConn then lagConn:Disconnect(); lagConn = nil end
+end
+
+-- // 8 (Config save/load) //
+local CONFIG_FILE = "EctralysiumConfig.json"
+
+local function saveConfig()
+if not writefile then return end
+local config = {
+boostSpeed = boostSpeed,
+power = power,
+keybind = keybind.Name,
+lagEnabled = activated
+}
+local json = HttpService:JSONEncode(config)
+pcall(function() writefile(CONFIG_FILE, json) end)
+end
+
+local function loadConfig()
+if not readfile then return end
+local success, data = pcall(readfile, CONFIG_FILE)
+if not success then return end
+local config
+pcall(function() config = HttpService:JSONDecode(data) end)
+if not config then return end
+
+if config.boostSpeed then
+boostSpeed = math.clamp(config.boostSpeed, 1, 500)
+if boostBox then boostBox.Text = tostring(boostSpeed) end
+end
+if config.power then
+applyPower(config.power)
+if powerBox then powerBox.Text = tostring(power) end
+end
+if config.keybind then
+local k = Enum.KeyCode[config.keybind]
+if k then
+keybind = k
+if kbBtn then kbBtn.Text = keybind.Name end
+end
+end
+if config.lagEnabled then
+task.defer(function()
+if not activated then
+toggleLag()
+end
+end)
+end
+end
+
+-- // 9 (Toggle lag) //
+local function toggleLag()
+if not activated then
+activated = true
+if enableBtn then
+enableBtn.Text = "Disable"
+enableBtn.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
+end
+startLag()
+else
+stopLag()
+if enableBtn then
+enableBtn.Text = "Enable"
+enableBtn.BackgroundColor3 = Color3.fromRGB(100, 100, 100)
+end
+end
+saveConfig()
+end
+
+-- // 10 (Cleanup) //
+if CoreGui:FindFirstChild("EctralysiumHub") then
+CoreGui.EctralysiumHub:Destroy()
+end
+
+-- // 11 (ScreenGui) //
+local gui = Instance.new("ScreenGui")
+gui.Name = "EctralysiumHub"
+gui.ResetOnSpawn = false
+gui.Parent = CoreGui
+
+-- // 12 (Main frame) //
+local WIDTH = 220
+local HEIGHT = 220
+local MIN_HEIGHT = 32
+
+local main = Instance.new("Frame")
+main.Size = UDim2.new(0, WIDTH, 0, HEIGHT)
+main.Position = UDim2.new(0.5, -WIDTH/2, 0.5, -HEIGHT/2)
+main.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
+main.BorderSizePixel = 0
+main.Active = true
+main.Draggable = true
+main.ClipsDescendants = true
+main.Parent = gui
+Instance.new("UICorner", main).CornerRadius = UDim.new(0, 10)
+
+local mainStroke = Instance.new("UIStroke")
+mainStroke.Thickness = 1.5
+mainStroke.Color = Color3.fromRGB(80, 80, 80)
+mainStroke.Parent = main
+
+-- // 13 (Title) //
+local title = Instance.new("TextLabel")
+title.Size = UDim2.new(1, 0, 0, 32)
+title.Position = UDim2.new(0, 0, 0, 5)
+title.BackgroundTransparency = 1
+title.Text = "Ectralysium Hub"
+title.TextColor3 = Color3.fromRGB(200, 200, 200)
+title.Font = Enum.Font.GothamBold
+title.TextSize = 13
+title.Parent = main
+
+-- // 14 (Minimize Button) //
+local minimizeBtn = Instance.new("TextButton")
+minimizeBtn.Size = UDim2.new(0, 22, 0, 22)
+minimizeBtn.Position = UDim2.new(1, -28, 0, 5)
+minimizeBtn.BackgroundColor3 = Color3.fromRGB(100, 100, 100)
+minimizeBtn.Text = "-"
+minimizeBtn.TextColor3 = Color3.new(1, 1, 1)
+minimizeBtn.Font = Enum.Font.GothamBold
+minimizeBtn.TextSize = 16
+minimizeBtn.BorderSizePixel = 0
+minimizeBtn.AutoButtonColor = false
+minimizeBtn.ZIndex = 10
+minimizeBtn.Parent = main
+Instance.new("UICorner", minimizeBtn).CornerRadius = UDim.new(0, 4)
+
+minimizeBtn.Modal = true
+
+local minimized = false
+local isAnimating = false
+
+local function getControls()
+local controls = {}
+for _, child in ipairs(main:GetChildren()) do
+if child:IsA("GuiObject") and child ~= title and child ~= minimizeBtn then
+table.insert(controls, child)
+end
+end
+return controls
+end
+
+local function toggleMinimize()
+if isAnimating then return end
+isAnimating = true
+
+local controls = getControls()
+local oldYOff = main.Position.Y.Offset
+local oldHeight = main.Size.Y.Offset
+
+minimized = not minimized
+local targetHeight = minimized and MIN_HEIGHT or HEIGHT
+local targetYOff = oldYOff - (oldHeight - targetHeight) / 2
+
+local sizeTween = TweenService:Create(main, TweenInfo.new(0.3, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
+Size = UDim2.new(0, WIDTH, 0, targetHeight)
+})
+local posTween = TweenService:Create(main, TweenInfo.new(0.3, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
+Position = UDim2.new(0.5, main.Position.X.Offset, 0.5, targetYOff)
+})
+
+if minimized then
+sizeTween.Completed:Connect(function()
+for _, child in ipairs(controls) do
+child.Visible = false
+end
+minimizeBtn.Text = "+"
+isAnimating = false
+end)
+else
+for _, child in ipairs(controls) do
+child.Visible = true
+end
+sizeTween.Completed:Connect(function()
+minimizeBtn.Text = "-"
+isAnimating = false
+end)
+end
+
+sizeTween:Play()
+posTween:Play()
+
+task.delay(0.5, function()
+if isAnimating then
+main.Size = UDim2.new(0, WIDTH, 0, targetHeight)
+main.Position = UDim2.new(0.5, main.Position.X.Offset, 0.5, targetYOff)
+if minimized then
+for _, child in ipairs(controls) do
+child.Visible = false
+end
+minimizeBtn.Text = "+"
+else
+for _, child in ipairs(controls) do
+child.Visible = true
+end
+minimizeBtn.Text = "-"
+end
+isAnimating = false
+end
+end)
+end
+minimizeBtn.MouseButton1Click:Connect(toggleMinimize)
+
+-- // 15 (Enable button for lag bypass) //
+local enableBtn = Instance.new("TextButton")
+enableBtn.Size = UDim2.new(0.9, 0, 0, 34)
+enableBtn.Position = UDim2.new(0.05, 0, 0, 42)
+enableBtn.BackgroundColor3 = Color3.fromRGB(100, 100, 100)
+enableBtn.Text = "Enable"
+enableBtn.TextColor3 = Color3.new(1, 1, 1)
+enableBtn.Font = Enum.Font.GothamBold
+enableBtn.TextSize = 12
+enableBtn.BorderSizePixel = 0
+enableBtn.AutoButtonColor = false
+enableBtn.Parent = main
+Instance.new("UICorner", enableBtn).CornerRadius = UDim.new(0, 8)
+
+-- // 16 (Row helper) //
+local function createRow(yPos, labelText)
+local row = Instance.new("Frame")
+row.Size = UDim2.new(0.9, 0, 0, 30)
+row.Position = UDim2.new(0.05, 0, 0, yPos)
+row.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
+row.BorderSizePixel = 0
+row.Parent = main
+Instance.new("UICorner", row).CornerRadius = UDim.new(0, 8)
+local label = Instance.new("TextLabel")
+label.Size = UDim2.new(0.5, 0, 1, 0)
+label.Position = UDim2.new(0, 0, 0, 0)
+label.BackgroundTransparency = 1
+label.Text = labelText
+label.TextColor3 = Color3.fromRGB(180, 180, 180)
+label.Font = Enum.Font.GothamMedium
+label.TextSize = 10
+label.TextXAlignment = Enum.TextXAlignment.Left
+label.Parent = row
+local pad = Instance.new("UIPadding")
+pad.PaddingLeft = UDim.new(0, 10)
+pad.Parent = label
+return row, label
+end
+
+-- // 17 (Version row) //
+local versionRow, versionLabel = createRow(81, "Version")
+local versionBtn = Instance.new("TextButton")
+versionBtn.Size = UDim2.new(0.4, 0, 0.7, 0)
+versionBtn.Position = UDim2.new(0.55, 0, 0.15, 0)
+versionBtn.BackgroundColor3 = Color3.fromRGB(100, 100, 100)
+versionBtn.Text = "V3"
+versionBtn.TextColor3 = Color3.new(1, 1, 1)
+versionBtn.Font = Enum.Font.GothamBold
+versionBtn.TextSize = 11
+versionBtn.BorderSizePixel = 0
+versionBtn.AutoButtonColor = false
+versionBtn.Parent = versionRow
+Instance.new("UICorner", versionBtn).CornerRadius = UDim.new(0, 6)
+
+-- // 18 (Power row) //
+local powerRow, powerLabel = createRow(115, "Power")
+local powerBox = Instance.new("TextBox")
+powerBox.Size = UDim2.new(0.4, 0, 0.7, 0)
+powerBox.Position = UDim2.new(0.55, 0, 0.15, 0)
+powerBox.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
+powerBox.Text = tostring(power)
+powerBox.TextColor3 = Color3.new(1, 1, 1)
+powerBox.Font = Enum.Font.GothamBold
+powerBox.TextSize = 12
+powerBox.BorderSizePixel = 0
+powerBox.ClearTextOnFocus = false
+powerBox.Parent = powerRow
+Instance.new("UICorner", powerBox).CornerRadius = UDim.new(0, 6)
+powerBox.FocusLost:Connect(function()
+local val = tonumber(powerBox.Text)
+if val then
+applyPower(val)
+powerBox.Text = tostring(power)
+saveConfig()
+else
+powerBox.Text = tostring(power)
+end
+end)
+
+-- // 19 (Boost row – speed input only) //
+local boostRow, boostLabel = createRow(149, "Boost")
+local boostBox = Instance.new("TextBox")
+boostBox.Size = UDim2.new(0.4, 0, 0.7, 0)
+boostBox.Position = UDim2.new(0.55, 0, 0.15, 0)
+boostBox.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
+boostBox.Text = tostring(boostSpeed)
+boostBox.TextColor3 = Color3.new(1, 1, 1)
+boostBox.Font = Enum.Font.GothamBold
+boostBox.TextSize = 12
+boostBox.BorderSizePixel = 0
+boostBox.ClearTextOnFocus = false
+boostBox.Parent = boostRow
+Instance.new("UICorner", boostBox).CornerRadius = UDim.new(0, 6)
+boostBox.FocusLost:Connect(function()
+local val = tonumber(boostBox.Text)
+if val then
+applyBoostSpeed(val)
+boostBox.Text = tostring(boostSpeed)
+else
+boostBox.Text = tostring(boostSpeed)
+end
+end)
+
+-- // 20 (Keybind row) //
+local kbRow, kbLabel = createRow(183, "Keybind")
+local kbBtn = Instance.new("TextButton")
+kbBtn.Size = UDim2.new(0.4, 0, 0.7, 0)
+kbBtn.Position = UDim2.new(0.55, 0, 0.15, 0)
+kbBtn.BackgroundColor3 = Color3.fromRGB(100, 100, 100)
+kbBtn.Text = keybind.Name
+kbBtn.TextColor3 = Color3.new(1, 1, 1)
+kbBtn.Font = Enum.Font.GothamBold
+kbBtn.TextSize = 12
+kbBtn.BorderSizePixel = 0
+kbBtn.AutoButtonColor = false
+kbBtn.Parent = kbRow
+Instance.new("UICorner", kbBtn).CornerRadius = UDim.new(0, 6)
+kbBtn.MouseButton1Click:Connect(function()
+waitingForKey = true
+kbBtn.Text = "..."
+kbBtn.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
+end)
+
+-- // 21 (Link toggle function to enableBtn) //
+enableBtn.MouseButton1Click:Connect(toggleLag)
+
+-- // 22 (Input listener) //
+UserInputService.InputBegan:Connect(function(input, gpe)
+if gpe then return end
+if waitingForKey then
+if input.UserInputType == Enum.UserInputType.Keyboard then
+keybind = input.KeyCode
+kbBtn.Text = keybind.Name
+kbBtn.BackgroundColor3 = Color3.fromRGB(100, 100, 100)
+waitingForKey = false
+saveConfig()
+end
+return
+end
+if input.KeyCode == keybind then
+toggleLag()
+end
+end)
+
+-- // 23 (Re-apply on respawn) //
+lp.CharacterAdded:Connect(function()
+task.wait(0.5)
+if activated then
+stopLag()
+activated = true
+startLag()
+end
+end)
+
+-- // 24 (Load config and start boost) //
+loadConfig()
+startBoost()
+
+-- // 25 (End) //

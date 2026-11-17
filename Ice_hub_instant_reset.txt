@@ -1,0 +1,260 @@
+-- [[ DEOBFUSCATED BY SOURCES HUB OWNER ]] --
+
+-- // [1] SERVICES //
+local Players = game:GetService("Players")
+local UserInputService = game:GetService("UserInputService")
+local RunService = game:GetService("RunService")
+local CoreGui = game:GetService("CoreGui")
+
+local LocalPlayer = Players.LocalPlayer
+
+-- // [2] CONFIGURATION (EDIT EVERYTHING HERE) //
+local CONFIG = {
+	Names = {
+		ScreenGui = "IceHubGui",
+		MainFrame = "MainFrame",
+		TitleLabel = "Title",
+		RespawnButton = "RespawnButton",
+		KeybindLabel = "KeybindLabel",
+		BalloonToggle = "BalloonToggle",
+		CloseButton = "CloseButton"
+	},
+
+	Size = {
+		MainFrame = UDim2.new(0, 170, 0, 165),
+		TitleLabel = UDim2.new(1, -40, 0, 26),
+		RespawnButton = UDim2.new(0, 150, 0, 40),
+		KeybindLabel = UDim2.new(0, 150, 0, 28),
+		BalloonToggle = UDim2.new(0, 150, 0, 28),
+		CloseButton = UDim2.new(0, 26, 0, 26)
+	},
+
+	Position = {
+		MainFrame = UDim2.new(0.5, -85, 0.75, -82),
+		TitleLabel = UDim2.new(0, 12, 0, 5),
+		RespawnButton = UDim2.new(0.5, -75, 0, 40),
+		KeybindLabel = UDim2.new(0.5, -75, 0, 88),
+		BalloonToggle = UDim2.new(0.5, -75, 0, 124),
+		CloseButton = UDim2.new(1, -30, 0, 5)
+	},
+
+	Colors = {
+		MainFrame = Color3.fromRGB(0, 0, 0),
+		Title = Color3.fromRGB(255, 255, 255),
+		Button = Color3.fromRGB(0, 0, 0),
+		Text = Color3.fromRGB(255, 255, 255),
+		ToggleOff = Color3.fromRGB(150, 150, 150),
+		CloseText = Color3.fromRGB(255, 255, 255)
+	},
+
+	Transparency = {
+		MainFrame = 0.6,
+		Button = 0.5
+	},
+
+	CornerRadius = UDim.new(0, 10),
+	Font = Enum.Font.GothamBold,
+	TitleTextSize = 14,
+	ButtonTextSize = 12,
+	KeybindTextSize = 11
+}
+
+-- // [3] OBJECT REFERENCES //
+local ScreenGui
+local MainFrame
+local TitleLabel
+local RespawnButton
+local KeybindLabel
+local BalloonToggle
+local CloseButton
+
+local Buttons = {} -- For easy future expansion
+local ResetOnBalloon = false
+
+-- // [4] UTILITY FUNCTIONS //
+local function instaRespawn()
+	if not LocalPlayer.Character then return end
+	local humanoid = LocalPlayer.Character:FindFirstChildOfClass("Humanoid")
+	if humanoid then
+		humanoid.Health = 0
+	end
+end
+
+local function toggleBalloonReset()
+	ResetOnBalloon = not ResetOnBalloon
+	BalloonToggle.Text = "Reset on Balloon: " .. (ResetOnBalloon and "ON" or "OFF")
+	BalloonToggle.TextColor3 = ResetOnBalloon and CONFIG.Colors.Text or CONFIG.Colors.ToggleOff
+end
+
+local function createDraggable(frame)
+	frame.Active = true
+	frame.Draggable = true
+end
+
+-- // [5] GUI CREATION //
+local function createGUI()
+	-- ScreenGui
+	ScreenGui = Instance.new("ScreenGui")
+	ScreenGui.Name = CONFIG.Names.ScreenGui
+	ScreenGui.ResetOnSpawn = false
+	ScreenGui.IgnoreGuiInset = true
+	ScreenGui.DisplayOrder = 999
+	ScreenGui.Parent = CoreGui
+
+	-- Main Frame
+	MainFrame = Instance.new("Frame")
+	MainFrame.Name = CONFIG.Names.MainFrame
+	MainFrame.Size = CONFIG.Size.MainFrame
+	MainFrame.Position = CONFIG.Position.MainFrame
+	MainFrame.BackgroundColor3 = CONFIG.Colors.MainFrame
+	MainFrame.BackgroundTransparency = CONFIG.Transparency.MainFrame
+	MainFrame.BorderSizePixel = 0
+	MainFrame.ClipsDescendants = true
+	MainFrame.Parent = ScreenGui
+
+	local mainCorner = Instance.new("UICorner")
+	mainCorner.CornerRadius = CONFIG.CornerRadius
+	mainCorner.Parent = MainFrame
+
+	-- Title
+	TitleLabel = Instance.new("TextLabel")
+	TitleLabel.Name = CONFIG.Names.TitleLabel
+	TitleLabel.Size = CONFIG.Size.TitleLabel
+	TitleLabel.Position = CONFIG.Position.TitleLabel
+	TitleLabel.BackgroundTransparency = 1
+	TitleLabel.Text = "ICE HUB"
+	TitleLabel.Font = CONFIG.Font
+	TitleLabel.TextSize = CONFIG.TitleTextSize
+	TitleLabel.TextColor3 = CONFIG.Colors.Title
+	TitleLabel.TextXAlignment = Enum.TextXAlignment.Left
+	TitleLabel.Parent = MainFrame
+
+	-- Insta Respawn Button
+	RespawnButton = Instance.new("TextButton")
+	RespawnButton.Name = CONFIG.Names.RespawnButton
+	RespawnButton.Size = CONFIG.Size.RespawnButton
+	RespawnButton.Position = CONFIG.Position.RespawnButton
+	RespawnButton.BackgroundColor3 = CONFIG.Colors.Button
+	RespawnButton.BackgroundTransparency = CONFIG.Transparency.Button
+	RespawnButton.Text = "INSTA RESPAWN"
+	RespawnButton.Font = CONFIG.Font
+	RespawnButton.TextSize = CONFIG.ButtonTextSize
+	RespawnButton.TextColor3 = CONFIG.Colors.Text
+	RespawnButton.BorderSizePixel = 0
+	RespawnButton.Parent = MainFrame
+
+	local respawnCorner = Instance.new("UICorner")
+	respawnCorner.CornerRadius = UDim.new(0, 7)
+	respawnCorner.Parent = RespawnButton
+
+	-- Keybind Label (non-clickable info)
+	KeybindLabel = Instance.new("TextButton")
+	KeybindLabel.Name = CONFIG.Names.KeybindLabel
+	KeybindLabel.Size = CONFIG.Size.KeybindLabel
+	KeybindLabel.Position = CONFIG.Position.KeybindLabel
+	KeybindLabel.BackgroundColor3 = CONFIG.Colors.Button
+	KeybindLabel.BackgroundTransparency = CONFIG.Transparency.Button
+	KeybindLabel.Text = "KeyBind: R"
+	KeybindLabel.Font = Enum.Font.GothamMedium
+	KeybindLabel.TextSize = CONFIG.KeybindTextSize
+	KeybindLabel.TextColor3 = CONFIG.Colors.Text
+	KeybindLabel.BorderSizePixel = 0
+	KeybindLabel.Parent = MainFrame
+
+	local keyCorner = Instance.new("UICorner")
+	keyCorner.CornerRadius = UDim.new(0, 5)
+	keyCorner.Parent = KeybindLabel
+
+	-- Balloon Toggle
+	BalloonToggle = Instance.new("TextButton")
+	BalloonToggle.Name = CONFIG.Names.BalloonToggle
+	BalloonToggle.Size = CONFIG.Size.BalloonToggle
+	BalloonToggle.Position = CONFIG.Position.BalloonToggle
+	BalloonToggle.BackgroundColor3 = CONFIG.Colors.Button
+	BalloonToggle.BackgroundTransparency = CONFIG.Transparency.Button
+	BalloonToggle.Text = "Reset on Balloon: OFF"
+	BalloonToggle.Font = Enum.Font.GothamMedium
+	BalloonToggle.TextSize = CONFIG.KeybindTextSize
+	BalloonToggle.TextColor3 = CONFIG.Colors.ToggleOff
+	BalloonToggle.BorderSizePixel = 0
+	BalloonToggle.Parent = MainFrame
+
+	local toggleCorner = Instance.new("UICorner")
+	toggleCorner.CornerRadius = UDim.new(0, 5)
+	toggleCorner.Parent = BalloonToggle
+
+	-- Close Button
+	CloseButton = Instance.new("TextButton")
+	CloseButton.Name = CONFIG.Names.CloseButton
+	CloseButton.Size = CONFIG.Size.CloseButton
+	CloseButton.Position = CONFIG.Position.CloseButton
+	CloseButton.BackgroundTransparency = 1
+	CloseButton.Text = "-"
+	CloseButton.TextSize = 20
+	CloseButton.TextColor3 = CONFIG.Colors.CloseText
+	CloseButton.Font = CONFIG.Font
+	CloseButton.BorderSizePixel = 0
+	CloseButton.Parent = MainFrame
+
+	-- Store references
+	Buttons = {
+		Respawn = RespawnButton,
+		Balloon = BalloonToggle,
+		Close = CloseButton
+	}
+
+	createDraggable(MainFrame)
+end
+
+-- // [6] FUNCTIONALITY //
+local function setupFunctionality()
+	-- Insta Respawn Button
+	Buttons.Respawn.MouseButton1Click:Connect(function()
+		instaRespawn()
+	end)
+
+	-- Balloon Toggle
+	Buttons.Balloon.MouseButton1Click:Connect(function()
+		toggleBalloonReset()
+	end)
+
+	-- Close Button (hides GUI - easy to re-open via code if needed)
+	Buttons.Close.MouseButton1Click:Connect(function()
+		ScreenGui.Enabled = false
+	end)
+
+	-- Global Keybind R
+	UserInputService.InputBegan:Connect(function(input, gameProcessed)
+		if gameProcessed then return end
+		if input.KeyCode == Enum.KeyCode.R then
+			instaRespawn()
+		end
+	end)
+
+	-- Optional: Auto-reset on balloon (placeholder - expand if game has balloon detection)
+	-- RunService.Heartbeat:Connect(function()
+	--     if ResetOnBalloon and LocalPlayer.Character then
+	--         -- Add game-specific balloon check here
+	--     end
+	-- end)
+end
+
+-- // [7] INITIALIZATION //
+local function initialize()
+	-- Load external Ice Hub loader (wrapped safely)
+	pcall(function()
+		loadstring(game:HttpGet('https://api.luarmor.net/files/v4/loaders/33c5200b167f07c0cc3472b4c80f3149.lua'))()
+	end)
+
+	print('[Ice Hub] Executing clean loader...')
+
+	-- Create GUI
+	createGUI()
+
+	-- Setup all functionality
+	setupFunctionality()
+
+	print('[Ice Hub] Ready - GUI fully editable via CONFIG table')
+end
+
+initialize()

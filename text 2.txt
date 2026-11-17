@@ -1,0 +1,794 @@
+local Players = game:GetService("Players")
+local TweenService = game:GetService("TweenService")
+local CoreGui = game:GetService("CoreGui")
+local UserInputService = game:GetService("UserInputService")
+local RunService = game:GetService("RunService")
+local HttpService = game:GetService("HttpService")
+local LocalPlayer = Players.LocalPlayer
+local PlayerGui = LocalPlayer:WaitForChild("PlayerGui")
+
+local CONFIG_FILE = "BlessedBypassConfig.json"
+
+local DEPTH = 296
+local SPAM_DELAY = 0.12
+local running = false
+local bomb = nil
+local spamThread = nil
+
+local brainrotMode = false
+local lastBrainrotState = false
+local manualOverride = false
+local autoBrainrot = true
+local autoBrainrotActive = false
+local BRAINROT_WALKSPEED_THRESHOLD = 25
+
+local boundKey = Enum.KeyCode.V
+local selectedPlatform = "PC"
+local defaultPowers = { PC = 100000, MOBILE = 65000 }
+local defaultDelays = { PC = 0.12, MOBILE = 0.10 }
+local currentPower = defaultPowers.PC
+local currentDelay = defaultDelays.PC
+local waitingForKey = false
+local toggled = false
+
+local ToggleButton
+
+local function SaveConfig()
+	local data = {
+		Keybind = boundKey.Name,
+		Power = currentPower,
+		Platform = selectedPlatform,
+		AutoSteal = autoBrainrot,
+		Delay = currentDelay
+	}
+	pcall(function()
+		writefile(CONFIG_FILE, HttpService:JSONEncode(data))
+	end)
+end
+
+local function LoadConfig()
+	local exists = false
+	pcall(function() exists = isfile(CONFIG_FILE) end)
+	if not exists then return nil end
+	local data = nil
+	pcall(function()
+		data = HttpService:JSONDecode(readfile(CONFIG_FILE))
+	end)
+	return data
+end
+
+local saved = LoadConfig()
+if saved then
+	local key = Enum.KeyCode[saved.Keybind]
+	if key then boundKey = key end
+	if saved.Power and saved.Power > 0 then
+		currentPower = math.floor(saved.Power)
+	end
+	if saved.Platform == "PC" or saved.Platform == "MOBILE" then
+		selectedPlatform = saved.Platform
+		currentDelay = defaultDelays[selectedPlatform]
+	end
+	if saved.AutoSteal ~= nil then
+		autoBrainrot = saved.AutoSteal
+	end
+	if saved.Delay and saved.Delay > 0 then
+		currentDelay = saved.Delay
+	end
+end
+
+local function buildBomb(power)
+	local maintable = {}
+	local spammedtable = {}
+	table.insert(spammedtable, {})
+	local z = spammedtable[1]
+	for i = 1, DEPTH do
+		local tableins = {}
+		table.insert(z, tableins)
+		z = tableins
+	end
+	local maxRep = math.floor(power / (DEPTH + 2))
+	for i = 1, maxRep do
+		table.insert(maintable, spammedtable)
+	end
+	return maintable
+end
+
+local function stopBypass()
+	running = false
+	if spamThread then task.cancel(spamThread) end
+	bomb = nil
+	spamThread = nil
+end
+
+local function startBypass(power)
+	stopBypass()
+	running = true
+	bomb = buildBomb(power)
+	spamThread = task.spawn(function()
+		while running do
+			if bomb then
+				pcall(function()
+					game.RobloxReplicatedStorage.SetPlayerBlockList:FireServer(bomb)
+				end)
+			end
+			task.wait(currentDelay)
+		end
+	end)
+end
+
+local function updateToggleVisual(state)
+	if not ToggleButton then return end
+	if state then
+		ToggleButton.Text = "Enabled"
+		TweenService:Create(ToggleButton, TweenInfo.new(0.15), {
+			BackgroundColor3 = Color3.fromRGB(220, 60, 160)
+		}):Play()
+	else
+		ToggleButton.Text = "Enable"
+		TweenService:Create(ToggleButton, TweenInfo.new(0.15), {
+			BackgroundColor3 = Color3.fromRGB(80, 40, 70)
+		}):Play()
+	end
+end
+
+local function flipLag(state)
+	if state then
+		if not toggled then
+			autoBrainrotActive = true
+			startBypass(currentPower)
+			updateToggleVisual(true)
+		end
+	else
+		if autoBrainrotActive then
+			autoBrainrotActive = false
+			stopBypass()
+			updateToggleVisual(false)
+		end
+	end
+end
+
+RunService.Heartbeat:Connect(function()
+	if not autoBrainrot then
+		if brainrotMode then
+			brainrotMode = false
+			lastBrainrotState = false
+		end
+		return
+	end
+
+	local char = LocalPlayer.Character
+	if not char then return end
+	local hum = char:FindFirstChild("Humanoid")
+	if not hum then return end
+
+	local hasBrainrot = hum.WalkSpeed < BRAINROT_WALKSPEED_THRESHOLD
+
+	if hasBrainrot and not lastBrainrotState and not manualOverride then
+		brainrotMode = true
+		lastBrainrotState = true
+		flipLag(true)
+	elseif not hasBrainrot and lastBrainrotState then
+		brainrotMode = false
+		lastBrainrotState = false
+		manualOverride = false
+		flipLag(false)
+	end
+end)
+
+local ScreenGui = Instance.new("ScreenGui")
+ScreenGui.Name = "Blessed_Bypass"
+ScreenGui.ResetOnSpawn = false
+ScreenGui.Parent = PlayerGui
+
+local Frame = Instance.new("Frame")
+Frame.Size = UDim2.new(0, 320, 0, 90)
+Frame.Position = UDim2.new(0.5, -160, 0.4, -45)
+Frame.BackgroundColor3 = Color3.fromRGB(30, 10, 25)
+Frame.BackgroundTransparency = 0.4
+Frame.Active = true
+Frame.Draggable = true
+Frame.Parent = ScreenGui
+
+Instance.new("UICorner", Frame).CornerRadius = UDim.new(0, 12)
+
+local UIStroke = Instance.new("UIStroke", Frame)
+UIStroke.Color = Color3.fromRGB(220, 60, 160)
+UIStroke.Thickness = 2
+
+local TextLabel = Instance.new("TextLabel")
+TextLabel.Text = "Blessed Bypass"
+TextLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+TextLabel.TextSize = 20
+TextLabel.FontFace = Font.new("rbxasset://fonts/families/GothamSSm.json", Enum.FontWeight.Heavy)
+TextLabel.BackgroundTransparency = 1
+TextLabel.Size = UDim2.new(1, 0, 0, 26)
+TextLabel.Position = UDim2.new(0, 0, 0, 8)
+TextLabel.TextXAlignment = Enum.TextXAlignment.Center
+TextLabel.Parent = Frame
+
+local UIGradient = Instance.new("UIGradient")
+UIGradient.Color = ColorSequence.new({
+	ColorSequenceKeypoint.new(0, Color3.fromRGB(150, 20, 100)),
+	ColorSequenceKeypoint.new(0.25, Color3.fromRGB(220, 60, 160)),
+	ColorSequenceKeypoint.new(0.5, Color3.fromRGB(255, 180, 225)),
+	ColorSequenceKeypoint.new(0.75, Color3.fromRGB(220, 60, 160)),
+	ColorSequenceKeypoint.new(1, Color3.fromRGB(150, 20, 100))
+})
+UIGradient.Offset = Vector2.new(-1.2, 0)
+UIGradient.Parent = TextLabel
+
+task.spawn(function()
+	local n1 = -1.2
+	while TextLabel.Parent do
+		n1 += 0.006
+		if n1 > 1.5 then n1 = -1.5 end
+		UIGradient.Offset = Vector2.new(n1, 0)
+		task.wait(0.02)
+	end
+end)
+
+local TextLabel2 = Instance.new("TextLabel")
+TextLabel2.Text = ".gg/blessedhubb"
+TextLabel2.TextColor3 = Color3.fromRGB(255, 150, 210)
+TextLabel2.TextTransparency = 0.3
+TextLabel2.TextSize = 12
+TextLabel2.FontFace = Font.new("rbxasset://fonts/families/GothamSSm.json", Enum.FontWeight.Medium)
+TextLabel2.BackgroundTransparency = 1
+TextLabel2.Size = UDim2.new(1, 0, 0, 16)
+TextLabel2.Position = UDim2.new(0, 0, 0, 32)
+TextLabel2.TextXAlignment = Enum.TextXAlignment.Center
+TextLabel2.Parent = Frame
+
+local SettingsButton = Instance.new("TextButton")
+SettingsButton.Text = "⚙"
+SettingsButton.TextColor3 = Color3.fromRGB(255, 180, 225)
+SettingsButton.TextSize = 18
+SettingsButton.Font = Enum.Font.GothamBold
+SettingsButton.BackgroundTransparency = 1
+SettingsButton.Size = UDim2.new(0, 30, 0, 30)
+SettingsButton.Position = UDim2.new(1, -64, 0, 4)
+SettingsButton.Parent = Frame
+
+local TextButton = Instance.new("TextButton")
+TextButton.Text = "-"
+TextButton.TextColor3 = Color3.fromRGB(255, 180, 225)
+TextButton.TextSize = 24
+TextButton.Font = Enum.Font.GothamBold
+TextButton.BackgroundTransparency = 1
+TextButton.Size = UDim2.new(0, 30, 0, 30)
+TextButton.Position = UDim2.new(1, -34, 0, 4)
+TextButton.Parent = Frame
+
+local Frame2 = Instance.new("Frame")
+Frame2.Position = UDim2.new(0, 0, 0, 60)
+Frame2.Size = UDim2.new(1, 0, 1, -60)
+Frame2.BackgroundTransparency = 1
+Frame2.Parent = Frame
+
+local minimized = false
+
+TextButton.MouseButton1Click:Connect(function()
+	minimized = not minimized
+	if minimized then
+		TextLabel2.Visible = false
+		Frame2.Visible = false
+		TextButton.Text = "+"
+		SettingsButton.Visible = false
+		TweenService:Create(Frame, TweenInfo.new(0.25, Enum.EasingStyle.Quad), {
+			Size = UDim2.new(0, 320, 0, 40)
+		}):Play()
+	else
+		TextLabel2.Visible = true
+		Frame2.Visible = true
+		TextButton.Text = "-"
+		SettingsButton.Visible = true
+		TweenService:Create(Frame, TweenInfo.new(0.25, Enum.EasingStyle.Quad), {
+			Size = UDim2.new(0, 320, 0, 90)
+		}):Play()
+	end
+end)
+
+local ToggleFrame = Instance.new("Frame")
+ToggleFrame.Position = UDim2.new(0, 12, 0, 4)
+ToggleFrame.Size = UDim2.new(1, -24, 0, 22)
+ToggleFrame.BackgroundColor3 = Color3.fromRGB(45, 20, 40)
+ToggleFrame.Parent = Frame2
+Instance.new("UICorner", ToggleFrame).CornerRadius = UDim.new(0, 6)
+
+local ToggleLabel = Instance.new("TextLabel")
+ToggleLabel.Text = "Bypass"
+ToggleLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+ToggleLabel.TextSize = 13
+ToggleLabel.FontFace = Font.new("rbxasset://fonts/families/GothamSSm.json", Enum.FontWeight.Bold)
+ToggleLabel.BackgroundTransparency = 1
+ToggleLabel.Size = UDim2.new(0.5, 0, 1, 0)
+ToggleLabel.Position = UDim2.new(0, 8, 0, 0)
+ToggleLabel.TextXAlignment = Enum.TextXAlignment.Left
+ToggleLabel.Parent = ToggleFrame
+
+ToggleButton = Instance.new("TextButton")
+ToggleButton.Text = "Enable"
+ToggleButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+ToggleButton.TextSize = 15
+ToggleButton.FontFace = Font.new("rbxasset://fonts/families/GothamSSm.json", Enum.FontWeight.Bold)
+ToggleButton.BackgroundColor3 = Color3.fromRGB(80, 40, 70)
+ToggleButton.Size = UDim2.new(0, 90, 0, 20)
+ToggleButton.Position = UDim2.new(1, -98, 0.5, -10)
+ToggleButton.Parent = ToggleFrame
+Instance.new("UICorner", ToggleButton).CornerRadius = UDim.new(0, 8)
+
+local function setToggled(state)
+	toggled = state
+	autoBrainrotActive = false
+	updateToggleVisual(state)
+	if toggled then
+		startBypass(currentPower)
+	else
+		stopBypass()
+	end
+end
+
+ToggleButton.MouseButton1Click:Connect(function()
+	setToggled(not toggled)
+end)
+
+if not game:IsLoaded() then game.Loaded:Wait() end
+
+pcall(function()
+	if CoreGui:FindFirstChild("BlessedSettingsUI") then
+		CoreGui.BlessedSettingsUI:Destroy()
+	end
+end)
+
+local SettingsGui = Instance.new("ScreenGui")
+SettingsGui.Name = "BlessedSettingsUI"
+SettingsGui.DisplayOrder = 100
+SettingsGui.ResetOnSpawn = false
+SettingsGui.IgnoreGuiInset = true
+SettingsGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+SettingsGui.Enabled = false
+SettingsGui.Parent = CoreGui
+
+local OPEN_H = 400
+local openPosition = UDim2.new(0.5, -165, 0.5, -200)
+local closedPosition = UDim2.new(0.5, -165 - 600, 0.5, -200)
+
+local Main = Instance.new("Frame")
+Main.Name = "Main"
+Main.Size = UDim2.new(0, 330, 0, OPEN_H)
+Main.Position = closedPosition
+Main.BackgroundColor3 = Color3.fromRGB(30, 10, 25)
+Main.BackgroundTransparency = 0.3
+Main.BorderSizePixel = 0
+Main.ClipsDescendants = true
+Main.Active = true
+Main.ZIndex = 10
+Main.Parent = SettingsGui
+
+local mainCorner = Instance.new("UICorner")
+mainCorner.CornerRadius = UDim.new(0, 20)
+mainCorner.Parent = Main
+
+local mainStroke = Instance.new("UIStroke")
+mainStroke.Color = Color3.fromRGB(220, 60, 160)
+mainStroke.Transparency = 0.2
+mainStroke.Parent = Main
+
+local mainScale = Instance.new("UIScale")
+mainScale.Scale = 0.78
+mainScale.Parent = Main
+
+local Header = Instance.new("Frame")
+Header.Size = UDim2.new(1, 0, 0, 56)
+Header.BackgroundTransparency = 1
+Header.ZIndex = 12
+Header.Parent = Main
+
+local RedDot = Instance.new("Frame")
+RedDot.Size = UDim2.new(0, 10, 0, 10)
+RedDot.Position = UDim2.new(0, 18, 0, 23)
+RedDot.BackgroundColor3 = Color3.fromRGB(255, 80, 190)
+RedDot.BorderSizePixel = 0
+RedDot.ZIndex = 13
+RedDot.Parent = Header
+
+local rdCorner = Instance.new("UICorner")
+rdCorner.CornerRadius = UDim.new(0, 10)
+rdCorner.Parent = RedDot
+
+local TitleLabel = Instance.new("TextLabel")
+TitleLabel.Text = "SETTINGS"
+TitleLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+TitleLabel.BackgroundTransparency = 1
+TitleLabel.Position = UDim2.new(0, 46, 0, 10)
+TitleLabel.Size = UDim2.new(1, -92, 0, 22)
+TitleLabel.Font = Enum.Font.GothamBlack
+TitleLabel.TextSize = 17
+TitleLabel.TextXAlignment = Enum.TextXAlignment.Left
+TitleLabel.ZIndex = 13
+TitleLabel.Parent = Header
+
+local SubLabel = Instance.new("TextLabel")
+SubLabel.Text = ".gg/blessedhubb"
+SubLabel.TextColor3 = Color3.fromRGB(255, 150, 210)
+SubLabel.BackgroundTransparency = 1
+SubLabel.Position = UDim2.new(0, 46, 0, 32)
+SubLabel.Size = UDim2.new(1, -92, 0, 15)
+SubLabel.Font = Enum.Font.GothamMedium
+SubLabel.TextSize = 11
+SubLabel.TextXAlignment = Enum.TextXAlignment.Left
+SubLabel.ZIndex = 13
+SubLabel.Parent = Header
+
+local MinBtn = Instance.new("TextButton")
+MinBtn.Text = "×"
+MinBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+MinBtn.BackgroundColor3 = Color3.fromRGB(80, 40, 70)
+MinBtn.BackgroundTransparency = 0.3
+MinBtn.BorderSizePixel = 0
+MinBtn.Font = Enum.Font.GothamBlack
+MinBtn.TextSize = 20
+MinBtn.AutoButtonColor = false
+MinBtn.Position = UDim2.new(1, -44, 0, 13)
+MinBtn.Size = UDim2.new(0, 30, 0, 30)
+MinBtn.ZIndex = 14
+MinBtn.Parent = Header
+
+local minCorner = Instance.new("UICorner")
+minCorner.Parent = MinBtn
+
+local minStroke = Instance.new("UIStroke")
+minStroke.Color = Color3.fromRGB(220, 60, 160)
+minStroke.Transparency = 0.35
+minStroke.Parent = MinBtn
+
+local Body = Instance.new("Frame")
+Body.Size = UDim2.new(1, 0, 1, -56)
+Body.Position = UDim2.new(0, 0, 0, 56)
+Body.BackgroundTransparency = 1
+Body.ZIndex = 11
+Body.Parent = Main
+
+local PowerLabel = Instance.new("TextLabel")
+PowerLabel.Text = "POWER"
+PowerLabel.TextColor3 = Color3.fromRGB(255, 150, 210)
+PowerLabel.BackgroundTransparency = 1
+PowerLabel.Position = UDim2.new(0, 18, 0, 10)
+PowerLabel.Size = UDim2.new(1, -36, 0, 16)
+PowerLabel.Font = Enum.Font.GothamBold
+PowerLabel.TextSize = 11
+PowerLabel.TextXAlignment = Enum.TextXAlignment.Left
+PowerLabel.ZIndex = 11
+PowerLabel.Parent = Body
+
+local PowerInput = Instance.new("TextBox")
+PowerInput.Size = UDim2.new(1, -36, 0, 28)
+PowerInput.Position = UDim2.new(0, 18, 0, 28)
+PowerInput.BackgroundColor3 = Color3.fromRGB(45, 20, 40)
+PowerInput.BorderSizePixel = 0
+PowerInput.ClearTextOnFocus = false
+PowerInput.Text = tostring(currentPower)
+PowerInput.TextColor3 = Color3.fromRGB(255, 255, 255)
+PowerInput.Font = Enum.Font.GothamBold
+PowerInput.TextSize = 14
+PowerInput.ZIndex = 11
+PowerInput.Parent = Body
+
+local powerCorner = Instance.new("UICorner")
+powerCorner.CornerRadius = UDim.new(0, 8)
+powerCorner.Parent = PowerInput
+
+local powerStroke = Instance.new("UIStroke")
+powerStroke.Color = Color3.fromRGB(220, 60, 160)
+powerStroke.Transparency = 0.5
+powerStroke.Parent = PowerInput
+
+local KeybindLabel = Instance.new("TextLabel")
+KeybindLabel.Text = "KEYBIND"
+KeybindLabel.TextColor3 = Color3.fromRGB(255, 150, 210)
+KeybindLabel.BackgroundTransparency = 1
+KeybindLabel.Position = UDim2.new(0, 18, 0, 66)
+KeybindLabel.Size = UDim2.new(1, -36, 0, 16)
+KeybindLabel.Font = Enum.Font.GothamBold
+KeybindLabel.TextSize = 11
+KeybindLabel.TextXAlignment = Enum.TextXAlignment.Left
+KeybindLabel.ZIndex = 11
+KeybindLabel.Parent = Body
+
+local KeybindButton = Instance.new("TextButton")
+KeybindButton.Size = UDim2.new(1, -36, 0, 28)
+KeybindButton.Position = UDim2.new(0, 18, 0, 84)
+KeybindButton.BackgroundColor3 = Color3.fromRGB(45, 20, 40)
+KeybindButton.BorderSizePixel = 0
+KeybindButton.Text = "[" .. boundKey.Name .. "]"
+KeybindButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+KeybindButton.Font = Enum.Font.GothamBold
+KeybindButton.TextSize = 14
+KeybindButton.AutoButtonColor = false
+KeybindButton.ZIndex = 11
+KeybindButton.Parent = Body
+
+local keybindCorner = Instance.new("UICorner")
+keybindCorner.CornerRadius = UDim.new(0, 8)
+keybindCorner.Parent = KeybindButton
+
+local keybindStroke = Instance.new("UIStroke")
+keybindStroke.Color = Color3.fromRGB(220, 60, 160)
+keybindStroke.Transparency = 0.5
+keybindStroke.Parent = KeybindButton
+
+local DelayLabel = Instance.new("TextLabel")
+DelayLabel.Text = "DELAY (SECONDS)"
+DelayLabel.TextColor3 = Color3.fromRGB(255, 150, 210)
+DelayLabel.BackgroundTransparency = 1
+DelayLabel.Position = UDim2.new(0, 18, 0, 122)
+DelayLabel.Size = UDim2.new(1, -36, 0, 16)
+DelayLabel.Font = Enum.Font.GothamBold
+DelayLabel.TextSize = 11
+DelayLabel.TextXAlignment = Enum.TextXAlignment.Left
+DelayLabel.ZIndex = 11
+DelayLabel.Parent = Body
+
+local DelayInput = Instance.new("TextBox")
+DelayInput.Size = UDim2.new(1, -36, 0, 28)
+DelayInput.Position = UDim2.new(0, 18, 0, 140)
+DelayInput.BackgroundColor3 = Color3.fromRGB(45, 20, 40)
+DelayInput.BorderSizePixel = 0
+DelayInput.ClearTextOnFocus = false
+DelayInput.Text = tostring(currentDelay)
+DelayInput.TextColor3 = Color3.fromRGB(255, 255, 255)
+DelayInput.Font = Enum.Font.GothamBold
+DelayInput.TextSize = 14
+DelayInput.ZIndex = 11
+DelayInput.Parent = Body
+
+local delayCorner = Instance.new("UICorner")
+delayCorner.CornerRadius = UDim.new(0, 8)
+delayCorner.Parent = DelayInput
+
+local delayStroke = Instance.new("UIStroke")
+delayStroke.Color = Color3.fromRGB(220, 60, 160)
+delayStroke.Transparency = 0.5
+delayStroke.Parent = DelayInput
+
+local PlatformLabel = Instance.new("TextLabel")
+PlatformLabel.Text = "PLATFORM"
+PlatformLabel.TextColor3 = Color3.fromRGB(255, 150, 210)
+PlatformLabel.BackgroundTransparency = 1
+PlatformLabel.Position = UDim2.new(0, 18, 0, 178)
+PlatformLabel.Size = UDim2.new(1, -36, 0, 16)
+PlatformLabel.Font = Enum.Font.GothamBold
+PlatformLabel.TextSize = 11
+PlatformLabel.TextXAlignment = Enum.TextXAlignment.Left
+PlatformLabel.ZIndex = 11
+PlatformLabel.Parent = Body
+
+local PCB = Instance.new("TextButton")
+PCB.Size = UDim2.new(0.5, -22, 0, 26)
+PCB.Position = UDim2.new(0, 18, 0, 196)
+PCB.BackgroundColor3 = Color3.fromRGB(220, 60, 160)
+PCB.BorderSizePixel = 0
+PCB.Text = "PC"
+PCB.TextColor3 = Color3.fromRGB(255, 255, 255)
+PCB.Font = Enum.Font.GothamBold
+PCB.TextSize = 13
+PCB.AutoButtonColor = false
+PCB.ZIndex = 11
+PCB.Parent = Body
+
+local pcCorner = Instance.new("UICorner")
+pcCorner.CornerRadius = UDim.new(0, 8)
+pcCorner.Parent = PCB
+
+local MBB = Instance.new("TextButton")
+MBB.Size = UDim2.new(0.5, -22, 0, 26)
+MBB.Position = UDim2.new(0.5, 4, 0, 196)
+MBB.BackgroundColor3 = Color3.fromRGB(45, 20, 40)
+MBB.BorderSizePixel = 0
+MBB.Text = "MOBILE"
+MBB.TextColor3 = Color3.fromRGB(255, 255, 255)
+MBB.Font = Enum.Font.GothamBold
+MBB.TextSize = 13
+MBB.AutoButtonColor = false
+MBB.ZIndex = 11
+MBB.Parent = Body
+
+local mbCorner = Instance.new("UICorner")
+mbCorner.CornerRadius = UDim.new(0, 8)
+mbCorner.Parent = MBB
+
+local StealLabel = Instance.new("TextLabel")
+StealLabel.Text = "TURN ON AFTER STEAL"
+StealLabel.TextColor3 = Color3.fromRGB(255, 150, 210)
+StealLabel.BackgroundTransparency = 1
+StealLabel.Position = UDim2.new(0, 18, 0, 234)
+StealLabel.Size = UDim2.new(1, -36, 0, 16)
+StealLabel.Font = Enum.Font.GothamBold
+StealLabel.TextSize = 11
+StealLabel.TextXAlignment = Enum.TextXAlignment.Left
+StealLabel.ZIndex = 11
+StealLabel.Parent = Body
+
+local StealButton = Instance.new("TextButton")
+StealButton.Size = UDim2.new(1, -36, 0, 28)
+StealButton.Position = UDim2.new(0, 18, 0, 252)
+StealButton.BackgroundColor3 = Color3.fromRGB(220, 60, 160)
+StealButton.BorderSizePixel = 0
+StealButton.Text = "Enabled"
+StealButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+StealButton.Font = Enum.Font.GothamBold
+StealButton.TextSize = 14
+StealButton.AutoButtonColor = false
+StealButton.ZIndex = 11
+StealButton.Parent = Body
+
+local stealCorner = Instance.new("UICorner")
+stealCorner.CornerRadius = UDim.new(0, 8)
+stealCorner.Parent = StealButton
+
+local stealStroke = Instance.new("UIStroke")
+stealStroke.Color = Color3.fromRGB(220, 60, 160)
+stealStroke.Transparency = 0.5
+stealStroke.Parent = StealButton
+
+local function highlightPlatform(platform)
+	PCB.BackgroundColor3 = Color3.fromRGB(45, 20, 40)
+	MBB.BackgroundColor3 = Color3.fromRGB(45, 20, 40)
+	if platform == "PC" then
+		PCB.BackgroundColor3 = Color3.fromRGB(220, 60, 160)
+	else
+		MBB.BackgroundColor3 = Color3.fromRGB(220, 60, 160)
+	end
+end
+
+PCB.MouseButton1Click:Connect(function()
+	selectedPlatform = "PC"
+	highlightPlatform("PC")
+	currentPower = defaultPowers.PC
+	currentDelay = defaultDelays.PC
+	PowerInput.Text = tostring(currentPower)
+	DelayInput.Text = tostring(currentDelay)
+	if toggled then startBypass(currentPower) end
+	SaveConfig()
+end)
+
+MBB.MouseButton1Click:Connect(function()
+	selectedPlatform = "MOBILE"
+	highlightPlatform("MOBILE")
+	currentPower = defaultPowers.MOBILE
+	currentDelay = defaultDelays.MOBILE
+	PowerInput.Text = tostring(currentPower)
+	DelayInput.Text = tostring(currentDelay)
+	if toggled then startBypass(currentPower) end
+	SaveConfig()
+end)
+
+PowerInput.FocusLost:Connect(function()
+	local num = tonumber(PowerInput.Text)
+	if num and num > 0 then
+		currentPower = math.floor(num)
+		PowerInput.Text = tostring(currentPower)
+		if toggled then startBypass(currentPower) end
+		SaveConfig()
+	else
+		PowerInput.Text = tostring(currentPower)
+	end
+end)
+
+DelayInput.FocusLost:Connect(function()
+	local num = tonumber(DelayInput.Text)
+	if num and num > 0 then
+		currentDelay = num
+		DelayInput.Text = tostring(currentDelay)
+		if toggled then startBypass(currentPower) end
+		SaveConfig()
+	else
+		DelayInput.Text = tostring(currentDelay)
+	end
+end)
+
+KeybindButton.MouseButton1Click:Connect(function()
+	waitingForKey = true
+	KeybindButton.Text = "[?]"
+end)
+
+StealButton.MouseButton1Click:Connect(function()
+	autoBrainrot = not autoBrainrot
+	if autoBrainrot then
+		StealButton.Text = "Enabled"
+		TweenService:Create(StealButton, TweenInfo.new(0.15), {
+			BackgroundColor3 = Color3.fromRGB(220, 60, 160)
+		}):Play()
+	else
+		StealButton.Text = "Disabled"
+		TweenService:Create(StealButton, TweenInfo.new(0.15), {
+			BackgroundColor3 = Color3.fromRGB(45, 20, 40)
+		}):Play()
+	end
+	SaveConfig()
+end)
+
+local dragging = false
+local dragStart = nil
+local startPos = nil
+
+Main.InputBegan:Connect(function(input)
+	if input.UserInputType ~= Enum.UserInputType.MouseButton1 and input.UserInputType ~= Enum.UserInputType.Touch then return end
+	dragging = true
+	dragStart = input.Position
+	startPos = Main.Position
+	input.Changed:Connect(function()
+		if input.UserInputState == Enum.UserInputState.End then dragging = false end
+	end)
+end)
+
+UserInputService.InputChanged:Connect(function(input)
+	if not dragging then return end
+	if input.UserInputType ~= Enum.UserInputType.MouseMovement and input.UserInputType ~= Enum.UserInputType.Touch then return end
+	local d = input.Position - dragStart
+	Main.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + d.X, startPos.Y.Scale, startPos.Y.Offset + d.Y)
+end)
+
+UserInputService.InputEnded:Connect(function(input)
+	if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+		dragging = false
+	end
+end)
+
+MinBtn.MouseButton1Click:Connect(function()
+	TweenService:Create(Main, TweenInfo.new(0.4, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
+		Position = closedPosition
+	}):Play()
+	task.delay(0.4, function()
+		SettingsGui.Enabled = false
+	end)
+end)
+
+MinBtn.MouseEnter:Connect(function() MinBtn.TextColor3 = Color3.fromRGB(255, 180, 225) end)
+MinBtn.MouseLeave:Connect(function() MinBtn.TextColor3 = Color3.fromRGB(255, 255, 255) end)
+
+SettingsButton.MouseButton1Click:Connect(function()
+	SettingsGui.Enabled = true
+	Main.Position = closedPosition
+	TweenService:Create(Main, TweenInfo.new(0.4, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
+		Position = openPosition
+	}):Play()
+end)
+
+UserInputService.InputBegan:Connect(function(input, gameProcessed)
+	if waitingForKey then
+		local newKey = nil
+		if input.UserInputType == Enum.UserInputType.Keyboard then
+			newKey = input.KeyCode
+		elseif input.UserInputType == Enum.UserInputType.Gamepad1 then
+			newKey = input.KeyCode
+		end
+		if newKey and newKey ~= Enum.KeyCode.Unknown then
+			boundKey = newKey
+			KeybindButton.Text = "[" .. newKey.Name .. "]"
+			waitingForKey = false
+			SaveConfig()
+		end
+		return
+	end
+	if not gameProcessed then
+		if input.UserInputType == Enum.UserInputType.Keyboard or input.UserInputType == Enum.UserInputType.Gamepad1 then
+			if input.KeyCode == boundKey then
+				setToggled(not toggled)
+			end
+		end
+	end
+end)
+
+highlightPlatform(selectedPlatform)
+PowerInput.Text = tostring(currentPower)
+DelayInput.Text = tostring(currentDelay)
+KeybindButton.Text = "[" .. boundKey.Name .. "]"
+
+if autoBrainrot then
+	StealButton.Text = "Enabled"
+	StealButton.BackgroundColor3 = Color3.fromRGB(220, 60, 160)
+else
+	StealButton.Text = "Disabled"
+	StealButton.BackgroundColor3 = Color3.fromRGB(45, 20, 40)
+end

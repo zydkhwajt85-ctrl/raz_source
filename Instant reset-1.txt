@@ -1,0 +1,318 @@
+local Players      = game:GetService("Players")
+local RunService   = game:GetService("RunService")
+local TweenService = game:GetService("TweenService")
+local LP = Players.LocalPlayer
+
+local VERSION        = "V2"
+local BURST          = 500
+local WINDOW         = 0.3
+local FLING          = 1e9
+local COOLDOWN       = 1.0
+
+local _busy      = false
+local _gaveUp    = false
+local _lastReset = 0
+local _camConn   = nil
+local _camSaved  = nil
+
+local function lockCamera()
+    local cam = workspace.CurrentCamera
+    if not cam then return end
+    if _camConn then pcall(function() _camConn:Disconnect() end) end
+    _camConn = nil
+    _camSaved = { cframe = cam.CFrame, type = cam.CameraType, subject = cam.CameraSubject }
+    cam.CameraType = Enum.CameraType.Scriptable
+    _camConn = RunService.RenderStepped:Connect(function()
+        local c = workspace.CurrentCamera
+        if not c or not _camSaved then return end
+        if c.CameraType ~= Enum.CameraType.Scriptable then
+            c.CameraType = Enum.CameraType.Scriptable
+        end
+        c.CFrame = _camSaved.cframe
+    end)
+end
+
+local function unlockCamera()
+    if _camConn then pcall(function() _camConn:Disconnect() end); _camConn = nil end
+    local saved = _camSaved; _camSaved = nil
+    if not saved then return end
+    local cam = workspace.CurrentCamera
+    if not cam then return end
+    pcall(function()
+        local char = LP.Character
+        local hum  = char and char:FindFirstChildOfClass("Humanoid")
+        cam.CameraType = (saved.type == Enum.CameraType.Scriptable)
+            and Enum.CameraType.Custom or saved.type
+        cam.CameraSubject = hum or saved.subject
+    end)
+end
+
+local function doInstantResetV2()
+    _gaveUp = false
+    local character = LP.Character
+    if not character then _gaveUp = true return end
+    local humanoid = character:FindFirstChildOfClass("Humanoid")
+    local root     = character:FindFirstChild("HumanoidRootPart")
+    if not humanoid or not root then _gaveUp = true return end
+
+    local savedPlatform, savedBreak = humanoid.PlatformStand, humanoid.BreakJointsOnDeath
+
+    local function applyFling(hum, r)
+        hum.BreakJointsOnDeath = true
+        hum.PlatformStand = true
+        hum:ChangeState(Enum.HumanoidStateType.Physics)
+        r.AssemblyAngularVelocity = Vector3.zero
+        r.AssemblyLinearVelocity = Vector3.new(0, FLING, 0)
+    end
+
+    local function attempt()
+        local ch = LP.Character
+        if ch ~= character or not character.Parent then return false end
+        local hum = ch:FindFirstChildOfClass("Humanoid")
+        if not hum or hum.Health <= 0 then return false end
+        local r = ch:FindFirstChild("HumanoidRootPart")
+        if r then pcall(applyFling, hum, r) end
+        return true
+    end
+
+    local t0 = os.clock()
+    for _ = 1, BURST do
+        if not attempt() then return end
+    end
+    while os.clock() - t0 < WINDOW do
+        RunService.Heartbeat:Wait()
+        if not attempt() then return end
+    end
+
+    if not character.Parent or LP.Character ~= character or humanoid.Health <= 0 then
+        return
+    end
+
+    _gaveUp = true
+    pcall(function()
+        humanoid.PlatformStand = savedPlatform
+        humanoid.BreakJointsOnDeath = savedBreak
+        humanoid:ChangeState(Enum.HumanoidStateType.GettingUp)
+        root.AssemblyLinearVelocity = Vector3.zero
+    end)
+end
+
+local function runInstantReset()
+    if _busy then return end
+    if os.clock() - _lastReset < COOLDOWN then return end
+    _lastReset = os.clock()
+    _busy  = true
+    _gaveUp = false
+
+    local wasAntiDie = false
+    pcall(function()
+        if _G.__CrystalAntiDieIsEnabled then
+            wasAntiDie = (_G.__CrystalAntiDieIsEnabled() == true)
+        end
+    end)
+    if wasAntiDie then
+        if _G.__CrystalAntiDieStop then
+            pcall(_G.__CrystalAntiDieStop)
+        elseif AntiDieModule and AntiDieModule.stop then
+            pcall(function() AntiDieModule.stop() end)
+        end
+    end
+
+    local oldChar = LP.Character
+    lockCamera()
+
+    task.spawn(function()
+        local ok, err = pcall(doInstantResetV2)
+        if not ok then
+            warn("[Instant Reset] " .. tostring(err))
+            _gaveUp = true
+        end
+    end)
+
+    task.spawn(function()
+        local deadline = os.clock() + 25
+        while os.clock() < deadline do
+            if _gaveUp then break end
+            local ch = LP.Character
+            if ch and ch.Parent and ch ~= oldChar then
+                local hum  = ch:FindFirstChildOfClass("Humanoid")
+                local root = ch:FindFirstChild("HumanoidRootPart")
+                if hum and root and hum.Health > 0 then break end
+            end
+            task.wait(0.05)
+        end
+        unlockCamera()
+
+        if wasAntiDie then
+            local aliveDeadline = os.clock() + 20
+            while os.clock() < aliveDeadline do
+                local ch  = LP.Character
+                local hum = ch and ch:FindFirstChildOfClass("Humanoid")
+                if ch and ch.Parent and hum and hum.Health > 0 then break end
+                task.wait(0.1)
+            end
+            if AntiDieModule and AntiDieModule.start then
+                pcall(function() AntiDieModule.start() end)
+            elseif _G.__CrystalAntiDieSet then
+                pcall(_G.__CrystalAntiDieSet, true)
+            end
+        end
+        _busy = false
+    end)
+end
+
+_G.__InstantResetRun = runInstantReset
+
+local existing = (game:GetService("CoreGui")):FindFirstChild("InstantResetGui")
+if existing then existing:Destroy() end
+
+local gui = Instance.new("ScreenGui")
+gui.Name = "InstantResetGui"
+gui.ResetOnSpawn = false
+gui.IgnoreGuiInset = true
+gui.DisplayOrder = 99999
+gui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+pcall(function()
+    if syn and syn.protect_gui then syn.protect_gui(gui) end
+end)
+local okParent = pcall(function() gui.Parent = game:GetService("CoreGui") end)
+if not okParent then gui.Parent = LP:WaitForChild("PlayerGui") end
+
+local win = Instance.new("Frame", gui)
+win.Name = "Window"
+win.Size = UDim2.new(0, 170, 0, 130)
+win.Position = UDim2.new(0.5, -85, 0.5, -65)
+win.BackgroundColor3 = Color3.fromRGB(24, 24, 24)
+win.BorderSizePixel = 0
+win.Active = true
+win.ClipsDescendants = true
+Instance.new("UICorner", win).CornerRadius = UDim.new(0, 10)
+
+local winStroke = Instance.new("UIStroke", win)
+winStroke.Color = Color3.fromRGB(90, 90, 90)
+winStroke.Thickness = 1
+winStroke.Transparency = 0.1
+
+local header = Instance.new("Frame", win)
+header.Size = UDim2.new(1, 0, 0, 22)
+header.BackgroundColor3 = Color3.fromRGB(32, 32, 32)
+header.BorderSizePixel = 0
+Instance.new("UICorner", header).CornerRadius = UDim.new(0, 10)
+
+local headerCover = Instance.new("Frame", header)
+headerCover.Size = UDim2.new(1, 0, 0, 12)
+headerCover.Position = UDim2.new(0, 0, 1, -12)
+headerCover.BackgroundColor3 = Color3.fromRGB(32, 32, 32)
+headerCover.BorderSizePixel = 0
+
+local title = Instance.new("TextLabel", header)
+title.Size = UDim2.new(1, -60, 1, 0)
+title.Position = UDim2.new(0, 10, 0, 0)
+title.BackgroundTransparency = 1
+title.Text = "INSTANT RESET · " .. VERSION
+title.TextColor3 = Color3.fromRGB(230, 230, 230)
+title.Font = Enum.Font.GothamBold
+title.TextSize = 11
+title.TextXAlignment = Enum.TextXAlignment.Left
+
+local close = Instance.new("TextButton", header)
+close.Size = UDim2.new(0, 18, 0, 18)
+close.Position = UDim2.new(1, -22, 0, 2)
+close.BackgroundColor3 = Color3.fromRGB(48, 48, 48)
+close.Text = "✕"
+close.TextColor3 = Color3.fromRGB(220, 220, 220)
+close.Font = Enum.Font.GothamBold
+close.TextSize = 10
+close.BorderSizePixel = 0
+close.AutoButtonColor = false
+Instance.new("UICorner", close).CornerRadius = UDim.new(0, 4)
+
+local btn = Instance.new("TextButton", win)
+btn.Name = "ResetBtn"
+btn.Size = UDim2.new(1, -24, 0, 44)
+btn.Position = UDim2.new(0, 12, 0, 34)
+btn.BackgroundColor3 = Color3.fromRGB(240, 240, 240)
+btn.BorderSizePixel = 0
+btn.Text = "INSTANT RESET"
+btn.TextColor3 = Color3.fromRGB(20, 20, 20)
+btn.Font = Enum.Font.GothamBold
+btn.TextSize = 13
+btn.AutoButtonColor = false
+Instance.new("UICorner", btn).CornerRadius = UDim.new(0, 8)
+
+local btnStroke = Instance.new("UIStroke", btn)
+btnStroke.Color = Color3.fromRGB(140, 140, 140)
+btnStroke.Thickness = 1
+btnStroke.Transparency = 0.2
+
+local footer = Instance.new("TextLabel", win)
+footer.Size = UDim2.new(1, -16, 0, 14)
+footer.Position = UDim2.new(0, 8, 1, -22)
+footer.BackgroundTransparency = 1
+footer.Text = "Instant Reset · " .. VERSION
+footer.TextColor3 = Color3.fromRGB(140, 140, 140)
+footer.Font = Enum.Font.GothamMedium
+footer.TextSize = 10
+footer.TextXAlignment = Enum.TextXAlignment.Center
+
+btn.MouseEnter:Connect(function()
+    if _busy then return end
+    btn.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+end)
+btn.MouseLeave:Connect(function()
+    if _busy then return end
+    btn.BackgroundColor3 = Color3.fromRGB(240, 240, 240)
+end)
+btn.MouseButton1Down:Connect(function()
+    if _busy then return end
+    btn.BackgroundColor3 = Color3.fromRGB(180, 180, 180)
+end)
+
+btn.Activated:Connect(function()
+    if _busy then
+        btn.Text = "BUSY..."
+        task.delay(0.8, function()
+            if btn and btn.Parent then btn.Text = "INSTANT RESET" end
+        end)
+        return
+    end
+    runInstantReset()
+end)
+
+close.Activated:Connect(function()
+    gui.Enabled = false
+end)
+
+do
+    local dragging, dragInput, dragStart, startPos
+    header.InputBegan:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseButton1
+        or input.UserInputType == Enum.UserInputType.Touch then
+            dragging = true
+            dragStart = input.Position
+            startPos  = win.Position
+            input.Changed:Connect(function()
+                if input.UserInputState == Enum.UserInputState.End then
+                    dragging = false
+                end
+            end)
+        end
+    end)
+    header.InputChanged:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseMovement
+        or input.UserInputType == Enum.UserInputType.Touch then
+            dragInput = input
+        end
+    end)
+    game:GetService("UserInputService").InputChanged:Connect(function(input)
+        if dragging and input == dragInput then
+            local delta = input.Position - dragStart
+            win.Position = UDim2.new(
+                startPos.X.Scale, startPos.X.Offset + delta.X,
+                startPos.Y.Scale, startPos.Y.Offset + delta.Y
+            )
+        end
+    end)
+end
+
+print("[Instant Reset] GUI V2 (compact gray) chargé.")
