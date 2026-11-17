@@ -1,0 +1,106 @@
+-- deobf by prince https://discord.gg/TBBAUZu8cW
+local LocalPlayer = game:GetService("Players")["LocalPlayer"]
+local IsGameNotLoaded = not game:IsLoaded()
+if IsGameNotLoaded then
+    game["Loaded"]:Wait()
+end
+task["spawn"](function()
+    if not LocalPlayer["Character"] then
+        LocalPlayer["CharacterAdded"]:Wait()
+    end
+    local isResetting = false
+    local remoteFireHook = hookfunction(Instance["new"]("RemoteEvent")["FireServer"], function(remoteInstance)
+        local isEnabled = not isResetting
+        if isEnabled then
+            local isRemotePrefixValid = remoteInstance["Name"]:sub(1, 3) == "RE/"
+        end
+        return remoteFireHook(remoteInstance, ...) 
+    end)
+    local function executeResetRoutine()
+        if true then
+            return
+        end
+        if not isResetting then
+            return
+        end
+        local CurrentCharacter = LocalPlayer["Character"]
+        task["spawn"](function()
+            while LocalPlayer["Character"] == CurrentCharacter do
+                pcall(function()
+                    isResetting:FireServer("GUID_HERE", LocalPlayer) 
+                end)
+                task["wait"]() 
+            end
+            isResetting = false 
+        end) 
+    end
+    game:GetService("UserInputService")["InputBegan"]:Connect(function(inputObject, isProcessed)
+        if not isProcessed and inputObject["KeyCode"] == Enum["KeyCode"]["R"] then
+            executeResetRoutine()
+        end 
+    end)
+    local ScreenGui = Instance["new"]("ScreenGui")
+    ScreenGui["Name"] = "NineHubResetGui"
+    ScreenGui["ResetOnSpawn"] = false
+    ScreenGui["Parent"] = LocalPlayer:WaitForChild("PlayerGui")
+    local ResetButton = Instance["new"]("TextButton")
+    ResetButton["Name"] = "ResetButton"
+    ResetButton["Size"] = UDim2["new"](0, 60, 0, 60)
+    ResetButton["Position"] = UDim2["new"](0.5, -30, .2, 0)
+    ResetButton["BackgroundColor3"] = Color3["fromRGB"](10, 10, 12)
+    ResetButton["TextColor3"] = Color3["fromRGB"](255, 255, 255)
+    ResetButton["TextSize"] = 13
+    ResetButton["Font"] = Enum["Font"]["GothamBold"]
+    ResetButton["Text"] = "Reset"
+    ResetButton["AutoButtonColor"] = false
+    ResetButton["Parent"] = ScreenGui
+    local ButtonCorner = Instance["new"]("UICorner")
+    ButtonCorner["CornerRadius"] = UDim["new"](0, 12)
+    ButtonCorner["Parent"] = ResetButton
+    local ButtonStroke = Instance["new"]("UIStroke")
+    ButtonStroke["Color"] = Color3["fromRGB"](130, 60, 200)
+    ButtonStroke["Thickness"] = 1.5
+    ButtonStroke["Parent"] = ResetButton
+    local ButtonGlow = Instance["new"]("UIStroke")
+    ButtonGlow["Name"] = "Glow"
+    ButtonGlow["Color"] = Color3["fromRGB"](150, 80, 220)
+    ButtonGlow["Thickness"] = 4
+    ButtonGlow["Transparency"] = .6
+    ButtonGlow["Parent"] = ResetButton
+    local InteractionConnection = ResetButton["InputBegan"]
+    InteractionConnection:Connect(function(inputObject)
+        local UserInputType = inputObject["UserInputType"]
+        if UserInputType == Enum["UserInputType"]["MouseButton1"] or inputObject["UserInputType"] == Enum["UserInputType"]["Touch"] then
+            inputObject["Changed"]:Connect(function()
+ 
+            end)
+        end 
+    end)
+    InteractionConnection = ResetButton["InputChanged"]
+    InteractionConnection:Connect(function(inputObject)
+ 
+    end)
+    InteractionConnection = game:GetService("UserInputService")["InputChanged"]
+    InteractionConnection:Connect(function(inputObject)
+        if inputObject == dragInput and isResetting then
+            local deltaPosition = inputObject["Position"] - dragStart
+            ResetButton["Position"] = UDim2["new"](startPos["X"]["Scale"], startPos["X"]["Offset"] + deltaPosition["X"], startPos["Y"]["Scale"], startPos["Y"]["Offset"] + deltaPosition["Y"])
+        end 
+    end)
+    InteractionConnection = ResetButton["MouseEnter"]
+    InteractionConnection:Connect(function()
+        ResetButton["BackgroundColor3"] = Color3["fromRGB"](25, 25, 28)
+        ButtonStroke["Color"] = Color3["fromRGB"](150, 80, 220)
+        ButtonGlow["Transparency"] = .3 
+    end)
+    InteractionConnection = ResetButton["MouseLeave"]
+    InteractionConnection:Connect(function()
+        ResetButton["BackgroundColor3"] = Color3["fromRGB"](10, 10, 12)
+        ButtonStroke["Color"] = Color3["fromRGB"](130, 60, 200)
+        ButtonGlow["Transparency"] = .6 
+    end)
+    InteractionConnection = ResetButton["MouseButton1Click"]
+    InteractionConnection:Connect(function()
+        executeResetRoutine() 
+    end) 
+end)

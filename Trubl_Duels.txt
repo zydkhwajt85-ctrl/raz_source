@@ -1,0 +1,659 @@
+--────────────────────────────────────────────────────────────
+--   zipshadow 🤖  |  deobfuscator bot
+--   made by: zipshadow & casual303
+--   watermarked: Trubl ui only.txt
+--────────────────────────────────────────────────────────────
+local Players = game:GetService("Players")
+local UIS = game:GetService("UserInputService")
+local RS = game:GetService("RunService")
+local TS = game:GetService("TweenService")
+local Stats = game:GetService("Stats")
+local LP = Players.LocalPlayer
+local PG = LP:WaitForChild("PlayerGui")
+
+local C = {
+    BG    = Color3.fromRGB(10,10,14),
+    DARK  = Color3.fromRGB(18,18,26),
+    DARK2 = Color3.fromRGB(26,26,36),
+    VIO   = Color3.fromRGB(200,20,20),
+    VBRI  = Color3.fromRGB(255,50,50),
+    VDIM  = Color3.fromRGB(130,15,15),
+    ACT   = Color3.fromRGB(180,20,20),
+    OFF   = Color3.fromRGB(20,20,30),
+    WHI   = Color3.new(1,1,1),
+    GRY   = Color3.fromRGB(150,150,150),
+}
+
+local Cfg = {
+    NormalSteal=28.7, NormalNorm=58.5,
+    LaggerSteal=11.5, LaggerNorm=30,
+    DesyncSteal=29,   DesyncNorm=59,
+    Radius=11.8,
+    AutoTP=50, Float=10, RiseSpeed=30, FallSpeed=50,
+    FOV=120, NightSky=50, MenuOpacity=90, MenuSize=100,
+    SpeedModeSize=112, ButtonSize=110,
+    SpeedMode="Desync", Direction="L", MovMode="Full",
+    JumpMode="Hold", StopMode="TP Down", CBMode="Follow",
+    HitMode="Auto Bat", LagMode="High", Shape="Rounded",
+    AutoLeft=false, AutoRight=false, AutoPlay=false,
+    AutoSteal=true, AntiKick=true, InfiniteJump=true, TPDown=true,
+    CounterBat=false, MedusaCounter=true, AutoPlayAfterMed=false,
+    Aimbot=false, Desync=true, DropBrainrot=false, Lagger=false,
+    ResetChar=false, NoCollision=true, FPSBoost=true,
+    NoAnimation=false, XRayBase=true, Taunt=false, Locked=false,
+}
+
+local function sg(f) local ok,r=pcall(f) return ok and r or nil end
+local function Char() return sg(function() return LP.Character end) end
+local function Hum() local c=Char() return c and sg(function() return c:FindFirstChildOfClass("Humanoid") end) end
+local function Root() local c=Char() return c and sg(function() return c:FindFirstChild("HumanoidRootPart") end) end
+
+local RP={Vector3.new(-473.32,-7.67,10.16),Vector3.new(-472.71,-8.14,29.92),Vector3.new(-472.87,-8.14,49.50),Vector3.new(-472.45,-8.14,65.05),Vector3.new(-472.94,-8.14,82.48),Vector3.new(-475.00,-8.14,96.84),Vector3.new(-485.50,-6.43,96.08)}
+local LP2={Vector3.new(-473.31,-7.67,111.75),Vector3.new(-473.51,-8.14,87.30),Vector3.new(-473.74,-8.14,60.58),Vector3.new(-474.04,-8.14,41.38),Vector3.new(-474.35,-8.14,25.77),Vector3.new(-485.30,-6.43,22.36)}
+local RR={Vector3.new(-475.23,-8.14,90.61),Vector3.new(-476.24,-8.14,57.32),Vector3.new(-475.63,-8.14,23.36)}
+local LR={Vector3.new(-474.23,-8.14,26.51),Vector3.new(-475.15,-8.14,59.32),Vector3.new(-475.62,-8.06,97.99)}
+local _wc,_jc=nil,nil
+local _wi=1;local _ret=false;local _pau=false
+
+local function StopWalk()
+    if _wc then _wc:Disconnect();_wc=nil end
+    _wi=1;_ret=false;_pau=false
+    local h=Hum() if h then h:Move(Vector3.new(0,0,0)) end
+end
+local function StartWalk(dir)
+    StopWalk()
+    local fwd=dir=="right" and RP or LP2
+    local ret=dir=="right" and RR or LR
+    local function spd(steal)
+        local m=Cfg.SpeedMode
+        if m=="Normal" then return steal and Cfg.NormalSteal or Cfg.NormalNorm end
+        if m=="Lagger" then return steal and Cfg.LaggerSteal or Cfg.LaggerNorm end
+        return steal and Cfg.DesyncSteal or Cfg.DesyncNorm
+    end
+    _wc=RS.Heartbeat:Connect(function()
+        if _pau then return end
+        local ro=Root();local hu=Hum()
+        if not ro or not hu then return end
+        local path=_ret and ret or fwd
+        local tgt=path[_wi];if not tgt then return end
+        local dv=(tgt-ro.Position)*Vector3.new(1,0,1)
+        local dist=dv.Magnitude;local md=dv.Unit
+        hu:Move(md)
+        ro.AssemblyLinearVelocity=Vector3.new(md.X*spd(_ret),ro.AssemblyLinearVelocity.Y,md.Z*spd(_ret))
+        if dist<3 then
+            _wi+=1
+            if not _ret and _wi>#fwd then
+                _pau=true;task.delay(0.3,function() _ret=true;_wi=1;_pau=false end)
+            elseif _ret and _wi>#ret then
+                _pau=true;Cfg.AutoLeft=false;Cfg.AutoRight=false;Cfg.AutoPlay=false;StopWalk()
+            end
+        end
+    end)
+end
+local function StartFPS()
+    if not Cfg.FPSBoost then return end
+    pcall(function() game:GetService("Lighting").GlobalShadows=false;game:GetService("Lighting").FogEnd=9e9 end)
+end
+task.spawn(function()
+    task.wait(1);StartFPS()
+    pcall(function() local cam=workspace.CurrentCamera;if cam then cam.FieldOfView=Cfg.FOV end end)
+end)
+
+-- GUI UTILS
+local function Cor(p,r) local c=Instance.new("UICorner");c.CornerRadius=UDim.new(0,r or 8);c.Parent=p;return c end
+local function Stk(p,col,th,tr) local s=Instance.new("UIStroke");s.Color=col or C.VIO;s.Thickness=th or 1.5;s.Transparency=tr or 0;s.Parent=p;return s end
+local function Pad(p,t,l,r2,b) local u=Instance.new("UIPadding");u.PaddingTop=UDim.new(0,t or 0);u.PaddingLeft=UDim.new(0,l or 0);u.PaddingRight=UDim.new(0,r2 or 0);u.PaddingBottom=UDim.new(0,b or 0);u.Parent=p end
+
+local gui=Instance.new("ScreenGui")
+gui.Name="TRUBL";gui.ResetOnSpawn=false;gui.ZIndexBehavior=Enum.ZIndexBehavior.Sibling;gui.Parent=PG
+
+-- ═══ TOP BAR (smaller) ═══
+local bar=Instance.new("Frame")
+bar.Size=UDim2.new(0,280,0,30)
+bar.Position=UDim2.new(0.5,-140,0,8)
+bar.BackgroundColor3=C.BG;bar.BorderSizePixel=0;bar.ZIndex=20;bar.Parent=gui
+Cor(bar,8);Stk(bar,C.VIO,2)
+
+local fpsL=Instance.new("TextLabel");fpsL.Size=UDim2.new(0,65,0.5,0);fpsL.Position=UDim2.new(0,6,0,0)
+fpsL.BackgroundTransparency=1;fpsL.Text="FPS: --";fpsL.TextColor3=C.WHI
+fpsL.Font=Enum.Font.GothamBold;fpsL.TextSize=9;fpsL.TextXAlignment=Enum.TextXAlignment.Left;fpsL.ZIndex=21;fpsL.Parent=bar
+
+local pingL=Instance.new("TextLabel");pingL.Size=UDim2.new(0,70,0.5,0);pingL.Position=UDim2.new(0,6,0.5,0)
+pingL.BackgroundTransparency=1;pingL.Text="Ping: --";pingL.TextColor3=C.WHI
+pingL.Font=Enum.Font.GothamBold;pingL.TextSize=9;pingL.TextXAlignment=Enum.TextXAlignment.Left;pingL.ZIndex=21;pingL.Parent=bar
+
+local titleL=Instance.new("TextLabel");titleL.Size=UDim2.new(1,-170,1,0);titleL.Position=UDim2.new(0,78,0,0)
+titleL.BackgroundTransparency=1;titleL.Text="TRUBL";titleL.TextColor3=C.WHI
+titleL.Font=Enum.Font.GothamBold;titleL.TextSize=13;titleL.TextXAlignment=Enum.TextXAlignment.Center;titleL.ZIndex=21;titleL.Parent=bar
+
+-- Radius
+local radF=Instance.new("Frame");radF.Size=UDim2.new(0,46,1,-4);radF.Position=UDim2.new(1,-50,0,2)
+radF.BackgroundTransparency=1;radF.ZIndex=21;radF.Parent=bar
+local radH=Instance.new("TextLabel");radH.Size=UDim2.new(1,0,0,12);radH.BackgroundTransparency=1
+radH.Text="Radius";radH.TextColor3=C.GRY;radH.Font=Enum.Font.GothamBold;radH.TextSize=8;radH.ZIndex=21;radH.Parent=radF
+local radV=Instance.new("TextLabel");radV.Size=UDim2.new(1,0,0,17);radV.Position=UDim2.new(0,0,0,11)
+radV.BackgroundTransparency=1;radV.Text=tostring(Cfg.Radius);radV.TextColor3=C.WHI
+radV.Font=Enum.Font.GothamBold;radV.TextSize=13;radV.ZIndex=21;radV.Parent=radF
+local radB=Instance.new("TextButton");radB.Size=UDim2.new(1,0,1,0);radB.BackgroundTransparency=1;radB.Text="";radB.ZIndex=22;radB.Parent=radF
+radB.MouseButton1Click:Connect(function()
+    Cfg.Radius=math.min(20,math.floor((Cfg.Radius+0.2)*10+0.5)/10)
+    radV.Text=string.format("%.1f",Cfg.Radius)
+end)
+radB.MouseButton2Click:Connect(function()
+    Cfg.Radius=math.max(1,math.floor((Cfg.Radius-0.2)*10+0.5)/10)
+    radV.Text=string.format("%.1f",Cfg.Radius)
+end)
+
+local _fps=60
+RS.Heartbeat:Connect(function(dt)
+    _fps=math.floor(0.9*_fps+0.1*(1/math.max(dt,0.001)))
+    fpsL.Text="FPS: ".._fps
+    local ok,p=pcall(function() return math.floor(Stats.Network.ServerStatsItem["Data Ping"]:GetValue()) end)
+    pingL.Text="Ping: "..(ok and p or "?").."ms"
+end)
+
+-- ═══ MENU ═══
+local menu=Instance.new("Frame")
+menu.Size=UDim2.new(0,280,0,0);menu.Position=UDim2.new(0.5,-140,0,42)
+menu.BackgroundColor3=C.BG;menu.BorderSizePixel=0;menu.ZIndex=18
+menu.Visible=false;menu.ClipsDescendants=true;menu.Parent=gui
+Cor(menu,8);Stk(menu,C.VIO,2)
+
+local scroll=Instance.new("ScrollingFrame")
+scroll.Size=UDim2.new(1,-2,1,-2);scroll.Position=UDim2.new(0,1,0,1)
+scroll.BackgroundTransparency=1;scroll.BorderSizePixel=0
+scroll.ScrollBarThickness=3;scroll.ScrollBarImageColor3=C.VIO
+scroll.AutomaticCanvasSize=Enum.AutomaticSize.Y;scroll.CanvasSize=UDim2.new(0,0,0,0)
+scroll.ZIndex=19;scroll.Parent=menu
+local ll=Instance.new("UIListLayout");ll.Padding=UDim.new(0,4);ll.SortOrder=Enum.SortOrder.LayoutOrder;ll.Parent=scroll
+Pad(scroll,6,6,6,10)
+
+local menuOpen=false
+local function openMenu() menuOpen=true;menu.Visible=true;menu:TweenSize(UDim2.new(0,280,0,520),"Out","Quad",0.2,true) end
+local function closeMenu() menuOpen=false;menu:TweenSize(UDim2.new(0,280,0,0),"Out","Quad",0.18,true,function() menu.Visible=false end) end
+
+local _bd=false;local _bs=nil;local _bp=nil
+bar.InputBegan:Connect(function(i)
+    if i.UserInputType==Enum.UserInputType.MouseButton1 or i.UserInputType==Enum.UserInputType.Touch then
+        _bd=true;_bs=i.Position;_bp=bar.Position
+    end
+end)
+UIS.InputChanged:Connect(function(i)
+    if _bd and (i.UserInputType==Enum.UserInputType.MouseMovement or i.UserInputType==Enum.UserInputType.Touch) then
+        local d=i.Position-_bs
+        if math.abs(d.X)>3 or math.abs(d.Y)>3 then
+            local np=UDim2.new(_bp.X.Scale,_bp.X.Offset+d.X,_bp.Y.Scale,_bp.Y.Offset+d.Y)
+            bar.Position=np;menu.Position=UDim2.new(np.X.Scale,np.X.Offset,np.Y.Scale,np.Y.Offset+34)
+        end
+    end
+end)
+bar.InputEnded:Connect(function(i)
+    if i.UserInputType==Enum.UserInputType.MouseButton1 or i.UserInputType==Enum.UserInputType.Touch then
+        local d=i.Position-_bs;_bd=false
+        if math.abs(d.X)<5 and math.abs(d.Y)<5 then
+            if menuOpen then closeMenu() else openMenu() end
+        end
+    end
+end)
+
+-- ═══ BUILDERS ═══
+local TF={}
+
+local function Sec(txt)
+    local f=Instance.new("Frame");f.Size=UDim2.new(1,-12,0,18);f.BackgroundTransparency=1;f.Parent=scroll
+    local dot=Instance.new("Frame");dot.Size=UDim2.new(0,6,0,6);dot.Position=UDim2.new(0,0,0.5,-3)
+    dot.BackgroundColor3=C.VBRI;dot.Parent=f;Cor(dot,3)
+    local l=Instance.new("TextLabel");l.Size=UDim2.new(1,-10,1,0);l.Position=UDim2.new(0,10,0,0)
+    l.BackgroundTransparency=1;l.Text="— "..txt;l.TextColor3=C.GRY
+    l.Font=Enum.Font.GothamBold;l.TextSize=10;l.TextXAlignment=Enum.TextXAlignment.Left;l.ZIndex=20;l.Parent=f
+end
+
+-- ═══ PIN SYSTEM ═══
+local _pinnedState={}
+local _pinnedFrames={}
+
+local QB_SIZE_W=130
+local QB_SIZE_H=100
+
+local function MakePin(label,key,getState,setState,isQBpin)
+    return function()
+        local ex=PG:FindFirstChild("TRUBLPIN_"..key)
+        if ex then
+            ex:Destroy()
+            _pinnedState[key]=false
+            _pinnedFrames[key]=nil
+            return
+        end
+
+        _pinnedState[key]=true
+        local sg2=Instance.new("ScreenGui");sg2.Name="TRUBLPIN_"..key
+        sg2.ResetOnSpawn=false;sg2.ZIndexBehavior=Enum.ZIndexBehavior.Sibling;sg2.Parent=PG
+        _pinnedFrames[key]=sg2
+
+        if isQBpin then
+            local pf=Instance.new("Frame");pf.Size=UDim2.new(0,QB_SIZE_W,0,QB_SIZE_H)
+            pf.Position=UDim2.new(1,-QB_SIZE_W-10,0.5,-QB_SIZE_H/2)
+            pf.BackgroundColor3=getState() and C.ACT or C.OFF
+            pf.BorderSizePixel=0;pf.ZIndex=60;pf.Parent=sg2
+            Cor(pf,14);Stk(pf,getState() and C.VBRI or C.VDIM,2,getState() and 0 or 0.3)
+
+            local mainLbl=Instance.new("TextLabel");mainLbl.Size=UDim2.new(1,0,0.6,0);mainLbl.Position=UDim2.new(0,0,0.1,0)
+            mainLbl.BackgroundTransparency=1;mainLbl.Text=label;mainLbl.TextColor3=C.WHI
+            mainLbl.Font=Enum.Font.GothamBold;mainLbl.TextSize=16;mainLbl.TextXAlignment=Enum.TextXAlignment.Center
+            mainLbl.ZIndex=61;mainLbl.Parent=pf
+
+            local stLbl=Instance.new("TextLabel");stLbl.Size=UDim2.new(1,0,0,18);stLbl.Position=UDim2.new(0,0,1,-22)
+            stLbl.BackgroundTransparency=1;stLbl.Text=getState() and "ON" or "OFF";stLbl.TextColor3=C.WHI
+            stLbl.Font=Enum.Font.GothamBold;stLbl.TextSize=11;stLbl.ZIndex=61;stLbl.Parent=pf
+
+            local cur=getState()
+            local pStk=pf:FindFirstChildOfClass("UIStroke")
+            local function pfSet(s)
+                cur=s;setState(s)
+                TS:Create(pf,TweenInfo.new(0.13),{BackgroundColor3=s and C.ACT or C.OFF}):Play()
+                if pStk then pStk.Color=s and C.VBRI or C.VDIM;pStk.Transparency=s and 0 or 0.3 end
+                stLbl.Text=s and "ON" or "OFF"
+                if TF[key] then TF[key](s) end
+            end
+
+            local clickB=Instance.new("TextButton");clickB.Size=UDim2.new(1,0,1,0);clickB.BackgroundTransparency=1
+            clickB.Text="";clickB.ZIndex=62;clickB.Parent=pf
+            clickB.MouseButton1Click:Connect(function() pfSet(not cur) end)
+            clickB.MouseButton2Click:Connect(function() sg2:Destroy();_pinnedState[key]=false;_pinnedFrames[key]=nil end)
+
+            local _d=false;local _ds=nil;local _dp=nil
+            pf.InputBegan:Connect(function(i)
+                if i.UserInputType==Enum.UserInputType.MouseButton1 then _d=true;_ds=i.Position;_dp=pf.Position end
+            end)
+            UIS.InputChanged:Connect(function(i)
+                if _d and i.UserInputType==Enum.UserInputType.MouseMovement then
+                    local dv=i.Position-_ds
+                    pf.Position=UDim2.new(_dp.X.Scale,_dp.X.Offset+dv.X,_dp.Y.Scale,_dp.Y.Offset+dv.Y)
+                end
+            end)
+            UIS.InputEnded:Connect(function(i) if i.UserInputType==Enum.UserInputType.MouseButton1 then _d=false end end)
+        else
+            local pf=Instance.new("Frame");pf.Size=UDim2.new(0,160,0,54)
+            pf.Position=UDim2.new(0.5,-80,0.28,0)
+            pf.BackgroundColor3=C.DARK2;pf.BorderSizePixel=0;pf.ZIndex=60;pf.Parent=sg2
+            Cor(pf,8);Stk(pf,C.VBRI,2)
+
+            local tlbl=Instance.new("TextLabel");tlbl.Size=UDim2.new(1,-50,0,22);tlbl.Position=UDim2.new(0,8,0,5)
+            tlbl.BackgroundTransparency=1;tlbl.Text=label;tlbl.TextColor3=C.WHI
+            tlbl.Font=Enum.Font.GothamBold;tlbl.TextSize=12;tlbl.TextXAlignment=Enum.TextXAlignment.Left
+            tlbl.ZIndex=61;tlbl.Parent=pf
+
+            local tog=Instance.new("TextButton");tog.Size=UDim2.new(0,44,0,22);tog.Position=UDim2.new(1,-50,0,5)
+            tog.BackgroundColor3=getState() and C.ACT or C.OFF
+            tog.Text=getState() and "ON" or "OFF";tog.TextColor3=C.WHI
+            tog.Font=Enum.Font.GothamBold;tog.TextSize=11;tog.ZIndex=62;tog.Parent=pf
+            Cor(tog,6);Stk(tog,C.VDIM,1.2)
+
+            local hint=Instance.new("TextLabel");hint.Size=UDim2.new(1,-16,0,16);hint.Position=UDim2.new(0,8,0,34)
+            hint.BackgroundTransparency=1;hint.Text="Right-click to close"
+            hint.TextColor3=C.GRY;hint.Font=Enum.Font.Gotham;hint.TextSize=9;hint.ZIndex=61;hint.Parent=pf
+
+            local cur=getState()
+            tog.MouseButton1Click:Connect(function()
+                cur=not cur;setState(cur)
+                tog.BackgroundColor3=cur and C.ACT or C.OFF;tog.Text=cur and "ON" or "OFF"
+                if TF[key] then TF[key](cur) end
+            end)
+            pf.InputEnded:Connect(function(i)
+                if i.UserInputType==Enum.UserInputType.MouseButton2 then
+                    sg2:Destroy();_pinnedState[key]=false;_pinnedFrames[key]=nil
+                end
+            end)
+            local _d=false;local _ds=nil;local _dp=nil
+            pf.InputBegan:Connect(function(i)
+                if i.UserInputType==Enum.UserInputType.MouseButton1 then _d=true;_ds=i.Position;_dp=pf.Position end
+            end)
+            UIS.InputChanged:Connect(function(i)
+                if _d and i.UserInputType==Enum.UserInputType.MouseMovement then
+                    local dv=i.Position-_ds
+                    pf.Position=UDim2.new(_dp.X.Scale,_dp.X.Offset+dv.X,_dp.Y.Scale,_dp.Y.Offset+dv.Y)
+                end
+            end)
+            UIS.InputEnded:Connect(function(i) if i.UserInputType==Enum.UserInputType.MouseButton1 then _d=false end end)
+        end
+    end
+end
+
+-- TOGGLE ROW with circular white pin indicator on right
+local function Tog(label,key,defOn,cb,useQBpin)
+    local row=Instance.new("Frame");row.Size=UDim2.new(1,-12,0,38)
+    row.BackgroundColor3=defOn and C.ACT or C.DARK2
+    row.BorderSizePixel=0;row.Parent=scroll;Cor(row,8)
+    local st=Stk(row,defOn and C.VBRI or C.VDIM,1.8,defOn and 0 or 0.45)
+
+    local lbl=Instance.new("TextLabel");lbl.Size=UDim2.new(1,-50,1,0);lbl.Position=UDim2.new(0,12,0,0)
+    lbl.BackgroundTransparency=1;lbl.Text=label;lbl.TextColor3=C.WHI
+    lbl.Font=Enum.Font.GothamBold;lbl.TextSize=12;lbl.TextXAlignment=Enum.TextXAlignment.Left;lbl.ZIndex=20;lbl.Parent=row
+
+    local pinCircle=Instance.new("Frame");pinCircle.Size=UDim2.new(0,22,0,22);pinCircle.Position=UDim2.new(1,-30,0.5,-11)
+    pinCircle.BackgroundColor3=C.WHI;pinCircle.BorderSizePixel=0;pinCircle.ZIndex=22;pinCircle.Parent=row
+    Cor(pinCircle,11);Stk(pinCircle,C.VDIM,1.5,0.3)
+
+    local pinIcon=Instance.new("TextLabel");pinIcon.Size=UDim2.new(1,0,1,0)
+    pinIcon.BackgroundTransparency=1;pinIcon.Text="📌";pinIcon.TextSize=11
+    pinIcon.Font=Enum.Font.GothamBold;pinIcon.ZIndex=23;pinIcon.Parent=pinCircle
+
+    local pinBtn=Instance.new("TextButton");pinBtn.Size=UDim2.new(0,26,0,26);pinBtn.Position=UDim2.new(1,-32,0.5,-13)
+    pinBtn.BackgroundTransparency=1;pinBtn.Text="";pinBtn.ZIndex=24;pinBtn.Parent=row
+
+    local en=defOn or false
+    local function set(s)
+        en=s
+        TS:Create(row,TweenInfo.new(0.14),{BackgroundColor3=s and C.ACT or C.DARK2}):Play()
+        st.Color=s and C.VBRI or C.VDIM;st.Transparency=s and 0 or 0.45
+        if cb then cb(s) end
+    end
+    local clk=Instance.new("TextButton");clk.Size=UDim2.new(1,-38,1,0);clk.BackgroundTransparency=1
+    clk.Text="";clk.ZIndex=21;clk.Parent=row
+    clk.MouseButton1Click:Connect(function() set(not en) end)
+
+    pinBtn.MouseButton1Click:Connect(function()
+        local isPinned=_pinnedState[key]
+        if isPinned then
+            pinCircle.BackgroundColor3=C.WHI
+        else
+            pinCircle.BackgroundColor3=C.VIO
+        end
+        MakePin(label,key,function() return en end,function(s) set(s) end,useQBpin)()
+    end)
+
+    if key then TF[key]=set end
+    return row,set
+end
+
+local function Seg(label,opts,def,cb)
+    local row=Instance.new("Frame");row.Size=UDim2.new(1,-12,0,42)
+    row.BackgroundColor3=C.DARK2;row.BorderSizePixel=0;row.Parent=scroll;Cor(row,8);Stk(row,C.VDIM,1.4,0.5)
+    local lbl=Instance.new("TextLabel");lbl.Size=UDim2.new(0,78,1,0);lbl.Position=UDim2.new(0,10,0,0)
+    lbl.BackgroundTransparency=1;lbl.Text=label;lbl.TextColor3=C.WHI
+    lbl.Font=Enum.Font.GothamBold;lbl.TextSize=11;lbl.TextXAlignment=Enum.TextXAlignment.Left;lbl.ZIndex=20;lbl.Parent=row
+    local total=168;local gap=3;local bw=math.floor((total-(#opts-1)*gap)/#opts)
+    local btns={}
+    for i,opt in ipairs(opts) do
+        local b=Instance.new("TextButton");b.Size=UDim2.new(0,bw,0,28)
+        b.Position=UDim2.new(0,88+(i-1)*(bw+gap),0.5,-14)
+        b.BackgroundColor3=(opt==def) and C.ACT or C.OFF
+        b.Text=opt;b.TextColor3=C.WHI;b.Font=Enum.Font.GothamBold;b.TextSize=10
+        b.ZIndex=21;b.Parent=row;Cor(b,7);btns[i]=b
+        b.MouseButton1Click:Connect(function()
+            for _,bb in ipairs(btns) do bb.BackgroundColor3=C.OFF end
+            b.BackgroundColor3=C.ACT;if cb then cb(opt) end
+        end)
+    end
+end
+
+local function Sld(label,mn,mx,def,cb)
+    local row=Instance.new("Frame");row.Size=UDim2.new(1,-12,0,48)
+    row.BackgroundColor3=C.DARK2;row.BorderSizePixel=0;row.Parent=scroll;Cor(row,8);Stk(row,C.VDIM,1.4,0.5)
+    local lbl=Instance.new("TextLabel");lbl.Size=UDim2.new(1,-50,0,20);lbl.Position=UDim2.new(0,10,0,3)
+    lbl.BackgroundTransparency=1;lbl.Text=label;lbl.TextColor3=C.WHI
+    lbl.Font=Enum.Font.GothamBold;lbl.TextSize=11;lbl.TextXAlignment=Enum.TextXAlignment.Left;lbl.ZIndex=20;lbl.Parent=row
+    local vl=Instance.new("TextLabel");vl.Size=UDim2.new(0,42,0,20);vl.Position=UDim2.new(1,-48,0,3)
+    vl.BackgroundTransparency=1;vl.Text=tostring(def);vl.TextColor3=C.VBRI
+    vl.Font=Enum.Font.GothamBold;vl.TextSize=12;vl.ZIndex=20;vl.Parent=row
+    local tr=Instance.new("Frame");tr.Size=UDim2.new(1,-20,0,5);tr.Position=UDim2.new(0,10,0,32)
+    tr.BackgroundColor3=Color3.fromRGB(35,35,52);tr.BorderSizePixel=0;tr.ZIndex=20;tr.Parent=row;Cor(tr,3)
+    local fl=Instance.new("Frame");fl.Size=UDim2.new((def-mn)/(mx-mn),0,1,0)
+    fl.BackgroundColor3=C.VIO;fl.BorderSizePixel=0;fl.ZIndex=21;fl.Parent=tr;Cor(fl,3)
+    local th=Instance.new("Frame");th.Size=UDim2.new(0,12,0,12)
+    th.Position=UDim2.new((def-mn)/(mx-mn),-6,0.5,-6);th.BackgroundColor3=C.WHI
+    th.BorderSizePixel=0;th.ZIndex=22;th.Parent=tr;Cor(th,6)
+    local drg=false
+    tr.InputBegan:Connect(function(i) if i.UserInputType==Enum.UserInputType.MouseButton1 or i.UserInputType==Enum.UserInputType.Touch then drg=true end end)
+    UIS.InputChanged:Connect(function(i)
+        if drg and (i.UserInputType==Enum.UserInputType.MouseMovement or i.UserInputType==Enum.UserInputType.Touch) then
+            local p=math.clamp((i.Position.X-tr.AbsolutePosition.X)/tr.AbsoluteSize.X,0,1)
+            local v=math.floor(mn+(mx-mn)*p)
+            fl.Size=UDim2.new(p,0,1,0);th.Position=UDim2.new(p,-6,0.5,-6)
+            vl.Text=tostring(v);if cb then cb(v) end
+        end
+    end)
+    UIS.InputEnded:Connect(function(i) if i.UserInputType==Enum.UserInputType.MouseButton1 or i.UserInputType==Enum.UserInputType.Touch then drg=false end end)
+end
+
+local function SpdRow(label,sub,sd,nd,isAct,onTog)
+    local row=Instance.new("Frame");row.Size=UDim2.new(1,-12,0,62)
+    row.BackgroundColor3=isAct and C.ACT or C.DARK2
+    row.BorderSizePixel=0;row.Parent=scroll;Cor(row,8)
+    local st=Stk(row,isAct and C.VBRI or C.VDIM,isAct and 2 or 1.5,isAct and 0 or 0.45)
+    local circ=Instance.new("TextButton");circ.Size=UDim2.new(0,26,0,26);circ.Position=UDim2.new(0,8,0.5,-13)
+    circ.BackgroundColor3=isAct and C.VBRI or C.OFF
+    circ.Text=isAct and "●" or "+";circ.TextColor3=C.WHI
+    circ.Font=Enum.Font.GothamBold;circ.TextSize=14;circ.ZIndex=21;circ.Parent=row;Cor(circ,13)
+    local nl=Instance.new("TextLabel");nl.Size=UDim2.new(0,110,0,20);nl.Position=UDim2.new(0,40,0,6)
+    nl.BackgroundTransparency=1;nl.Text=label;nl.TextColor3=C.WHI
+    nl.Font=Enum.Font.GothamBold;nl.TextSize=12;nl.TextXAlignment=Enum.TextXAlignment.Left;nl.ZIndex=20;nl.Parent=row
+    local sl=Instance.new("TextLabel");sl.Size=UDim2.new(0,110,0,14);sl.Position=UDim2.new(0,40,0,28)
+    sl.BackgroundTransparency=1;sl.Text=sub;sl.TextColor3=C.GRY
+    sl.Font=Enum.Font.Gotham;sl.TextSize=9;sl.TextXAlignment=Enum.TextXAlignment.Left;sl.ZIndex=20;sl.Parent=row
+    local sh=Instance.new("TextLabel");sh.Size=UDim2.new(0,48,0,13);sh.Position=UDim2.new(1,-106,0,6)
+    sh.BackgroundTransparency=1;sh.Text="steal spd";sh.TextColor3=C.GRY;sh.Font=Enum.Font.Gotham;sh.TextSize=9;sh.ZIndex=20;sh.Parent=row
+    local sb=Instance.new("TextBox");sb.Size=UDim2.new(0,46,0,22);sb.Position=UDim2.new(1,-106,0,21)
+    sb.BackgroundColor3=C.DARK;sb.Text=tostring(sd);sb.TextColor3=C.VBRI
+    sb.Font=Enum.Font.GothamBold;sb.TextSize=12;sb.BorderSizePixel=0;sb.ZIndex=21;sb.Parent=row;Cor(sb,5);Stk(sb,C.VDIM,1)
+    local nh=Instance.new("TextLabel");nh.Size=UDim2.new(0,48,0,13);nh.Position=UDim2.new(1,-56,0,6)
+    nh.BackgroundTransparency=1;nh.Text="norm spd";nh.TextColor3=C.GRY;nh.Font=Enum.Font.Gotham;nh.TextSize=9;nh.ZIndex=20;nh.Parent=row
+    local nb=Instance.new("TextBox");nb.Size=UDim2.new(0,46,0,22);nb.Position=UDim2.new(1,-56,0,21)
+    nb.BackgroundColor3=C.DARK;nb.Text=tostring(nd);nb.TextColor3=C.VBRI
+    nb.Font=Enum.Font.GothamBold;nb.TextSize=12;nb.BorderSizePixel=0;nb.ZIndex=21;nb.Parent=row;Cor(nb,5);Stk(nb,C.VDIM,1)
+    local act=isAct
+    local function tog()
+        act=not act
+        TS:Create(row,TweenInfo.new(0.14),{BackgroundColor3=act and C.ACT or C.DARK2}):Play()
+        circ.BackgroundColor3=act and C.VBRI or C.OFF;circ.Text=act and "●" or "+"
+        st.Color=act and C.VBRI or C.VDIM;st.Transparency=act and 0 or 0.45
+        if onTog then onTog(act,sb,nb) end
+    end
+    circ.MouseButton1Click:Connect(tog)
+    sb.FocusLost:Connect(function() if not tonumber(sb.Text) then sb.Text=tostring(sd) end;if onTog then onTog(act,sb,nb) end end)
+    nb.FocusLost:Connect(function() if not tonumber(nb.Text) then nb.Text=tostring(nd) end;if onTog then onTog(act,sb,nb) end end)
+    return row,sb,nb
+end
+
+-- ═══ BUILD MENU ═══
+
+-- Direction row
+local dirRow=Instance.new("Frame");dirRow.Size=UDim2.new(1,-12,0,40)
+dirRow.BackgroundColor3=C.DARK2;dirRow.BorderSizePixel=0;dirRow.Parent=scroll;Cor(dirRow,8);Stk(dirRow,C.VDIM,1.4,0.5)
+local function DB(txt,x,w,on)
+    local b=Instance.new("TextButton");b.Size=UDim2.new(0,w or 38,0,28);b.Position=UDim2.new(0,x,0.5,-14)
+    b.BackgroundColor3=on and C.ACT or C.OFF;b.Text=txt;b.TextColor3=C.WHI
+    b.Font=Enum.Font.GothamBold;b.TextSize=10;b.ZIndex=21;b.Parent=dirRow;Cor(b,7);return b
+end
+local bBase=DB("Base",4,36,false);local bL=DB("◄L",44,32,true);local bR=DB("R►",80,32,false)
+local mLbl=Instance.new("TextLabel");mLbl.Size=UDim2.new(0,32,0,28);mLbl.Position=UDim2.new(0,118,0.5,-14)
+mLbl.BackgroundTransparency=1;mLbl.Text="Mode";mLbl.TextColor3=C.WHI;mLbl.Font=Enum.Font.GothamBold;mLbl.TextSize=10;mLbl.ZIndex=20;mLbl.Parent=dirRow
+local bSemi=DB("Semi",152,38,false);local bFull=DB("Full",194,38,true)
+bL.MouseButton1Click:Connect(function() Cfg.Direction="L";bL.BackgroundColor3=C.ACT;bR.BackgroundColor3=C.OFF end)
+bR.MouseButton1Click:Connect(function() Cfg.Direction="R";bR.BackgroundColor3=C.ACT;bL.BackgroundColor3=C.OFF end)
+bSemi.MouseButton1Click:Connect(function() Cfg.MovMode="Semi";bSemi.BackgroundColor3=C.ACT;bFull.BackgroundColor3=C.OFF end)
+bFull.MouseButton1Click:Connect(function() Cfg.MovMode="Full";bFull.BackgroundColor3=C.ACT;bSemi.BackgroundColor3=C.OFF end)
+
+Sec("SPEED")
+SpdRow("Normal Speed","default mode",Cfg.NormalSteal,Cfg.NormalNorm,false,function(on,sb,nb)
+    if on then Cfg.SpeedMode="Normal";Cfg.NormalSteal=tonumber(sb.Text) or Cfg.NormalSteal;Cfg.NormalNorm=tonumber(nb.Text) or Cfg.NormalNorm end
+end)
+SpdRow("Lagger Speed","use against lagger",Cfg.LaggerSteal,Cfg.LaggerNorm,false,function(on,sb,nb)
+    if on then Cfg.SpeedMode="Lagger";Cfg.LaggerSteal=tonumber(sb.Text) or Cfg.LaggerSteal;Cfg.LaggerNorm=tonumber(nb.Text) or Cfg.LaggerNorm end
+end)
+SpdRow("Desync Speed","use if desynced",Cfg.DesyncSteal,Cfg.DesyncNorm,true,function(on,sb,nb)
+    if on then Cfg.SpeedMode="Desync";Cfg.DesyncSteal=tonumber(sb.Text) or Cfg.DesyncSteal;Cfg.DesyncNorm=tonumber(nb.Text) or Cfg.DesyncNorm end
+end)
+
+Sec("AUTO")
+Tog("Auto Left","AutoLeft",Cfg.AutoLeft,function(s)
+    Cfg.AutoLeft=s
+    if s then Cfg.AutoRight=false;if TF["AutoRight"] then TF["AutoRight"](false) end;StartWalk("left") else StopWalk() end
+end)
+Tog("Auto Right","AutoRight",Cfg.AutoRight,function(s)
+    Cfg.AutoRight=s
+    if s then Cfg.AutoLeft=false;if TF["AutoLeft"] then TF["AutoLeft"](false) end;StartWalk("right") else StopWalk() end
+end)
+
+-- AUTO PLAY — special row with direction picker
+local _apDir="L"
+local apRow=Instance.new("Frame");apRow.Size=UDim2.new(1,-12,0,38)
+apRow.BackgroundColor3=C.DARK2;apRow.BorderSizePixel=0;apRow.Parent=scroll;Cor(apRow,8)
+local apSt=Stk(apRow,C.VDIM,1.8,0.45)
+
+local apLbl=Instance.new("TextLabel");apLbl.Size=UDim2.new(0,78,1,0);apLbl.Position=UDim2.new(0,12,0,0)
+apLbl.BackgroundTransparency=1;apLbl.Text="Auto Play";apLbl.TextColor3=C.WHI
+apLbl.Font=Enum.Font.GothamBold;apLbl.TextSize=12;apLbl.TextXAlignment=Enum.TextXAlignment.Left;apLbl.ZIndex=21;apLbl.Parent=apRow
+
+local dirIcon=Instance.new("TextButton");dirIcon.Size=UDim2.new(0,28,0,28);dirIcon.Position=UDim2.new(0,92,0.5,-14)
+dirIcon.BackgroundColor3=C.DARK;dirIcon.Text="➡️";dirIcon.TextSize=14;dirIcon.Font=Enum.Font.GothamBold
+dirIcon.TextColor3=C.WHI;dirIcon.ZIndex=23;dirIcon.Parent=apRow;Cor(dirIcon,7);Stk(dirIcon,C.VDIM,1)
+
+local apDirLbl=Instance.new("TextLabel");apDirLbl.Size=UDim2.new(0,56,0,28);apDirLbl.Position=UDim2.new(0,124,0.5,-14)
+apDirLbl.BackgroundColor3=C.DARK;apDirLbl.Text="◄ LEFT";apDirLbl.TextColor3=C.VBRI
+apDirLbl.Font=Enum.Font.GothamBold;apDirLbl.TextSize=10;apDirLbl.ZIndex=22;apDirLbl.Parent=apRow
+Cor(apDirLbl,7);Stk(apDirLbl,C.VDIM,1)
+
+local apPicker=Instance.new("Frame");apPicker.Size=UDim2.new(0,100,0,66)
+apPicker.Position=UDim2.new(0,88,1,2);apPicker.BackgroundColor3=C.DARK2;apPicker.BorderSizePixel=0
+apPicker.ZIndex=50;apPicker.Visible=false;apPicker.Parent=apRow;Cor(apPicker,8);Stk(apPicker,C.VIO,2)
+
+local function makeDirOpt(txt,ypos,isLeft)
+    local b=Instance.new("TextButton");b.Size=UDim2.new(1,-8,0,28);b.Position=UDim2.new(0,4,0,ypos)
+    b.BackgroundColor3=C.OFF;b.Text=txt;b.TextColor3=C.WHI;b.Font=Enum.Font.GothamBold;b.TextSize=12
+    b.ZIndex=51;b.Parent=apPicker;Cor(b,6)
+    b.MouseButton1Click:Connect(function()
+        _apDir=isLeft and "L" or "R"
+        apDirLbl.Text=isLeft and "◄ LEFT" or "RIGHT ►"
+        apPicker.Visible=false
+    end)
+end
+makeDirOpt("◄ LEFT",4,true)
+makeDirOpt("RIGHT ►",36,false)
+
+dirIcon.MouseButton1Click:Connect(function()
+    apPicker.Visible=not apPicker.Visible
+end)
+
+local apPinCircle=Instance.new("Frame");apPinCircle.Size=UDim2.new(0,22,0,22);apPinCircle.Position=UDim2.new(1,-28,0.5,-11)
+apPinCircle.BackgroundColor3=C.WHI;apPinCircle.BorderSizePixel=0;apPinCircle.ZIndex=22;apPinCircle.Parent=apRow
+Cor(apPinCircle,11);Stk(apPinCircle,C.VDIM,1.5,0.3)
+local apPinIcon=Instance.new("TextLabel");apPinIcon.Size=UDim2.new(1,0,1,0)
+apPinIcon.BackgroundTransparency=1;apPinIcon.Text="📌";apPinIcon.TextSize=11
+apPinIcon.Font=Enum.Font.GothamBold;apPinIcon.ZIndex=23;apPinIcon.Parent=apPinCircle
+
+local apPinBtn=Instance.new("TextButton");apPinBtn.Size=UDim2.new(0,26,0,26);apPinBtn.Position=UDim2.new(1,-30,0.5,-13)
+apPinBtn.BackgroundTransparency=1;apPinBtn.Text="";apPinBtn.ZIndex=24;apPinBtn.Parent=apRow
+
+local apOn=false
+local function setAP(s)
+    apOn=s;Cfg.AutoPlay=s
+    TS:Create(apRow,TweenInfo.new(0.14),{BackgroundColor3=s and C.ACT or C.DARK2}):Play()
+    apSt.Color=s and C.VBRI or C.VDIM;apSt.Transparency=s and 0 or 0.45
+    if s then StartWalk((_apDir=="L") and "left" or "right") else StopWalk() end
+end
+local apClk=Instance.new("TextButton");apClk.Size=UDim2.new(0,84,1,0);apClk.BackgroundTransparency=1
+apClk.Text="";apClk.ZIndex=21;apClk.Parent=apRow
+apClk.MouseButton1Click:Connect(function() apPicker.Visible=false;setAP(not apOn) end)
+
+apPinBtn.MouseButton1Click:Connect(function()
+    local isPinned=_pinnedState["AutoPlay"]
+    apPinCircle.BackgroundColor3=isPinned and C.WHI or C.VIO
+    MakePin("Auto Play","AutoPlay",function() return apOn end,function(s) setAP(s) end,true)()
+end)
+TF["AutoPlay"]=function(s) setAP(s) end
+
+Tog("Auto Steal","AutoSteal",Cfg.AutoSteal,function(s) Cfg.AutoSteal=s end)
+Tog("Anti Kick","AntiKick",Cfg.AntiKick,function(s) Cfg.AntiKick=s end)
+Sld("Auto TP",0,100,Cfg.AutoTP,function(v) Cfg.AutoTP=v end)
+
+Sec("MOVEMENT")
+Tog("Infinite Jump","InfiniteJump",Cfg.InfiniteJump,function(s) Cfg.InfiniteJump=s end)
+Seg("Jump Mode",{"Single","Hold"},Cfg.JumpMode,function(o) Cfg.JumpMode=o end)
+Sld("Float",0,50,Cfg.Float,function(v) Cfg.Float=v end)
+Sld("Rise Speed",0,100,Cfg.RiseSpeed,function(v) Cfg.RiseSpeed=v end)
+Sld("Fall Speed",0,100,Cfg.FallSpeed,function(v) Cfg.FallSpeed=v end)
+Seg("Stop Mode",{"TP Down","Float Down"},Cfg.StopMode,function(o) Cfg.StopMode=o end)
+Tog("TP Down","TPDown",Cfg.TPDown,function(s) Cfg.TPDown=s end)
+
+Sec("COMBAT")
+Tog("Counter Bat","CounterBat",Cfg.CounterBat,function(s) Cfg.CounterBat=s end)
+Seg("CB Mode",{"Follow","No Follow"},Cfg.CBMode,function(o) Cfg.CBMode=o end)
+Tog("Medusa Counter","MedusaCounter",Cfg.MedusaCounter,function(s) Cfg.MedusaCounter=s end)
+Tog("AUTO PLAY AFTER MED","AutoPlayAfterMed",Cfg.AutoPlayAfterMed,function(s) Cfg.AutoPlayAfterMed=s end)
+Tog("Aimbot","Aimbot",Cfg.Aimbot,function(s) Cfg.Aimbot=s end,true)
+Seg("Hit Mode",{"Auto Bat","Manual"},Cfg.HitMode,function(o) Cfg.HitMode=o end)
+Tog("Desync","Desync",Cfg.Desync,function(s) Cfg.Desync=s end,true)
+Tog("Drop Brainrot","DropBrainrot",Cfg.DropBrainrot,function(s) Cfg.DropBrainrot=s end,true)
+Tog("Lagger","Lagger",Cfg.Lagger,function(s) Cfg.Lagger=s end)
+Seg("Lag Mode",{"High","Low"},Cfg.LagMode,function(o) Cfg.LagMode=o end)
+
+Sec("UTILITY")
+Tog("Reset Char","ResetChar",Cfg.ResetChar,function(s) Cfg.ResetChar=s end)
+Tog("No Player Collision","NoCollision",Cfg.NoCollision,function(s) Cfg.NoCollision=s end)
+Tog("FPS Boost","FPSBoost",Cfg.FPSBoost,function(s) Cfg.FPSBoost=s;StartFPS() end)
+Tog("No Animation","NoAnimation",Cfg.NoAnimation,function(s) Cfg.NoAnimation=s end)
+Tog("X-Ray Base","XRayBase",Cfg.XRayBase,function(s) Cfg.XRayBase=s end)
+Sld("FOV",60,160,Cfg.FOV,function(v) Cfg.FOV=v;pcall(function() workspace.CurrentCamera.FieldOfView=v end) end)
+Sld("Night Sky",0,100,Cfg.NightSky,function(v) Cfg.NightSky=v end)
+Tog("Taunt","Taunt",Cfg.Taunt,function(s) Cfg.Taunt=s end)
+
+local topBtn=Instance.new("TextButton");topBtn.Size=UDim2.new(1,-12,0,34)
+topBtn.BackgroundColor3=C.DARK;topBtn.Text="TRUBL ON TOP";topBtn.TextColor3=C.WHI
+topBtn.Font=Enum.Font.GothamBold;topBtn.TextSize=12;topBtn.Parent=scroll;Cor(topBtn,8);Stk(topBtn,C.VIO,2)
+topBtn.MouseButton1Click:Connect(function() gui.DisplayOrder=gui.DisplayOrder+1 end)
+
+Sec("SETTINGS")
+Sld("Menu Opacity",10,100,Cfg.MenuOpacity,function(v) Cfg.MenuOpacity=v;menu.BackgroundTransparency=1-(v/100) end)
+Sld("Menu Size",50,150,Cfg.MenuSize,function(v) Cfg.MenuSize=v end)
+Sld("Speed Mode Size",50,150,Cfg.SpeedModeSize,function(v) Cfg.SpeedModeSize=v end)
+
+local cfgR=Instance.new("Frame");cfgR.Size=UDim2.new(1,-12,0,36);cfgR.BackgroundTransparency=1;cfgR.Parent=scroll
+local cpB=Instance.new("TextButton");cpB.Size=UDim2.new(0.49,0,1,0);cpB.BackgroundColor3=C.DARK2
+cpB.Text="Copy Config";cpB.TextColor3=C.WHI;cpB.Font=Enum.Font.GothamBold;cpB.TextSize=11;cpB.Parent=cfgR;Cor(cpB,7);Stk(cpB,C.VDIM,1.5)
+cpB.MouseButton1Click:Connect(function()
+    if setclipboard then setclipboard(game:GetService("HttpService"):JSONEncode(Cfg)) end
+    cpB.Text="Copied!";task.delay(1.5,function() cpB.Text="Copy Config" end)
+end)
+local ldB=Instance.new("TextButton");ldB.Size=UDim2.new(0.49,0,1,0);ldB.Position=UDim2.new(0.51,0,0,0)
+ldB.BackgroundColor3=C.DARK2;ldB.Text="Load Config";ldB.TextColor3=C.WHI;ldB.Font=Enum.Font.GothamBold;ldB.TextSize=11;ldB.Parent=cfgR;Cor(ldB,7);Stk(ldB,C.VDIM,1.5)
+
+local pasteB=Instance.new("TextBox");pasteB.Size=UDim2.new(1,-12,0,30)
+pasteB.BackgroundColor3=C.DARK;pasteB.PlaceholderText="Paste config code here..."
+pasteB.PlaceholderColor3=C.GRY;pasteB.Text="";pasteB.TextColor3=C.WHI
+pasteB.Font=Enum.Font.Gotham;pasteB.TextSize=11;pasteB.BorderSizePixel=0;pasteB.Parent=scroll;Cor(pasteB,7);Stk(pasteB,C.VDIM,1.5)
+
+Sld("Button Size",60,150,Cfg.ButtonSize,function(v) Cfg.ButtonSize=v end)
+
+local _qBtns={}
+Seg("Shape",{"Rounded","Box"},Cfg.Shape,function(o)
+    Cfg.Shape=o;local r=o=="Rounded" and 14 or 5
+    for _,b in ipairs(_qBtns) do
+        local co=b:FindFirstChildOfClass("UICorner")
+        if co then co.CornerRadius=UDim.new(0,r) end
+    end
+end)
+
+-- ═══ LOCK BUTTONS ═══
+local lkBtn=Instance.new("TextButton");lkBtn.Size=UDim2.new(1,-12,0,38)
+lkBtn.BackgroundColor3=C.DARK;lkBtn.Text="🔒  Lock Buttons";lkBtn.TextColor3=C.WHI
+lkBtn.Font=Enum.Font.GothamBold;lkBtn.TextSize=13;lkBtn.Parent=scroll;Cor(lkBtn,8);Stk(lkBtn,C.VIO,2.2)
+lkBtn.MouseButton1Click:Connect(function()
+    Cfg.Locked=not Cfg.Locked
+    lkBtn.Text=Cfg.Locked and "🔓  Unlock Buttons" or "🔒  Lock Buttons"
+    lkBtn.BackgroundColor3=Cfg.Locked and C.ACT or C.DARK
+    for key,sg2 in pairs(_pinnedFrames) do
+        if sg2 and sg2.Parent then
+            for _,pf in ipairs(sg2:GetChildren()) do
+                if pf:IsA("Frame") then
+                    local ol=pf:FindFirstChildOfClass("UIStroke")
+                    if ol then ol.Color=Cfg.Locked and Color3.fromRGB(200,50,50) or C.VBRI end
+                end
+            end
+        end
+    end
+end)
+
+local sp=Instance.new("Frame");sp.Size=UDim2.new(1,0,0,8);sp.BackgroundTransparency=1;sp.Parent=scroll
+
+print("[TRUBL] ✓ Red theme, UI only - no logic")

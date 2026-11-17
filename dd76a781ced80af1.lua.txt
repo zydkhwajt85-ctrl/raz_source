@@ -1,0 +1,1237 @@
+-- This file was generated with UnveilR 2.1.8 at discord.gg/threaded or discord.gg/aqfudJEEeE (hookOp is on).
+
+-- local _ = bit32 or (unknown_value)
+-- false
+if not bit32 then -- didnt run, expr id 1, has an else.
+else
+    local TweenService = game:GetService("TweenService")
+    local LocalPlayer = game:GetService("Players").LocalPlayer
+    _G.STICKYInstantStealLoaded = true
+    local Vector3_New = Vector3.new
+    Vector3_New(-481.88, -3.79, 138.02)
+    Vector3_New(-481.75, -3.79, 89.18)
+    Vector3_New(-481.82, -3.79, 30.95)
+    Vector3_New(-481.75, -3.79, -17.79)
+    Vector3_New(-481.8, -3.79, -76.06)
+    Vector3_New(-481.72, -3.79, -124.7)
+    Vector3_New(-337.45, -3.85, -124.72)
+    Vector3_New(-337.37, -3.85, -76.07)
+    Vector3_New(-337.46, -3.79, -17.72)
+    Vector3_New(-337.41, -3.79, 30.92)
+    Vector3_New(-337.32, -3.79, 89.02)
+    Vector3_New(-337.27, -3.79, 137.9)
+    Vector3_New(-337.45, -3.79, 196.29)
+    Vector3_New(-337.37, -3.79, 244.91)
+    Vector3_New(-481.72, -3.79, 196.21)
+    Vector3_New(-481.76, -3.79, 244.92)
+    local STICKYUI = Instance.new("ScreenGui")
+    STICKYUI.Name = "STICKYUI"
+    STICKYUI.ResetOnSpawn = false
+    STICKYUI.Parent = LocalPlayer:WaitForChild("PlayerGui")
+    local Frame = Instance.new("Frame")
+    Frame.Parent = STICKYUI
+    local UDim2_FromOffset = UDim2.fromOffset
+    Frame.Size = UDim2_FromOffset(220, 160)
+    Frame.Position = UDim2.fromScale(0.5, 0.5)
+    Frame.AnchorPoint = Vector2.new(0.5, 0.5)
+    local Color3_FromRGB = Color3.fromRGB
+    Frame.BackgroundColor3 = Color3_FromRGB(0, 0, 0)
+    Frame.BackgroundTransparency = 0
+    Frame.Active = true
+    Frame.Draggable = true
+    local UICorner = Instance.new("UICorner")
+    UICorner.Parent = Frame
+    local UDim_New = UDim.new
+    UICorner.CornerRadius = UDim_New(0, 10)
+    local UIStroke = Instance.new("UIStroke")
+    UIStroke.Parent = Frame
+    UIStroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
+    UIStroke.Color = Color3_FromRGB(255, 0, 0)
+    UIStroke.Thickness = 1
+    local TextLabel = Instance.new("TextLabel")
+    TextLabel.Parent = Frame
+    local UDim2_New = UDim2.new
+    TextLabel.Size = UDim2_New(1, -12, 0, 28)
+    TextLabel.Position = UDim2_FromOffset(6, 6)
+    TextLabel.BackgroundTransparency = 1
+    TextLabel.Text = "Sticky Insta Steal💢"
+    local Enum_Font = Enum.Font
+    TextLabel.Font = Enum_Font.GothamBold
+    TextLabel.TextSize = 14
+    TextLabel.TextColor3 = Color3_FromRGB(220, 220, 220)
+    local Enum_TextXAlignment = Enum.TextXAlignment
+    TextLabel.TextXAlignment = Enum_TextXAlignment.Center
+    local TextLabel_2 = Instance.new("TextLabel")
+    TextLabel_2.Parent = Frame
+    TextLabel_2.Size = UDim2_New(1, -12, 0, 22)
+    TextLabel_2.Position = UDim2_FromOffset(6, 42)
+    TextLabel_2.BackgroundTransparency = 1
+    TextLabel_2.Text = "Stealing In Progress…"
+    TextLabel_2.Font = Enum_Font.Gotham
+    TextLabel_2.TextSize = 12
+    TextLabel_2.TextColor3 = Color3_FromRGB(180, 180, 180)
+    TextLabel_2.TextXAlignment = Enum_TextXAlignment.Center
+    task.spawn(function(ext_1_0, ext_2_0, ext_3_0, ext_4_0, ext_5_0, ...)
+        local TweenInfo = Env.TweenInfo
+        local str = TweenService:Create(TextLabel_2, TweenInfo.new(1.2), {
+            TextTransparency = 0.4,
+        })
+        str:Play()
+        task.wait(1.2)
+        local str_2 = TweenService:Create(TextLabel_2, TweenInfo.new(1.2), {
+            TextTransparency = 0.4,
+        })
+        str_2:Play()
+        task.wait(1.2)
+        local str_3 = TweenService:Create(TextLabel_2, TweenInfo.new(1.2), {
+            TextTransparency = 0.4,
+        })
+        str_3:Play()
+        task.wait(1.2)
+        local str_4 = TweenService:Create(TextLabel_2, TweenInfo.new(1.2), {
+            TextTransparency = 0.4,
+        })
+        str_4:Play()
+        task.wait(1.2)
+        local str_5 = TweenService:Create(TextLabel_2, TweenInfo.new(1.2), {
+            TextTransparency = 0.4,
+        })
+        str_5:Play()
+        task.wait(1.2)
+        local str_6 = TweenService:Create(TextLabel_2, TweenInfo.new(1.2), {
+            TextTransparency = 0.4,
+        })
+        str_6:Play()
+        task.wait(1.2)
+        local str_7 = TweenService:Create(TextLabel_2, TweenInfo.new(1.2), {
+            TextTransparency = 0.4,
+        })
+        str_7:Play()
+        task.wait(1.2)
+        local str_8 = TweenService:Create(TextLabel_2, TweenInfo.new(1.2), {
+            TextTransparency = 0.4,
+        })
+        str_8:Play()
+        task.wait(1.2)
+        local str_9 = TweenService:Create(TextLabel_2, TweenInfo.new(1.2), {
+            TextTransparency = 0.4,
+        })
+        str_9:Play()
+        task.wait(1.2)
+        local str_10 = TweenService:Create(TextLabel_2, TweenInfo.new(1.2), {
+            TextTransparency = 0.4,
+        })
+        str_10:Play()
+        task.wait(1.2)
+        local str_11 = TweenService:Create(TextLabel_2, TweenInfo.new(1.2), {
+            TextTransparency = 0.4,
+        })
+        str_11:Play()
+        task.wait(1.2)
+        local str_12 = TweenService:Create(TextLabel_2, TweenInfo.new(1.2), {
+            TextTransparency = 0.4,
+        })
+        str_12:Play()
+        task.wait(1.2)
+        local str_13 = TweenService:Create(TextLabel_2, TweenInfo.new(1.2), {
+            TextTransparency = 0.4,
+        })
+        str_13:Play()
+        task.wait(1.2)
+        local str_14 = TweenService:Create(TextLabel_2, TweenInfo.new(1.2), {
+            TextTransparency = 0.4,
+        })
+        str_14:Play()
+        task.wait(1.2)
+        local str_15 = TweenService:Create(TextLabel_2, TweenInfo.new(1.2), {
+            TextTransparency = 0.4,
+        })
+        str_15:Play()
+        task.wait(1.2)
+        local str_16 = TweenService:Create(TextLabel_2, TweenInfo.new(1.2), {
+            TextTransparency = 0.4,
+        })
+        str_16:Play()
+        task.wait(1.2)
+        local str_17 = TweenService:Create(TextLabel_2, TweenInfo.new(1.2), {
+            TextTransparency = 0.4,
+        })
+        str_17:Play()
+        task.wait(1.2)
+        local str_18 = TweenService:Create(TextLabel_2, TweenInfo.new(1.2), {
+            TextTransparency = 0.4,
+        })
+        str_18:Play()
+        task.wait(1.2)
+        local str_19 = TweenService:Create(TextLabel_2, TweenInfo.new(1.2), {
+            TextTransparency = 0.4,
+        })
+        str_19:Play()
+        task.wait(1.2)
+        local str_20 = TweenService:Create(TextLabel_2, TweenInfo.new(1.2), {
+            TextTransparency = 0.4,
+        })
+        str_20:Play()
+        task.wait(1.2)
+        local str_21 = TweenService:Create(TextLabel_2, TweenInfo.new(1.2), {
+            TextTransparency = 0.4,
+        })
+        str_21:Play()
+        task.wait(1.2)
+        local str_22 = TweenService:Create(TextLabel_2, TweenInfo.new(1.2), {
+            TextTransparency = 0.4,
+        })
+        str_22:Play()
+        task.wait(1.2)
+        local str_23 = TweenService:Create(TextLabel_2, TweenInfo.new(1.2), {
+            TextTransparency = 0.4,
+        })
+        str_23:Play()
+        task.wait(1.2)
+        local str_24 = TweenService:Create(TextLabel_2, TweenInfo.new(1.2), {
+            TextTransparency = 0.4,
+        })
+        str_24:Play()
+        task.wait(1.2)
+        local str_25 = TweenService:Create(TextLabel_2, TweenInfo.new(1.2), {
+            TextTransparency = 0.4,
+        })
+        str_25:Play()
+        task.wait(1.2)
+        local str_26 = TweenService:Create(TextLabel_2, TweenInfo.new(1.2), {
+            TextTransparency = 0.4,
+        })
+        str_26:Play()
+        task.wait(1.2)
+        local str_27 = TweenService:Create(TextLabel_2, TweenInfo.new(1.2), {
+            TextTransparency = 0.4,
+        })
+        str_27:Play()
+        task.wait(1.2)
+        local str_28 = TweenService:Create(TextLabel_2, TweenInfo.new(1.2), {
+            TextTransparency = 0.4,
+        })
+        str_28:Play()
+        task.wait(1.2)
+        local str_29 = TweenService:Create(TextLabel_2, TweenInfo.new(1.2), {
+            TextTransparency = 0.4,
+        })
+        str_29:Play()
+        task.wait(1.2)
+        local str_30 = TweenService:Create(TextLabel_2, TweenInfo.new(1.2), {
+            TextTransparency = 0.4,
+        })
+        str_30:Play()
+        task.wait(1.2)
+        local str_31 = TweenService:Create(TextLabel_2, TweenInfo.new(1.2), {
+            TextTransparency = 0.4,
+        })
+        str_31:Play()
+        task.wait(1.2)
+        local str_32 = TweenService:Create(TextLabel_2, TweenInfo.new(1.2), {
+            TextTransparency = 0.4,
+        })
+        str_32:Play()
+        task.wait(1.2)
+        local str_33 = TweenService:Create(TextLabel_2, TweenInfo.new(1.2), {
+            TextTransparency = 0.4,
+        })
+        str_33:Play()
+        task.wait(1.2)
+        local str_34 = TweenService:Create(TextLabel_2, TweenInfo.new(1.2), {
+            TextTransparency = 0.4,
+        })
+        str_34:Play()
+        task.wait(1.2)
+        local str_35 = TweenService:Create(TextLabel_2, TweenInfo.new(1.2), {
+            TextTransparency = 0.4,
+        })
+        str_35:Play()
+        task.wait(1.2)
+        local str_36 = TweenService:Create(TextLabel_2, TweenInfo.new(1.2), {
+            TextTransparency = 0.4,
+        })
+        str_36:Play()
+        task.wait(1.2)
+        local str_37 = TweenService:Create(TextLabel_2, TweenInfo.new(1.2), {
+            TextTransparency = 0.4,
+        })
+        str_37:Play()
+        task.wait(1.2)
+        local str_38 = TweenService:Create(TextLabel_2, TweenInfo.new(1.2), {
+            TextTransparency = 0.4,
+        })
+        str_38:Play()
+        task.wait(1.2)
+        local str_39 = TweenService:Create(TextLabel_2, TweenInfo.new(1.2), {
+            TextTransparency = 0.4,
+        })
+        str_39:Play()
+        task.wait(1.2)
+        local str_40 = TweenService:Create(TextLabel_2, TweenInfo.new(1.2), {
+            TextTransparency = 0.4,
+        })
+        str_40:Play()
+        task.wait(1.2)
+        local str_41 = TweenService:Create(TextLabel_2, TweenInfo.new(1.2), {
+            TextTransparency = 0.4,
+        })
+        str_41:Play()
+        task.wait(1.2)
+        local str_42 = TweenService:Create(TextLabel_2, TweenInfo.new(1.2), {
+            TextTransparency = 0.4,
+        })
+        str_42:Play()
+        task.wait(1.2)
+        local str_43 = TweenService:Create(TextLabel_2, TweenInfo.new(1.2), {
+            TextTransparency = 0.4,
+        })
+        str_43:Play()
+        task.wait(1.2)
+        local str_44 = TweenService:Create(TextLabel_2, TweenInfo.new(1.2), {
+            TextTransparency = 0.4,
+        })
+        str_44:Play()
+        task.wait(1.2)
+        local str_45 = TweenService:Create(TextLabel_2, TweenInfo.new(1.2), {
+            TextTransparency = 0.4,
+        })
+        str_45:Play()
+        task.wait(1.2)
+        local str_46 = TweenService:Create(TextLabel_2, TweenInfo.new(1.2), {
+            TextTransparency = 0.4,
+        })
+        str_46:Play()
+        task.wait(1.2)
+        local str_47 = TweenService:Create(TextLabel_2, TweenInfo.new(1.2), {
+            TextTransparency = 0.4,
+        })
+        str_47:Play()
+        task.wait(1.2)
+        local str_48 = TweenService:Create(TextLabel_2, TweenInfo.new(1.2), {
+            TextTransparency = 0.4,
+        })
+        str_48:Play()
+        task.wait(1.2)
+        local str_49 = TweenService:Create(TextLabel_2, TweenInfo.new(1.2), {
+            TextTransparency = 0.4,
+        })
+        str_49:Play()
+        task.wait(1.2)
+        local str_50 = TweenService:Create(TextLabel_2, TweenInfo.new(1.2), {
+            TextTransparency = 0.4,
+        })
+        str_50:Play()
+        task.wait(1.2)
+        local str_51 = TweenService:Create(TextLabel_2, TweenInfo.new(1.2), {
+            TextTransparency = 0.4,
+        })
+        str_51:Play()
+        task.wait(1.2)
+        local str_52 = TweenService:Create(TextLabel_2, TweenInfo.new(1.2), {
+            TextTransparency = 0.4,
+        })
+        str_52:Play()
+        task.wait(1.2)
+        local str_53 = TweenService:Create(TextLabel_2, TweenInfo.new(1.2), {
+            TextTransparency = 0.4,
+        })
+        str_53:Play()
+        task.wait(1.2)
+        local str_54 = TweenService:Create(TextLabel_2, TweenInfo.new(1.2), {
+            TextTransparency = 0.4,
+        })
+        str_54:Play()
+        task.wait(1.2)
+        local str_55 = TweenService:Create(TextLabel_2, TweenInfo.new(1.2), {
+            TextTransparency = 0.4,
+        })
+        str_55:Play()
+        task.wait(1.2)
+        local str_56 = TweenService:Create(TextLabel_2, TweenInfo.new(1.2), {
+            TextTransparency = 0.4,
+        })
+        str_56:Play()
+        task.wait(1.2)
+        local str_57 = TweenService:Create(TextLabel_2, TweenInfo.new(1.2), {
+            TextTransparency = 0.4,
+        })
+        str_57:Play()
+        task.wait(1.2)
+        local str_58 = TweenService:Create(TextLabel_2, TweenInfo.new(1.2), {
+            TextTransparency = 0.4,
+        })
+        str_58:Play()
+        task.wait(1.2)
+        local str_59 = TweenService:Create(TextLabel_2, TweenInfo.new(1.2), {
+            TextTransparency = 0.4,
+        })
+        str_59:Play()
+        task.wait(1.2)
+        local str_60 = TweenService:Create(TextLabel_2, TweenInfo.new(1.2), {
+            TextTransparency = 0.4,
+        })
+        str_60:Play()
+        task.wait(1.2)
+        local str_61 = TweenService:Create(TextLabel_2, TweenInfo.new(1.2), {
+            TextTransparency = 0.4,
+        })
+        str_61:Play()
+        task.wait(1.2)
+        local str_62 = TweenService:Create(TextLabel_2, TweenInfo.new(1.2), {
+            TextTransparency = 0.4,
+        })
+        str_62:Play()
+        task.wait(1.2)
+        local str_63 = TweenService:Create(TextLabel_2, TweenInfo.new(1.2), {
+            TextTransparency = 0.4,
+        })
+        str_63:Play()
+        task.wait(1.2)
+        local str_64 = TweenService:Create(TextLabel_2, TweenInfo.new(1.2), {
+            TextTransparency = 0.4,
+        })
+        str_64:Play()
+        task.wait(1.2)
+        local str_65 = TweenService:Create(TextLabel_2, TweenInfo.new(1.2), {
+            TextTransparency = 0.4,
+        })
+        str_65:Play()
+        task.wait(1.2)
+        local str_66 = TweenService:Create(TextLabel_2, TweenInfo.new(1.2), {
+            TextTransparency = 0.4,
+        })
+        str_66:Play()
+        task.wait(1.2)
+        local str_67 = TweenService:Create(TextLabel_2, TweenInfo.new(1.2), {
+            TextTransparency = 0.4,
+        })
+        str_67:Play()
+        task.wait(1.2)
+        local str_68 = TweenService:Create(TextLabel_2, TweenInfo.new(1.2), {
+            TextTransparency = 0.4,
+        })
+        str_68:Play()
+        task.wait(1.2)
+        local str_69 = TweenService:Create(TextLabel_2, TweenInfo.new(1.2), {
+            TextTransparency = 0.4,
+        })
+        str_69:Play()
+        task.wait(1.2)
+        local str_70 = TweenService:Create(TextLabel_2, TweenInfo.new(1.2), {
+            TextTransparency = 0.4,
+        })
+        str_70:Play()
+        task.wait(1.2)
+        local str_71 = TweenService:Create(TextLabel_2, TweenInfo.new(1.2), {
+            TextTransparency = 0.4,
+        })
+        str_71:Play()
+        task.wait(1.2)
+        error("[internal]:659: too many operations")
+        error("[internal]:1691: [internal]:659: too many operations")
+    end)
+    local TextButton = Instance.new("TextButton")
+    TextButton.Parent = Frame
+    TextButton.Size = UDim2_New(1, -24, 0, 36)
+    TextButton.Position = UDim2_FromOffset(12, 80)
+    TextButton.BackgroundColor3 = Color3_FromRGB(50, 50, 50)
+    TextButton.BackgroundTransparency = 0.05
+    TextButton.Text = "Set Position✅"
+    TextButton.Font = Enum_Font.GothamMedium
+    TextButton.TextSize = 14
+    TextButton.TextColor3 = Color3_FromRGB(230, 230, 230)
+    TextButton.AutoButtonColor = false
+    local UICorner_2 = Instance.new("UICorner")
+    UICorner_2.Parent = TextButton
+    UICorner_2.CornerRadius = UDim_New(0, 6)
+    local Connection
+    Connection = TextButton.MouseEnter:Connect(function(...) -- args: X, Y
+        local str_72 = TweenService:Create(TextButton, TweenInfo.new(0.15), {
+            BackgroundTransparency = 0,
+        })
+        str_72:Play()
+    end)
+    local Connection_2
+    Connection_2 = TextButton.MouseLeave:Connect(function(...) -- args: X_2, Y_2
+        local str_73 = TweenService:Create(TextButton, TweenInfo.new(0.15), {
+            BackgroundTransparency = 0.05,
+        })
+        str_73:Play()
+    end)
+    local Connection_3
+    Connection_3 = TextButton.MouseButton1Click:Connect(function(...)
+        local Size = TextButton.Size
+        local Position = TextButton.Position
+        local str_74 = TweenService:Create(TextButton, TweenInfo.new(0.08), {
+            Position = UDim2_New(0, 14, 0, 81),
+            Size = UDim2_New(1, -28, 0, 33),
+        })
+        str_74:Play()
+        task.wait(0.08)
+        local str_75 = TweenService:Create(TextButton, TweenInfo.new(0.12), {
+            Position = Position,
+            Size = Size,
+        })
+        str_75:Play()
+        if LocalPlayer.Character then -- ran, expr id 2, has an else.
+            local HumanoidRootPart = LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
+            if HumanoidRootPart then -- ran, expr id 3, has an else.
+                local CFrame = HumanoidRootPart.CFrame
+                local Character_3 = LocalPlayer.Character
+                if Character_3 then -- ran, expr id 4, has an else.
+                    local HumanoidRootPart_2 = Character_3:FindFirstChild("HumanoidRootPart")
+                    -- false
+                    if not HumanoidRootPart_2 then -- didnt run, expr id 5, has an else.
+                    else
+                        local Part = Instance.new("Part")
+                        Part.Parent = workspace
+                        Part.Size = Vector3_New(1, 1, 1)
+                        Part.Anchored = true
+                        Part.CanCollide = false
+                        Part.Transparency = 1
+                        Part.CFrame = CFrame.new(CFrame.Position)
+                        local Attachment = Instance.new("Attachment")
+                        Attachment.Parent = Part
+                        local Attachment_2 = Instance.new("Attachment")
+                        Attachment_2.Parent = HumanoidRootPart_2
+                        local Beam = Instance.new("Beam")
+                        Beam.Parent = workspace
+                        Beam.Attachment0 = Attachment
+                        Beam.Attachment1 = Attachment_2
+                        Beam.Width0 = 0.12
+                        Beam.Width1 = 0.12
+                        Beam.FaceCamera = true
+                        Beam.Color = ColorSequence.new(Color3_FromRGB(0, 170, 255))
+                    end
+                end
+            end
+        end
+    end)
+    local _ = task.spawn(function(ext_1_0, ext_2_0, ext_3_0, ext_4_0, ext_5_0, ...)
+        local Waited_For_73 = task.wait(1);
+        local Character_4 = LocalPlayer.Character;
+        if Character_4 then -- ran, expr id 6, has an else.
+            local Character_5 = LocalPlayer.Character;
+            local HumanoidRootPart_4 = Character_5:FindFirstChild("HumanoidRootPart");
+            if HumanoidRootPart_4 then -- ran, expr id 7, has an else.
+                local Position_3 = HumanoidRootPart_4.Position;
+                local var159 = Position_3 - Vector3.new(-481.8800048828125, -3.7899999618530273, 138.02000427246094);
+                local Magnitude = var159.Magnitude;
+                local var160 = (Magnitude < math.huge); -- nil
+                if var160 then -- didnt run, expr id 8, has an else.
+                else
+                    local Position_4 = HumanoidRootPart_4.Position;
+                    local var161 = Position_4 - Vector3.new(-481.75, -3.7899999618530273, 89.18000030517578);
+                    local Magnitude_2 = var161.Magnitude;
+                    local var162 = (Magnitude_2 < math.huge); -- nil
+                    if var162 then -- didnt run, expr id 9, has an else.
+                    else
+                        local Position_5 = HumanoidRootPart_4.Position;
+                        local var163 = Position_5 - Vector3.new(-481.82000732421875, -3.7899999618530273, 30.950000762939453);
+                        local Magnitude_3 = var163.Magnitude;
+                        local var164 = (Magnitude_3 < math.huge); -- nil
+                        if var164 then -- didnt run, expr id 10, has an else.
+                        else
+                            local Position_6 = HumanoidRootPart_4.Position;
+                            local var165 = Position_6 - Vector3.new(-481.75, -3.7899999618530273, -17.790000915527344);
+                            local Magnitude_4 = var165.Magnitude;
+                            local var166 = (Magnitude_4 < math.huge); -- nil
+                            if var166 then -- didnt run, expr id 11, has an else.
+                            else
+                                local Position_7 = HumanoidRootPart_4.Position;
+                                local var167 = Position_7 - Vector3.new(-481.79998779296875, -3.7899999618530273, -76.05999755859375);
+                                local Magnitude_5 = var167.Magnitude;
+                                local var168 = (Magnitude_5 < math.huge); -- nil
+                                if var168 then -- didnt run, expr id 12, has an else.
+                                else
+                                    local Position_8 = HumanoidRootPart_4.Position;
+                                    local var169 = Position_8 - Vector3.new(-481.7200012207031, -3.7899999618530273, -124.69999694824219);
+                                    local Magnitude_6 = var169.Magnitude;
+                                    local var170 = (Magnitude_6 < math.huge); -- nil
+                                    if var170 then -- didnt run, expr id 13, has an else.
+                                    else
+                                        local Position_9 = HumanoidRootPart_4.Position;
+                                        local var171 = Position_9 - Vector3.new(-337.45001220703125, -3.8499999046325684, -124.72000122070312);
+                                        local Magnitude_7 = var171.Magnitude;
+                                        local var172 = (Magnitude_7 < math.huge); -- nil
+                                        if var172 then -- didnt run, expr id 14, has an else.
+                                        else
+                                            local Position_10 = HumanoidRootPart_4.Position;
+                                            local var173 = Position_10 - Vector3.new(-337.3699951171875, -3.8499999046325684, -76.06999969482422);
+                                            local Magnitude_8 = var173.Magnitude;
+                                            local var174 = (Magnitude_8 < math.huge); -- nil
+                                            if var174 then -- didnt run, expr id 15, has an else.
+                                            else
+                                                local Position_11 = HumanoidRootPart_4.Position;
+                                                local var175 = Position_11 - Vector3.new(-337.4599914550781, -3.7899999618530273, -17.719999313354492);
+                                                local Magnitude_9 = var175.Magnitude;
+                                                local var176 = (Magnitude_9 < math.huge); -- nil
+                                                if var176 then -- didnt run, expr id 16, has an else.
+                                                else
+                                                local Position_12 = HumanoidRootPart_4.Position;
+                                                local var177 = Position_12 - Vector3.new(-337.4100036621094, -3.7899999618530273, 30.920000076293945);
+                                                local Magnitude_10 = var177.Magnitude;
+                                                local var178 = (Magnitude_10 < math.huge); -- nil
+                                                if var178 then -- didnt run, expr id 17, has an else.
+                                                else
+                                                local Position_13 = HumanoidRootPart_4.Position;
+                                                local var179 = Position_13 - Vector3.new(-337.32000732421875, -3.7899999618530273, 89.0199966430664);
+                                                local Magnitude_11 = var179.Magnitude;
+                                                local var180 = (Magnitude_11 < math.huge); -- nil
+                                                if var180 then -- didnt run, expr id 18, has an else.
+                                                else
+                                                local Position_14 = HumanoidRootPart_4.Position;
+                                                local var181 = Position_14 - Vector3.new(-337.2699890136719, -3.7899999618530273, 137.89999389648438);
+                                                local Magnitude_12 = var181.Magnitude;
+                                                local var182 = (Magnitude_12 < math.huge); -- nil
+                                                if var182 then -- didnt run, expr id 19, has an else.
+                                                else
+                                                local Position_15 = HumanoidRootPart_4.Position;
+                                                local var183 = Position_15 - Vector3.new(-337.45001220703125, -3.7899999618530273, 196.2899932861328);
+                                                local Magnitude_13 = var183.Magnitude;
+                                                local var184 = (Magnitude_13 < math.huge); -- nil
+                                                if var184 then -- didnt run, expr id 20, has an else.
+                                                else
+                                                local Position_16 = HumanoidRootPart_4.Position;
+                                                local var185 = Position_16 - Vector3.new(-337.3699951171875, -3.7899999618530273, 244.91000366210938);
+                                                local Magnitude_14 = var185.Magnitude;
+                                                local var186 = (Magnitude_14 < math.huge); -- nil
+                                                if var186 then -- didnt run, expr id 21, has an else.
+                                                else
+                                                local Position_17 = HumanoidRootPart_4.Position;
+                                                local var187 = Position_17 - Vector3.new(-481.7200012207031, -3.7899999618530273, 196.2100067138672);
+                                                local Magnitude_15 = var187.Magnitude;
+                                                local var188 = (Magnitude_15 < math.huge); -- nil
+                                                if var188 then -- didnt run, expr id 22, has an else.
+                                                else
+                                                local Position_18 = HumanoidRootPart_4.Position;
+                                                local var189 = Position_18 - Vector3.new(-481.760009765625, -3.7899999618530273, 244.9199981689453);
+                                                local Magnitude_16 = var189.Magnitude;
+                                                local var190 = (Magnitude_16 < math.huge); -- nil
+                                                if var190 then -- didnt run, expr id 23, has an else.
+                                                else
+                                                local Waited_For_74 = task.wait(1);
+                                                local Character_6 = LocalPlayer.Character;
+                                                if Character_6 then -- ran, expr id 24, has an else.
+                                                local Character_7 = LocalPlayer.Character;
+                                                local HumanoidRootPart_5 = Character_7:FindFirstChild("HumanoidRootPart");
+                                                if HumanoidRootPart_5 then -- ran, expr id 25, has an else.
+                                                local Position_19 = HumanoidRootPart_5.Position;
+                                                local var191 = Position_19 - Vector3.new(-481.8800048828125, -3.7899999618530273, 138.02000427246094);
+                                                local Magnitude_17 = var191.Magnitude;
+                                                local var192 = (Magnitude_17 < math.huge); -- nil
+                                                if var192 then -- didnt run, expr id 26, has an else.
+                                                else
+                                                local Position_20 = HumanoidRootPart_5.Position;
+                                                local var193 = Position_20 - Vector3.new(-481.75, -3.7899999618530273, 89.18000030517578);
+                                                local Magnitude_18 = var193.Magnitude;
+                                                local var194 = (Magnitude_18 < math.huge); -- nil
+                                                if var194 then -- didnt run, expr id 27, has an else.
+                                                else
+                                                local Position_21 = HumanoidRootPart_5.Position;
+                                                local var195 = Position_21 - Vector3.new(-481.82000732421875, -3.7899999618530273, 30.950000762939453);
+                                                local Magnitude_19 = var195.Magnitude;
+                                                local var196 = (Magnitude_19 < math.huge); -- nil
+                                                if var196 then -- didnt run, expr id 28, has an else.
+                                                else
+                                                local Position_22 = HumanoidRootPart_5.Position;
+                                                local var197 = Position_22 - Vector3.new(-481.75, -3.7899999618530273, -17.790000915527344);
+                                                local Magnitude_20 = var197.Magnitude;
+                                                local var198 = (Magnitude_20 < math.huge); -- nil
+                                                if var198 then -- didnt run, expr id 29, has an else.
+                                                else
+                                                local Position_23 = HumanoidRootPart_5.Position;
+                                                local var199 = Position_23 - Vector3.new(-481.79998779296875, -3.7899999618530273, -76.05999755859375);
+                                                local Magnitude_21 = var199.Magnitude;
+                                                local var200 = (Magnitude_21 < math.huge); -- nil
+                                                if var200 then -- didnt run, expr id 30, has an else.
+                                                else
+                                                local Position_24 = HumanoidRootPart_5.Position;
+                                                local var201 = Position_24 - Vector3.new(-481.7200012207031, -3.7899999618530273, -124.69999694824219);
+                                                local Magnitude_22 = var201.Magnitude;
+                                                local var202 = (Magnitude_22 < math.huge); -- nil
+                                                if var202 then -- didnt run, expr id 31, has an else.
+                                                else
+                                                local Position_25 = HumanoidRootPart_5.Position;
+                                                local var203 = Position_25 - Vector3.new(-337.45001220703125, -3.8499999046325684, -124.72000122070312);
+                                                local Magnitude_23 = var203.Magnitude;
+                                                local var204 = (Magnitude_23 < math.huge); -- nil
+                                                if var204 then -- didnt run, expr id 32, has an else.
+                                                else
+                                                local Position_26 = HumanoidRootPart_5.Position;
+                                                local var205 = Position_26 - Vector3.new(-337.3699951171875, -3.8499999046325684, -76.06999969482422);
+                                                local Magnitude_24 = var205.Magnitude;
+                                                local var206 = (Magnitude_24 < math.huge); -- nil
+                                                if var206 then -- didnt run, expr id 33, has an else.
+                                                else
+                                                local Position_27 = HumanoidRootPart_5.Position;
+                                                local var207 = Position_27 - Vector3.new(-337.4599914550781, -3.7899999618530273, -17.719999313354492);
+                                                local Magnitude_25 = var207.Magnitude;
+                                                local var208 = (Magnitude_25 < math.huge); -- nil
+                                                if var208 then -- didnt run, expr id 34, has an else.
+                                                else
+                                                local Position_28 = HumanoidRootPart_5.Position;
+                                                local var209 = Position_28 - Vector3.new(-337.4100036621094, -3.7899999618530273, 30.920000076293945);
+                                                local Magnitude_26 = var209.Magnitude;
+                                                local var210 = (Magnitude_26 < math.huge); -- nil
+                                                if var210 then -- didnt run, expr id 35, has an else.
+                                                else
+                                                local Position_29 = HumanoidRootPart_5.Position;
+                                                local var211 = Position_29 - Vector3.new(-337.32000732421875, -3.7899999618530273, 89.0199966430664);
+                                                local Magnitude_27 = var211.Magnitude;
+                                                local var212 = (Magnitude_27 < math.huge); -- nil
+                                                if var212 then -- didnt run, expr id 36, has an else.
+                                                else
+                                                local Position_30 = HumanoidRootPart_5.Position;
+                                                local var213 = Position_30 - Vector3.new(-337.2699890136719, -3.7899999618530273, 137.89999389648438);
+                                                local Magnitude_28 = var213.Magnitude;
+                                                local var214 = (Magnitude_28 < math.huge); -- nil
+                                                if var214 then -- didnt run, expr id 37, has an else.
+                                                else
+                                                local Position_31 = HumanoidRootPart_5.Position;
+                                                local var215 = Position_31 - Vector3.new(-337.45001220703125, -3.7899999618530273, 196.2899932861328);
+                                                local Magnitude_29 = var215.Magnitude;
+                                                local var216 = (Magnitude_29 < math.huge); -- nil
+                                                if var216 then -- didnt run, expr id 38, has an else.
+                                                else
+                                                local Position_32 = HumanoidRootPart_5.Position;
+                                                local var217 = Position_32 - Vector3.new(-337.3699951171875, -3.7899999618530273, 244.91000366210938);
+                                                local Magnitude_30 = var217.Magnitude;
+                                                local var218 = (Magnitude_30 < math.huge); -- nil
+                                                if var218 then -- didnt run, expr id 39, has an else.
+                                                else
+                                                local Position_33 = HumanoidRootPart_5.Position;
+                                                local var219 = Position_33 - Vector3.new(-481.7200012207031, -3.7899999618530273, 196.2100067138672);
+                                                local Magnitude_31 = var219.Magnitude;
+                                                local var220 = (Magnitude_31 < math.huge); -- nil
+                                                if var220 then -- didnt run, expr id 40, has an else.
+                                                else
+                                                local Position_34 = HumanoidRootPart_5.Position;
+                                                local var221 = Position_34 - Vector3.new(-481.760009765625, -3.7899999618530273, 244.9199981689453);
+                                                local Magnitude_32 = var221.Magnitude;
+                                                local var222 = (Magnitude_32 < math.huge); -- nil
+                                                if var222 then -- didnt run, expr id 41, has an else.
+                                                else
+                                                local Waited_For_75 = task.wait(1);
+                                                local Character_8 = LocalPlayer.Character;
+                                                if Character_8 then -- ran, expr id 42, has an else.
+                                                local Character_9 = LocalPlayer.Character;
+                                                local HumanoidRootPart_6 = Character_9:FindFirstChild("HumanoidRootPart");
+                                                if HumanoidRootPart_6 then -- ran, expr id 43, has an else.
+                                                local Position_35 = HumanoidRootPart_6.Position;
+                                                local var223 = Position_35 - Vector3.new(-481.8800048828125, -3.7899999618530273, 138.02000427246094);
+                                                local Magnitude_33 = var223.Magnitude;
+                                                local var224 = (Magnitude_33 < math.huge); -- nil
+                                                if var224 then -- didnt run, expr id 44, has an else.
+                                                else
+                                                local Position_36 = HumanoidRootPart_6.Position;
+                                                local var225 = Position_36 - Vector3.new(-481.75, -3.7899999618530273, 89.18000030517578);
+                                                local Magnitude_34 = var225.Magnitude;
+                                                local var226 = (Magnitude_34 < math.huge); -- nil
+                                                if var226 then -- didnt run, expr id 45, has an else.
+                                                else
+                                                local Position_37 = HumanoidRootPart_6.Position;
+                                                local var227 = Position_37 - Vector3.new(-481.82000732421875, -3.7899999618530273, 30.950000762939453);
+                                                local Magnitude_35 = var227.Magnitude;
+                                                local var228 = (Magnitude_35 < math.huge); -- nil
+                                                if var228 then -- didnt run, expr id 46, has an else.
+                                                else
+                                                local Position_38 = HumanoidRootPart_6.Position;
+                                                local var229 = Position_38 - Vector3.new(-481.75, -3.7899999618530273, -17.790000915527344);
+                                                local Magnitude_36 = var229.Magnitude;
+                                                local var230 = (Magnitude_36 < math.huge); -- nil
+                                                if var230 then -- didnt run, expr id 47, has an else.
+                                                else
+                                                local Position_39 = HumanoidRootPart_6.Position;
+                                                local var231 = Position_39 - Vector3.new(-481.79998779296875, -3.7899999618530273, -76.05999755859375);
+                                                local Magnitude_37 = var231.Magnitude;
+                                                local var232 = (Magnitude_37 < math.huge); -- nil
+                                                if var232 then -- didnt run, expr id 48, has an else.
+                                                else
+                                                local Position_40 = HumanoidRootPart_6.Position;
+                                                local var233 = Position_40 - Vector3.new(-481.7200012207031, -3.7899999618530273, -124.69999694824219);
+                                                local Magnitude_38 = var233.Magnitude;
+                                                local var234 = (Magnitude_38 < math.huge); -- nil
+                                                if var234 then -- didnt run, expr id 49, has an else.
+                                                else
+                                                local Position_41 = HumanoidRootPart_6.Position;
+                                                local var235 = Position_41 - Vector3.new(-337.45001220703125, -3.8499999046325684, -124.72000122070312);
+                                                local Magnitude_39 = var235.Magnitude;
+                                                local var236 = (Magnitude_39 < math.huge); -- nil
+                                                if var236 then -- didnt run, expr id 50, has an else.
+                                                else
+                                                local Position_42 = HumanoidRootPart_6.Position;
+                                                local var237 = Position_42 - Vector3.new(-337.3699951171875, -3.8499999046325684, -76.06999969482422);
+                                                local Magnitude_40 = var237.Magnitude;
+                                                local var238 = (Magnitude_40 < math.huge); -- nil
+                                                if var238 then -- didnt run, expr id 51, has an else.
+                                                else
+                                                local Position_43 = HumanoidRootPart_6.Position;
+                                                local var239 = Position_43 - Vector3.new(-337.4599914550781, -3.7899999618530273, -17.719999313354492);
+                                                local Magnitude_41 = var239.Magnitude;
+                                                local var240 = (Magnitude_41 < math.huge); -- nil
+                                                if var240 then -- didnt run, expr id 52, has an else.
+                                                else
+                                                local Position_44 = HumanoidRootPart_6.Position;
+                                                local var241 = Position_44 - Vector3.new(-337.4100036621094, -3.7899999618530273, 30.920000076293945);
+                                                local Magnitude_42 = var241.Magnitude;
+                                                local var242 = (Magnitude_42 < math.huge); -- nil
+                                                if var242 then -- didnt run, expr id 53, has an else.
+                                                else
+                                                local Position_45 = HumanoidRootPart_6.Position;
+                                                local var243 = Position_45 - Vector3.new(-337.32000732421875, -3.7899999618530273, 89.0199966430664);
+                                                local Magnitude_43 = var243.Magnitude;
+                                                local var244 = (Magnitude_43 < math.huge); -- nil
+                                                if var244 then -- didnt run, expr id 54, has an else.
+                                                else
+                                                local Position_46 = HumanoidRootPart_6.Position;
+                                                local var245 = Position_46 - Vector3.new(-337.2699890136719, -3.7899999618530273, 137.89999389648438);
+                                                local Magnitude_44 = var245.Magnitude;
+                                                local var246 = (Magnitude_44 < math.huge); -- nil
+                                                if var246 then -- didnt run, expr id 55, has an else.
+                                                else
+                                                local Position_47 = HumanoidRootPart_6.Position;
+                                                local var247 = Position_47 - Vector3.new(-337.45001220703125, -3.7899999618530273, 196.2899932861328);
+                                                local Magnitude_45 = var247.Magnitude;
+                                                local var248 = (Magnitude_45 < math.huge); -- nil
+                                                if var248 then -- didnt run, expr id 56, has an else.
+                                                else
+                                                local Position_48 = HumanoidRootPart_6.Position;
+                                                local var249 = Position_48 - Vector3.new(-337.3699951171875, -3.7899999618530273, 244.91000366210938);
+                                                local Magnitude_46 = var249.Magnitude;
+                                                local var250 = (Magnitude_46 < math.huge); -- nil
+                                                if var250 then -- didnt run, expr id 57, has an else.
+                                                else
+                                                local Position_49 = HumanoidRootPart_6.Position;
+                                                local var251 = Position_49 - Vector3.new(-481.7200012207031, -3.7899999618530273, 196.2100067138672);
+                                                local Magnitude_47 = var251.Magnitude;
+                                                local var252 = (Magnitude_47 < math.huge); -- nil
+                                                if var252 then -- didnt run, expr id 58, has an else.
+                                                else
+                                                local Position_50 = HumanoidRootPart_6.Position;
+                                                local var253 = Position_50 - Vector3.new(-481.760009765625, -3.7899999618530273, 244.9199981689453);
+                                                local Magnitude_48 = var253.Magnitude;
+                                                local var254 = (Magnitude_48 < math.huge); -- nil
+                                                if var254 then -- didnt run, expr id 59, has an else.
+                                                else
+                                                local Waited_For_76 = task.wait(1);
+                                                local Character_10 = LocalPlayer.Character;
+                                                if Character_10 then -- ran, expr id 60, has an else.
+                                                local Character_11 = LocalPlayer.Character;
+                                                local HumanoidRootPart_7 = Character_11:FindFirstChild("HumanoidRootPart");
+                                                if HumanoidRootPart_7 then -- ran, expr id 61, has an else.
+                                                local Position_51 = HumanoidRootPart_7.Position;
+                                                local var255 = Position_51 - Vector3.new(-481.8800048828125, -3.7899999618530273, 138.02000427246094);
+                                                local Magnitude_49 = var255.Magnitude;
+                                                local var256 = (Magnitude_49 < math.huge); -- nil
+                                                if var256 then -- didnt run, expr id 62, has an else.
+                                                else
+                                                local Position_52 = HumanoidRootPart_7.Position;
+                                                local var257 = Position_52 - Vector3.new(-481.75, -3.7899999618530273, 89.18000030517578);
+                                                local Magnitude_50 = var257.Magnitude;
+                                                local var258 = (Magnitude_50 < math.huge); -- nil
+                                                if var258 then -- didnt run, expr id 63, has an else.
+                                                else
+                                                local Position_53 = HumanoidRootPart_7.Position;
+                                                local var259 = Position_53 - Vector3.new(-481.82000732421875, -3.7899999618530273, 30.950000762939453);
+                                                local Magnitude_51 = var259.Magnitude;
+                                                local var260 = (Magnitude_51 < math.huge); -- nil
+                                                if var260 then -- didnt run, expr id 64, has an else.
+                                                else
+                                                local Position_54 = HumanoidRootPart_7.Position;
+                                                local var261 = Position_54 - Vector3.new(-481.75, -3.7899999618530273, -17.790000915527344);
+                                                local Magnitude_52 = var261.Magnitude;
+                                                local var262 = (Magnitude_52 < math.huge); -- nil
+                                                if var262 then -- didnt run, expr id 65, has an else.
+                                                else
+                                                local Position_55 = HumanoidRootPart_7.Position;
+                                                local var263 = Position_55 - Vector3.new(-481.79998779296875, -3.7899999618530273, -76.05999755859375);
+                                                local Magnitude_53 = var263.Magnitude;
+                                                local var264 = (Magnitude_53 < math.huge); -- nil
+                                                if var264 then -- didnt run, expr id 66, has an else.
+                                                else
+                                                local Position_56 = HumanoidRootPart_7.Position;
+                                                local var265 = Position_56 - Vector3.new(-481.7200012207031, -3.7899999618530273, -124.69999694824219);
+                                                local Magnitude_54 = var265.Magnitude;
+                                                local var266 = (Magnitude_54 < math.huge); -- nil
+                                                if var266 then -- didnt run, expr id 67, has an else.
+                                                else
+                                                local Position_57 = HumanoidRootPart_7.Position;
+                                                local var267 = Position_57 - Vector3.new(-337.45001220703125, -3.8499999046325684, -124.72000122070312);
+                                                local Magnitude_55 = var267.Magnitude;
+                                                local var268 = (Magnitude_55 < math.huge); -- nil
+                                                if var268 then -- didnt run, expr id 68, has an else.
+                                                else
+                                                local Position_58 = HumanoidRootPart_7.Position;
+                                                local var269 = Position_58 - Vector3.new(-337.3699951171875, -3.8499999046325684, -76.06999969482422);
+                                                local Magnitude_56 = var269.Magnitude;
+                                                local var270 = (Magnitude_56 < math.huge); -- nil
+                                                if var270 then -- didnt run, expr id 69, has an else.
+                                                else
+                                                local Position_59 = HumanoidRootPart_7.Position;
+                                                local var271 = Position_59 - Vector3.new(-337.4599914550781, -3.7899999618530273, -17.719999313354492);
+                                                local Magnitude_57 = var271.Magnitude;
+                                                local var272 = (Magnitude_57 < math.huge); -- nil
+                                                if var272 then -- didnt run, expr id 70, has an else.
+                                                else
+                                                local Position_60 = HumanoidRootPart_7.Position;
+                                                local var273 = Position_60 - Vector3.new(-337.4100036621094, -3.7899999618530273, 30.920000076293945);
+                                                local Magnitude_58 = var273.Magnitude;
+                                                local var274 = (Magnitude_58 < math.huge); -- nil
+                                                if var274 then -- didnt run, expr id 71, has an else.
+                                                else
+                                                local Position_61 = HumanoidRootPart_7.Position;
+                                                local var275 = Position_61 - Vector3.new(-337.32000732421875, -3.7899999618530273, 89.0199966430664);
+                                                local Magnitude_59 = var275.Magnitude;
+                                                local var276 = (Magnitude_59 < math.huge); -- nil
+                                                if var276 then -- didnt run, expr id 72, has an else.
+                                                else
+                                                local Position_62 = HumanoidRootPart_7.Position;
+                                                local var277 = Position_62 - Vector3.new(-337.2699890136719, -3.7899999618530273, 137.89999389648438);
+                                                local Magnitude_60 = var277.Magnitude;
+                                                local var278 = (Magnitude_60 < math.huge); -- nil
+                                                if var278 then -- didnt run, expr id 73, has an else.
+                                                else
+                                                local Position_63 = HumanoidRootPart_7.Position;
+                                                local var279 = Position_63 - Vector3.new(-337.45001220703125, -3.7899999618530273, 196.2899932861328);
+                                                local Magnitude_61 = var279.Magnitude;
+                                                local var280 = (Magnitude_61 < math.huge); -- nil
+                                                if var280 then -- didnt run, expr id 74, has an else.
+                                                else
+                                                local Position_64 = HumanoidRootPart_7.Position;
+                                                local var281 = Position_64 - Vector3.new(-337.3699951171875, -3.7899999618530273, 244.91000366210938);
+                                                local Magnitude_62 = var281.Magnitude;
+                                                local var282 = (Magnitude_62 < math.huge); -- nil
+                                                if var282 then -- didnt run, expr id 75, has an else.
+                                                else
+                                                local Position_65 = HumanoidRootPart_7.Position;
+                                                local var283 = Position_65 - Vector3.new(-481.7200012207031, -3.7899999618530273, 196.2100067138672);
+                                                local Magnitude_63 = var283.Magnitude;
+                                                local var284 = (Magnitude_63 < math.huge); -- nil
+                                                if var284 then -- didnt run, expr id 76, has an else.
+                                                else
+                                                local Position_66 = HumanoidRootPart_7.Position;
+                                                local var285 = Position_66 - Vector3.new(-481.760009765625, -3.7899999618530273, 244.9199981689453);
+                                                local Magnitude_64 = var285.Magnitude;
+                                                local var286 = (Magnitude_64 < math.huge); -- nil
+                                                if var286 then -- didnt run, expr id 77, has an else.
+                                                else
+                                                local Waited_For_77 = task.wait(1);
+                                                local Character_12 = LocalPlayer.Character;
+                                                if Character_12 then -- ran, expr id 78, has an else.
+                                                local Character_13 = LocalPlayer.Character;
+                                                local HumanoidRootPart_8 = Character_13:FindFirstChild("HumanoidRootPart");
+                                                if HumanoidRootPart_8 then -- ran, expr id 79, has an else.
+                                                local Position_67 = HumanoidRootPart_8.Position;
+                                                local var287 = Position_67 - Vector3.new(-481.8800048828125, -3.7899999618530273, 138.02000427246094);
+                                                local Magnitude_65 = var287.Magnitude;
+                                                local var288 = (Magnitude_65 < math.huge); -- nil
+                                                if var288 then -- didnt run, expr id 80, has an else.
+                                                else
+                                                local Position_68 = HumanoidRootPart_8.Position;
+                                                local var289 = Position_68 - Vector3.new(-481.75, -3.7899999618530273, 89.18000030517578);
+                                                local Magnitude_66 = var289.Magnitude;
+                                                local var290 = (Magnitude_66 < math.huge); -- nil
+                                                if var290 then -- didnt run, expr id 81, has an else.
+                                                else
+                                                local Position_69 = HumanoidRootPart_8.Position;
+                                                local var291 = Position_69 - Vector3.new(-481.82000732421875, -3.7899999618530273, 30.950000762939453);
+                                                local Magnitude_67 = var291.Magnitude;
+                                                local var292 = (Magnitude_67 < math.huge); -- nil
+                                                if var292 then -- didnt run, expr id 82, has an else.
+                                                else
+                                                local Position_70 = HumanoidRootPart_8.Position;
+                                                local var293 = Position_70 - Vector3.new(-481.75, -3.7899999618530273, -17.790000915527344);
+                                                local Magnitude_68 = var293.Magnitude;
+                                                local var294 = (Magnitude_68 < math.huge); -- nil
+                                                if var294 then -- didnt run, expr id 83, has an else.
+                                                else
+                                                local Position_71 = HumanoidRootPart_8.Position;
+                                                local var295 = Position_71 - Vector3.new(-481.79998779296875, -3.7899999618530273, -76.05999755859375);
+                                                local Magnitude_69 = var295.Magnitude;
+                                                local var296 = (Magnitude_69 < math.huge); -- nil
+                                                if var296 then -- didnt run, expr id 84, has an else.
+                                                else
+                                                local Position_72 = HumanoidRootPart_8.Position;
+                                                local var297 = Position_72 - Vector3.new(-481.7200012207031, -3.7899999618530273, -124.69999694824219);
+                                                local Magnitude_70 = var297.Magnitude;
+                                                local var298 = (Magnitude_70 < math.huge); -- nil
+                                                if var298 then -- didnt run, expr id 85, has an else.
+                                                else
+                                                local Position_73 = HumanoidRootPart_8.Position;
+                                                local var299 = Position_73 - Vector3.new(-337.45001220703125, -3.8499999046325684, -124.72000122070312);
+                                                local Magnitude_71 = var299.Magnitude;
+                                                local var300 = (Magnitude_71 < math.huge); -- nil
+                                                if var300 then -- didnt run, expr id 86, has an else.
+                                                else
+                                                local Position_74 = HumanoidRootPart_8.Position;
+                                                local var301 = Position_74 - Vector3.new(-337.3699951171875, -3.8499999046325684, -76.06999969482422);
+                                                local Magnitude_72 = var301.Magnitude;
+                                                local var302 = (Magnitude_72 < math.huge); -- nil
+                                                if var302 then -- didnt run, expr id 87, has an else.
+                                                else
+                                                local Position_75 = HumanoidRootPart_8.Position;
+                                                local var303 = Position_75 - Vector3.new(-337.4599914550781, -3.7899999618530273, -17.719999313354492);
+                                                local Magnitude_73 = var303.Magnitude;
+                                                local var304 = (Magnitude_73 < math.huge); -- nil
+                                                if var304 then -- didnt run, expr id 88, has an else.
+                                                else
+                                                local Position_76 = HumanoidRootPart_8.Position;
+                                                local var305 = Position_76 - Vector3.new(-337.4100036621094, -3.7899999618530273, 30.920000076293945);
+                                                local Magnitude_74 = var305.Magnitude;
+                                                local var306 = (Magnitude_74 < math.huge); -- nil
+                                                if var306 then -- didnt run, expr id 89, has an else.
+                                                else
+                                                local Position_77 = HumanoidRootPart_8.Position;
+                                                local var307 = Position_77 - Vector3.new(-337.32000732421875, -3.7899999618530273, 89.0199966430664);
+                                                local Magnitude_75 = var307.Magnitude;
+                                                local var308 = (Magnitude_75 < math.huge); -- nil
+                                                if var308 then -- didnt run, expr id 90, has an else.
+                                                else
+                                                local Position_78 = HumanoidRootPart_8.Position;
+                                                local var309 = Position_78 - Vector3.new(-337.2699890136719, -3.7899999618530273, 137.89999389648438);
+                                                local Magnitude_76 = var309.Magnitude;
+                                                local var310 = (Magnitude_76 < math.huge); -- nil
+                                                if var310 then -- didnt run, expr id 91, has an else.
+                                                else
+                                                local Position_79 = HumanoidRootPart_8.Position;
+                                                local var311 = Position_79 - Vector3.new(-337.45001220703125, -3.7899999618530273, 196.2899932861328);
+                                                local Magnitude_77 = var311.Magnitude;
+                                                local var312 = (Magnitude_77 < math.huge); -- nil
+                                                if var312 then -- didnt run, expr id 92, has an else.
+                                                else
+                                                local Position_80 = HumanoidRootPart_8.Position;
+                                                local var313 = Position_80 - Vector3.new(-337.3699951171875, -3.7899999618530273, 244.91000366210938);
+                                                local Magnitude_78 = var313.Magnitude;
+                                                local var314 = (Magnitude_78 < math.huge); -- nil
+                                                if var314 then -- didnt run, expr id 93, has an else.
+                                                else
+                                                local Position_81 = HumanoidRootPart_8.Position;
+                                                local var315 = Position_81 - Vector3.new(-481.7200012207031, -3.7899999618530273, 196.2100067138672);
+                                                local Magnitude_79 = var315.Magnitude;
+                                                local var316 = (Magnitude_79 < math.huge); -- nil
+                                                if var316 then -- didnt run, expr id 94, has an else.
+                                                else
+                                                local Position_82 = HumanoidRootPart_8.Position;
+                                                local var317 = Position_82 - Vector3.new(-481.760009765625, -3.7899999618530273, 244.9199981689453);
+                                                local Magnitude_80 = var317.Magnitude;
+                                                local var318 = (Magnitude_80 < math.huge); -- nil
+                                                if var318 then -- didnt run, expr id 95, has an else.
+                                                else
+                                                local Waited_For_78 = task.wait(1);
+                                                local Character_14 = LocalPlayer.Character;
+                                                if Character_14 then -- ran, expr id 96, has an else.
+                                                local Character_15 = LocalPlayer.Character;
+                                                local HumanoidRootPart_9 = Character_15:FindFirstChild("HumanoidRootPart");
+                                                if HumanoidRootPart_9 then -- ran, expr id 97, has an else.
+                                                local Position_83 = HumanoidRootPart_9.Position;
+                                                local var319 = Position_83 - Vector3.new(-481.8800048828125, -3.7899999618530273, 138.02000427246094);
+                                                local Magnitude_81 = var319.Magnitude;
+                                                local var320 = (Magnitude_81 < math.huge); -- nil
+                                                if var320 then -- didnt run, expr id 98, has an else.
+                                                else
+                                                local Position_84 = HumanoidRootPart_9.Position;
+                                                local var321 = Position_84 - Vector3.new(-481.75, -3.7899999618530273, 89.18000030517578);
+                                                local Magnitude_82 = var321.Magnitude;
+                                                local var322 = (Magnitude_82 < math.huge); -- nil
+                                                if var322 then -- didnt run, expr id 99, has an else.
+                                                else
+                                                local Position_85 = HumanoidRootPart_9.Position;
+                                                local var323 = Position_85 - Vector3.new(-481.82000732421875, -3.7899999618530273, 30.950000762939453);
+                                                local Magnitude_83 = var323.Magnitude;
+                                                local var324 = (Magnitude_83 < math.huge); -- nil
+                                                if var324 then -- didnt run, expr id 100, has an else.
+                                                else
+                                                local Position_86 = HumanoidRootPart_9.Position;
+                                                local var325 = Position_86 - Vector3.new(-481.75, -3.7899999618530273, -17.790000915527344);
+                                                local Magnitude_84 = var325.Magnitude;
+                                                local var326 = (Magnitude_84 < math.huge); -- nil
+                                                if var326 then -- didnt run, expr id 101, has an else.
+                                                else
+                                                local Position_87 = HumanoidRootPart_9.Position;
+                                                local var327 = Position_87 - Vector3.new(-481.79998779296875, -3.7899999618530273, -76.05999755859375);
+                                                local Magnitude_85 = var327.Magnitude;
+                                                local var328 = (Magnitude_85 < math.huge); -- nil
+                                                if var328 then -- didnt run, expr id 102, has an else.
+                                                else
+                                                local Position_88 = HumanoidRootPart_9.Position;
+                                                local var329 = Position_88 - Vector3.new(-481.7200012207031, -3.7899999618530273, -124.69999694824219);
+                                                local Magnitude_86 = var329.Magnitude;
+                                                local var330 = (Magnitude_86 < math.huge); -- nil
+                                                if var330 then -- didnt run, expr id 103, has an else.
+                                                else
+                                                local Position_89 = HumanoidRootPart_9.Position;
+                                                local var331 = Position_89 - Vector3.new(-337.45001220703125, -3.8499999046325684, -124.72000122070312);
+                                                local Magnitude_87 = var331.Magnitude;
+                                                local var332 = (Magnitude_87 < math.huge); -- nil
+                                                if var332 then -- didnt run, expr id 104, has an else.
+                                                else
+                                                local Position_90 = HumanoidRootPart_9.Position;
+                                                local var333 = Position_90 - Vector3.new(-337.3699951171875, -3.8499999046325684, -76.06999969482422);
+                                                local Magnitude_88 = var333.Magnitude;
+                                                local var334 = (Magnitude_88 < math.huge); -- nil
+                                                if var334 then -- didnt run, expr id 105, has an else.
+                                                else
+                                                local Position_91 = HumanoidRootPart_9.Position;
+                                                local var335 = Position_91 - Vector3.new(-337.4599914550781, -3.7899999618530273, -17.719999313354492);
+                                                local Magnitude_89 = var335.Magnitude;
+                                                local var336 = (Magnitude_89 < math.huge); -- nil
+                                                if var336 then -- didnt run, expr id 106, has an else.
+                                                else
+                                                local Position_92 = HumanoidRootPart_9.Position;
+                                                local var337 = Position_92 - Vector3.new(-337.4100036621094, -3.7899999618530273, 30.920000076293945);
+                                                local Magnitude_90 = var337.Magnitude;
+                                                local var338 = (Magnitude_90 < math.huge); -- nil
+                                                if var338 then -- didnt run, expr id 107, has an else.
+                                                else
+                                                local Position_93 = HumanoidRootPart_9.Position;
+                                                local var339 = Position_93 - Vector3.new(-337.32000732421875, -3.7899999618530273, 89.0199966430664);
+                                                local Magnitude_91 = var339.Magnitude;
+                                                local var340 = (Magnitude_91 < math.huge); -- nil
+                                                if var340 then -- didnt run, expr id 108, has an else.
+                                                else
+                                                local Position_94 = HumanoidRootPart_9.Position;
+                                                local var341 = Position_94 - Vector3.new(-337.2699890136719, -3.7899999618530273, 137.89999389648438);
+                                                local Magnitude_92 = var341.Magnitude;
+                                                local var342 = (Magnitude_92 < math.huge); -- nil
+                                                if var342 then -- didnt run, expr id 109, has an else.
+                                                else
+                                                local Position_95 = HumanoidRootPart_9.Position;
+                                                local var343 = Position_95 - Vector3.new(-337.45001220703125, -3.7899999618530273, 196.2899932861328);
+                                                local Magnitude_93 = var343.Magnitude;
+                                                local var344 = (Magnitude_93 < math.huge); -- nil
+                                                if var344 then -- didnt run, expr id 110, has an else.
+                                                else
+                                                local Position_96 = HumanoidRootPart_9.Position;
+                                                local var345 = Position_96 - Vector3.new(-337.3699951171875, -3.7899999618530273, 244.91000366210938);
+                                                local Magnitude_94 = var345.Magnitude;
+                                                local var346 = (Magnitude_94 < math.huge); -- nil
+        error("[internal]:659: too many operations")
+                                                                                                                                                                                                                                                                                                                                                                                                                                        end
+                                                                                                                                                                                                                                                                                                                                                                                                                                    end
+                                                                                                                                                                                                                                                                                                                                                                                                                                end
+                                                                                                                                                                                                                                                                                                                                                                                                                            end
+                                                                                                                                                                                                                                                                                                                                                                                                                        end
+                                                                                                                                                                                                                                                                                                                                                                                                                    end
+                                                                                                                                                                                                                                                                                                                                                                                                                end
+                                                                                                                                                                                                                                                                                                                                                                                                            end
+                                                                                                                                                                                                                                                                                                                                                                                                        end
+                                                                                                                                                                                                                                                                                                                                                                                                    end
+                                                                                                                                                                                                                                                                                                                                                                                                end
+                                                                                                                                                                                                                                                                                                                                                                                            end
+                                                                                                                                                                                                                                                                                                                                                                                        end
+                                                                                                                                                                                                                                                                                                                                                                                    end
+                                                                                                                                                                                                                                                                                                                                                                                end
+                                                                                                                                                                                                                                                                                                                                                                            end
+                                                                                                                                                                                                                                                                                                                                                                        end
+                                                                                                                                                                                                                                                                                                                                                                    end
+                                                                                                                                                                                                                                                                                                                                                                end
+                                                                                                                                                                                                                                                                                                                                                            end
+                                                                                                                                                                                                                                                                                                                                                        end
+                                                                                                                                                                                                                                                                                                                                                    end
+                                                                                                                                                                                                                                                                                                                                                end
+                                                                                                                                                                                                                                                                                                                                            end
+                                                                                                                                                                                                                                                                                                                                        end
+                                                                                                                                                                                                                                                                                                                                    end
+                                                                                                                                                                                                                                                                                                                                end
+                                                                                                                                                                                                                                                                                                                            end
+                                                                                                                                                                                                                                                                                                                        end
+                                                                                                                                                                                                                                                                                                                    end
+                                                                                                                                                                                                                                                                                                                end
+                                                                                                                                                                                                                                                                                                            end
+                                                                                                                                                                                                                                                                                                        end
+                                                                                                                                                                                                                                                                                                    end
+                                                                                                                                                                                                                                                                                                end
+                                                                                                                                                                                                                                                                                            end
+                                                                                                                                                                                                                                                                                        end
+                                                                                                                                                                                                                                                                                    end
+                                                                                                                                                                                                                                                                                end
+                                                                                                                                                                                                                                                                            end
+                                                                                                                                                                                                                                                                        end
+                                                                                                                                                                                                                                                                    end
+                                                                                                                                                                                                                                                                end
+                                                                                                                                                                                                                                                            end
+                                                                                                                                                                                                                                                        end
+                                                                                                                                                                                                                                                    end
+                                                                                                                                                                                                                                                end
+                                                                                                                                                                                                                                            end
+                                                                                                                                                                                                                                        end
+                                                                                                                                                                                                                                    end
+                                                                                                                                                                                                                                end
+                                                                                                                                                                                                                            end
+                                                                                                                                                                                                                        end
+                                                                                                                                                                                                                    end
+                                                                                                                                                                                                                end
+                                                                                                                                                                                                            end
+                                                                                                                                                                                                        end
+                                                                                                                                                                                                    end
+                                                                                                                                                                                                end
+                                                                                                                                                                                            end
+                                                                                                                                                                                        end
+                                                                                                                                                                                    end
+                                                                                                                                                                                end
+                                                                                                                                                                            end
+                                                                                                                                                                        end
+                                                                                                                                                                    end
+                                                                                                                                                                end
+                                                                                                                                                            end
+                                                                                                                                                        end
+                                                                                                                                                    end
+                                                                                                                                                end
+                                                                                                                                            end
+                                                                                                                                        end
+                                                                                                                                    end
+                                                                                                                                end
+                                                                                                                            end
+                                                                                                                        end
+                                                                                                                    end
+                                                                                                                end
+                                                                                                            end
+                                                                                                        end
+                                                                                                    end
+                                                                                                end
+                                                                                            end
+                                                                                        end
+                                                                                    end
+                                                                                end
+                                                                            end
+                                                                        end
+                                                                    end
+                                                                end
+                                                            end
+                                                        end
+                                                    end
+                                                end
+                                            end
+                                        end
+                                    end
+                                end
+                            end
+                        end
+                    end
+                end
+            end
+        end
+    end)
+    local Connection_4
+    Connection_4 = game:GetService("ProximityPromptService").PromptButtonHoldEnded:Connect(function(...) -- args: Prompt, PlayerWhoTriggered
+        -- true, eq id 1
+        if (nil ~= LocalPlayer) then -- ran, expr id 111, has an else.
+        end
+    end)
+    local TextLabel_3 = Instance.new("TextLabel")
+    TextLabel_3.Parent = Frame
+    TextLabel_3.Size = UDim2_New(1, 0, 0, 16)
+    TextLabel_3.Position = UDim2_FromOffset(0, 140)
+    TextLabel_3.BackgroundTransparency = 1
+    TextLabel_3.Text = "discord.gg/zWXC68K4n\nFREE? omg thanks bby sticky😘"
+    TextLabel_3.Font = Enum_Font.GothamMedium
+    TextLabel_3.TextSize = 10
+    TextLabel_3.TextXAlignment = Enum_TextXAlignment.Center
+    TextLabel_3.TextColor3 = Color3_FromRGB(180, 180, 180)
+    local Connection_5
+    Connection_5 = game:GetService("RunService").RenderStepped:Connect(function(...) -- args: DeltaTime
+        TextLabel_3.TextColor3 = Color3.fromHSV(0 + ... * 0.3 % 1, 1, 1)
+    end)
+end

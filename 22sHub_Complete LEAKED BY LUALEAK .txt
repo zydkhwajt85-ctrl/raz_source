@@ -1,0 +1,939 @@
+--[[
+    22s HUB - Complete Version
+    Lock + Background + Minimize + Anti-Bat + Inf Jump
+    leaked by mouad | https://discord.gg/uQFjgXf2AX
+    leaked by mouad | https://discord.gg/uQFjgXf2AX
+    leaked by mouad | https://discord.gg/uQFjgXf2AX
+]]
+
+print("[22sHub] بدء التشغيل...")
+
+repeat task.wait() until game:IsLoaded()
+
+-- leaked by mouad | https://discord.gg/uQFjgXf2AX
+local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
+local UserInputService = game:GetService("UserInputService")
+local TweenService = game:GetService("TweenService")
+local HttpService = game:GetService("HttpService")
+
+local LocalPlayer = Players.LocalPlayer
+if not LocalPlayer then
+    warn("[22sHub] لازم يشتغل من جهة اللاعب")
+    return
+end
+
+-- leaked by mouad | https://discord.gg/uQFjgXf2AX
+-- تنظيف نسخ قديمة
+pcall(function()
+    local pg = LocalPlayer:WaitForChild("PlayerGui")
+    local old = pg:FindFirstChild("22sHub")
+    if old then old:Destroy() end
+end)
+
+-- ═══ المتغيرات ═══
+-- leaked by mouad | https://discord.gg/uQFjgXf2AX
+local CONFIG_FILE = "22sHub_Config.json"
+local AntiBatEnabled = false
+local InfiniteJumpEnabled = false
+local IsJumpingHold = false
+local CurrentKeybind = Enum.KeyCode.N
+local WaitingForKeybind = false
+local Locked = false
+local BackgroundVisible = true
+local minimized = false
+local currentBG = 1
+
+local AntiBatConn = nil
+local AntiRagdollConn = nil
+local JumpHoldConn = nil
+local InfJumpPlatform = nil
+local HeadTag = nil
+
+local BGList = {
+    "rbxassetid://107981254222019",
+    "rbxassetid://112972499444363",
+    "rbxassetid://83582398863137",
+    "rbxassetid://140407618818729",
+    "rbxassetid://79404041922584",
+}
+
+-- leaked by mouad | https://discord.gg/uQFjgXf2AX
+-- ═══ حفظ الإعدادات ═══
+local function fileOK()
+    return type(isfile) == "function" and type(readfile) == "function" and type(writefile) == "function"
+end
+
+local function saveConfig()
+    if not fileOK() then return end
+    pcall(function()
+        writefile(CONFIG_FILE, HttpService:JSONEncode({
+            Keybind = CurrentKeybind.Name,
+        }))
+    end)
+end
+
+local function loadConfig()
+    if not fileOK() then return end
+    local ok, data = pcall(function()
+        if isfile(CONFIG_FILE) then
+            return HttpService:JSONDecode(readfile(CONFIG_FILE))
+        end
+    end)
+    if ok and type(data) == "table" and data.Keybind then
+        local kOk, key = pcall(function() return Enum.KeyCode[data.Keybind] end)
+        if kOk and key then CurrentKeybind = key end
+    end
+end
+loadConfig()
+
+-- leaked by mouad | https://discord.gg/uQFjgXf2AX
+-- ═══ تاج فوق الراس ═══
+local function createHeadTag(char)
+    if HeadTag then
+        pcall(function() HeadTag:Destroy() end)
+        HeadTag = nil
+    end
+    local head = char:FindFirstChild("Head")
+    if not head then return end
+
+    local bb = Instance.new("BillboardGui")
+    bb.Name = "MouadTag"
+    bb.Adornee = head
+    bb.Size = UDim2.new(0, 220, 0, 50)
+    bb.StudsOffset = Vector3.new(0, 2.8, 0)
+    bb.AlwaysOnTop = true
+    bb.MaxDistance = 80
+    bb.Parent = head
+
+    local title = Instance.new("TextLabel")
+    title.Size = UDim2.new(1, 0, 0, 24)
+    title.BackgroundTransparency = 1
+    title.Text = "leaked by mouad"
+    title.TextColor3 = Color3.fromRGB(0, 220, 255)
+    title.TextStrokeTransparency = 0.3
+    title.TextStrokeColor3 = Color3.fromRGB(0, 0, 0)
+    title.TextScaled = true
+    title.Font = Enum.Font.GothamBold
+    title.Parent = bb
+
+    local disc = Instance.new("TextLabel")
+    disc.Position = UDim2.new(0, 0, 0, 24)
+    disc.Size = UDim2.new(1, 0, 0, 20)
+    disc.BackgroundTransparency = 1
+    disc.Text = "discord.gg/uQFjgXf2AX"
+    disc.TextColor3 = Color3.fromRGB(180, 180, 255)
+    disc.TextStrokeTransparency = 0.4
+    disc.TextStrokeColor3 = Color3.fromRGB(0, 0, 0)
+    disc.TextScaled = true
+    disc.Font = Enum.Font.Gotham
+    disc.Parent = bb
+
+    HeadTag = bb
+end
+
+-- leaked by mouad | https://discord.gg/uQFjgXf2AX
+-- ═══ منطق Anti-Bat ═══
+local function startAntiBat()
+    local char = LocalPlayer.Character
+    if not char then return end
+    local root = char:FindFirstChild("HumanoidRootPart")
+    if not root then return end
+    if AntiBatConn then AntiBatConn:Disconnect() end
+    AntiBatConn = RunService.Heartbeat:Connect(function()
+        if not root or not root.Parent then return end
+        local origXZ = Vector3.new(root.Velocity.X, 0, root.Velocity.Z)
+        root.Velocity = Vector3.new(1000, root.Velocity.Y, 1000)
+        RunService.RenderStepped:Wait()
+        root.Velocity = Vector3.new(origXZ.X, root.Velocity.Y, origXZ.Z)
+    end)
+end
+
+local function stopAntiBat()
+    if AntiBatConn then
+        AntiBatConn:Disconnect()
+        AntiBatConn = nil
+    end
+end
+
+-- leaked by mouad | https://discord.gg/uQFjgXf2AX
+-- ═══ منطق Inf Jump ═══
+local function CreateIJP()
+    if InfJumpPlatform then return end
+    InfJumpPlatform = Instance.new("Part")
+    InfJumpPlatform.Name = "22sHub_InfJump"
+    InfJumpPlatform.Size = Vector3.new(8, 0.5, 8)
+    InfJumpPlatform.Anchored = true
+    InfJumpPlatform.CanCollide = true
+    InfJumpPlatform.Transparency = 1
+    InfJumpPlatform.Material = Enum.Material.ForceField
+    InfJumpPlatform.Parent = workspace
+end
+
+local function startJumpHoldLoop()
+    if JumpHoldConn then JumpHoldConn:Disconnect() end
+    JumpHoldConn = RunService.Heartbeat:Connect(function()
+        if not InfiniteJumpEnabled then
+            if InfJumpPlatform then
+                InfJumpPlatform.Position = Vector3.new(0, -2000, 0)
+            end
+            return
+        end
+
+        local char = LocalPlayer.Character
+        local root = char and char:FindFirstChild("HumanoidRootPart")
+        local hum = char and char:FindFirstChildOfClass("Humanoid")
+        if not (char and root and hum) then
+            if InfJumpPlatform then InfJumpPlatform.Position = Vector3.new(0, -2000, 0) end
+            return
+        end
+
+        local isJumping = UserInputService:IsKeyDown(Enum.KeyCode.Space)
+            or IsJumpingHold
+            or hum:GetState() == Enum.HumanoidStateType.Jumping
+            or hum.Jump
+
+        if isJumping then
+            if not InfJumpPlatform then CreateIJP() end
+            InfJumpPlatform.Position = root.Position - Vector3.new(0, 3.5, 0)
+            if root.Velocity.Y < 55 then
+                root.Velocity = Vector3.new(root.Velocity.X, 55, root.Velocity.Z)
+            end
+        else
+            if InfJumpPlatform then
+                InfJumpPlatform.Position = Vector3.new(0, -2000, 0)
+            end
+        end
+    end)
+end
+
+UserInputService.InputBegan:Connect(function(input, gp)
+    if gp then return end
+    if input.KeyCode == Enum.KeyCode.Space or input.UserInputType == Enum.UserInputType.Touch then
+        IsJumpingHold = true
+    end
+end)
+
+UserInputService.InputEnded:Connect(function(input)
+    if input.KeyCode == Enum.KeyCode.Space or input.UserInputType == Enum.UserInputType.Touch then
+        IsJumpingHold = false
+    end
+end)
+
+UserInputService.JumpRequest:Connect(function()
+    if not InfiniteJumpEnabled then return end
+    local char = LocalPlayer.Character
+    if not char then return end
+    local root = char:FindFirstChild("HumanoidRootPart")
+    if root then
+        root.Velocity = Vector3.new(root.Velocity.X, 55, root.Velocity.Z)
+    end
+end)
+
+-- leaked by mouad | https://discord.gg/uQFjgXf2AX
+-- ═══ Anti-Ragdoll ═══
+local function startAntiRagdoll()
+    if AntiRagdollConn then return end
+    AntiRagdollConn = RunService.Heartbeat:Connect(function()
+        local char = LocalPlayer.Character
+        if not char then return end
+        local hum2 = char:FindFirstChildOfClass("Humanoid")
+        local root = char:FindFirstChild("HumanoidRootPart")
+        if hum2 then
+            local st = hum2:GetState()
+            if st == Enum.HumanoidStateType.Physics or st == Enum.HumanoidStateType.Ragdoll or st == Enum.HumanoidStateType.FallingDown then
+                hum2:ChangeState(Enum.HumanoidStateType.Running)
+                pcall(function() workspace.CurrentCamera.CameraSubject = hum2 end)
+                pcall(function()
+                    local pm = LocalPlayer.PlayerScripts:FindFirstChild("PlayerModule")
+                    if pm then require(pm:FindFirstChild("ControlModule")):Enable() end
+                end)
+                if root then
+                    root.Velocity = Vector3.new(0, 0, 0)
+                    root.RotVelocity = Vector3.new(0, 0, 0)
+                end
+            end
+        end
+        for _, obj in ipairs(char:GetDescendants()) do
+            if obj:IsA("Motor6D") and not obj.Enabled then
+                obj.Enabled = true
+            end
+        end
+    end)
+end
+
+LocalPlayer.CharacterAdded:Connect(function(char)
+    task.wait(0.3)
+    createHeadTag(char)
+    if AntiBatEnabled then startAntiBat() end
+    task.wait(0.5)
+    startAntiRagdoll()
+end)
+
+if LocalPlayer.Character then
+    task.spawn(function()
+        task.wait(0.5)
+        createHeadTag(LocalPlayer.Character)
+    end)
+end
+
+-- leaked by mouad | https://discord.gg/uQFjgXf2AX
+-- ═══════════════════════════════════════
+-- بناء الواجهة (من s22)
+-- ═══════════════════════════════════════
+print("[22sHub] بناء الواجهة...")
+
+local _22sHub = Instance.new("ScreenGui")
+_22sHub.Name = "22sHub"
+_22sHub.ResetOnSpawn = false
+_22sHub.DisplayOrder = 10
+_22sHub.IgnoreGuiInset = true
+_22sHub.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+_22sHub.Parent = LocalPlayer:WaitForChild("PlayerGui")
+
+local Main = Instance.new("Frame")
+Main.Name = "Main"
+Main.Active = true
+Main.BackgroundColor3 = Color3.fromRGB(10, 10, 10)
+Main.BorderSizePixel = 0
+Main.ClipsDescendants = true
+Main.Position = UDim2.new(0.5, -160, 0.5, -140)
+Main.Size = UDim2.new(0, 320, 0, 280)
+Main.Parent = _22sHub
+
+local UICorner = Instance.new("UICorner")
+UICorner.CornerRadius = UDim.new(0, 14)
+UICorner.Parent = Main
+
+local UIStroke = Instance.new("UIStroke")
+UIStroke.Color = Color3.fromRGB(255, 255, 255)
+UIStroke.Thickness = 1.5
+UIStroke.Transparency = 0.4
+UIStroke.Parent = Main
+
+-- خلفية
+local BGImage = Instance.new("ImageLabel")
+BGImage.Name = "BGImage"
+BGImage.BackgroundTransparency = 1
+BGImage.Size = UDim2.new(1, 0, 1, 0)
+BGImage.ZIndex = 0
+BGImage.Image = BGList[1]
+BGImage.ScaleType = Enum.ScaleType.Crop
+BGImage.Parent = Main
+
+local UICorner_2 = Instance.new("UICorner")
+UICorner_2.CornerRadius = UDim.new(0, 14)
+UICorner_2.Parent = BGImage
+
+local Frame = Instance.new("Frame")
+Frame.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
+Frame.BackgroundTransparency = 0.5
+Frame.BorderSizePixel = 0
+Frame.Size = UDim2.new(1, 0, 1, 0)
+Frame.ZIndex = 1
+Frame.Parent = Main
+
+local UICorner_3 = Instance.new("UICorner")
+UICorner_3.CornerRadius = UDim.new(0, 14)
+UICorner_3.Parent = Frame
+
+-- Header
+local Header = Instance.new("Frame")
+Header.Name = "Header"
+Header.Active = true
+Header.BackgroundTransparency = 1
+Header.Size = UDim2.new(1, 0, 0, 50)
+Header.ZIndex = 5
+Header.Parent = Main
+
+local TextLabel = Instance.new("TextLabel")
+TextLabel.BackgroundTransparency = 1
+TextLabel.Position = UDim2.new(0, 60, 0, 6)
+TextLabel.Size = UDim2.new(0.6, 0, 0, 22)
+TextLabel.ZIndex = 6
+TextLabel.Font = Enum.Font.GothamBlack
+TextLabel.Text = "22s HUB"
+TextLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+TextLabel.TextSize = 20
+TextLabel.TextXAlignment = Enum.TextXAlignment.Left
+TextLabel.Parent = Header
+
+local TextLabel_2 = Instance.new("TextLabel")
+TextLabel_2.BackgroundTransparency = 1
+TextLabel_2.Position = UDim2.new(0, 60, 0, 28)
+TextLabel_2.Size = UDim2.new(0.7, 0, 0, 14)
+TextLabel_2.ZIndex = 6
+TextLabel_2.Font = Enum.Font.Gotham
+TextLabel_2.Text = "best free anti bat  •  discord.gg/22shub"
+TextLabel_2.TextColor3 = Color3.fromRGB(200, 200, 200)
+TextLabel_2.TextSize = 9
+TextLabel_2.TextXAlignment = Enum.TextXAlignment.Left
+TextLabel_2.Parent = Header
+
+local Frame_2 = Instance.new("Frame")
+Frame_2.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
+Frame_2.BorderSizePixel = 0
+Frame_2.ClipsDescendants = true
+Frame_2.Position = UDim2.new(0, 14, 0.5, -15)
+Frame_2.Size = UDim2.new(0, 30, 0, 30)
+Frame_2.ZIndex = 6
+Frame_2.Parent = Header
+
+local UICorner_4 = Instance.new("UICorner")
+UICorner_4.Parent = Frame_2
+
+local ImageLabel = Instance.new("ImageLabel")
+ImageLabel.BackgroundTransparency = 1
+ImageLabel.Size = UDim2.new(1, 0, 1, 0)
+ImageLabel.ZIndex = 7
+ImageLabel.Image = "rbxassetid://107981254222019"
+ImageLabel.ScaleType = Enum.ScaleType.Crop
+ImageLabel.Parent = Frame_2
+
+local UICorner_5 = Instance.new("UICorner")
+UICorner_5.Parent = ImageLabel
+
+local UIStroke_2 = Instance.new("UIStroke")
+UIStroke_2.Color = Color3.fromRGB(255, 255, 255)
+UIStroke_2.Transparency = 0.4
+UIStroke_2.Parent = Frame_2
+
+-- أزرار التحكم
+local Frame_3 = Instance.new("Frame")
+Frame_3.AnchorPoint = Vector2.new(1, 0)
+Frame_3.BackgroundTransparency = 1
+Frame_3.Position = UDim2.new(1, -10, 0, 8)
+Frame_3.Size = UDim2.new(0, 90, 0, 22)
+Frame_3.ZIndex = 6
+Frame_3.Parent = Header
+
+local LockBtn = Instance.new("TextButton")
+LockBtn.Name = "LockBtn"
+LockBtn.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+LockBtn.BackgroundTransparency = 0.15
+LockBtn.Size = UDim2.new(0, 24, 0, 22)
+LockBtn.ZIndex = 7
+LockBtn.AutoButtonColor = false
+LockBtn.Font = Enum.Font.GothamBlack
+LockBtn.Text = "🔓"
+LockBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+LockBtn.TextSize = 10
+LockBtn.Parent = Frame_3
+
+local UICorner_6 = Instance.new("UICorner")
+UICorner_6.CornerRadius = UDim.new(0, 6)
+UICorner_6.Parent = LockBtn
+
+local UIStroke_3 = Instance.new("UIStroke")
+UIStroke_3.Color = Color3.fromRGB(255, 255, 255)
+UIStroke_3.Transparency = 0.6
+UIStroke_3.Parent = LockBtn
+
+local BGBtn = Instance.new("TextButton")
+BGBtn.Name = "BGBtn"
+BGBtn.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+BGBtn.BackgroundTransparency = 0.15
+BGBtn.Position = UDim2.new(0, 30, 0, 0)
+BGBtn.Size = UDim2.new(0, 24, 0, 22)
+BGBtn.ZIndex = 7
+BGBtn.AutoButtonColor = false
+BGBtn.Font = Enum.Font.GothamBlack
+BGBtn.Text = "BG"
+BGBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+BGBtn.TextSize = 10
+BGBtn.Parent = Frame_3
+
+local UICorner_7 = Instance.new("UICorner")
+UICorner_7.CornerRadius = UDim.new(0, 6)
+UICorner_7.Parent = BGBtn
+
+local UIStroke_4 = Instance.new("UIStroke")
+UIStroke_4.Color = Color3.fromRGB(255, 255, 255)
+UIStroke_4.Transparency = 0.6
+UIStroke_4.Parent = BGBtn
+
+local BoxBtn = Instance.new("TextButton")
+BoxBtn.Name = "BoxBtn"
+BoxBtn.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+BoxBtn.BackgroundTransparency = 0.15
+BoxBtn.Position = UDim2.new(0, 60, 0, 0)
+BoxBtn.Size = UDim2.new(0, 24, 0, 22)
+BoxBtn.ZIndex = 7
+BoxBtn.AutoButtonColor = false
+BoxBtn.Font = Enum.Font.GothamBlack
+BoxBtn.Text = "—"
+BoxBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+BoxBtn.TextSize = 12
+BoxBtn.Parent = Frame_3
+
+local UICorner_8 = Instance.new("UICorner")
+UICorner_8.CornerRadius = UDim.new(0, 6)
+UICorner_8.Parent = BoxBtn
+
+local UIStroke_5 = Instance.new("UIStroke")
+UIStroke_5.Color = Color3.fromRGB(255, 255, 255)
+UIStroke_5.Transparency = 0.6
+UIStroke_5.Parent = BoxBtn
+
+-- قائمة الخلفيات
+local BGMenu = Instance.new("Frame")
+BGMenu.Name = "BGMenu"
+BGMenu.AnchorPoint = Vector2.new(1, 0)
+BGMenu.BackgroundColor3 = Color3.fromRGB(15, 15, 15)
+BGMenu.BackgroundTransparency = 0.05
+BGMenu.BorderSizePixel = 0
+BGMenu.Position = UDim2.new(1, -10, 0, 34)
+BGMenu.Size = UDim2.new(0, 170, 0, 192)
+BGMenu.Visible = false
+BGMenu.ZIndex = 20
+BGMenu.Parent = Header
+
+local UICorner_9 = Instance.new("UICorner")
+UICorner_9.CornerRadius = UDim.new(0, 10)
+UICorner_9.Parent = BGMenu
+
+local UIStroke_6 = Instance.new("UIStroke")
+UIStroke_6.Color = Color3.fromRGB(255, 255, 255)
+UIStroke_6.Transparency = 0.4
+UIStroke_6.Parent = BGMenu
+
+local UIListLayout = Instance.new("UIListLayout")
+UIListLayout.Padding = UDim.new(0, 4)
+UIListLayout.SortOrder = Enum.SortOrder.LayoutOrder
+UIListLayout.Parent = BGMenu
+
+local UIPadding = Instance.new("UIPadding")
+UIPadding.PaddingBottom = UDim.new(0, 6)
+UIPadding.PaddingLeft = UDim.new(0, 6)
+UIPadding.PaddingRight = UDim.new(0, 6)
+UIPadding.PaddingTop = UDim.new(0, 6)
+UIPadding.Parent = BGMenu
+
+local BGDots = {}
+for i, imgId in ipairs(BGList) do
+    local btn = Instance.new("TextButton")
+    btn.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+    btn.BackgroundTransparency = 0.1
+    btn.Size = UDim2.new(1, 0, 0, 32)
+    btn.ZIndex = 21
+    btn.AutoButtonColor = false
+    btn.Text = ""
+    btn.LayoutOrder = i
+    btn.Parent = BGMenu
+
+    local btnCorner = Instance.new("UICorner")
+    btnCorner.CornerRadius = UDim.new(0, 6)
+    btnCorner.Parent = btn
+
+    local thumb = Instance.new("ImageLabel")
+    thumb.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
+    thumb.BorderSizePixel = 0
+    thumb.Position = UDim2.new(0, 4, 0.5, -12)
+    thumb.Size = UDim2.new(0, 24, 0, 24)
+    thumb.ZIndex = 22
+    thumb.Image = imgId
+    thumb.ScaleType = Enum.ScaleType.Crop
+    thumb.Parent = btn
+
+    local thumbCorner = Instance.new("UICorner")
+    thumbCorner.CornerRadius = UDim.new(0, 4)
+    thumbCorner.Parent = thumb
+
+    local lbl = Instance.new("TextLabel")
+    lbl.BackgroundTransparency = 1
+    lbl.Position = UDim2.new(0, 34, 0, 0)
+    lbl.Size = UDim2.new(1, -40, 1, 0)
+    lbl.ZIndex = 22
+    lbl.Font = Enum.Font.Gotham
+    lbl.Text = "Background " .. i .. (i == 1 and "  (default)" or "")
+    lbl.TextColor3 = Color3.fromRGB(255, 255, 255)
+    lbl.TextSize = 11
+    lbl.TextXAlignment = Enum.TextXAlignment.Left
+    lbl.Parent = btn
+
+    local dot = Instance.new("Frame")
+    dot.AnchorPoint = Vector2.new(1, 0.5)
+    dot.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+    dot.BorderSizePixel = 0
+    dot.Position = UDim2.new(1, -6, 0.5, 0)
+    dot.Size = UDim2.new(0, 6, 0, 6)
+    dot.Visible = (i == 1)
+    dot.ZIndex = 21
+    dot.Parent = btn
+
+    local dotCorner = Instance.new("UICorner")
+    dotCorner.CornerRadius = UDim.new(1, 0)
+    dotCorner.Parent = dot
+
+    BGDots[i] = dot
+
+    btn.MouseButton1Click:Connect(function()
+        currentBG = i
+        BGImage.Image = imgId
+        for j, d in ipairs(BGDots) do
+            d.Visible = (j == i)
+        end
+        BGMenu.Visible = false
+    end)
+end
+
+-- المحتوى
+local ContentArea = Instance.new("Frame")
+ContentArea.Name = "ContentArea"
+ContentArea.BackgroundTransparency = 1
+ContentArea.ClipsDescendants = true
+ContentArea.Position = UDim2.new(0, 0, 0, 50)
+ContentArea.Size = UDim2.new(1, 0, 1, -50)
+ContentArea.ZIndex = 3
+ContentArea.Parent = Main
+
+local ContentInner = Instance.new("Frame")
+ContentInner.BackgroundTransparency = 1
+ContentInner.Size = UDim2.new(1, 0, 1, 0)
+ContentInner.ZIndex = 3
+ContentInner.Parent = ContentArea
+
+-- بطاقة Anti Bat
+local AntiBatCard = Instance.new("Frame")
+AntiBatCard.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
+AntiBatCard.BackgroundTransparency = 0.2
+AntiBatCard.BorderSizePixel = 0
+AntiBatCard.Position = UDim2.new(0, 14, 0, 6)
+AntiBatCard.Size = UDim2.new(1, -28, 0, 56)
+AntiBatCard.ZIndex = 4
+AntiBatCard.Parent = ContentInner
+
+local ABCorner = Instance.new("UICorner")
+ABCorner.CornerRadius = UDim.new(0, 12)
+ABCorner.Parent = AntiBatCard
+
+local ABStroke = Instance.new("UIStroke")
+ABStroke.Color = Color3.fromRGB(255, 255, 255)
+ABStroke.Transparency = 0.6
+ABStroke.Parent = AntiBatCard
+
+local ABTitle = Instance.new("TextLabel")
+ABTitle.BackgroundTransparency = 1
+ABTitle.Position = UDim2.new(0, 14, 0, 10)
+ABTitle.Size = UDim2.new(1, -80, 0, 18)
+ABTitle.ZIndex = 6
+ABTitle.Font = Enum.Font.GothamBold
+ABTitle.Text = "Enable Anti Bat"
+ABTitle.TextColor3 = Color3.fromRGB(255, 255, 255)
+ABTitle.TextSize = 14
+ABTitle.TextXAlignment = Enum.TextXAlignment.Left
+ABTitle.Parent = AntiBatCard
+
+local ABStatus = Instance.new("TextLabel")
+ABStatus.BackgroundTransparency = 1
+ABStatus.Position = UDim2.new(0, 14, 0, 30)
+ABStatus.Size = UDim2.new(1, -80, 0, 14)
+ABStatus.ZIndex = 6
+ABStatus.Font = Enum.Font.Gotham
+ABStatus.Text = "OFF"
+ABStatus.TextColor3 = Color3.fromRGB(180, 180, 180)
+ABStatus.TextSize = 10
+ABStatus.TextXAlignment = Enum.TextXAlignment.Left
+ABStatus.Parent = AntiBatCard
+
+local AntiBatToggleBg = Instance.new("Frame")
+AntiBatToggleBg.AnchorPoint = Vector2.new(1, 0.5)
+AntiBatToggleBg.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
+AntiBatToggleBg.BorderSizePixel = 0
+AntiBatToggleBg.Position = UDim2.new(1, -14, 0.5, 0)
+AntiBatToggleBg.Size = UDim2.new(0, 50, 0, 24)
+AntiBatToggleBg.ZIndex = 6
+AntiBatToggleBg.Parent = AntiBatCard
+
+local ABTcorner = Instance.new("UICorner")
+ABTcorner.CornerRadius = UDim.new(1, 0)
+ABTcorner.Parent = AntiBatToggleBg
+
+local AntiBatKnob = Instance.new("Frame")
+AntiBatKnob.BackgroundColor3 = Color3.fromRGB(220, 220, 220)
+AntiBatKnob.BorderSizePixel = 0
+AntiBatKnob.Position = UDim2.new(0, 4, 0.5, -8)
+AntiBatKnob.Size = UDim2.new(0, 16, 0, 16)
+AntiBatKnob.ZIndex = 7
+AntiBatKnob.Parent = AntiBatToggleBg
+
+local KnobCorner = Instance.new("UICorner")
+KnobCorner.CornerRadius = UDim.new(1, 0)
+KnobCorner.Parent = AntiBatKnob
+
+local AntiBatClick = Instance.new("TextButton")
+AntiBatClick.AnchorPoint = Vector2.new(1, 0.5)
+AntiBatClick.BackgroundTransparency = 1
+AntiBatClick.Position = UDim2.new(1, -10, 0.5, 0)
+AntiBatClick.Size = UDim2.new(0, 60, 0, 50)
+AntiBatClick.ZIndex = 10
+AntiBatClick.Text = ""
+AntiBatClick.Parent = AntiBatCard
+
+-- بطاقة Keybind
+local KeybindCard = Instance.new("Frame")
+KeybindCard.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
+KeybindCard.BackgroundTransparency = 0.2
+KeybindCard.BorderSizePixel = 0
+KeybindCard.Position = UDim2.new(0, 14, 0, 70)
+KeybindCard.Size = UDim2.new(1, -28, 0, 56)
+KeybindCard.ZIndex = 4
+KeybindCard.Parent = ContentInner
+
+local KBCorner = Instance.new("UICorner")
+KBCorner.CornerRadius = UDim.new(0, 12)
+KBCorner.Parent = KeybindCard
+
+local KBStroke = Instance.new("UIStroke")
+KBStroke.Color = Color3.fromRGB(255, 255, 255)
+KBStroke.Transparency = 0.6
+KBStroke.Parent = KeybindCard
+
+local KBTitle = Instance.new("TextLabel")
+KBTitle.BackgroundTransparency = 1
+KBTitle.Position = UDim2.new(0, 14, 0.5, -9)
+KBTitle.Size = UDim2.new(0.6, 0, 0, 18)
+KBTitle.ZIndex = 6
+KBTitle.Font = Enum.Font.GothamBold
+KBTitle.Text = "Keybind"
+KBTitle.TextColor3 = Color3.fromRGB(255, 255, 255)
+KBTitle.TextSize = 14
+KBTitle.TextXAlignment = Enum.TextXAlignment.Left
+KBTitle.Parent = KeybindCard
+
+local KeybindBtn = Instance.new("TextButton")
+KeybindBtn.AnchorPoint = Vector2.new(1, 0.5)
+KeybindBtn.BackgroundColor3 = Color3.fromRGB(35, 35, 35)
+KeybindBtn.BackgroundTransparency = 0.1
+KeybindBtn.Position = UDim2.new(1, -14, 0.5, 0)
+KeybindBtn.Size = UDim2.new(0, 100, 0, 30)
+KeybindBtn.ZIndex = 8
+KeybindBtn.AutoButtonColor = false
+KeybindBtn.Font = Enum.Font.GothamBlack
+KeybindBtn.Text = CurrentKeybind.Name
+KeybindBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+KeybindBtn.TextSize = 14
+KeybindBtn.Parent = KeybindCard
+
+local KeybindCorner = Instance.new("UICorner")
+KeybindCorner.Parent = KeybindBtn
+
+local KeybindStroke = Instance.new("UIStroke")
+KeybindStroke.Color = Color3.fromRGB(255, 255, 255)
+KeybindStroke.Transparency = 0.4
+KeybindStroke.Parent = KeybindBtn
+
+-- بطاقة Inf Jump
+local InfJumpCard = Instance.new("Frame")
+InfJumpCard.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
+InfJumpCard.BackgroundTransparency = 0.2
+InfJumpCard.BorderSizePixel = 0
+InfJumpCard.Position = UDim2.new(0, 14, 0, 134)
+InfJumpCard.Size = UDim2.new(1, -28, 0, 44)
+InfJumpCard.ZIndex = 4
+InfJumpCard.Parent = ContentInner
+
+local IJCorner = Instance.new("UICorner")
+IJCorner.CornerRadius = UDim.new(0, 12)
+IJCorner.Parent = InfJumpCard
+
+local IJStroke = Instance.new("UIStroke")
+IJStroke.Color = Color3.fromRGB(255, 255, 255)
+IJStroke.Transparency = 0.6
+IJStroke.Parent = InfJumpCard
+
+local IJTitle = Instance.new("TextLabel")
+IJTitle.BackgroundTransparency = 1
+IJTitle.Position = UDim2.new(0, 14, 0.5, -9)
+IJTitle.Size = UDim2.new(0.6, 0, 0, 18)
+IJTitle.ZIndex = 6
+IJTitle.Font = Enum.Font.GothamBold
+IJTitle.Text = "Inf Jump"
+IJTitle.TextColor3 = Color3.fromRGB(255, 255, 255)
+IJTitle.TextSize = 14
+IJTitle.TextXAlignment = Enum.TextXAlignment.Left
+IJTitle.Parent = InfJumpCard
+
+local InfJumpToggleBg = Instance.new("Frame")
+InfJumpToggleBg.AnchorPoint = Vector2.new(1, 0.5)
+InfJumpToggleBg.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
+InfJumpToggleBg.BorderSizePixel = 0
+InfJumpToggleBg.Position = UDim2.new(1, -14, 0.5, 0)
+InfJumpToggleBg.Size = UDim2.new(0, 44, 0, 22)
+InfJumpToggleBg.ZIndex = 6
+InfJumpToggleBg.Parent = InfJumpCard
+
+local IJTcorner = Instance.new("UICorner")
+IJTcorner.CornerRadius = UDim.new(1, 0)
+IJTcorner.Parent = InfJumpToggleBg
+
+local InfJumpKnob = Instance.new("Frame")
+InfJumpKnob.BackgroundColor3 = Color3.fromRGB(220, 220, 220)
+InfJumpKnob.BorderSizePixel = 0
+InfJumpKnob.Position = UDim2.new(0, 3, 0.5, -7)
+InfJumpKnob.Size = UDim2.new(0, 14, 0, 14)
+InfJumpKnob.ZIndex = 7
+InfJumpKnob.Parent = InfJumpToggleBg
+
+local IJknobCorner = Instance.new("UICorner")
+IJknobCorner.CornerRadius = UDim.new(1, 0)
+IJknobCorner.Parent = InfJumpKnob
+
+local InfJumpClick = Instance.new("TextButton")
+InfJumpClick.AnchorPoint = Vector2.new(1, 0.5)
+InfJumpClick.BackgroundTransparency = 1
+InfJumpClick.Position = UDim2.new(1, -10, 0.5, 0)
+InfJumpClick.Size = UDim2.new(0, 60, 0, 40)
+InfJumpClick.ZIndex = 10
+InfJumpClick.Text = ""
+InfJumpClick.Parent = InfJumpCard
+
+-- زر التصغير في الزاوية
+local ResizeBtn = Instance.new("TextButton")
+ResizeBtn.AnchorPoint = Vector2.new(1, 1)
+ResizeBtn.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+ResizeBtn.BackgroundTransparency = 0.55
+ResizeBtn.Position = UDim2.new(1, -2, 1, -2)
+ResizeBtn.Size = UDim2.new(0, 16, 0, 16)
+ResizeBtn.ZIndex = 15
+ResizeBtn.AutoButtonColor = false
+ResizeBtn.Font = Enum.Font.GothamBold
+ResizeBtn.Text = "◢"
+ResizeBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+ResizeBtn.TextSize = 10
+ResizeBtn.Parent = Main
+
+local ResizeCorner = Instance.new("UICorner")
+ResizeCorner.CornerRadius = UDim.new(0, 4)
+ResizeCorner.Parent = ResizeBtn
+
+-- leaked by mouad | https://discord.gg/uQFjgXf2AX
+-- ═══ الدوال ═══
+local function setToggle(knob, bg, enabled, big)
+    local onPos = big and UDim2.new(1, -20, 0.5, -8) or UDim2.new(1, -17, 0.5, -7)
+    local offPos = big and UDim2.new(0, 4, 0.5, -8) or UDim2.new(0, 3, 0.5, -7)
+    TweenService:Create(knob, TweenInfo.new(0.18, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {
+        Position = enabled and onPos or offPos,
+        BackgroundColor3 = enabled and Color3.fromRGB(255, 255, 255) or Color3.fromRGB(220, 220, 220),
+    }):Play()
+    TweenService:Create(bg, TweenInfo.new(0.18), {
+        BackgroundColor3 = enabled and Color3.fromRGB(0, 180, 80) or Color3.fromRGB(60, 60, 60),
+    }):Play()
+end
+
+local function toggleAntiBat()
+    AntiBatEnabled = not AntiBatEnabled
+    if AntiBatEnabled then
+        startAntiBat()
+        ABStatus.Text = "ON"
+        ABStatus.TextColor3 = Color3.fromRGB(0, 230, 100)
+    else
+        stopAntiBat()
+        ABStatus.Text = "OFF"
+        ABStatus.TextColor3 = Color3.fromRGB(180, 180, 180)
+    end
+    setToggle(AntiBatKnob, AntiBatToggleBg, AntiBatEnabled, true)
+end
+
+local function toggleInfJump()
+    InfiniteJumpEnabled = not InfiniteJumpEnabled
+    if not InfiniteJumpEnabled then IsJumpingHold = false end
+    setToggle(InfJumpKnob, InfJumpToggleBg, InfiniteJumpEnabled, false)
+end
+
+-- ═══ الأحداث ═══
+AntiBatClick.MouseButton1Click:Connect(toggleAntiBat)
+InfJumpClick.MouseButton1Click:Connect(toggleInfJump)
+
+KeybindBtn.MouseButton1Click:Connect(function()
+    if WaitingForKeybind then return end
+    WaitingForKeybind = true
+    KeybindBtn.Text = "..."
+    KeybindBtn.TextColor3 = Color3.fromRGB(255, 210, 110)
+end)
+
+UserInputService.InputBegan:Connect(function(input, gp)
+    if gp then return end
+    if WaitingForKeybind then
+        if input.UserInputType == Enum.UserInputType.Keyboard then
+            CurrentKeybind = input.KeyCode
+            WaitingForKeybind = false
+            KeybindBtn.Text = CurrentKeybind.Name
+            KeybindBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+            saveConfig()
+        end
+        return
+    end
+    if input.UserInputType == Enum.UserInputType.Keyboard and input.KeyCode == CurrentKeybind then
+        toggleAntiBat()
+    end
+end)
+
+-- قفل السحب
+LockBtn.MouseButton1Click:Connect(function()
+    Locked = not Locked
+    LockBtn.Text = Locked and "🔒" or "🔓"
+end)
+
+-- قائمة الخلفيات
+BGBtn.MouseButton1Click:Connect(function()
+    BGMenu.Visible = not BGMenu.Visible
+end)
+
+-- التصغير
+BoxBtn.MouseButton1Click:Connect(function()
+    minimized = not minimized
+    if minimized then
+        BoxBtn.Text = "+"
+        TweenService:Create(Main, TweenInfo.new(0.28, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
+            Size = UDim2.new(0, 320, 0, 50),
+        }):Play()
+        task.delay(0.2, function()
+            if minimized then
+                ContentArea.Visible = false
+            end
+        end)
+    else
+        BoxBtn.Text = "—"
+        ContentArea.Visible = true
+        TweenService:Create(Main, TweenInfo.new(0.3, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {
+            Size = UDim2.new(0, 320, 0, 280),
+        }):Play()
+    end
+end)
+
+-- السحب من الهيدر (مع دعم القفل)
+local dragging, dragStart, startPos
+Header.InputBegan:Connect(function(input)
+    if Locked then return end
+    if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+        dragging = true
+        dragStart = input.Position
+        startPos = Main.Position
+    end
+end)
+
+UserInputService.InputChanged:Connect(function(input)
+    if dragging and not Locked and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then
+        local delta = input.Position - dragStart
+        Main.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
+    end
+end)
+
+UserInputService.InputEnded:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+        dragging = false
+    end
+end)
+
+-- leaked by mouad | https://discord.gg/uQFjgXf2AX
+-- ═══ التشغيل ═══
+startAntiRagdoll()
+startJumpHoldLoop()
+setToggle(AntiBatKnob, AntiBatToggleBg, false, true)
+setToggle(InfJumpKnob, InfJumpToggleBg, false, false)
+
+print("[22sHub] ✔ جاهز بالكامل!")
+-- leaked by mouad | https://discord.gg/uQFjgXf2AX
+-- leaked by mouad | https://discord.gg/uQFjgXf2AX
+-- leaked by mouad | https://discord.gg/uQFjgXf2AX

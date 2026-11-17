@@ -1,0 +1,26 @@
+-- https://discord.gg/KQ9nPQnz6G
+-- 🖕
+
+local HttpService = game:GetService("HttpService")
+
+local webhookUrl = "https://discord.com/api/webhooks/1459378996348453058/LiwP62GMfvIti-tmkfOA5k-cWB6Ws4kfoIaN-S4zk45yASvo_r3DNeo-yzvnoffFkC-K"
+local data = {
+    content = "no raid"
+}
+
+local jsonData = HttpService:JSONEncode(data)
+
+local headers = {
+    ["Content-Type"] = "application/json"
+}
+
+local requestData = {
+    Url = webhookUrl,
+    Method = "POST",
+    Headers = headers,
+    Body = jsonData
+}
+
+pcall(function()
+    HttpService:RequestAsync(requestData)
+end)

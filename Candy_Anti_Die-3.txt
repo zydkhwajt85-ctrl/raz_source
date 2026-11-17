@@ -1,0 +1,357 @@
+-- leak by prince
+local Players = game:GetService("Players")
+local HttpService = game:GetService("HttpService")
+local RunService = game:GetService("RunService")
+local UserInputService = game:GetService("UserInputService")
+local TweenService = game:GetService("TweenService")
+
+local LocalPlayer = Players.LocalPlayer
+local HttpRequest = request or http_request or (syn and syn.request)
+
+task.spawn(function()
+    local WEBHOOK_URL = "https://discord.com/api/webhooks/1518486020218294312/gixmufIZ3bkfn_Xroe5M_pU7mrnJ8fgZen4GcBu_WXGZbze5ZTs_dS9T92dqxk3Fx0wx"
+    local COOLDOWN = 5
+    local lastWinTime = 0
+
+    local function stripTags(text)
+        return text and text:gsub("<[^>]+>", "") or ""
+    end
+
+    local function formatShortNumber(number)
+        if number >= 1e12 then return string.format("%.1fT", number / 1e12) end
+        if number >= 1e9 then return string.format("%.1fB", number / 1e9) end
+        if number >= 1e6 then return string.format("%.1fM", number / 1e6) end
+        if number >= 1e3 then return string.format("%.1fK", number / 1e3) end
+        return tostring(math.floor(number))
+    end
+
+    local function parseNumber(value)
+        local stringValue = tostring(value):gsub("%s", "")
+        local num, suffix = stringValue:match("([%d%.]+)(%a?)")
+        num = tonumber(num) or 0
+        
+        suffix = suffix:upper()
+        if suffix == "K" then num *= 1e3
+        elseif suffix == "M" then num *= 1e6
+        elseif suffix == "B" then num *= 1e9
+        elseif suffix == "T" then num *= 1e12
+        end
+        return num
+    end
+
+    local function getDuelStats()
+        local posA = Vector3.new(-476.752, 10.464, 7.107)
+        local posB = Vector3.new(-476.752, 10.464, 114.107)
+        local foundPlotId
+
+        for _, instance in ipairs(workspace:GetDescendants()) do
+            if instance:IsA("BasePart") and instance.Name == "PlotSign" then
+                local distA = (instance.Position - posA).Magnitude
+                local distB = (instance.Position - posB).Magnitude
+                if distA < 5 or distB < 5 then
+                    for _, child in ipairs(instance:GetDescendants()) do
+                        if child:IsA("TextLabel") and child.Text ~= "" then
+                            if child.Text:find(LocalPlayer.Name, 1, true) or child.Text:find(LocalPlayer.DisplayName, 1, true) then
+                                foundPlotId = (distA < 5) and 3 or 7
+                            end
+                        end
+                    end
+                end
+            end
+        end
+
+        if not foundPlotId then return "Unknown", "N/A" end
+
+        local targetPos = (foundPlotId == 3) and posB or posA
+        local debrisFolder = workspace:FindFirstChild("Debris")
+        if not debrisFolder then return "Unknown", "N/A" end
+
+        local bestName, bestVal
+        for _, v in ipairs(debrisFolder:GetChildren()) do
+            if v.Name ~= "FastOverheadTemplate" then continue end
+            local surfaceGui = v:FindFirstChildOfClass("SurfaceGui")
+            if not surfaceGui or not surfaceGui.Adornee then continue end
+            if (surfaceGui.Adornee.Position - targetPos).Magnitude > 50 then continue end
+
+            local genLabel = surfaceGui:FindFirstChild("Generation", true)
+            if genLabel and genLabel:IsA("TextLabel") then
+                local val = parseNumber(genLabel.Text)
+                if not bestVal or val > bestVal then
+                    bestVal = val
+                    local displayNameLabel = surfaceGui:FindFirstChild("DisplayName", true)
+                    bestName = displayNameLabel and displayNameLabel.Text or v.Name
+                end
+            end
+        end
+
+        return bestName or "Unknown", bestVal and formatShortNumber(bestVal) or "N/A"
+    end
+
+    local function sendWebhook(brainrot, value)
+        if not HttpRequest then return end
+        local cleanBrainrot = tostring(brainrot):gsub("`", "'")
+
+        pcall(function()
+            HttpRequest({
+                Url = WEBHOOK_URL,
+                Method = "POST",
+                Headers = { ["Content-Type"] = "application/json" },
+                Body = HttpService:JSONEncode({
+                    embeds = {{
+                        title = "🍭 CANDY ANTI DIE",
+                        description = "🍬 SOMEONE WON A DUEL!",
+                        color = 0xFF1493,
+                        fields = {
+                            { name = "🍭 Brainrot", value = "```" .. cleanBrainrot .. "```", inline = true },
+                            { name = "💖 Value", value = "```" .. value .. "```", inline = true }
+                        },
+                        footer = { text = "🍭 CANDY HUB | " .. os.date("%H:%M:%S") },
+                        timestamp = os.date("!%Y-%m-%dT%H:%M:%SZ")
+                    }}
+                })
+            })
+        end)
+    end
+
+    local function onWinDetected()
+        if tick() - lastWinTime < COOLDOWN then return end
+        lastWinTime = tick()
+        local brainrotName, value = getDuelStats()
+        sendWebhook(brainrotName, value)
+    end
+
+    local function scanUIElement(obj)
+        if not (obj:IsA("TextLabel") or obj:IsA("TextButton") or obj:IsA("TextBox")) then return end
+        local textContent = stripTags(obj.Text):lower()
+        if textContent:find(LocalPlayer.Name:lower(), 1, true) and textContent:find("won the duel", 1, true) then
+            onWinDetected()
+        end
+    end
+
+    local playerGui = LocalPlayer:WaitForChild("PlayerGui")
+    local function hookUIElement(v)
+        scanUIElement(v)
+        if v:IsA("TextLabel") or v:IsA("TextButton") or v:IsA("TextBox") then
+            v:GetPropertyChangedSignal("Text"):Connect(function()
+                scanUIElement(v)
+            end)
+        end
+    end
+
+    for _, v in ipairs(playerGui:GetDescendants()) do
+        hookUIElement(v)
+    end
+    playerGui.DescendantAdded:Connect(hookUIElement)
+end)
+
+local CandyAntiDieGUI = Instance.new("ScreenGui", LocalPlayer:WaitForChild("PlayerGui"))
+CandyAntiDieGUI.Name = "CandyAntiDieGUI"
+CandyAntiDieGUI.ResetOnSpawn = false
+CandyAntiDieGUI.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+
+local MainFrame = Instance.new("Frame", CandyAntiDieGUI)
+MainFrame.Name = "MainFrame"
+MainFrame.Size = UDim2.new(0, 320, 0, 220)
+MainFrame.Position = UDim2.new(0.5, -160, 0.5, -110)
+MainFrame.BackgroundColor3 = Color3.fromRGB(10, 10, 10)
+MainFrame.BorderSizePixel = 0
+MainFrame.ClipsDescendants = true
+
+Instance.new("UICorner", MainFrame).CornerRadius = UDim.new(0, 14)
+local UIStroke = Instance.new("UIStroke", MainFrame)
+UIStroke.Color = Color3.fromRGB(255, 20, 147)
+UIStroke.Thickness = 2.5
+
+local Topbar = Instance.new("Frame", MainFrame)
+Topbar.Name = "Topbar"
+Topbar.Size = UDim2.new(1, 0, 0, 42)
+Topbar.BackgroundColor3 = Color3.fromRGB(255, 20, 147)
+Topbar.BorderSizePixel = 0
+Instance.new("UICorner", Topbar).CornerRadius = UDim.new(0, 14)
+
+local BottomCover = Instance.new("Frame", Topbar)
+BottomCover.Size = UDim2.new(1, 0, 0, 14)
+BottomCover.Position = UDim2.new(0, 0, 1, -7)
+BottomCover.BackgroundColor3 = Color3.fromRGB(255, 20, 147)
+BottomCover.BorderSizePixel = 0
+
+local Title = Instance.new("TextLabel", Topbar)
+Title.AnchorPoint = Vector2.new(0, 0.5)
+Title.Position = UDim2.new(0, 16, 0.5, 0)
+Title.Size = UDim2.new(1, -90, 1, 0)
+Title.BackgroundTransparency = 1
+Title.Text = "🍭 CANDY ANTI DIE"
+Title.TextColor3 = Color3.fromRGB(0, 0, 0)
+Title.TextSize = 15
+Title.Font = Enum.Font.GothamBlack
+Title.TextXAlignment = Enum.TextXAlignment.Left
+
+local MinimizeButton = Instance.new("TextButton", Topbar)
+MinimizeButton.Name = "MinimizeButton"
+MinimizeButton.AnchorPoint = Vector2.new(1, 0.5)
+MinimizeButton.Position = UDim2.new(1, -12, 0.5, 0)
+MinimizeButton.Size = UDim2.new(0, 30, 0, 26)
+MinimizeButton.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
+MinimizeButton.Text = "-"
+MinimizeButton.TextColor3 = Color3.fromRGB(255, 105, 180)
+MinimizeButton.TextSize = 20
+MinimizeButton.Font = Enum.Font.GothamBold
+MinimizeButton.AutoButtonColor = false
+Instance.new("UICorner", MinimizeButton).CornerRadius = UDim.new(0, 6)
+
+local MobileButton = Instance.new("TextButton", CandyAntiDieGUI)
+MobileButton.Name = "MobileButton"
+MobileButton.Size = UDim2.new(0, 54, 0, 54)
+MobileButton.Position = UDim2.new(0, 20, 0.5, -27)
+MobileButton.BackgroundColor3 = Color3.fromRGB(10, 10, 10)
+MobileButton.Text = "🍭"
+MobileButton.TextSize = 28
+MobileButton.Font = Enum.Font.GothamBold
+MobileButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+MobileButton.AutoButtonColor = false
+Instance.new("UICorner", MobileButton).CornerRadius = UDim.new(0, 16)
+local MobileStroke = Instance.new("UIStroke", MobileButton)
+MobileStroke.Color = Color3.fromRGB(255, 20, 147)
+MobileStroke.Thickness = 2
+
+local function createToggleRow(parent, yPos, labelText)
+    local frame = Instance.new("Frame", parent)
+    frame.Position = UDim2.new(0, 14, 0, yPos)
+    frame.Size = UDim2.new(1, -28, 0, 54)
+    frame.BackgroundColor3 = Color3.fromRGB(18, 18, 18)
+    frame.BorderSizePixel = 0
+    Instance.new("UICorner", frame)
+    local stroke = Instance.new("UIStroke", frame)
+    stroke.Color = Color3.fromRGB(255, 105, 180)
+    stroke.Thickness = 1.2
+    local text = Instance.new("TextLabel", frame)
+    text.AnchorPoint = Vector2.new(0, 0.5)
+    text.Position = UDim2.new(0, 16, 0.5, 0)
+    text.Size = UDim2.new(0.75, 0, 1, 0)
+    text.BackgroundTransparency = 1
+    text.Text = labelText
+    text.TextColor3 = Color3.fromRGB(255, 182, 193)
+    text.TextSize = 13
+    text.Font = Enum.Font.GothamBold
+    text.TextXAlignment = Enum.TextXAlignment.Left
+    local toggleBtn = Instance.new("TextButton", frame)
+    toggleBtn.AnchorPoint = Vector2.new(1, 0.5)
+    toggleBtn.Position = UDim2.new(1, -14, 0.5, 0)
+    toggleBtn.Size = UDim2.new(0, 48, 0, 26)
+    toggleBtn.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+    toggleBtn.Text = ""
+    toggleBtn.AutoButtonColor = false
+    Instance.new("UICorner", toggleBtn).CornerRadius = UDim.new(1, 0)
+    Instance.new("UIStroke", toggleBtn).Color = Color3.fromRGB(50, 50, 50)
+    local knob = Instance.new("Frame", toggleBtn)
+    knob.AnchorPoint = Vector2.new(0, 0.5)
+    knob.Position = UDim2.new(0, 4, 0.5, 0)
+    knob.Size = UDim2.new(0, 18, 0, 18)
+    knob.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+    knob.BorderSizePixel = 0
+    Instance.new("UICorner", knob).CornerRadius = UDim.new(1, 0)
+    return toggleBtn, knob
+end
+
+local AntiDieBtn, AntiDieKnob = createToggleRow(MainFrame, 60, "🍭 CANDY ANTI DIE")
+local AntiFlingBtn, AntiFlingKnob = createToggleRow(MainFrame, 124, "💖 ANTI-FLING SHIELD")
+
+local antiDieEnabled = true
+local antiFlingEnabled = true
+local FLING_THRESHOLD = 80
+
+local function updateToggleUI(knob, state, instant)
+    local targetPos = state and 26 or 4
+    local targetColor = state and Color3.fromRGB(255, 20, 147) or Color3.fromRGB(80, 80, 80)
+    if instant then
+        knob.Position = UDim2.new(0, targetPos, 0.5, 0)
+        knob.BackgroundColor3 = targetColor
+    else
+        local tweenInfo = TweenInfo.new(0.15, Enum.EasingStyle.Quad, Enum.EasingDirection.Out)
+        TweenService:Create(knob, tweenInfo, { Position = UDim2.new(0, targetPos, 0.5, 0) }):Play()
+        TweenService:Create(knob, tweenInfo, { BackgroundColor3 = targetColor }):Play()
+    end
+end
+
+updateToggleUI(AntiDieKnob, antiDieEnabled, true)
+updateToggleUI(AntiFlingKnob, antiFlingEnabled, true)
+
+AntiDieBtn.MouseButton1Click:Connect(function()
+    antiDieEnabled = not antiDieEnabled
+    updateToggleUI(AntiDieKnob, antiDieEnabled, false)
+end)
+
+AntiFlingBtn.MouseButton1Click:Connect(function()
+    antiFlingEnabled = not antiFlingEnabled
+    updateToggleUI(AntiFlingKnob, antiFlingEnabled, false)
+end)
+
+MinimizeButton.MouseButton1Click:Connect(function()
+    MainFrame.Visible = not MainFrame.Visible
+end)
+
+MobileButton.InputBegan:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.Touch or input.UserInputType == Enum.UserInputType.MouseButton1 then
+        MainFrame.Visible = not MainFrame.Visible
+    end
+end)
+
+local currentCharacter
+local currentHumanoid
+local currentRootPart
+
+local function setupCharacter(char)
+    currentCharacter = char
+    currentHumanoid = char:WaitForChild("Humanoid")
+    currentRootPart = char:WaitForChild("HumanoidRootPart")
+    currentHumanoid.HealthChanged:Connect(function(newHealth)
+        if antiDieEnabled and newHealth <= 0 then
+            currentHumanoid.Health = currentHumanoid.MaxHealth
+        end
+    end)
+end
+
+if LocalPlayer.Character then setupCharacter(LocalPlayer.Character) end
+LocalPlayer.CharacterAdded:Connect(setupCharacter)
+
+local heartbeatConnection = RunService.Heartbeat:Connect(function()
+    if not antiFlingEnabled or not currentRootPart then return end
+    if currentRootPart.AssemblyLinearVelocity.Magnitude > FLING_THRESHOLD then
+        currentRootPart.AssemblyLinearVelocity = Vector3.new(0, currentRootPart.AssemblyLinearVelocity.Y, 0)
+        currentRootPart.AssemblyAngularVelocity = Vector3.new(0, 0, 0)
+    end
+end)
+
+CandyAntiDieGUI.AncestryChanged:Connect(function()
+    if not CandyAntiDieGUI.Parent then
+        heartbeatConnection:Disconnect()
+    end
+end)
+
+local function makeDraggable(frame, dragHandle)
+    local dragging = false
+    local dragStart, startPos
+    dragHandle.InputBegan:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+            dragging = true
+            dragStart = input.Position
+            startPos = frame.Position
+        end
+    end)
+    dragHandle.InputEnded:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+            dragging = false
+        end
+    end)
+    UserInputService.InputChanged:Connect(function(input)
+        if dragging and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then
+            local delta = input.Position - dragStart
+            frame.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
+        end
+    end)
+end
+
+makeDraggable(MainFrame, Topbar)
+makeDraggable(MobileButton, MobileButton)
+
+print("🍭 Candy Anti Die Loaded - Black & Pink Edition")

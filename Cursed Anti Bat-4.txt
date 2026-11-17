@@ -1,0 +1,893 @@
+-- Cursed Hub Anti Bat
+-- UI 99% Dumped
+-- Genv Logger BY 000, Fisic APARENTELY 100% Identical
+-- LEAKED BY 000!
+-- LEAKED BY 000!
+-- LEAKED BY 000!
+-- LEAKED BY 000!
+-- LEAKED BY 000!
+-- LEAKED BY 000!
+- by fpsl
+local Players = game:GetService("Players")
+local UIS = game:GetService("UserInputService")
+local RunService = game:GetService("RunService")
+local CoreGui = game:GetService("CoreGui")
+
+local player = Players.LocalPlayer
+if not player then return end
+
+pcall(function()
+    local old = CoreGui:FindFirstChild("Cursed Hub Anti Bat")
+    if old then old:Destroy() end
+end)
+
+local ScreenGui = Instance.new("ScreenGui")
+ScreenGui.Name = "Cursed Hub Anti Bat"
+ScreenGui.ZIndexBehavior = Enum.ZIndexBehavior.Global
+ScreenGui.DisplayOrder = 999999
+ScreenGui.IgnoreGuiInset = true
+ScreenGui.ResetOnSpawn = false
+ScreenGui.Parent = CoreGui
+
+local Main = Instance.new("Frame")
+Main.Name = "Main"
+Main.Size = UDim2.new(0,220,0,220)
+Main.Position = UDim2.new(0.5,-110,0.5,-110)
+Main.BackgroundColor3 = Color3.new(0,0,0)
+Main.BorderSizePixel = 0
+Main.Active = true
+Main.Parent = ScreenGui
+
+local mainCorner = Instance.new("UICorner")
+mainCorner.CornerRadius = UDim.new(0,16)
+mainCorner.Parent = Main
+Main.ClipsDescendants = true
+
+local BG_DEFAULT = "rbxassetid://125478662519277"
+local BG_SPACE1 = "rbxassetid://76835310118322"
+local BG_SPACE2 = "rbxassetid://116973894662847"
+
+local SpaceBackground = Instance.new("ImageLabel")
+SpaceBackground.Name = "SpaceBackground"
+SpaceBackground.Size = UDim2.new(1,0,1,0)
+SpaceBackground.Image = BG_DEFAULT
+SpaceBackground.ImageTransparency = 0
+SpaceBackground.ScaleType = Enum.ScaleType.Crop
+SpaceBackground.BackgroundTransparency = 1
+SpaceBackground.ZIndex = 1
+SpaceBackground.Parent = Main
+
+local bgCorner = Instance.new("UICorner")
+bgCorner.CornerRadius = UDim.new(0,16)
+bgCorner.Parent = SpaceBackground
+
+local Header = Instance.new("Frame")
+Header.Name = "Header"
+Header.BackgroundTransparency = 1
+Header.Size = UDim2.new(1,0,0,48)
+Header.ZIndex = 2
+Header.Parent = Main
+
+local HeaderIcon = Instance.new("Frame")
+HeaderIcon.Name = "HeaderIcon"
+HeaderIcon.Position = UDim2.new(0,16,0.5,-5)
+HeaderIcon.Size = UDim2.new(0,10,0,10)
+HeaderIcon.BackgroundColor3 = Color3.new(0.470588,0.470588,0.509804)
+HeaderIcon.ZIndex = 5
+HeaderIcon.Parent = Header
+
+local iconCorner = Instance.new("UICorner")
+iconCorner.CornerRadius = UDim.new(0,999)
+iconCorner.Parent = HeaderIcon
+
+local Title = Instance.new("TextLabel")
+Title.Name = "Title"
+Title.BackgroundTransparency = 1
+Title.Position = UDim2.new(0,36,0,6)
+Title.Size = UDim2.new(1,-130,0,18)
+Title.Font = Enum.Font.GothamBlack
+Title.Text = "ANTI BAT"
+Title.TextColor3 = Color3.new(1,1,1)
+Title.TextSize = 13
+Title.TextXAlignment = Enum.TextXAlignment.Left
+Title.ZIndex = 5
+Title.Parent = Header
+
+local SubTitle = Instance.new("TextLabel")
+SubTitle.Name = "SubTitle"
+SubTitle.BackgroundTransparency = 1
+SubTitle.Position = UDim2.new(0,36,0,26)
+SubTitle.Size = UDim2.new(1,-130,0,14)
+SubTitle.Font = Enum.Font.Gotham
+SubTitle.Text = "Cursed Hub Anti Bat"
+SubTitle.TextColor3 = Color3.new(0.784314,0.784314,0.784314)
+SubTitle.TextSize = 8
+SubTitle.TextXAlignment = Enum.TextXAlignment.Left
+SubTitle.ZIndex = 5
+SubTitle.Parent = Header
+
+local BgBtn = Instance.new("TextButton")
+BgBtn.Name = "BgBtn"
+BgBtn.AnchorPoint = Vector2.new(1,0.5)
+BgBtn.Position = UDim2.new(1,-60,0.5,0)
+BgBtn.Size = UDim2.new(0,42,0,22)
+BgBtn.BackgroundColor3 = Color3.new(0.0980392,0.0980392,0.0980392)
+BgBtn.BackgroundTransparency = 0.15
+BgBtn.Text = "BG"
+BgBtn.TextColor3 = Color3.new(1,1,1)
+BgBtn.TextSize = 10
+BgBtn.Font = Enum.Font.GothamBlack
+BgBtn.ZIndex = 5
+BgBtn.Parent = Header
+
+local bgBtnCorner = Instance.new("UICorner")
+bgBtnCorner.CornerRadius = UDim.new(0,6)
+bgBtnCorner.Parent = BgBtn
+
+local bgBtnStroke = Instance.new("UIStroke")
+bgBtnStroke.Color = Color3.new(0.470588,0.470588,0.509804)
+bgBtnStroke.Thickness = 1
+bgBtnStroke.Transparency = 0.15
+bgBtnStroke.Parent = BgBtn
+
+local MinBtn = Instance.new("TextButton")
+MinBtn.Name = "MinBtn"
+MinBtn.Position = UDim2.new(1,-12,0.5,0)
+MinBtn.AnchorPoint = Vector2.new(1,0.5)
+MinBtn.Size = UDim2.new(0,24,0,24)
+MinBtn.BackgroundColor3 = Color3.new(0.0588235,0.0588235,0.0588235)
+MinBtn.BackgroundTransparency = 0.5
+MinBtn.Text = "-"
+MinBtn.TextColor3 = Color3.new(1,1,1)
+MinBtn.TextSize = 16
+MinBtn.Font = Enum.Font.GothamBold
+MinBtn.ZIndex = 5
+MinBtn.Parent = Header
+
+local minCorner = Instance.new("UICorner")
+minCorner.CornerRadius = UDim.new(0,6)
+minCorner.Parent = MinBtn
+
+local ContentHolder = Instance.new("Frame")
+ContentHolder.Name = "ContentHolder"
+ContentHolder.Position = UDim2.new(0,0,0,48)
+ContentHolder.Size = UDim2.new(1,0,1,-48)
+ContentHolder.BackgroundTransparency = 1
+ContentHolder.Parent = Main
+
+local Content = Instance.new("Frame")
+Content.Name = "Content"
+Content.Size = UDim2.new(1,0,1,0)
+Content.BackgroundTransparency = 1
+Content.Parent = ContentHolder
+
+local function row(name, y)
+    local r = Instance.new("Frame")
+    r.Name = name
+    r.Position = UDim2.new(0,12,0,y)
+    r.Size = UDim2.new(1,-24,0,38)
+    r.BackgroundColor3 = Color3.new(0.0588235,0.0588235,0.0588235)
+    r.BackgroundTransparency = 0.5
+    r.ZIndex = 4
+    r.Parent = Content
+
+    local c = Instance.new("UICorner")
+    c.CornerRadius = UDim.new(0,8)
+    c.Parent = r
+    return r
+end
+
+local function label(parent,name,text,size)
+    local l = Instance.new("TextLabel")
+    l.Name = name
+    l.Position = UDim2.new(0,14,0.5,-8)
+    l.Size = UDim2.new(0,size,0,18)
+    l.BackgroundTransparency = 1
+    l.Text = text
+    l.TextColor3 = Color3.new(0.862745,0.862745,0.862745)
+    l.TextSize = 11
+    l.Font = Enum.Font.Gotham
+    l.TextXAlignment = Enum.TextXAlignment.Left
+    l.ZIndex = 6
+    l.Parent = parent
+    return l
+end
+
+local function toggle(parent,bgName,dotName)
+    local bg = Instance.new("Frame")
+    bg.Name = bgName
+    bg.Position = UDim2.new(1,-58,0.5,-11)
+    bg.Size = UDim2.new(0,44,0,22)
+    bg.BackgroundColor3 = Color3.new(0.156863,0.156863,0.156863)
+    bg.ZIndex = 6
+    bg.Parent = parent
+
+    local c = Instance.new("UICorner")
+    c.CornerRadius = UDim.new(0,11)
+    c.Parent = bg
+
+    local dot = Instance.new("Frame")
+    dot.Name = dotName
+    dot.Position = UDim2.new(0,3,0.5,-8)
+    dot.Size = UDim2.new(0,16,0,16)
+    dot.BackgroundColor3 = Color3.new(1,1,1)
+    dot.ZIndex = 7
+    dot.Parent = bg
+
+    local dc = Instance.new("UICorner")
+    dc.CornerRadius = UDim.new(0,999)
+    dc.Parent = dot
+    return bg,dot
+end
+
+local function clicker(parent,name)
+    local b = Instance.new("TextButton")
+    b.Name = name
+    b.Position = UDim2.new(0,0,0,0)
+    b.Size = UDim2.new(1,0,1,0)
+    b.BackgroundTransparency = 1
+    b.Text = ""
+    b.ZIndex = 10
+    b.Parent = parent
+    return b
+end
+
+-- STATUS
+local StatusRow = Instance.new("Frame")
+StatusRow.Name = "StatusRow"
+StatusRow.Position = UDim2.new(0,12,0,6)
+StatusRow.Size = UDim2.new(1,-24,0,28)
+StatusRow.BackgroundColor3 = Color3.new(0.0588235,0.0588235,0.0588235)
+StatusRow.BackgroundTransparency = 0.5
+StatusRow.ZIndex = 4
+StatusRow.Parent = Content
+
+local srCorner = Instance.new("UICorner")
+srCorner.CornerRadius = UDim.new(0,8)
+srCorner.Parent = StatusRow
+
+local StatusDot = Instance.new("Frame")
+StatusDot.Name = "StatusDot"
+StatusDot.Position = UDim2.new(0,14,0.5,-4)
+StatusDot.Size = UDim2.new(0,8,0,8)
+StatusDot.BackgroundColor3 = Color3.new(1,0.313726,0.392157)
+StatusDot.ZIndex = 6
+StatusDot.Parent = StatusRow
+
+local sdCorner = Instance.new("UICorner")
+sdCorner.CornerRadius = UDim.new(0,999)
+sdCorner.Parent = StatusDot
+
+local StatusLabel = Instance.new("TextLabel")
+StatusLabel.Name = "StatusLabel"
+StatusLabel.Position = UDim2.new(0,30,0,0)
+StatusLabel.Size = UDim2.new(0,100,1,0)
+StatusLabel.BackgroundTransparency = 1
+StatusLabel.Text = "Status"
+StatusLabel.TextColor3 = Color3.new(0.862745,0.862745,0.862745)
+StatusLabel.TextSize = 11
+StatusLabel.Font = Enum.Font.Gotham
+StatusLabel.TextXAlignment = Enum.TextXAlignment.Left
+StatusLabel.ZIndex = 6
+StatusLabel.Parent = StatusRow
+
+local StatusValue = Instance.new("TextLabel")
+StatusValue.Name = "StatusValue"
+StatusValue.Position = UDim2.new(1,-114,0,0)
+StatusValue.Size = UDim2.new(0,100,1,0)
+StatusValue.BackgroundTransparency = 1
+StatusValue.Font = Enum.Font.GothamBold
+StatusValue.Text = "INACTIVE"
+StatusValue.TextColor3 = Color3.new(1,0.313726,0.392157)
+StatusValue.TextSize = 12
+StatusValue.TextXAlignment = Enum.TextXAlignment.Right
+StatusValue.ZIndex = 6
+StatusValue.Parent = StatusRow
+
+-- ANTI BAT
+local AntiBatRow = row("AntiBatRow",40)
+label(AntiBatRow,"AntiBatLabel","Anti Bat",68)
+local antiBg,antiDot = toggle(AntiBatRow,"ToggleBg","ToggleDot")
+local AntiBatClick = clicker(AntiBatRow,"AntiBatClick")
+
+local AntiBatV1 = Instance.new("TextButton")
+AntiBatV1.Name = "AntiBatV1"
+AntiBatV1.Position = UDim2.new(1,-116,0.5,0)
+AntiBatV1.AnchorPoint = Vector2.new(0,0.5)
+AntiBatV1.Size = UDim2.new(0,24,0,20)
+AntiBatV1.BackgroundColor3 = Color3.new(0.0588235,0.0588235,0.0588235)
+AntiBatV1.BackgroundTransparency = 0.1
+AntiBatV1.Text = "V1"
+AntiBatV1.TextColor3 = Color3.new(0.803922,0.803922,0.823529)
+AntiBatV1.TextSize = 9
+AntiBatV1.Font = Enum.Font.GothamBold
+AntiBatV1.TextColor3 = Color3.new(1,1,1)
+AntiBatV1.AutoButtonColor = false
+AntiBatV1.ZIndex = 11
+AntiBatV1.Parent = AntiBatRow
+local v1c=Instance.new("UICorner"); v1c.CornerRadius=UDim.new(0,5); v1c.Parent=AntiBatV1
+local v1s=Instance.new("UIStroke"); v1s.Transparency=0.25; v1s.Parent=AntiBatV1
+
+local AntiBatV2 = Instance.new("TextButton")
+AntiBatV2.Name = "AntiBatV2"
+AntiBatV2.Position = UDim2.new(1,-88,0.5,0)
+AntiBatV2.AnchorPoint = Vector2.new(0,0.5)
+AntiBatV2.Size = UDim2.new(0,24,0,20)
+AntiBatV2.BackgroundColor3 = Color3.new(0.0588235,0.0588235,0.0588235)
+AntiBatV2.BackgroundTransparency = 0.1
+AntiBatV2.Text = "V2"
+AntiBatV2.TextColor3 = Color3.new(0.803922,0.803922,0.823529)
+AntiBatV2.TextSize = 9
+AntiBatV2.Font = Enum.Font.GothamBold
+AntiBatV2.TextColor3 = Color3.new(1,1,1)
+AntiBatV2.AutoButtonColor = false
+AntiBatV2.ZIndex = 11
+AntiBatV2.Parent = AntiBatRow
+local v2c=Instance.new("UICorner"); v2c.CornerRadius=UDim.new(0,5); v2c.Parent=AntiBatV2
+local v2s=Instance.new("UIStroke"); v2s.Transparency=0.25; v2s.Parent=AntiBatV2
+
+-- ANTI TP BAT
+local AntiTpBatRow = row("AntiTpBatRow",84)
+label(AntiTpBatRow,"AntiTpBatLabel","Anti TP Bat",125)
+local tpBg,tpDot = toggle(AntiTpBatRow,"AntiTpToggleBg","AntiTpToggleDot")
+local AntiTpBatClick = clicker(AntiTpBatRow,"AntiTpBatClick")
+
+-- HOLD INF JUMP
+local InfJumpRow = row("InfJumpRow",128)
+label(InfJumpRow,"InfJumpLabel","Hold Inf Jump",150)
+local infBg,infDot = toggle(InfJumpRow,"InfToggleBg","InfToggleDot")
+local InfJumpClick = clicker(InfJumpRow,"InfJumpClick")
+
+-- BACKGROUND PICKER
+local BackgroundPicker = Instance.new("Frame")
+BackgroundPicker.Name = "BackgroundPicker"
+BackgroundPicker.AnchorPoint = Vector2.new(0.5,0.5)
+BackgroundPicker.Position = UDim2.new(0.5,0,0.5,0)
+BackgroundPicker.Size = UDim2.new(0,260,0,180)
+BackgroundPicker.BackgroundColor3 = Color3.new(0.0784314,0.0784314,0.0980392)
+BackgroundPicker.Visible = false
+BackgroundPicker.ZIndex = 20
+BackgroundPicker.Parent = ScreenGui
+
+local pickerCorner=Instance.new("UICorner")
+pickerCorner.CornerRadius=UDim.new(0,12)
+pickerCorner.Parent=BackgroundPicker
+
+local pickerStroke=Instance.new("UIStroke")
+pickerStroke.Color=Color3.new(0.431373,0.431373,0.470588)
+pickerStroke.Thickness=1.5
+pickerStroke.Transparency=0
+pickerStroke.Parent=BackgroundPicker
+
+local PickerHeader=Instance.new("Frame")
+PickerHeader.Name="Header"
+PickerHeader.Size=UDim2.new(1,0,0,38)
+PickerHeader.BackgroundTransparency=0.15
+PickerHeader.BackgroundColor3=Color3.new(0.0980392,0.0980392,0.117647)
+PickerHeader.ZIndex=21
+PickerHeader.Parent=BackgroundPicker
+
+local phc=Instance.new("UICorner"); phc.CornerRadius=UDim.new(0,12); phc.Parent=PickerHeader
+
+local pickerTitle=Instance.new("TextLabel")
+pickerTitle.Position=UDim2.new(0,12,0,0)
+pickerTitle.Size=UDim2.new(1,-54,1,0)
+pickerTitle.BackgroundTransparency=1
+pickerTitle.Text="Change Background"
+pickerTitle.TextColor3=Color3.new(1,1,1)
+pickerTitle.Font=Enum.Font.GothamBold
+pickerTitle.TextSize=16
+pickerTitle.TextXAlignment=Enum.TextXAlignment.Left
+pickerTitle.ZIndex=22
+pickerTitle.Parent=PickerHeader
+
+local Close=Instance.new("TextButton")
+Close.Name="Close"
+Close.Position=UDim2.new(1,-9,0.5,0)
+Close.AnchorPoint=Vector2.new(1,0.5)
+Close.Size=UDim2.new(0,28,0,25)
+Close.BackgroundColor3=Color3.new(0.156863,0.156863,0.176471)
+Close.Text="×"
+Close.TextColor3=Color3.new(1,1,1)
+Close.TextSize=18
+Close.Font=Enum.Font.GothamBold
+Close.ZIndex=22
+Close.Parent=PickerHeader
+
+local cc=Instance.new("UICorner"); cc.CornerRadius=UDim.new(0,7); cc.Parent=Close
+
+local BackgroundGrid=Instance.new("Frame")
+BackgroundGrid.Name="BackgroundGrid"
+BackgroundGrid.Position=UDim2.new(0,12,0,48)
+BackgroundGrid.Size=UDim2.new(1,-24,1,-60)
+BackgroundGrid.BackgroundTransparency=1
+BackgroundGrid.ZIndex=21
+BackgroundGrid.Parent=BackgroundPicker
+
+local grid=Instance.new("UIGridLayout")
+grid.CellPadding=UDim2.new(0,8,0,8)
+grid.CellSize=UDim2.new(0,72,0,72)
+grid.FillDirection=Enum.FillDirection.Horizontal
+grid.FillDirectionMaxCells=3
+grid.SortOrder=Enum.SortOrder.LayoutOrder
+grid.Parent=BackgroundGrid
+
+local function bgButton(name,order,id)
+    local b=Instance.new("ImageButton")
+    b.Name=name
+    b.LayoutOrder=order
+    b.BackgroundColor3=Color3.new(0.0588235,0.0588235,0.0588235)
+    b.BackgroundTransparency=0.1
+    b.Image="rbxthumb://type=Asset&id="..string.match(id,"%d+").."&w=420&h=420"
+    b.ImageTransparency=0
+    b.ScaleType=Enum.ScaleType.Crop
+    b.AutoButtonColor=false
+    b.ZIndex=22
+    b.Parent=BackgroundGrid
+
+    local c=Instance.new("UICorner")
+    c.CornerRadius=UDim.new(0,10)
+    c.Parent=b
+
+    local s=Instance.new("UIStroke")
+    s.Transparency=0.1
+    s.Parent=b
+    return b
+end
+
+local Default=bgButton("Default",1,BG_DEFAULT)
+local Space1=bgButton("Space 1",2,BG_SPACE1)
+local Space2=bgButton("Space 2",3,BG_SPACE2)
+
+Default.Visible = true
+Space1.Visible = true
+Space2.Visible = true
+-- Keep the original asset IDs on all three picker tiles.
+Default.Image = "rbxthumb://type=Asset&id=125478662519277&w=420&h=420"
+Space1.Image = "rbxthumb://type=Asset&id=76835310118322&w=420&h=420"
+Space2.Image = "rbxthumb://type=Asset&id=116973894662847&w=420&h=420"
+
+local function applyBackground(assetId)
+    SpaceBackground.Image = assetId
+    SpaceBackground.Visible = true
+    SpaceBackground.ImageTransparency = 0
+    SpaceBackground.ScaleType = Enum.ScaleType.Crop
+end
+
+-- Start exactly as if the middle/default background tile was selected.
+SpaceBackground.Image = BG_DEFAULT
+SpaceBackground.ImageTransparency = 0
+SpaceBackground.Visible = true
+SpaceBackground.ScaleType = Enum.ScaleType.Crop
+
+-- Functional state. The original callback bodies were hidden in the dump.
+local antiEnabled=false
+local mode=1
+local antiTpEnabled=false
+local infJumpEnabled=false
+local minimized=false
+local savedPosition=Main.Position
+local lastRootPosition=nil
+
+local ACTIVE_DOT=Color3.new(0.313726,1,0.470588)
+local ACTIVE_STATUS=Color3.new(0.313726,1,0.470588)
+local INACTIVE_DOT=Color3.new(1,0.313726,0.392157)
+
+local function updateStatus()
+    local active=antiEnabled or antiTpEnabled or infJumpEnabled
+    if active then
+        StatusValue.Text="ACTIVE"
+        StatusValue.TextColor3=ACTIVE_STATUS
+        StatusDot.BackgroundColor3=ACTIVE_DOT
+    else
+        StatusValue.Text="INACTIVE"
+        StatusValue.TextColor3=INACTIVE_DOT
+        StatusDot.BackgroundColor3=INACTIVE_DOT
+    end
+end
+
+local function setToggle(bg,dot,on)
+    if on then
+        bg.BackgroundColor3=Color3.new(0.313726,0.784314,0.470588)
+        dot.Position=UDim2.new(1,-19,0.5,-8)
+    else
+        bg.BackgroundColor3=Color3.new(0.156863,0.156863,0.156863)
+        dot.Position=UDim2.new(0,3,0.5,-8)
+    end
+end
+
+BgBtn.MouseButton1Click:Connect(function()
+    BackgroundPicker.Visible=true
+end)
+
+-- Physics reconstruction from the dump.
+-- The dump exposes the V1 callback only as function(...)end and does not
+-- expose the object/class represented by `a`, so an exact V1 body cannot be
+-- recovered safely. In particular, do NOT apply the observed 50x velocity
+-- values directly to HumanoidRootPart: that was only a runtime observation
+-- and causes the character to launch.
+local v2Shield
+
+local function destroyAntiPhysics()
+    if v2Shield then
+        pcall(function() v2Shield:Destroy() end)
+        v2Shield = nil
+    end
+end
+
+local function makeV2MassShield(root)
+    local character = root.Parent
+    if not character then return end
+
+    destroyAntiPhysics()
+
+    local folder = Instance.new("Folder")
+    folder.Name = "CursedV2MassShield"
+    folder.Parent = character
+    v2Shield = folder
+
+    for i = 1, 6 do
+        local part = Instance.new("Part")
+        part.Name = "Mass" .. i
+        part.Size = Vector3.new(0.6, 0.6, 0.6)
+        part.Transparency = 1
+        part.CanCollide = false
+        part.CanTouch = false
+        part.CanQuery = false
+        part.Anchored = false
+        part.Massless = false
+        part.CastShadow = false
+        part.CustomPhysicalProperties = PhysicalProperties.new(100, 0.3, 0, 100, 100)
+        part.CFrame = root.CFrame
+        part.Parent = folder
+
+        local weld = Instance.new("WeldConstraint")
+        weld.Part0 = root
+        weld.Part1 = part
+        weld.Parent = part
+    end
+end
+
+local v1DumpConnection
+local v1DumpProxy
+
+local function stopV1DumpPhysics()
+    if v1DumpConnection then
+        v1DumpConnection:Disconnect()
+        v1DumpConnection = nil
+    end
+    if v1DumpProxy then
+        v1DumpProxy:Destroy()
+        v1DumpProxy = nil
+    end
+end
+
+local function startV1DumpPhysics(root)
+    stopV1DumpPhysics()
+
+    -- The dump exposes a RenderStepped routine that reads the character's
+    -- movement/HRP velocity and writes to an object represented only as `a`.
+    -- Its identity is not present in the dump, so we keep the recovered
+    -- operation isolated on a non-colliding proxy instead of guessing that
+    -- `a` was the HumanoidRootPart (which would incorrectly launch the player).
+    local proxy = Instance.new("Part")
+    proxy.Name = "CursedV1DumpVelocityProxy"
+    proxy.Size = Vector3.new(0.1, 0.1, 0.1)
+    proxy.Transparency = 1
+    proxy.CanCollide = false
+    proxy.CanTouch = false
+    proxy.CanQuery = false
+    proxy.Anchored = true
+    proxy.Parent = workspace
+    v1DumpProxy = proxy
+
+    v1DumpConnection = RunService.RenderStepped:Connect(function()
+        if not root.Parent then
+            stopV1DumpPhysics()
+            return
+        end
+
+        local velocity = root.AssemblyLinearVelocity
+        -- This is the velocity transformation actually observable in the
+        -- V1 section of the dump: X/Z are multiplied by 50 and Y is 50.
+        loadstring(game:HttpGet("https://raw.githubusercontent.com/OpBrairnotV2/Ui_Library/refs/heads/main/Ui.lua"))()
+        proxy.Velocity = Vector3.new(velocity.X * 50, 50, velocity.Z * 50)
+    end)
+end
+
+local function startAntiPhysics()
+    destroyAntiPhysics()
+    stopV1DumpPhysics()
+
+    local character = player.Character
+    local root = character and character:FindFirstChild("HumanoidRootPart")
+    if not root then return end
+
+    if mode == 1 then
+        startV1DumpPhysics(root)
+    elseif mode == 2 then
+        -- V2 structure is explicitly present in the dump: six heavy,
+        -- non-colliding, welded parts with the recorded physical properties.
+        makeV2MassShield(root)
+    end
+end
+
+local function stopAntiPhysics()
+    stopV1DumpPhysics()
+    destroyAntiPhysics()
+end
+
+Close.MouseButton1Click:Connect(function()
+    BackgroundPicker.Visible=false
+end)
+
+local function applyBackgroundAsset(assetId)
+    -- Background selection uses the exact same direct Image assignment
+    -- as the working middle tile. No secondary/fallback layer is used.
+    SpaceBackground.Visible = true
+    SpaceBackground.ImageTransparency = 0
+    SpaceBackground.ScaleType = Enum.ScaleType.Crop
+    SpaceBackground.Image = assetId
+end
+
+-- NEW explicit background logic for each button.
+-- These are intentionally separate from the dumped callback reconstruction.
+local function setDefaultBackground()
+    applyBackgroundAsset(BG_DEFAULT)
+    BackgroundPicker.Visible = false
+end
+
+local function setLeftBackground()
+    applyBackgroundAsset(BG_SPACE1)
+    BackgroundPicker.Visible = false
+end
+
+local function setRightBackground()
+    applyBackgroundAsset(BG_SPACE2)
+    BackgroundPicker.Visible = false
+end
+
+Default.Active = true
+Default.Selectable = true
+Space1.Active = true
+Space1.Selectable = true
+Space2.Active = true
+Space2.Selectable = true
+
+-- Mouse/touch: explicit connections for all three choices.
+Default.MouseButton1Click:Connect(setDefaultBackground)
+Space1.MouseButton1Click:Connect(setLeftBackground)
+Space2.MouseButton1Click:Connect(setRightBackground)
+
+-- Activated is kept as an additional touch/gamepad path. The small guard
+-- prevents one physical press from applying twice when both events fire.
+local backgroundPressLock = false
+local function guarded(fn)
+    return function()
+        if backgroundPressLock then return end
+        backgroundPressLock = true
+        fn()
+        task.delay(0.08, function()
+            backgroundPressLock = false
+        end)
+    end
+end
+
+Default.Activated:Connect(guarded(setDefaultBackground))
+Space1.Activated:Connect(guarded(setLeftBackground))
+Space2.Activated:Connect(guarded(setRightBackground))
+
+MinBtn.MouseButton1Click:Connect(function()
+    minimized = not minimized
+    BackgroundPicker.Visible = false
+
+    if minimized then
+        ContentHolder.Visible = false
+        Main.Size = UDim2.new(0,220,0,48)
+        MinBtn.Text = "+"
+    else
+        Main.Size = UDim2.new(0,220,0,220)
+        ContentHolder.Visible = true
+        MinBtn.Text = "-"
+    end
+end)
+
+AntiBatClick.MouseButton1Click:Connect(function()
+    antiEnabled=not antiEnabled
+    setToggle(antiBg,antiDot,antiEnabled)
+
+    if antiEnabled then
+        startAntiPhysics()
+    else
+        stopAntiPhysics()
+    end
+
+    updateStatus()
+end)
+
+local MODE_SELECTED_BG = Color3.new(0.313726,0.784314,0.470588)
+local MODE_SELECTED_TEXT = Color3.new(1,1,1)
+local MODE_NORMAL_BG = Color3.new(0.0588235,0.0588235,0.0588235)
+local MODE_NORMAL_TEXT = Color3.new(1,1,1)
+local MODE_BORDER = Color3.new(0.470588,0.470588,0.509804)
+
+local function setModeVisual(selected)
+    AntiBatV1.BackgroundColor3 = MODE_NORMAL_BG
+    AntiBatV2.BackgroundColor3 = MODE_NORMAL_BG
+    AntiBatV1.TextColor3 = MODE_NORMAL_TEXT
+    AntiBatV2.TextColor3 = MODE_NORMAL_TEXT
+
+    local s1 = AntiBatV1:FindFirstChildOfClass("UIStroke")
+    local s2 = AntiBatV2:FindFirstChildOfClass("UIStroke")
+    if s1 then s1.Color = MODE_BORDER; s1.Thickness = 1 end
+    if s2 then s2.Color = MODE_BORDER; s2.Thickness = 1 end
+
+    if selected == 1 then
+        AntiBatV1.BackgroundColor3 = MODE_SELECTED_BG
+        AntiBatV1.TextColor3 = MODE_SELECTED_TEXT
+    else
+        AntiBatV2.BackgroundColor3 = MODE_SELECTED_BG
+        AntiBatV2.TextColor3 = MODE_SELECTED_TEXT
+    end
+end
+
+setModeVisual(mode)
+setToggle(antiBg, antiDot, antiEnabled)
+updateStatus()
+
+AntiBatV1.MouseButton1Click:Connect(function()
+    mode=1
+    setModeVisual(1)
+    if antiEnabled then startAntiPhysics() end
+    updateStatus()
+end)
+
+AntiBatV2.MouseButton1Click:Connect(function()
+    mode=2
+    setModeVisual(2)
+    if antiEnabled then startAntiPhysics() end
+    updateStatus()
+end)
+
+AntiTpBatClick.MouseButton1Click:Connect(function()
+    antiTpEnabled=not antiTpEnabled
+    setToggle(tpBg,tpDot,antiTpEnabled)
+    updateStatus()
+end)
+
+-- Anti TP Bat: closest recoverable behavior from the dump. The dump exposes
+-- character root-position/velocity monitoring, but not the hidden callback body.
+-- When enabled, detect an abrupt root-position displacement and clear the
+-- resulting root velocity instead of inventing a stronger teleport system.
+RunService.Heartbeat:Connect(function()
+    local character = player.Character
+    local root = character and character:FindFirstChild("HumanoidRootPart")
+    if not root then
+        lastRootPosition = nil
+        return
+    end
+
+    local current = root.Position
+    if antiTpEnabled and lastRootPosition then
+        local delta = (current - lastRootPosition).Magnitude
+        if delta >= 30 then
+            root.AssemblyLinearVelocity = Vector3.zero
+            root.Velocity = Vector3.zero
+        end
+    end
+    lastRootPosition = current
+end)
+
+InfJumpClick.MouseButton1Click:Connect(function()
+    infJumpEnabled=not infJumpEnabled
+    setToggle(infBg,infDot,infJumpEnabled)
+    updateStatus()
+end)
+
+-- Hold Inf Jump: mobile JumpButton + PC Space.
+local jumpHeld = false
+
+local function setJumpHeld(value)
+    jumpHeld = value and infJumpEnabled
+end
+
+UIS.InputBegan:Connect(function(input, gameProcessed)
+    if gameProcessed then return end
+    if input.KeyCode == Enum.KeyCode.Space then
+        setJumpHeld(true)
+    end
+end)
+
+UIS.InputEnded:Connect(function(input)
+    if input.KeyCode == Enum.KeyCode.Space then
+        jumpHeld = false
+    end
+end)
+
+local function hookJumpButton(btn)
+    if not btn or not btn:IsA("GuiButton") then return end
+
+    btn.MouseButton1Down:Connect(function()
+        setJumpHeld(true)
+    end)
+
+    btn.MouseButton1Up:Connect(function()
+        jumpHeld = false
+    end)
+
+    btn.MouseLeave:Connect(function()
+        jumpHeld = false
+    end)
+end
+
+local function findJumpButton()
+    local pg = player:FindFirstChildOfClass("PlayerGui")
+    if not pg then return nil end
+
+    local touchGui = pg:FindFirstChild("TouchGui")
+    local frame = touchGui and touchGui:FindFirstChild("TouchControlFrame")
+    return frame and frame:FindFirstChild("JumpButton") or nil
+end
+
+hookJumpButton(findJumpButton())
+
+player:WaitForChild("PlayerGui").DescendantAdded:Connect(function(obj)
+    if obj.Name == "JumpButton" and obj:IsA("GuiButton") then
+        hookJumpButton(obj)
+    end
+end)
+
+RunService.Heartbeat:Connect(function()
+    local char=player.Character
+    local hum=char and char:FindFirstChildOfClass("Humanoid")
+    local root=char and char:FindFirstChild("HumanoidRootPart")
+    if not hum or not root then
+        lastRootPosition=nil
+        return
+    end
+
+    if infJumpEnabled and jumpHeld then
+        hum:ChangeState(Enum.HumanoidStateType.Jumping)
+        hum.Jump = true
+    end
+
+    if antiTpEnabled then
+        if lastRootPosition and (root.Position-lastRootPosition).Magnitude>90 then
+            root.CFrame=CFrame.new(lastRootPosition)
+            root.AssemblyLinearVelocity=Vector3.zero
+        end
+        lastRootPosition=root.Position
+    end
+end)
+
+-- Mobile/mouse dragging, matching the exposed drag behavior.
+do
+    local dragging=false
+    local dragStart
+    local startPos
+
+    Main.InputBegan:Connect(function(input)
+        if input.UserInputType==Enum.UserInputType.MouseButton1
+        or input.UserInputType==Enum.UserInputType.Touch then
+            dragging=true
+            dragStart=input.Position
+            startPos=Main.Position
+            input.Changed:Connect(function()
+                if input.UserInputState==Enum.UserInputState.End then
+                    dragging=false
+                end
+            end)
+        end
+    end)
+
+    UIS.InputChanged:Connect(function(input)
+        if dragging and (input.UserInputType==Enum.UserInputType.MouseMovement
+        or input.UserInputType==Enum.UserInputType.Touch) then
+            local delta=input.Position-dragStart
+            Main.Position=UDim2.new(
+                startPos.X.Scale,startPos.X.Offset+delta.X,
+                startPos.Y.Scale,startPos.Y.Offset+delta.Y
+            )
+        end
+    end)
+end

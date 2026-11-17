@@ -1,0 +1,288 @@
+-- Anti-Lag GUI Script
+local RunService = game:GetService('RunService')
+local UserInputService = game:GetService('UserInputService')
+local TweenService = game:GetService('TweenService')
+local LocalPlayer = game:GetService('Players').LocalPlayer
+local CoreGui = game:GetService('CoreGui')
+
+-- Anti-lag state
+local antiLagEnabled = false
+local maxSpeedValue = 31
+local antiLagConnection = nil
+local targetSpeed = 31
+
+-- Speed limiter function
+local function setMaxSpeed(speed)
+    targetSpeed = math.clamp(speed, 30, 32)
+    maxSpeedValue = targetSpeed
+    return targetSpeed
+end
+
+-- Anti-lag function
+local function enableAntiLag()
+    if antiLagConnection then antiLagConnection:Disconnect() end
+    
+    antiLagConnection = RunService.Heartbeat:Connect(function()
+        if not antiLagEnabled then return end
+        
+        local character = LocalPlayer.Character
+        if not character then return end
+        
+        local hrp = character:FindFirstChild('HumanoidRootPart')
+        if not hrp then return end
+        
+        -- Disable proximity prompts in range
+        for _, descendant in ipairs(workspace:GetDescendants()) do
+            if descendant:IsA('ProximityPrompt') then
+                local parent = descendant.Parent
+                if parent:IsA('BasePart') and hrp then
+                    local distance = (hrp.Position - parent.Position).Magnitude
+                    if distance < descendant.MaxActivationDistance then
+                        -- Prevent prompt activation
+                        descendant.Enabled = false
+                    else
+                        descendant.Enabled = true
+                    end
+                end
+            end
+        end
+        
+        -- Limit player speed
+        local velocity = hrp.AssemblyLinearVelocity
+        local horizontalSpeed = math.sqrt((velocity.X * velocity.X) + (velocity.Z * velocity.Z))
+        
+        if horizontalSpeed > maxSpeedValue and UserInputService:IsKeyDown(Enum.KeyCode.W) then
+            local scale = maxSpeedValue / horizontalSpeed
+            hrp.AssemblyLinearVelocity = Vector3.new(velocity.X * scale, velocity.Y, velocity.Z * scale)
+        end
+    end)
+end
+
+-- Create GUI
+local screenGui = Instance.new('ScreenGui')
+screenGui.Name = 'StormsAntiLagNgas'
+screenGui.ResetOnSpawn = false
+screenGui.Parent = CoreGui
+
+-- Main Frame
+local mainFrame = Instance.new('Frame')
+mainFrame.Size = UDim2.new(0, 360, 0, 130)
+mainFrame.Position = UDim2.new(0.5, -180, 0.5, -65)
+mainFrame.BackgroundColor3 = Color3.fromRGB(8, 9, 12)
+mainFrame.BackgroundTransparency = 0.15
+mainFrame.Active = true
+mainFrame.Parent = screenGui
+
+-- Corner
+local corner = Instance.new('UICorner', mainFrame)
+corner.CornerRadius = UDim.new(0, 12)
+
+-- Stroke with animated gradient
+local stroke = Instance.new('UIStroke', mainFrame)
+stroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
+stroke.LineJoinMode = Enum.LineJoinMode.Round
+stroke.Thickness = 2
+stroke.Transparency = 0
+stroke.Color = Color3.new(1, 1, 1)
+
+local gradient = Instance.new('UIGradient', stroke)
+local colorSeq = ColorSequence.new({
+    ColorSequenceKeypoint.new(0, Color3.fromRGB(60, 65, 70)),
+    ColorSequenceKeypoint.new(0.4, Color3.fromRGB(60, 65, 70)),
+    ColorSequenceKeypoint.new(0.5, Color3.fromRGB(255, 255, 255)),
+    ColorSequenceKeypoint.new(0.6, Color3.fromRGB(60, 65, 70)),
+    ColorSequenceKeypoint.new(1, Color3.fromRGB(60, 65, 70)),
+})
+gradient.Color = colorSeq
+
+-- Animate stroke
+local strokeAnimation
+strokeAnimation = RunService.Heartbeat:Connect(function(deltaTime)
+    if not mainFrame.Parent then strokeAnimation:Disconnect() return end
+    local time = tick()
+    gradient.Rotation = (time * 40) % 360
+    local sinVal = math.sin((time * 0.8 * math.pi) * 2)
+    stroke.Transparency = 0.25 * (1 - ((sinVal + 1) / 2))
+end)
+
+-- Title bar
+local titleBar = Instance.new('Frame', mainFrame)
+titleBar.Size = UDim2.new(1, 0, 0, 32)
+titleBar.BackgroundColor3 = Color3.fromRGB(180, 185, 190)
+titleBar.BackgroundTransparency = 0.88
+
+local titleCorner = Instance.new('UICorner', titleBar)
+titleCorner.CornerRadius = UDim.new(0, 12)
+
+-- Title text
+local titleText = Instance.new('TextLabel', titleBar)
+titleText.Size = UDim2.new(1, -140, 1, 0)
+titleText.Position = UDim2.new(0, 14, 0, 0)
+titleText.BackgroundTransparency = 1
+titleText.Text = 'STORMSANTILAGNGAS'
+titleText.TextColor3 = Color3.fromRGB(255, 255, 255)
+titleText.Font = Enum.Font.Bangers
+titleText.TextSize = 15
+titleText.TextXAlignment = Enum.TextXAlignment.Left
+
+-- Close button
+local closeBtn = Instance.new('TextButton', titleBar)
+closeBtn.Size = UDim2.new(0, 26, 0, 26)
+closeBtn.Position = UDim2.new(1, -34, 0.5, -13)
+closeBtn.BackgroundColor3 = Color3.fromRGB(100, 110, 118)
+closeBtn.BackgroundTransparency = 0.85
+closeBtn.Text = 'X'
+closeBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+closeBtn.Font = Enum.Font.Bangers
+closeBtn.TextSize = 20
+closeBtn.AutoButtonColor = false
+
+local closeCorner = Instance.new('UICorner', closeBtn)
+closeCorner.CornerRadius = UDim.new(0, 6)
+
+closeBtn.MouseButton1Click:Connect(function()
+    if strokeAnimation then strokeAnimation:Disconnect() end
+    if antiLagConnection then antiLagConnection:Disconnect() end
+    screenGui:Destroy()
+end)
+
+-- Lock button (does nothing useful, kept for compatibility)
+local lockBtn = Instance.new('TextButton', titleBar)
+lockBtn.Size = UDim2.new(0, 55, 0, 26)
+lockBtn.Position = UDim2.new(1, -95, 0.5, -13)
+lockBtn.BackgroundColor3 = Color3.fromRGB(100, 110, 118)
+lockBtn.BackgroundTransparency = 0.85
+lockBtn.Text = 'LOCK'
+lockBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+lockBtn.Font = Enum.Font.Bangers
+lockBtn.TextSize = 13
+lockBtn.AutoButtonColor = false
+
+local lockCorner = Instance.new('UICorner', lockBtn)
+lockCorner.CornerRadius = UDim.new(0, 6)
+
+lockBtn.MouseButton1Click:Connect(function()
+    if lockBtn.Text == 'LOCK' then
+        lockBtn.Text = 'UNLOCK'
+        lockBtn.BackgroundColor3 = Color3.fromRGB(80, 180, 80)
+        lockBtn.TextColor3 = Color3.fromRGB(0, 0, 0)
+    else
+        lockBtn.Text = 'LOCK'
+        lockBtn.BackgroundColor3 = Color3.fromRGB(100, 110, 118)
+        lockBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+    end
+end)
+
+-- Divider
+local divider = Instance.new('Frame', mainFrame)
+divider.Size = UDim2.new(1, 0, 0, 1)
+divider.Position = UDim2.new(0, 0, 0, 32)
+divider.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+
+-- Content container
+local content = Instance.new('Frame', mainFrame)
+content.Size = UDim2.new(1, -20, 1, -42)
+content.Position = UDim2.new(0, 10, 0, 38)
+content.BackgroundTransparency = 1
+
+-- Anti-lag toggle row
+local row1 = Instance.new('Frame', content)
+row1.Size = UDim2.new(1, 0, 0, 40)
+row1.BackgroundTransparency = 1
+
+local row1Label = Instance.new('TextLabel', row1)
+row1Label.Size = UDim2.new(1, -100, 1, 0)
+row1Label.Position = UDim2.new(0, 14, 0, 0)
+row1Label.BackgroundTransparency = 1
+row1Label.Text = 'ANTI-LAGBACK'
+row1Label.TextColor3 = Color3.fromRGB(255, 255, 255)
+row1Label.Font = Enum.Font.Bangers
+row1Label.TextSize = 16
+row1Label.TextXAlignment = Enum.TextXAlignment.Left
+
+local toggleBtn = Instance.new('TextButton', row1)
+toggleBtn.Size = UDim2.new(0, 75, 0, 32)
+toggleBtn.Position = UDim2.new(1, -85, 0.5, -16)
+toggleBtn.Text = 'OFF'
+toggleBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+toggleBtn.Font = Enum.Font.Bangers
+toggleBtn.TextSize = 15
+toggleBtn.BackgroundColor3 = Color3.fromRGB(80, 80, 90)
+
+local toggleCorner = Instance.new('UICorner', toggleBtn)
+toggleCorner.CornerRadius = UDim.new(0, 6)
+
+toggleBtn.MouseButton1Click:Connect(function()
+    antiLagEnabled = not antiLagEnabled
+    
+    if antiLagEnabled then
+        toggleBtn.Text = 'ON'
+        toggleBtn.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+        toggleBtn.TextColor3 = Color3.fromRGB(0, 0, 0)
+        enableAntiLag()
+    else
+        toggleBtn.Text = 'OFF'
+        toggleBtn.BackgroundColor3 = Color3.fromRGB(80, 80, 90)
+        toggleBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+        if antiLagConnection then
+            antiLagConnection:Disconnect()
+            antiLagConnection = nil
+        end
+    end
+end)
+
+-- Max speed row
+local row2 = Instance.new('Frame', content)
+row2.Size = UDim2.new(1, 0, 0, 40)
+row2.Position = UDim2.new(0, 0, 0, 43)
+row2.BackgroundTransparency = 1
+
+local row2Label = Instance.new('TextLabel', row2)
+row2Label.Size = UDim2.new(1, -100, 1, 0)
+row2Label.Position = UDim2.new(0, 14, 0, 0)
+row2Label.BackgroundTransparency = 1
+row2Label.Text = 'MAX SPEED (30-32)'
+row2Label.TextColor3 = Color3.fromRGB(255, 255, 255)
+row2Label.Font = Enum.Font.Bangers
+row2Label.TextSize = 14
+row2Label.TextXAlignment = Enum.TextXAlignment.Left
+
+local speedFrame = Instance.new('Frame', row2)
+speedFrame.Size = UDim2.new(0, 60, 0, 32)
+speedFrame.Position = UDim2.new(1, -70, 0.5, -16)
+speedFrame.BackgroundColor3 = Color3.fromRGB(20, 22, 28)
+speedFrame.BorderSizePixel = 0
+
+local speedCorner = Instance.new('UICorner', speedFrame)
+speedCorner.CornerRadius = UDim.new(0, 6)
+
+local speedBox = Instance.new('TextBox', speedFrame)
+speedBox.Size = UDim2.new(1, 0, 1, 0)
+speedBox.BackgroundTransparency = 1
+speedBox.Text = tostring(maxSpeedValue)
+speedBox.TextColor3 = Color3.fromRGB(255, 255, 255)
+speedBox.Font = Enum.Font.Bangers
+speedBox.TextSize = 15
+speedBox.TextXAlignment = Enum.TextXAlignment.Center
+speedBox.ClearTextOnFocus = false
+
+speedBox.FocusLost:Connect(function(enterPressed)
+    local newSpeed = tonumber(speedBox.Text)
+    if newSpeed then
+        maxSpeedValue = setMaxSpeed(newSpeed)
+    end
+    speedBox.Text = tostring(maxSpeedValue)
+end)
+
+-- Initial animation
+local tween = TweenService:Create(mainFrame, TweenInfo.new(0.4), {BackgroundTransparency = 0.15})
+tween:Play()
+
+-- Start anti-lag by default (optional - change to false if you want it off by default)
+-- antiLagEnabled = true
+-- toggleBtn.Text = 'ON'
+-- toggleBtn.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+-- toggleBtn.TextColor3 = Color3.fromRGB(0, 0, 0)
+-- enableAntiLag()
+
+print("Storms Anti-Lag GUI loaded successfully!")

