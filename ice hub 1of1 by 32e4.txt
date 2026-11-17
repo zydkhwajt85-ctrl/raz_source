@@ -1,0 +1,745 @@
+if not game:IsLoaded() then
+	game.Loaded:Wait()
+end
+local inputService, selectionRows, appliedNames, refreshBanners, tweenService, iceHubGui, windowColor, gradientMiddleColor, gradientEndColor, rowColor
+local selectedRowColor, buttonColor, headerButtonColor, textColor, mutedTextColor, accentColor, isTouchDevice, addCorner, addStroke
+
+do
+	local localPlayer, world, replicatedStorage, overheadController
+
+	do
+		local brainrotCards
+
+		do
+			local players = game:GetService("Players")
+			inputService = game:GetService("UserInputService")
+			localPlayer = players.LocalPlayer
+		end
+		selectionRows = {}
+		appliedNames = {}
+		do
+			local replicatedStorageService = game:GetService("ReplicatedStorage")
+			world = game:GetService("Workspace")
+			replicatedStorage = game:GetService("ReplicatedStorage")
+			brainrotCards = require(replicatedStorageService.Shared.BrainrotCard)
+			overheadController = require(replicatedStorageService.Controllers.AnimalOverheadController)
+		end
+
+		do
+			local originalObserveOneOfOne = nil
+
+			originalObserveOneOfOne = hookfunction(brainrotCards.ObserveOneOfOne, function(brainrot, onChanged)
+				return originalObserveOneOfOne(brainrot, function(isOneOfOne)
+					if appliedNames[brainrot.Index] then
+						onChanged(true)
+					else
+						onChanged(isOneOfOne)
+					end
+				end)
+			end)
+		end
+
+		local originalApplyOneOfOne = nil
+
+		originalApplyOneOfOne = hookfunction(brainrotCards.ApplyOneOfOne, function(card, isOneOfOne, ...)
+			local spacer = card:FindFirstChild("Spacer")
+
+			if spacer and spacer:FindFirstChild("Title") then
+				if appliedNames[spacer.Title.Text] then
+					isOneOfOne = true
+				end
+			end
+
+			return originalApplyOneOfOne(card, isOneOfOne, ...)
+		end)
+	end
+
+	do
+		local originalPopulate = nil
+
+		originalPopulate = hookfunction(overheadController.Populate, function(controller, animal)
+			originalPopulate(controller, animal)
+
+			if animal.Overhead then
+				local oneOfOneBanner = animal.Overhead:FindFirstChild("1OF1Banner")
+
+				if oneOfOneBanner then
+					local displayName = animal.Overhead:FindFirstChild("DisplayName")
+
+					if displayName and displayName:IsA("TextLabel") then
+						oneOfOneBanner.Visible = appliedNames[displayName.Text] or false
+					end
+				end
+			end
+		end)
+	end
+
+	refreshBanners = function()
+		do
+			for _, descendant in ipairs(world:GetDescendants()) do
+				if descendant.Name == "1OF1Banner" and descendant:IsA("GuiObject") then
+					local parent = descendant.Parent
+					parent = parent and parent:FindFirstChild("DisplayName")
+
+					if parent and parent:IsA("TextLabel") then
+						descendant.Visible = appliedNames[parent.Text] or false
+					end
+				end
+			end
+
+			for _, child in ipairs(replicatedStorage:GetChildren()) do
+				if child:IsA("Part") and child.Name == "FastOverheadTemplate" then
+					local animalOverhead = child:FindFirstChild("AnimalOverhead")
+
+					if animalOverhead then
+						local displayName = animalOverhead:FindFirstChild("DisplayName")
+						local oneOfOneBanner = animalOverhead:FindFirstChild("1OF1Banner")
+
+						if displayName and oneOfOneBanner and oneOfOneBanner:IsA("GuiObject") then
+							oneOfOneBanner.Visible = appliedNames[displayName.Text] or false
+						end
+					end
+				end
+			end
+
+			return
+		end
+	end
+	task.spawn(function()
+		while true do
+			task.wait(2)
+			refreshBanners()
+		end
+	end)
+	do
+		local coreGui = game:GetService("CoreGui")
+		tweenService = game:GetService("TweenService")
+		local existingGui = coreGui:FindFirstChild("IceHubOneOfOne")
+
+		if existingGui then
+			existingGui:Destroy()
+		end
+
+		iceHubGui = Instance.new("ScreenGui")
+		iceHubGui.Name = "IceHubOneOfOne"
+		iceHubGui.ResetOnSpawn = false
+		iceHubGui.DisplayOrder = 1001
+		iceHubGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+		iceHubGui.IgnoreGuiInset = true
+
+		iceHubGui.Parent = localPlayer:WaitForChild("PlayerGui")
+	end
+end
+windowColor = Color3.fromRGB(5, 14, 31)
+gradientMiddleColor = Color3.fromRGB(9, 31, 65)
+gradientEndColor = Color3.fromRGB(5, 12, 28)
+rowColor = Color3.fromRGB(12, 27, 52)
+selectedRowColor = Color3.fromRGB(10, 38, 76)
+buttonColor = Color3.fromRGB(9, 34, 67)
+headerButtonColor = Color3.fromRGB(14, 43, 82)
+do
+	local strokeColor = Color3.fromRGB(78, 158, 255)
+	textColor = Color3.fromRGB(242, 248, 255)
+	mutedTextColor = Color3.fromRGB(145, 180, 215)
+	accentColor = Color3.fromRGB(100, 205, 255)
+	Color3.fromRGB(90, 225, 165)
+	isTouchDevice = inputService.TouchEnabled and not inputService.KeyboardEnabled
+
+	addCorner = function(parent, radius)
+		do
+			local uiCorner = Instance.new("UICorner")
+			uiCorner.CornerRadius = UDim.new(0, radius)
+			uiCorner.Parent = parent
+			return uiCorner
+		end
+	end
+
+	addStroke = function(parent, thickness, transparency)
+		do
+			local instance = Instance.new("UIStroke")
+			instance.Color = strokeColor
+			instance.Thickness = thickness or 1
+			instance.Transparency = transparency or 0.28
+			instance.Parent = parent
+
+			return instance
+		end
+	end
+end
+
+local tween, windowWidth, windowHeight, window
+
+tween = function(instance, duration, properties)
+	do
+		tweenService
+			:Create(instance, TweenInfo.new(duration, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), properties)
+			:Play()
+		return
+	end
+end
+windowWidth = isTouchDevice and 315 or 340
+windowHeight = isTouchDevice and 390 or 420
+window = Instance.new("Frame")
+window.Name = "OneOfOneWindow"
+window.Size = UDim2.new(0, windowWidth, 0, windowHeight)
+window.Position = UDim2.new(0.02, 0, 0.5, -windowHeight / 2)
+window.BackgroundColor3 = windowColor
+window.BackgroundTransparency = 0.6
+window.BorderSizePixel = 0
+window.Active = true
+window.ZIndex = 20
+window.Parent = iceHubGui
+addCorner(window, 16)
+addStroke(window, 2, 0.12)
+do
+	local instance = Instance.new("UIGradient")
+	local colorSequence = ColorSequence.new
+	local gradientKeypoints = {}
+	local gradientStart = ColorSequenceKeypoint.new(0, windowColor)
+	local gradientMiddle = ColorSequenceKeypoint.new(0.55, gradientMiddleColor)
+	local new = ColorSequenceKeypoint.new
+	gradientKeypoints[1] = gradientStart
+	gradientKeypoints[2] = gradientMiddle
+
+	do
+		local values = table.pack(new(1, gradientEndColor))
+		table.move(values, 1, values.n, 3, gradientKeypoints)
+	end
+
+	instance.Color = colorSequence(gradientKeypoints)
+	instance.Rotation = 135
+	instance.Parent = window
+end
+
+local titleBar
+
+titleBar = Instance.new("Frame")
+titleBar.Size = UDim2.new(1, 0, 0, 42)
+titleBar.BackgroundColor3 = Color3.fromRGB(10, 27, 55)
+titleBar.BackgroundTransparency = 1
+titleBar.BorderSizePixel = 0
+titleBar.ZIndex = 21
+titleBar.Parent = window
+addCorner(titleBar, 16)
+do
+	local titleBarFill = Instance.new("Frame")
+	titleBarFill.Size = UDim2.new(1, 0, 0, 16)
+	titleBarFill.Position = UDim2.new(0, 0, 1, -16)
+	titleBarFill.BackgroundColor3 = Color3.fromRGB(10, 27, 55)
+	titleBarFill.BackgroundTransparency = 1
+	titleBarFill.BorderSizePixel = 0
+	titleBarFill.ZIndex = 21
+	titleBarFill.Parent = titleBar
+end
+
+do
+	local logoBackground = Instance.new("Frame")
+	logoBackground.Size = UDim2.new(0, 28, 0, 28)
+	logoBackground.Position = UDim2.new(0, 8, 0.5, -14)
+	logoBackground.BackgroundColor3 = headerButtonColor
+	logoBackground.BackgroundTransparency = 0.2
+	logoBackground.BorderSizePixel = 0
+
+	do
+		local contentPanel, selectionHeader
+
+		logoBackground.ZIndex = 22
+		logoBackground.Parent = titleBar
+		addCorner(logoBackground, 8)
+		addStroke(logoBackground, 1, 0.12)
+		do
+			local imageLabel = Instance.new("ImageLabel")
+			imageLabel.Size = UDim2.new(1, -4, 1, -4)
+			imageLabel.Position = UDim2.new(0, 2, 0, 2)
+			imageLabel.BackgroundTransparency = 1
+			imageLabel.ScaleType = Enum.ScaleType.Fit
+			imageLabel.ZIndex = 23
+			imageLabel.Parent = logoBackground
+
+			local function loadLogo()
+				local logoText = Instance.new("TextLabel")
+				logoText.Name = "IceHubLogo"
+				logoText.Size = UDim2.fromScale(1, 1)
+				logoText.BackgroundTransparency = 1
+				logoText.Text = "\226\157\132"
+				logoText.TextColor3 = textColor
+				logoText.TextSize = 20
+				logoText.ZIndex = 24
+				logoText.Parent = imageLabel
+			end
+
+			loadLogo()
+		end
+
+		do
+			local titleLabel = Instance.new("TextLabel")
+			titleLabel.Size = UDim2.new(1, -78, 1, 0)
+			titleLabel.Position = UDim2.new(0, 42, 0, 0)
+			titleLabel.BackgroundTransparency = 1
+			titleLabel.Text = "Ice Hub - 1 OF 1"
+			titleLabel.TextColor3 = textColor
+			titleLabel.TextSize = isTouchDevice and 14 or 16
+			titleLabel.Font = Enum.Font.GothamBlack
+			titleLabel.TextXAlignment = Enum.TextXAlignment.Left
+			titleLabel.ZIndex = 22
+			titleLabel.Parent = titleBar
+		end
+
+		do
+			local minimizeButton
+
+			minimizeButton = Instance.new("TextButton")
+			minimizeButton.Size = UDim2.new(0, 26, 0, 26)
+			minimizeButton.Position = UDim2.new(1, -34, 0.5, -13)
+			minimizeButton.BackgroundColor3 = headerButtonColor
+			minimizeButton.BackgroundTransparency = 0.15
+			minimizeButton.BorderSizePixel = 0
+			minimizeButton.Text = "−"
+			minimizeButton.TextColor3 = textColor
+			minimizeButton.TextSize = 16
+			minimizeButton.Font = Enum.Font.GothamBlack
+			minimizeButton.ZIndex = 23
+			minimizeButton.AutoButtonColor = false
+			minimizeButton.Parent = titleBar
+			addCorner(minimizeButton, 7)
+			addStroke(minimizeButton, 1, 0.12)
+			contentPanel = Instance.new("Frame")
+			contentPanel.Size = UDim2.new(1, -18, 1, -54)
+			contentPanel.Position = UDim2.new(0, 9, 0, 48)
+			contentPanel.BackgroundTransparency = 1
+			contentPanel.BorderSizePixel = 0
+			contentPanel.ZIndex = 21
+			contentPanel.Parent = window
+			contentPanel.ClipsDescendants = false
+			do
+				local uiListLayout = Instance.new("UIListLayout")
+				uiListLayout.SortOrder = Enum.SortOrder.LayoutOrder
+				uiListLayout.Padding = UDim.new(0, 7)
+				uiListLayout.HorizontalAlignment = Enum.HorizontalAlignment.Center
+				uiListLayout.Parent = contentPanel
+			end
+
+			do
+				local uiPadding = Instance.new("UIPadding")
+				uiPadding.PaddingTop = UDim.new(0, 3)
+				uiPadding.PaddingBottom = UDim.new(0, 5)
+				uiPadding.Parent = contentPanel
+			end
+
+			local expandedHeight = windowHeight
+			local isMinimized = false
+
+			minimizeButton.MouseButton1Click:Connect(function()
+				do
+					isMinimized = not isMinimized
+					contentPanel.Visible = not isMinimized
+					minimizeButton.Text = isMinimized and "+" or "−"
+					tween(window, 0.18, {
+						Size = isMinimized and UDim2.new(0, windowWidth, 0, 42)
+							or UDim2.new(0, windowWidth, 0, expandedHeight),
+					})
+					return
+				end
+			end)
+		end
+
+		do
+			local isDragging = false
+			local dragInput = nil
+			local dragStartPosition = nil
+			local windowStartPosition = nil
+
+			titleBar.InputBegan:Connect(function(input)
+				if
+					input.UserInputType == Enum.UserInputType.MouseButton1
+					or input.UserInputType == Enum.UserInputType.Touch
+				then
+					isDragging = true
+					dragStartPosition = input.Position
+
+					windowStartPosition = window.Position
+					input.Changed:Connect(function()
+						if input.UserInputState == Enum.UserInputState.End then
+							isDragging = false
+						end
+					end)
+				end
+			end)
+
+			titleBar.InputChanged:Connect(function(input)
+				if
+					input.UserInputType == Enum.UserInputType.MouseMovement
+					or input.UserInputType == Enum.UserInputType.Touch
+				then
+					dragInput = input
+				end
+			end)
+
+			inputService.InputChanged:Connect(function(input)
+				do
+					if isDragging and input == dragInput and dragStartPosition and windowStartPosition then
+						local dragDelta = input.Position - dragStartPosition
+						window.Position = UDim2.new(
+							windowStartPosition.X.Scale,
+							windowStartPosition.X.Offset + dragDelta.X,
+							windowStartPosition.Y.Scale,
+							windowStartPosition.Y.Offset + dragDelta.Y
+						)
+					end
+
+					return
+				end
+			end)
+		end
+		selectionHeader = Instance.new("Frame")
+		selectionHeader.Size = UDim2.new(1, -4, 0, isTouchDevice and 42 or 38)
+		selectionHeader.BackgroundColor3 = Color3.fromRGB(10, 30, 60)
+		selectionHeader.BackgroundTransparency = 0.48
+		selectionHeader.BorderSizePixel = 0
+		selectionHeader.ZIndex = 22
+		selectionHeader.Parent = contentPanel
+		addCorner(selectionHeader, 9)
+		addStroke(selectionHeader, 1, 0.34)
+		do
+			local sectionLabel = Instance.new("TextLabel")
+			sectionLabel.Size = UDim2.new(1, -16, 0, 17)
+			sectionLabel.Position = UDim2.new(0, 8, 0, 8)
+			sectionLabel.BackgroundTransparency = 1
+			sectionLabel.Text = "SELECT BRAINROTS"
+			sectionLabel.TextColor3 = textColor
+			sectionLabel.TextSize = isTouchDevice and 11 or 10
+			sectionLabel.Font = Enum.Font.GothamBlack
+			sectionLabel.TextXAlignment = Enum.TextXAlignment.Left
+			sectionLabel.ZIndex = 23
+			sectionLabel.Parent = selectionHeader
+		end
+
+		local updateSelectionCount
+
+		do
+			local selectionCountLabel, scrollingFrame, uiListLayout
+
+			selectionCountLabel = Instance.new("TextLabel")
+			selectionCountLabel.Size = UDim2.new(1, -16, 0, 14)
+			selectionCountLabel.Position = UDim2.new(0, 8, 1, -18)
+			selectionCountLabel.BackgroundTransparency = 1
+			selectionCountLabel.Text = "0 selected"
+			selectionCountLabel.TextColor3 = mutedTextColor
+			selectionCountLabel.TextSize = 9
+			selectionCountLabel.Font = Enum.Font.GothamBold
+			selectionCountLabel.TextXAlignment = Enum.TextXAlignment.Left
+			selectionCountLabel.ZIndex = 23
+			selectionCountLabel.Parent = selectionHeader
+			do
+				local listBackground = Instance.new("Frame")
+				listBackground.Size = UDim2.new(1, -8, 0, isTouchDevice and 198 or 220)
+				listBackground.BackgroundColor3 = rowColor
+				listBackground.BackgroundTransparency = 0.55
+				listBackground.BorderSizePixel = 0
+				listBackground.ZIndex = 22
+				listBackground.Parent = contentPanel
+				addCorner(listBackground, 8)
+				addStroke(listBackground, 1, 0.42)
+				scrollingFrame = Instance.new("ScrollingFrame")
+				scrollingFrame.Size = UDim2.new(1, -12, 1, -12)
+				scrollingFrame.Position = UDim2.new(0, 6, 0, 6)
+				scrollingFrame.BackgroundTransparency = 1
+				scrollingFrame.BorderSizePixel = 0
+				scrollingFrame.ScrollBarThickness = 0
+				scrollingFrame.CanvasSize = UDim2.new(0, 0, 0, 0)
+				scrollingFrame.AutomaticCanvasSize = Enum.AutomaticSize.Y
+				scrollingFrame.ZIndex = 23
+				scrollingFrame.Parent = listBackground
+			end
+
+			uiListLayout = Instance.new("UIListLayout")
+			uiListLayout.SortOrder = Enum.SortOrder.LayoutOrder
+			uiListLayout.Padding = UDim.new(0, 6)
+			uiListLayout.Parent = scrollingFrame
+			do
+				local uiPadding = Instance.new("UIPadding")
+				uiPadding.PaddingLeft = UDim.new(0, 4)
+				uiPadding.PaddingRight = UDim.new(0, 4)
+				uiPadding.PaddingTop = UDim.new(0, 2)
+				uiPadding.PaddingBottom = UDim.new(0, 8)
+				uiPadding.Parent = scrollingFrame
+			end
+
+			do
+				local plots = workspace:WaitForChild("Plots")
+
+				local function hasAnimator(model)
+					for _, descendant in ipairs(model:GetDescendants()) do
+						if descendant:IsA("Animator") then
+							return true
+						end
+					end
+					return false
+				end
+
+				updateSelectionCount = function()
+					local selectedCount = 0
+
+					for _, row in ipairs(selectionRows) do
+						if row.selected then
+							selectedCount += 1
+						end
+					end
+
+					selectionCountLabel.Text = tostring(selectedCount) .. " selected"
+				end
+
+				for _, child in ipairs(plots:GetChildren()) do
+					for _, descendant in ipairs(child:GetDescendants()) do
+						if
+							descendant:IsA("Model")
+							and descendant.Name ~= "Baseplate"
+							and not string.match(string.lower(descendant.Name), "^_?trait[%.:_%- ]")
+							and hasAnimator(descendant)
+						then
+							local rowFrame, rowStroke
+
+							rowFrame = Instance.new("Frame")
+							rowFrame.Size = UDim2.new(1, -10, 0, isTouchDevice and 36 or 32)
+							rowFrame.BackgroundColor3 = rowColor
+							rowFrame.BackgroundTransparency = 0.58
+							rowFrame.BorderSizePixel = 0
+							rowFrame.ZIndex = 24
+							rowFrame.Parent = scrollingFrame
+							rowFrame.ClipsDescendants = false
+							addCorner(rowFrame, 8)
+							rowStroke = addStroke(rowFrame, 1.25, 0.28)
+							do
+								local brainrotNameLabel = Instance.new("TextLabel")
+								brainrotNameLabel.Size = UDim2.new(1, -48, 1, 0)
+								brainrotNameLabel.Position = UDim2.new(0, 10, 0, 0)
+								brainrotNameLabel.BackgroundTransparency = 1
+								brainrotNameLabel.Text = descendant.Name
+								brainrotNameLabel.TextColor3 = textColor
+								brainrotNameLabel.TextSize = isTouchDevice and 10 or 10
+								brainrotNameLabel.Font = Enum.Font.GothamBold
+								brainrotNameLabel.TextXAlignment = Enum.TextXAlignment.Left
+								brainrotNameLabel.TextTruncate = Enum.TextTruncate.AtEnd
+								brainrotNameLabel.ZIndex = 25
+								brainrotNameLabel.Parent = rowFrame
+							end
+
+							local checkBox = Instance.new("TextButton")
+							checkBox.Size = UDim2.new(0, 22, 0, 22)
+							checkBox.Position = UDim2.new(1, -8, 0.5, 0)
+							checkBox.AnchorPoint = Vector2.new(1, 0.5)
+							checkBox.BackgroundColor3 = buttonColor
+							checkBox.BackgroundTransparency = 0.38
+							checkBox.BorderSizePixel = 0
+							checkBox.Text = ""
+							checkBox.AutoButtonColor = false
+							checkBox.ZIndex = 26
+							checkBox.Parent = rowFrame
+							addCorner(checkBox, 6)
+							addStroke(checkBox, 1, 0.25)
+							local checkMark = Instance.new("TextLabel")
+							checkMark.Size = UDim2.new(1, 0, 1, 0)
+							checkMark.BackgroundTransparency = 1
+							checkMark.Text = ""
+							checkMark.TextColor3 = textColor
+							checkMark.Font = Enum.Font.GothamBlack
+							checkMark.TextSize = 13
+							checkMark.ZIndex = 27
+							checkMark.Parent = checkBox
+							local rowButton = Instance.new("TextButton")
+							rowButton.Size = UDim2.new(1, -38, 1, 0)
+							rowButton.BackgroundTransparency = 1
+							rowButton.Text = ""
+							rowButton.AutoButtonColor = false
+							rowButton.ZIndex = 26
+							rowButton.Parent = rowFrame
+
+							local row = {
+								item = rowFrame,
+								model = descendant,
+								selected = false,
+								checkBox = checkBox,
+								checkMark = checkMark,
+							}
+
+							local function toggleSelected()
+								row.selected = not row.selected
+
+								if row.selected then
+									tween(
+										rowFrame,
+										0.14,
+										{ BackgroundColor3 = selectedRowColor, BackgroundTransparency = 0.3 }
+									)
+									tween(
+										checkBox,
+										0.14,
+										{ BackgroundColor3 = accentColor, BackgroundTransparency = 0.08 }
+									)
+									rowStroke.Transparency = 0.08
+									checkMark.Text = "✓"
+								else
+									tween(
+										rowFrame,
+										0.14,
+										{ BackgroundColor3 = rowColor, BackgroundTransparency = 0.58 }
+									)
+									tween(
+										checkBox,
+										0.14,
+										{ BackgroundColor3 = buttonColor, BackgroundTransparency = 0.38 }
+									)
+									rowStroke.Transparency = 0.28
+									checkMark.Text = ""
+								end
+
+								updateSelectionCount()
+							end
+
+							row.toggle = toggleSelected
+							checkBox.MouseButton1Click:Connect(toggleSelected)
+							rowButton.MouseButton1Click:Connect(toggleSelected)
+							table.insert(selectionRows, row)
+						end
+					end
+				end
+			end
+
+			uiListLayout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
+				scrollingFrame.CanvasSize = UDim2.new(0, 0, 0, uiListLayout.AbsoluteContentSize.Y + 12)
+			end)
+
+			scrollingFrame.CanvasSize = UDim2.new(0, 0, 0, uiListLayout.AbsoluteContentSize.Y + 12)
+		end
+
+		local selectNoneButton, selectAllButton
+
+		do
+			local quickSelectPanel = Instance.new("Frame")
+			quickSelectPanel.Size = UDim2.new(1, -4, 0, isTouchDevice and 38 or 34)
+			quickSelectPanel.BackgroundColor3 = rowColor
+			quickSelectPanel.BackgroundTransparency = 0.55
+			quickSelectPanel.BorderSizePixel = 0
+			quickSelectPanel.ZIndex = 22
+			quickSelectPanel.Parent = contentPanel
+			addCorner(quickSelectPanel, 8)
+			local quickSelectLabel = Instance.new("TextLabel")
+			quickSelectLabel.Size = UDim2.new(0.55, 0, 1, 0)
+			quickSelectLabel.Position = UDim2.new(0, 10, 0, 0)
+			quickSelectLabel.BackgroundTransparency = 1
+			quickSelectLabel.Text = "QUICK SELECT"
+			quickSelectLabel.TextColor3 = mutedTextColor
+			quickSelectLabel.TextSize = isTouchDevice and 11 or 10
+			quickSelectLabel.Font = Enum.Font.GothamBold
+			quickSelectLabel.TextXAlignment = Enum.TextXAlignment.Left
+			quickSelectLabel.ZIndex = 23
+			quickSelectLabel.Parent = quickSelectPanel
+			selectNoneButton = Instance.new("TextButton")
+			selectNoneButton.Size = UDim2.new(0, 58, 0, 22)
+			selectNoneButton.Position = UDim2.new(1, -72, 0.5, 0)
+			selectNoneButton.AnchorPoint = Vector2.new(1, 0.5)
+			selectNoneButton.BackgroundColor3 = buttonColor
+			selectNoneButton.BackgroundTransparency = 0.38
+			selectNoneButton.BorderSizePixel = 0
+			selectNoneButton.Text = "NONE"
+			selectNoneButton.TextColor3 = textColor
+			selectNoneButton.Font = Enum.Font.GothamBold
+			selectNoneButton.TextSize = 9
+			selectNoneButton.AutoButtonColor = false
+			selectNoneButton.ZIndex = 23
+			selectNoneButton.Parent = quickSelectPanel
+			addCorner(selectNoneButton, 6)
+			addStroke(selectNoneButton, 1, 0.25)
+			selectAllButton = Instance.new("TextButton")
+			selectAllButton.Size = UDim2.new(0, 52, 0, 22)
+			selectAllButton.Position = UDim2.new(1, -8, 0.5, 0)
+			selectAllButton.AnchorPoint = Vector2.new(1, 0.5)
+			selectAllButton.BackgroundColor3 = buttonColor
+			selectAllButton.BackgroundTransparency = 0.38
+			selectAllButton.BorderSizePixel = 0
+			selectAllButton.Text = "ALL"
+			selectAllButton.TextColor3 = textColor
+			selectAllButton.Font = Enum.Font.GothamBold
+			selectAllButton.TextSize = 9
+			selectAllButton.AutoButtonColor = false
+			selectAllButton.ZIndex = 23
+			selectAllButton.Parent = quickSelectPanel
+		end
+
+		addCorner(selectAllButton, 6)
+		addStroke(selectAllButton, 1, 0.25)
+
+		do
+			local applyPanel = Instance.new("Frame")
+			applyPanel.Size = UDim2.new(1, -4, 0, isTouchDevice and 46 or 44)
+			applyPanel.BackgroundColor3 = Color3.fromRGB(10, 30, 60)
+			applyPanel.BackgroundTransparency = 0.48
+			applyPanel.BorderSizePixel = 0
+			applyPanel.ZIndex = 22
+			applyPanel.Parent = contentPanel
+			addCorner(applyPanel, 9)
+			addStroke(applyPanel, 2, 0.16)
+			local applyButton = Instance.new("TextButton")
+			applyButton.Size = UDim2.new(1, 0, 1, 0)
+			applyButton.BackgroundTransparency = 1
+			applyButton.Text = "✓ APPLY 1 OF 1"
+			applyButton.TextColor3 = textColor
+			applyButton.TextSize = isTouchDevice and 14 or 13
+			applyButton.Font = Enum.Font.GothamBlack
+			applyButton.ZIndex = 23
+			applyButton.AutoButtonColor = false
+			applyButton.Parent = applyPanel
+
+			selectAllButton.MouseButton1Click:Connect(function()
+				for _, row in ipairs(selectionRows) do
+					if not row.selected then
+						row.toggle()
+					end
+				end
+			end)
+
+			selectNoneButton.MouseButton1Click:Connect(function()
+				for _, row in ipairs(selectionRows) do
+					if row.selected then
+						row.toggle()
+					end
+				end
+			end)
+
+			applyButton.MouseButton1Click:Connect(function()
+				appliedNames = {}
+
+				for _, row in ipairs(selectionRows) do
+					if row.selected then
+						appliedNames[row.model.Name] = true
+					end
+				end
+
+				refreshBanners()
+				local appliedCount = 0
+
+				for k in pairs(appliedNames) do
+					appliedCount += 1
+				end
+
+				applyButton.Text = "✓ APPLIED (" .. tostring(appliedCount) .. ")"
+				tween(applyPanel, 0.12, { BackgroundColor3 = Color3.fromRGB(8, 55, 52) })
+
+				task.delay(0.85, function()
+					do
+						if applyButton and applyButton.Parent then
+							applyButton.Text = "✓ APPLY 1 OF 1"
+							tween(applyPanel, 0.12, { BackgroundColor3 = Color3.fromRGB(10, 30, 60) })
+						end
+
+						return
+					end
+				end)
+			end)
+		end
+
+		updateSelectionCount()
+
+		return
+	end
+end

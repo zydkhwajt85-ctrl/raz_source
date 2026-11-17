@@ -1,0 +1,4327 @@
+
+if not game:IsLoaded() then
+	game.Loaded:Wait()
+end
+
+local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
+local UIS = game:GetService("UserInputService")
+local TweenService = game:GetService("TweenService")
+local HttpService = game:GetService("HttpService")
+local RS = game:GetService("ReplicatedStorage")
+local CoreGui = game:GetService("CoreGui")
+local LP = Players.LocalPlayer
+
+if type(_G.InfinVisualsCleanup) == "function" then
+	pcall(_G.InfinVisualsCleanup)
+end
+local RUN_ID = {}
+_G.InfinVisualsRun = RUN_ID
+local function alive()
+	return _G.InfinVisualsRun == RUN_ID
+end
+local connections = {}
+local function track(c)
+	table.insert(connections, c)
+	return c
+end
+
+local LOGO = "rbxassetid://88206773600496"
+local SAVE_FILE = "infin_visuals.json"
+
+local T = {
+	BG = Color3.fromRGB(14, 14, 24),
+	BG2 = Color3.fromRGB(30, 24, 58),
+	Panel = Color3.fromRGB(34, 34, 52),
+	Card = Color3.fromRGB(48, 48, 72),
+	CardHover = Color3.fromRGB(86, 74, 140),
+	Stroke = Color3.fromRGB(150, 150, 200),
+	Text = Color3.fromRGB(242, 242, 250),
+	Sub = Color3.fromRGB(150, 148, 175),
+	Accent = Color3.fromRGB(132, 92, 255),
+	Accent2 = Color3.fromRGB(64, 170, 255),
+	Good = Color3.fromRGB(62, 205, 120),
+	Bad = Color3.fromRGB(235, 72, 92),
+	Warn = Color3.fromRGB(255, 170, 60),
+}
+
+local TOUCH = UIS.TouchEnabled and not UIS.KeyboardEnabled
+local function px(n)
+	return TOUCH and math.floor(n * 1.08 + 0.5) or n
+end
+
+local RARITY_FALLBACK = {
+	Common = Color3.fromRGB(0, 171, 40),
+	Rare = Color3.fromRGB(0, 131, 171),
+	Epic = Color3.fromRGB(134, 0, 171),
+	Legendary = Color3.fromRGB(251, 255, 0),
+	Mythic = Color3.fromRGB(255, 0, 0),
+	["Brainrot God"] = Color3.fromRGB(255, 0, 221),
+	Secret = Color3.fromRGB(230, 230, 230),
+	OG = Color3.fromRGB(255, 215, 0),
+}
+local RARITY_ORDER = { OG = 1, Secret = 2, ["Brainrot God"] = 3, Mythic = 4, Legendary = 5, Epic = 6, Rare = 7, Common = 8 }
+
+local Data = { Animals = {}, Mutations = {}, Traits = {}, Rarities = {} }
+pcall(function()
+	Data.Animals = require(RS.Datas.Animals)
+end)
+pcall(function()
+	Data.Mutations = require(RS.Datas.Mutations)
+end)
+pcall(function()
+	Data.Traits = require(RS.Datas.Traits)
+end)
+pcall(function()
+	Data.Rarities = require(RS.Datas.Rarities)
+end)
+local SharedAnimals, BrainrotAssets, Gradients
+pcall(function()
+	SharedAnimals = require(RS.Shared.Animals)
+end)
+pcall(function()
+	BrainrotAssets = require(RS.Shared.BrainrotAssets)
+end)
+pcall(function()
+	Gradients = require(RS.Packages.Gradients)
+end)
+
+local function rarityColor(r)
+	local d = Data.Rarities[r]
+	return (type(d) == "table" and d.Color) or RARITY_FALLBACK[r] or T.Sub
+end
+
+local BAKED = {}
+BAKED.ANIMALS_BY_RARITY = {
+	{ rarity = "OG", names = { "Skibidi Toilet", "Strawberry Elephant", "Headless Horseman", "Meowl", "John Pork" } },
+	{
+		rarity = "Secret",
+		names = {
+			"Dragon Cannelloni",
+			"Garama and Madundung",
+			"Elefanto Frigo",
+			"Signore Carapace",
+			"Fragola La La La",
+			"Love Love Bear",
+			"Hydra Dragon Cannelloni",
+			"Tang Tang Keletang",
+			"Ketchuru and Musturu",
+			"Burguro And Fryuro",
+			"La Secret Combinasion",
+			"Tictac Sahur",
+			"Cerberus",
+			"Capitano Moby",
+			"Foxini Lanternini",
+			"Antonio",
+			"Ginger Gerat",
+			"Fishino Clownino",
+			"Guerriro Digitale",
+			"Ginger Globo",
+			"Cappuccino Clownino",
+			"Griffin",
+			"La Supreme Combinasion",
+			"Arcadragon",
+			"Rosey and Teddy",
+			"Hydra Bunny",
+			"Ketupat Bros",
+			"Tirilikalika Tirilikalako",
+			"Pancake and Syrup",
+			"Cash or Card",
+			"Dragon Gingerini",
+			"Globa Steppa",
+			"Gym Bros",
+			"Money Money Bros",
+			"Dug dug dug",
+			"Digi Narwhal",
+			"Popcuru and Fizzuru",
+			"Reinito Sleighito",
+			"Los Amigos",
+			"Los Sekolahs",
+			"Los Spaghettis",
+			"Spaghetti Tualetti",
+			"Spooky and Pumpky",
+			"Ventoliero Pavonero",
+			"Quackini Snackini",
+			"Sammyni Fattini",
+			"Nacho Spyder",
+			"Rosetti Tualetti",
+			"Lavadorito Spinito",
+			"Las Sis",
+			"La Casa Boo",
+			"Fragrama and Chocrama",
+			"Cooki and Milki",
+			"Bunny and Eggy",
+			"Celestial Pegasus",
+			"Chillin Chili",
+			"Chipso and Queso",
+			"Cloverat Clapat",
+		},
+	},
+}
+BAKED.MUTATIONS = {
+	"None",
+	"Gold",
+	"Diamond",
+	"Bloodrot",
+	"Rainbow",
+	"Candy",
+	"Lava",
+	"Galaxy",
+	"YinYang",
+	"Radioactive",
+	"Cursed",
+	"Divine",
+	"Cyber",
+	"Crystal",
+}
+BAKED.TRAITS = {
+	"Taco",
+	"Nyan",
+	"Galactic",
+	"Fireworks",
+	"Zombie",
+	"Claws",
+	"Glitched",
+	"Bubblegum",
+	"Fire",
+	"Wet",
+	"Snowy",
+	"Cometstruck",
+	"Explosive",
+	"Disco",
+	"10B",
+	"Shark Fin",
+	"Matteo Hat",
+	"Brazil",
+	"Sleepy",
+	"Lightning",
+	"UFO",
+	"Spider",
+	"Strawberry",
+	"Paint",
+	"Skeleton",
+	"Sombrero",
+	"Tie",
+	"Witch Hat",
+	"Indonesia",
+	"Meowl",
+	"John Pork",
+	"RIP Gravestone",
+	"Jackolantern Pet",
+	"Santa Hat",
+	"Reindeer Pet",
+	"Skibidi",
+	"26",
+	"Rose",
+	":3",
+	"Chocolate",
+	"Halo",
+	"Lucky",
+	"Orange Balloon",
+	"Green Balloon",
+	"Blue Balloon",
+	"Red Balloon",
+	"Pink Balloon",
+	"Rainbow Balloon",
+	"Granny",
+	"Bunny Ears",
+	"Orange Egg",
+	"Green Egg",
+	"Blue Egg",
+	"Pink Egg",
+}
+BAKED.TRAIT_ICONS = {
+	["10B"] = "rbxassetid://134655415681926",
+	["26"] = "rbxassetid://80468035315420",
+	[":3"] = "rbxassetid://108293878529172",
+	["Blue Balloon"] = "rbxassetid://128841931686463",
+	["Blue Egg"] = "rbxassetid://109212886335786",
+	["Brazil"] = "rbxassetid://75650816341229",
+	["Bubblegum"] = "rbxassetid://100601425541874",
+	["Bunny Ears"] = "rbxassetid://118516289496954",
+	["Chocolate"] = "rbxassetid://81641382604997",
+	["Claws"] = "rbxassetid://104964195846833",
+	["Cometstruck"] = "rbxassetid://127455440418221",
+	["Disco"] = "rbxassetid://82620342632406",
+	["Explosive"] = "rbxassetid://97725744252608",
+	["Fire"] = "rbxassetid://118283346037788",
+	["Fireworks"] = "rbxassetid://121100427764858",
+	["Galactic"] = "rbxassetid://99181785766598",
+	["Glitched"] = "rbxassetid://121332433272976",
+	["Granny"] = "rbxassetid://73467619616299",
+	["Green Balloon"] = "rbxassetid://75222826429094",
+	["Green Egg"] = "rbxassetid://94602857440295",
+	["Halo"] = "rbxassetid://98316436141359",
+	["Indonesia"] = "rbxassetid://93350414974589",
+	["Jackolantern Pet"] = "rbxassetid://97054765273857",
+	["John Pork"] = "rbxassetid://117176397136731",
+	["Lightning"] = "rbxassetid://139729696247144",
+	["Lucky"] = "rbxassetid://124098467754457",
+	["Matteo Hat"] = "rbxassetid://115664804212096",
+	["Meowl"] = "rbxassetid://114748221761549",
+	["Nyan"] = "rbxassetid://104229924295526",
+	["Orange Balloon"] = "rbxassetid://83111173051279",
+	["Orange Egg"] = "rbxassetid://76307362192037",
+	["Paint"] = "rbxassetid://119591742504251",
+	["Pink Balloon"] = "rbxassetid://114128099162490",
+	["Pink Egg"] = "rbxassetid://133939661230277",
+	["RIP Gravestone"] = "rbxassetid://123115843719383",
+	["Rainbow Balloon"] = "rbxassetid://112821854659961",
+	["Red Balloon"] = "rbxassetid://119661964026012",
+	["Reindeer Pet"] = "rbxassetid://70894779883038",
+	["Rose"] = "rbxassetid://135489065859287",
+	["Santa Hat"] = "rbxassetid://88375043733582",
+	["Shark Fin"] = "rbxassetid://104985313532149",
+	["Skeleton"] = "rbxassetid://89591838221335",
+	["Skibidi"] = "rbxassetid://83384385019272",
+	["Sleepy"] = "rbxassetid://115001117876534",
+	["Snowy"] = "rbxassetid://83627475909869",
+	["Sombrero"] = "rbxassetid://95128039793845",
+	["Spider"] = "rbxassetid://117478971325696",
+	["Strawberry"] = "rbxassetid://84731118566493",
+	["Taco"] = "rbxassetid://89041930759464",
+	["Tie"] = "rbxassetid://103610037004911",
+	["UFO"] = "rbxassetid://110910518481052",
+	["Wet"] = "rbxassetid://78474194088770",
+	["Witch Hat"] = "rbxassetid://123964048606874",
+	["Zombie"] = "rbxassetid://110723387483939",
+}
+BAKED.ANIMAL_DATA = {
+	["1x1x1x1"] = { gen = 1111111, price = 255555555 },
+	["25"] = { gen = 2500000, price = 600000000 },
+	["67"] = { gen = 7500000, price = 1250000000 },
+	["Agarrini la Palini"] = { gen = 425000, price = 80000000 },
+	["Alessio"] = { gen = 85000, price = 17500000 },
+	["Anpali Babel"] = { gen = 280000, price = 48000000 },
+	["Antonio"] = { gen = 55000000, price = 12500000000 },
+	["Arcadragon"] = { gen = 150000000, price = 160000000000 },
+	["Aquanaut"] = { gen = 245000, price = 45500000 },
+	["Arcadopus"] = { gen = 5000000, price = 900000000 },
+	["Astrolero Cervalero"] = { gen = 280000, price = 48000000 },
+	["Bacuru and Egguru"] = { gen = 24000000, price = 3850000000 },
+	["Ballerina Peppermintina"] = { gen = 215000, price = 37500000 },
+	["Ballerino Lololo"] = { gen = 200000, price = 35000000 },
+	["Bambu Bambu Sahur"] = { gen = 275000, price = 47500000 },
+	["Baskito"] = { gen = 16000000, price = 2100000000 },
+	["Belula Beluga"] = { gen = 290000, price = 60000000 },
+	["Bisonte Giuppitere"] = { gen = 325000, price = 80000000 },
+	["Blackhole Goat"] = { gen = 400000, price = 75000000 },
+	["Boatito Auratito"] = { gen = 525000, price = 115000000 },
+	["Boba Panda"] = { gen = 270000, price = 47000000 },
+	["Bombardini Tortinii"] = { gen = 225000, price = 50000000 },
+	["Boppin Bunny"] = { gen = 80000000, price = 25000000000 },
+	["Brainrot God Lucky Block"] = { gen = 0, price = 25000000 },
+	["Brasilini Berimbini"] = { gen = 285000, price = 55000000 },
+	["Brr es Teh Patipum"] = { gen = 225000, price = 40000000 },
+	["Brunito Marsito"] = { gen = 3500000, price = 750000000 },
+	["Buho de Noelo"] = { gen = 267500, price = 46750000 },
+	["Bulbito Bandito Traktorito"] = { gen = 205000, price = 35000000 },
+	["Bunito Bunito Spinito"] = { gen = 3000000, price = 900000000 },
+	["Bunny Bunny Bunny Sahur"] = { gen = 2250000, price = 575000000 },
+	["Bunny Tralala"] = { gen = 270000, price = 47000000 },
+	["Bunny and Eggy"] = { gen = 170000000, price = 135000000000 },
+	["Bunnyman"] = { gen = 1500000, price = 500000000 },
+	["Buntteo"] = { gen = 850000, price = 225000000 },
+	["Burguro And Fryuro"] = { gen = 150000000, price = 75000000000 },
+	["Burrito Bandito"] = { gen = 4000000, price = 850000000 },
+	["Cacasito Satalito"] = { gen = 240000, price = 45000000 },
+	["Capi Taco"] = { gen = 155000, price = 31000000 },
+	["Capitano Moby"] = { gen = 160000000, price = 125000000000 },
+	["Cappuccino Clownino"] = { gen = 285000, price = 48500000 },
+	["Cash or Card"] = { gen = 100000000, price = 40000000000 },
+	["Celestial Pegasus"] = { gen = 175000000, price = 150000000000 },
+	["Celularcini Viciosini"] = { gen = 22500000, price = 2750000000 },
+	["Cerberus"] = { gen = 175000000, price = 150000000000 },
+	["Chachechi"] = { gen = 400000, price = 85000000 },
+	["Chicleteira Bicicleteira"] = { gen = 3500000, price = 750000000 },
+	["Chicleteira Cupideira"] = { gen = 17500000, price = 2500000000 },
+	["Chicleteira Noelteira"] = { gen = 15000000, price = 2000000000 },
+	["Chicleteirina Bicicleteirina"] = { gen = 4000000, price = 850000000 },
+	["Chihuanini Taconini"] = { gen = 45000, price = 8500000 },
+	["Chill Puppy"] = { gen = 4000000, price = 850000000 },
+	["Chillin Chili"] = { gen = 25000000, price = 2500000000 },
+	["Chimnino"] = { gen = 14000000, price = 1900000000 },
+	["Chipso and Queso"] = { gen = 25000000, price = 2500000000 },
+	["Chrismasmamat"] = { gen = 277500, price = 47750000 },
+	["Churrito Bunnito"] = { gen = 21000000, price = 2600000000 },
+	["Cigno Fulgoro"] = { gen = 20000000, price = 3000000000 },
+	["Cloverat Clapat"] = { gen = 60000000, price = 15000000000 },
+	["Clovkur Kurkur"] = { gen = 305000, price = 70000000 },
+	["Cocoa Assassino"] = { gen = 291000, price = 61000000 },
+	["Cocofanto Elefanto"] = { gen = 19000, price = 6500000 },
+	["Coffin Tung Tung Tung Sahur"] = { gen = 0, price = 500000000 },
+	["Cooki and Milki"] = { gen = 155000000, price = 100000000000 },
+	["Corn Corn Corn Sahur"] = { gen = 250000, price = 45000000 },
+	["Crabbo Limonetta"] = { gen = 235000, price = 46000000 },
+	["Cuadramat and Pakrahmatmamat"] = { gen = 1400000, price = 400000000 },
+	["Cupid Cupid Sahur"] = { gen = 3100000, price = 715000000 },
+	["Cupid Hotspot"] = { gen = 3500000, price = 750000000 },
+	["DJ Panda"] = { gen = 17500000, price = 2500000000 },
+	["Digi Narwhal"] = { gen = 200000000, price = 200000000000 },
+	["Divino Platypio"] = { gen = 160000, price = 32000000 },
+	["Dolphini Jetskini"] = { gen = 294500, price = 64500000 },
+	["Donkeyturbo Express"] = { gen = 7500000, price = 1250000000 },
+	["Dragon Cannelloni"] = { gen = 250000000, price = 250000000000 },
+	["Dragon Gingerini"] = { gen = 350000000, price = 350000000000 },
+	["Dug dug dug"] = { gen = 35000000, price = 5000000000 },
+	["Dul Dul Dul"] = { gen = 375000, price = 150000000 },
+	["Dumborino Miracello"] = { gen = 315000, price = 75000000 },
+	["Easter Easter Easter Sahur"] = { gen = 1250000, price = 300000000 },
+	["Eggdin Egg Egg Dun"] = { gen = 310000, price = 72500000 },
+	["Eid Eid Eid Sahur"] = { gen = 3500000, price = 750000000 },
+	["Elefanto Frigo"] = { gen = 85000000, price = 12500000000 },
+	["Esok Sekolah"] = { gen = 30000000, price = 3500000000 },
+	["Espresso Signora"] = { gen = 70000, price = 25000000 },
+	["Eviledon"] = { gen = 31500000, price = 3850000000 },
+	["Extinct Ballerina"] = { gen = 125000, price = 23500000 },
+	["Extinct Matteo"] = { gen = 625000, price = 140000000 },
+	["Extinct Tralalero"] = { gen = 450000, price = 125000000 },
+	["Festive 67"] = { gen = 67000000, price = 16000000000 },
+	["Fishboard"] = { gen = 825000, price = 215000000 },
+	["Fishino Clownino"] = { gen = 47000000, price = 9000000000 },
+	["Fortunu and Cashuru"] = { gen = 130000000, price = 55000000000 },
+	["Foxini Lanternini"] = { gen = 115000000, price = 47500000000 },
+	["Fragola La La La"] = { gen = 450000, price = 125000000 },
+	["Fragrama and Chocrama"] = { gen = 100000000, price = 40000000000 },
+	["Frankentteo"] = { gen = 700000, price = 175000000 },
+	["Frio Ninja"] = { gen = 265000, price = 46500000 },
+	["GOAT"] = { gen = 950000, price = 237500000 },
+	["Garama and Madundung"] = { gen = 50000000, price = 10000000000 },
+	["Gattatino Nyanino"] = { gen = 35000, price = 7500000 },
+	["Gattito Tacoto"] = { gen = 165000, price = 32500000 },
+	["Giftini Spyderini"] = { gen = 999999, price = 240000000 },
+	["Ginger Cisterna"] = { gen = 293500, price = 63500000 },
+	["Ginger Gerat"] = { gen = 75000000, price = 22500000000 },
+	["Ginger Globo"] = { gen = 257500, price = 45750000 },
+	["Girafa Celestre"] = { gen = 20000, price = 7500000 },
+	["Globa Steppa"] = { gen = 27500000, price = 3000000000 },
+	["Gobblino Uniciclino"] = { gen = 27500000, price = 2850000000 },
+	["Gold Egg"] = { gen = 0, price = 0 },
+	["Gold Elf"] = { gen = 0, price = 0 },
+	["Gold Gold Gold"] = { gen = 45000000, price = 8000000000 },
+	["Graipuss Medussi"] = { gen = 1000000, price = 250000000 },
+	["Granchiello Spiritell"] = { gen = 260000, price = 46000000 },
+	["Granny"] = { gen = 4000000, price = 850000000 },
+	["Griffin"] = { gen = 400000000, price = 400000000000 },
+	["Guerriro Digitale"] = { gen = 550000, price = 120000000 },
+	["Guest 666"] = { gen = 6666666, price = 1166666666 },
+	["Gym Bros"] = { gen = 42500000, price = 7500000000 },
+	["Headless Horseman"] = { gen = 550000000, price = 550000000000 },
+	["Ho Ho Ho Sahur"] = { gen = 3250000, price = 725000000 },
+	["Hopilikalika Hopilikalako"] = { gen = 55000000, price = 12500000000 },
+	["Horegini Boom"] = { gen = 2750000, price = 650000000 },
+	["Hydra Bunny"] = { gen = 185000000, price = 175000000000 },
+	["Hydra Dragon Cannelloni"] = { gen = 300000000, price = 300000000000 },
+	["Jacko Jack Jack"] = { gen = 150000, price = 30000000 },
+	["Jackorilla"] = { gen = 315000, price = 80000000 },
+	["Job Job Job Sahur"] = { gen = 700000, price = 175000000 },
+	["Jolly Jolly Sahur"] = { gen = 45000000, price = 8000000000 },
+	["Karker Sahur"] = { gen = 725000, price = 185000000 },
+	["Karkerheart Luvkur"] = { gen = 297500, price = 67500000 },
+	["Karkerkar Kurkur"] = { gen = 325000, price = 80000000 },
+	["Ketchuru and Musturu"] = { gen = 42500000, price = 7500000000 },
+	["Ketupat Bros"] = { gen = 145000000, price = 65000000000 },
+	["Ketupat Kepat"] = { gen = 35000000, price = 5000000000 },
+	["Krupuk Pagi Pagi"] = { gen = 290000, price = 60000000 },
+	["La Casa Boo"] = { gen = 100000000, price = 40000000000 },
+	["La Cucaracha"] = { gen = 475000, price = 110000000 },
+	["La Easter Grande"] = { gen = 55000000, price = 12500000000 },
+	["La Extinct Grande"] = { gen = 23500000, price = 3250000000 },
+	["La Food Combinasion"] = { gen = 90000000, price = 30000000000 },
+	["La Ginger Sekolah"] = { gen = 75000000, price = 23000000000 },
+	["La Grande Combinasion"] = { gen = 10000000, price = 1000000000 },
+	["La Jolly Grande"] = { gen = 30000000, price = 3500000000 },
+	["La Karkerkar Combinasion"] = { gen = 600000, price = 160000000 },
+	["La Lucky Grande"] = { gen = 40000000, price = 7000000000 },
+	["La Romantic Grande"] = { gen = 40000000, price = 7000000000 },
+	["La Sahur Combinasion"] = { gen = 2000000, price = 550000000 },
+	["La Secret Combinasion"] = { gen = 125000000, price = 50000000000 },
+	["La Spooky Grande"] = { gen = 24500000, price = 2900000000 },
+	["La Supreme Combinasion"] = { gen = 200000000, price = 200000000000 },
+	["La Taco Combinasion"] = { gen = 35000000, price = 5000000000 },
+	["La Vacca Jacko Linterino"] = { gen = 850000, price = 225000000 },
+	["La Vacca Lepre Lepreino"] = { gen = 1100000, price = 255000000 },
+	["La Vacca Prese Presente"] = { gen = 600000, price = 160000000 },
+	["La Vacca Saturno Saturnita"] = { gen = 325000, price = 80000000 },
+	["Las Capuchinas"] = { gen = 185000, price = 32500000 },
+	["Las Sis"] = { gen = 17500000, price = 2500000000 },
+	["Las Tralaleritas"] = { gen = 650000, price = 150000000 },
+	["Las Vaquitas Saturnitas"] = { gen = 750000, price = 200000000 },
+	["Lavadorito Spinito"] = { gen = 45000000, price = 8000000000 },
+	["List List List Sahur"] = { gen = 2000000, price = 550000000 },
+	["Los 25"] = { gen = 10000000, price = 1500000000 },
+	["Los 67"] = { gen = 22500000, price = 2750000000 },
+	["Los Amigos"] = { gen = 130000000, price = 55000000000 },
+	["Los Bombinitos"] = { gen = 220000, price = 42500000 },
+	["Los Bros"] = { gen = 24000000, price = 2600000000 },
+	["Los Bunitos"] = { gen = 4250000, price = 865000000 },
+	["Los Burritos"] = { gen = 8500000, price = 1400000000 },
+	["Los Candies"] = { gen = 23000000, price = 3000000000 },
+	["Los Chicleteiras"] = { gen = 7000000, price = 1200000000 },
+	["Los Chihuaninis"] = { gen = 160000, price = 32000000 },
+	["Los Combinasionas"] = { gen = 15000000, price = 2000000000 },
+	["Los Crocodillitos"] = { gen = 55000, price = 12500000 },
+	["Los Cucarachas"] = { gen = 1250000, price = 300000000 },
+	["Los Cupids"] = { gen = 30000000, price = 3500000000 },
+	["Los Gattitos"] = { gen = 275000, price = 47500000 },
+	["Los Hotspotsitos"] = { gen = 20000000, price = 3000000000 },
+	["Los Jobcitos"] = { gen = 1500000, price = 500000000 },
+	["Los Jolly Combinasionas"] = { gen = 20000000, price = 3000000000 },
+	["Los Karkeritos"] = { gen = 750000, price = 200000000 },
+	["Los Matteos"] = { gen = 325000, price = 80000000 },
+	["Los Mi Gatitos"] = { gen = 6500000, price = 1250000000 },
+	["Los Mobilis"] = { gen = 22000000, price = 2700000000 },
+	["Los Nooo My Hotspotsitos"] = { gen = 5500000, price = 1000000000 },
+	["Los Orcalitos"] = { gen = 235000, price = 45000000 },
+	["Los Planitos"] = { gen = 18500000, price = 2750000000 },
+	["Los Primos"] = { gen = 31000000, price = 3750000000 },
+	["Los Puggies"] = { gen = 30000000, price = 3000000000 },
+	["Los Quesadillas"] = { gen = 4500000, price = 875000000 },
+	["Los Sekolahs"] = { gen = 110000000, price = 45000000000 },
+	["Los Spaghettis"] = { gen = 70000000, price = 20000000000 },
+	["Los Spooky Combinasionas"] = { gen = 20000000, price = 3000000000 },
+	["Los Spyderinis"] = { gen = 425000, price = 125000000 },
+	["Los Sweethearts"] = { gen = 16500000, price = 2250000000 },
+	["Los Tacoritas"] = { gen = 32000000, price = 4000000000 },
+	["Los Tipi Tacos"] = { gen = 260000, price = 46000000 },
+	["Los Tortus"] = { gen = 500000, price = 100000000 },
+	["Los Tralaleritos"] = { gen = 500000, price = 100000000 },
+	["Los Trios"] = { gen = 700000, price = 175000000 },
+	["Los Tungtungtungcitos"] = { gen = 210000, price = 37500000 },
+	["Love Love Bear"] = { gen = 225000000, price = 225000000000 },
+	["Love Love Love Sahur"] = { gen = 1000000, price = 250000000 },
+	["Lovin Rose"] = { gen = 32500000, price = 4250000000 },
+	["Luck Luck Luck Sahur"] = { gen = 3750000, price = 800000000 },
+	["Luv Luv Luv"] = { gen = 282500, price = 48250000 },
+	["Mariachi Corazoni"] = { gen = 12500000, price = 1750000000 },
+	["Mastodontico Telepiedone"] = { gen = 275000, price = 47500000 },
+	["Matteo"] = { gen = 50000, price = 10000000 },
+	["Meowl"] = { gen = 600000000, price = 600000000000 },
+	["John Pork"] = { gen = 500000000, price = 650000000000 },
+	["Mi Gatito"] = { gen = 3250000, price = 725000000 },
+	["Mieteteira Bicicleteira"] = { gen = 26000000, price = 2750000000 },
+	["Money Money Bros"] = { gen = 47000000, price = 9000000000 },
+	["Money Money Man"] = { gen = 65000, price = 17500000 },
+	["Money Money Puggy"] = { gen = 21000000, price = 2600000000 },
+	["Money Money Reindeer"] = { gen = 25000000, price = 2500000000 },
+	["Mummy Ambalabu"] = { gen = 250000, price = 45000000 },
+	["Nacho Spyder"] = { gen = 50000000, price = 10000000000 },
+	["Naughty Naughty"] = { gen = 3000000, price = 700000000 },
+	["Noo La Polizia"] = { gen = 280000, price = 67000000 },
+	["Noo my Candy"] = { gen = 5000000, price = 900000000 },
+	["Noo my Eggs"] = { gen = 7000000, price = 1200000000 },
+	["Noo my Gold"] = { gen = 13500000, price = 1850000000 },
+	["Noo my Heart"] = { gen = 13000000, price = 1800000000 },
+	["Noo my Present"] = { gen = 6000000, price = 1100000000 },
+	["Noo my examine"] = { gen = 1750000, price = 525000000 },
+	["Nooo My Hotspot"] = { gen = 1500000, price = 500000000 },
+	["Nuclearo Dinossauro"] = { gen = 15000000, price = 2500000000 },
+	["Odin Din Din Dun"] = { gen = 75000, price = 15000000 },
+	["Orcaledon"] = { gen = 40000000, price = 7000000000 },
+	["Orcalero Orcala"] = { gen = 100000, price = 25000000 },
+	["Orcalita Orcala"] = { gen = 240000, price = 45000000 },
+	["Pakrahmatmamat"] = { gen = 215000, price = 37500000 },
+	["Pakrahmatmatina"] = { gen = 225000, price = 40500000 },
+	["Pancake and Syrup"] = { gen = 125000000, price = 50000000000 },
+	["Pandanini Frostini"] = { gen = 294000, price = 64000000 },
+	["Paradiso Axolottino"] = { gen = 900000, price = 235000000 },
+	["Patteo"] = { gen = 287500, price = 57500000 },
+	["Perrito Burrito"] = { gen = 1000000, price = 250000000 },
+	["Piccione Macchina"] = { gen = 225000, price = 40000000 },
+	["Piccionetta Macchina"] = { gen = 270000, price = 47000000 },
+	["Pirulitoita Bicicleteira"] = { gen = 2500000, price = 600000000 },
+	["Please my Present"] = { gen = 1300000, price = 350000000 },
+	["Pop Pop Sahur"] = { gen = 295000, price = 65000000 },
+	["Popcuru and Fizzuru"] = { gen = 170000000, price = 135000000000 },
+	["Pot Hotspot"] = { gen = 2500000, price = 600000000 },
+	["Pot Pumpkin"] = { gen = 3000000, price = 700000000 },
+	["Pumpkini Spyderini"] = { gen = 650000, price = 165000000 },
+	["Quackini Snackini"] = { gen = 65000000, price = 15500000000 },
+	["Quesadilla Crocodila"] = { gen = 3000000, price = 700000000 },
+	["Quesadillo Vampiro"] = { gen = 3500000, price = 750000000 },
+	["Rang Ring Bus"] = { gen = 6000000, price = 1100000000 },
+	["Reindeer Tralala"] = { gen = 600000, price = 160000000 },
+	["Reinito Sleighito"] = { gen = 140000000, price = 60000000000 },
+	["Rocco Disco"] = { gen = 650000, price = 150000000 },
+	["Rosetti Tualetti"] = { gen = 50000000, price = 10000000000 },
+	["Rosey and Teddy"] = { gen = 165000000, price = 130000000000 },
+	["Sammyni Fattini"] = { gen = 70000000, price = 20000000000 },
+	["Sammyni Spyderini"] = { gen = 325000, price = 75000000 },
+	["Santa Hotspot"] = { gen = 2600000, price = 625000000 },
+	["Santteo"] = { gen = 800000, price = 210000000 },
+	["Secret Lucky Block"] = { gen = 0, price = 750000000 },
+	["Serafinna Medusella"] = { gen = 5500000, price = 1000000000 },
+	["Signore Carapace"] = { gen = 105000000, price = 42500000000 },
+	["Skibidi Toilet"] = { gen = 450000000, price = 450000000000 },
+	["Skull Skull Skull"] = { gen = 290000, price = 60000000 },
+	["Snailenzo"] = { gen = 250000, price = 45000000 },
+	["Snailo Clovero"] = { gen = 18500000, price = 2750000000 },
+	["Spaghetti Tualetti"] = { gen = 60000000, price = 15000000000 },
+	["Spinny Hammy"] = { gen = 17000000, price = 2300000000 },
+	["Spooky and Pumpky"] = { gen = 80000000, price = 25000000000 },
+	["Squalanana"] = { gen = 250000, price = 45000000 },
+	["Strawberry Elephant"] = { gen = 750000000, price = 750000000000 },
+	["Swag Soda"] = { gen = 13000000, price = 1800000000 },
+	["Swaggy Bros"] = { gen = 40000000, price = 7000000000 },
+	["Tacorillo Crocodillo"] = { gen = 12500000, price = 1500000000 },
+	["Tacorita Bicicleta"] = { gen = 16500000, price = 2250000000 },
+	["Tang Tang Keletang"] = { gen = 33500000, price = 4500000000 },
+	["Tartaruga Cisterna"] = { gen = 250000, price = 45000000 },
+	["Telemorte"] = { gen = 2000000, price = 550000000 },
+	["Tentacolo Tecnico"] = { gen = 292500, price = 62500000 },
+	["Tictac Sahur"] = { gen = 37500000, price = 6000000000 },
+	["Tigroligre Frutonni"] = { gen = 60000, price = 14000000 },
+	["Tipi Topi Taco"] = { gen = 75000, price = 20000000 },
+	["Tirilikalika Tirilikalako"] = { gen = 42500000, price = 7500000000 },
+	["To to to Sahur"] = { gen = 2250000, price = 575000000 },
+	["Tootini Shrimpini"] = { gen = 260000, price = 46000000 },
+	["Torrtuginni Dragonfrutini"] = { gen = 350000, price = 125000000 },
+	["Tractoro Dinosauro"] = { gen = 230000, price = 42500000 },
+	["Tralaledon"] = { gen = 27500000, price = 3000000000 },
+	["Tralalero Tralala"] = { gen = 50000, price = 10000000 },
+	["Tralalita Tralala"] = { gen = 100000, price = 20000000 },
+	["Trenostruzzo Turbo 3000"] = { gen = 150000, price = 25000000 },
+	["Trenostruzzo Turbo 4000"] = { gen = 335000, price = 90000000 },
+	["Trickolino"] = { gen = 900000, price = 235000000 },
+	["Triplito Tralaleritos"] = { gen = 875000, price = 230000000 },
+	["Trippi Troppi Troppa Trippa"] = { gen = 175000, price = 30000000 },
+	["Tuff Toucan"] = { gen = 26000000, price = 2750000000 },
+	["Tukanno Bananno"] = { gen = 100000, price = 22500000 },
+	["Tung Tung Tung Sahur"] = { gen = 1500000, price = 500000000 },
+	["Unclito Samito"] = { gen = 75000, price = 20000000 },
+	["Urubini Flamenguini"] = { gen = 150000, price = 30000000 },
+	["Vampira Cappucina"] = { gen = 125000, price = 24500000 },
+	["Ventoliero Pavonero"] = { gen = 65000000, price = 15500000000 },
+	["Vulturino Skeletono"] = { gen = 500000, price = 110000000 },
+	["W or L"] = { gen = 30000000, price = 3000000000 },
+	["Yess my examine"] = { gen = 575000, price = 130000000 },
+	["Yeti Claus"] = { gen = 257500, price = 45750000 },
+	["Zombie Tralala"] = { gen = 500000, price = 100000000 },
+}
+BAKED.TRAIT_MULTIPLIERS = {
+	["Taco"] = 2,
+	["Nyan"] = 5,
+	["Galactic"] = 3,
+	["Fireworks"] = 5,
+	["Zombie"] = 4,
+	["Claws"] = 4,
+	["Glitched"] = 4,
+	["Bubblegum"] = 3,
+	["Fire"] = 5,
+	["Wet"] = 1.5,
+	["Snowy"] = 2,
+	["Cometstruck"] = 2.5,
+	["Explosive"] = 3,
+	["Disco"] = 4,
+	["10B"] = 3,
+	["Shark Fin"] = 3,
+	["Matteo Hat"] = 3.5,
+	["Brazil"] = 5,
+	["Sleepy"] = 0,
+	["Lightning"] = 5,
+	["UFO"] = 2,
+	["Spider"] = 3.5,
+	["Strawberry"] = 8,
+	["Paint"] = 5,
+	["Skeleton"] = 3,
+	["Sombrero"] = 4,
+	["Tie"] = 3.75,
+	["Witch Hat"] = 3,
+	["Indonesia"] = 4,
+	["Meowl"] = 7,
+	["John Pork"] = 6.5,
+	["RIP Gravestone"] = 3.5,
+	["Jackolantern Pet"] = 4.5,
+	["Santa Hat"] = 4,
+	["Reindeer Pet"] = 5,
+	["Skibidi"] = 6,
+	["26"] = 5,
+	["Rose"] = 5,
+	[":3"] = 4.5,
+	["Chocolate"] = 4.5,
+	["Halo"] = 5,
+	["Lucky"] = 5,
+	["Orange Balloon"] = 3,
+	["Green Balloon"] = 3.5,
+	["Blue Balloon"] = 4,
+	["Red Balloon"] = 5,
+	["Pink Balloon"] = 5.5,
+	["Rainbow Balloon"] = 6.5,
+	["Granny"] = 5.5,
+	["Bunny Ears"] = 4.5,
+	["Orange Egg"] = 3,
+	["Green Egg"] = 4,
+	["Blue Egg"] = 5,
+	["Pink Egg"] = 6.5,
+}
+BAKED.MUTATION_MODIFIERS = {
+	["Gold"] = 0.25,
+	["Diamond"] = 0.5,
+	["Bloodrot"] = 1,
+	["Rainbow"] = 9,
+	["Candy"] = 3,
+	["Lava"] = 5,
+	["Galaxy"] = 6,
+	["YinYang"] = 6.5,
+	["Radioactive"] = 7.5,
+	["Cursed"] = 8,
+	["Divine"] = 9,
+	["Cyber"] = 10,
+}
+BAKED.MUTATION_ICONS = {
+	["None"] = "",
+	["Gold"] = "rbxassetid://136133057822407",
+	["Diamond"] = "rbxassetid://100875709547015",
+	["Bloodrot"] = "rbxassetid://75212036784031",
+	["Rainbow"] = "rbxassetid://83078714090192",
+	["Candy"] = "rbxassetid://84797673698685",
+	["Lava"] = "rbxassetid://70800471498231",
+	["Galaxy"] = "rbxassetid://139331671405138",
+	["YinYang"] = "rbxassetid://112996178302302",
+	["Radioactive"] = "rbxassetid://134809510446754",
+	["Cursed"] = "rbxassetid://139160534192980",
+	["Divine"] = "rbxassetid://117437279650650",
+	["Cyber"] = "rbxassetid://91596580591665",
+}
+
+local bakedRarity = {}
+for _, g in ipairs(BAKED.ANIMALS_BY_RARITY) do
+	for _, n in ipairs(g.names) do
+		bakedRarity[n] = g.rarity
+	end
+end
+
+local animalList, animalByName = {}, {}
+do
+	local seen = {}
+	local function add(name, rarity, gen, price, yMod)
+		if seen[name] then
+			return
+		end
+		seen[name] = true
+		local b = BAKED.ANIMAL_DATA[name]
+		if (not gen or gen <= 0) and b then
+			gen = b.gen
+		end
+		if (not price or price <= 0) and b then
+			price = b.price
+		end
+		if not rarity or rarity == "Unknown" then
+			rarity = bakedRarity[name] or "Unknown"
+		end
+		table.insert(animalList, { name = name, rarity = rarity, gen = gen or 0, price = price or 0, yMod = yMod or 1 })
+	end
+	for name, info in pairs(Data.Animals) do
+		if type(name) == "string" and type(info) == "table" then
+			add(name, info.Rarity, tonumber(info.Generation), tonumber(info.Price), tonumber(info.OverheadYOffsetModifier))
+		end
+	end
+	for name in pairs(BAKED.ANIMAL_DATA) do
+		add(name)
+	end
+	for n in pairs(bakedRarity) do
+		add(n)
+	end
+	local folder = RS:FindFirstChild("Models") and RS.Models:FindFirstChild("Animals")
+	if folder then
+		for _, m in ipairs(folder:GetChildren()) do
+			add(m.Name)
+		end
+	end
+	table.sort(animalList, function(a, b)
+		local ra, rb = RARITY_ORDER[a.rarity] or 99, RARITY_ORDER[b.rarity] or 99
+		if ra ~= rb then
+			return ra < rb
+		end
+		if a.gen ~= b.gen then
+			return a.gen > b.gen
+		end
+		return a.name < b.name
+	end)
+	for _, e in ipairs(animalList) do
+		animalByName[e.name] = e
+	end
+end
+
+local function mutMod(name)
+	local d = Data.Mutations[name]
+	if type(d) == "table" and type(d.Modifier) == "number" then
+		return d.Modifier
+	end
+	return BAKED.MUTATION_MODIFIERS[name] or 0
+end
+
+local mutationList = { "None" }
+do
+	local seen, tmp = { None = true }, {}
+	local function add(n)
+		if type(n) == "string" and not seen[n] then
+			seen[n] = true
+			table.insert(tmp, n)
+		end
+	end
+	for name, d in pairs(Data.Mutations) do
+		if type(d) == "table" then
+			add(name)
+		end
+	end
+	for _, n in ipairs(BAKED.MUTATIONS) do
+		add(n)
+	end
+	table.sort(tmp, function(a, b)
+		if mutMod(a) ~= mutMod(b) then
+			return mutMod(a) < mutMod(b)
+		end
+		return a < b
+	end)
+	for _, n in ipairs(tmp) do
+		table.insert(mutationList, n)
+	end
+end
+
+local traitList = {}
+do
+	local seen = {}
+	local function add(n)
+		if type(n) == "string" and n ~= "" and not seen[n] then
+			seen[n] = true
+			table.insert(traitList, n)
+		end
+	end
+	for name, d in pairs(Data.Traits) do
+		if type(d) == "table" then
+			add(name)
+		end
+	end
+	for _, n in ipairs(BAKED.TRAITS) do
+		add(n)
+	end
+	pcall(function()
+		for _, f in ipairs({ RS.Models:FindFirstChild("Traits"), RS.Models:FindFirstChild("TraitsPerAnimal") }) do
+			for _, c in ipairs(f and f:GetChildren() or {}) do
+				add(c.Name)
+			end
+		end
+	end)
+	table.sort(traitList, function(a, b)
+		return a:lower() < b:lower()
+	end)
+end
+
+local function iconOf(v)
+	if type(v) == "number" then
+		return "rbxassetid://" .. v
+	end
+	if type(v) == "string" and v ~= "" then
+		if v:match("^%d+$") then
+			return "rbxassetid://" .. v
+		end
+		return v
+	end
+	return nil
+end
+local function traitIcon(name)
+	local d = Data.Traits[name]
+	return (type(d) == "table" and iconOf(d.Icon or d.Image)) or BAKED.TRAIT_ICONS[name]
+end
+local function traitMod(name)
+	local d = Data.Traits[name]
+	if type(d) == "table" and type(d.MultiplierModifier) == "number" then
+		return d.MultiplierModifier
+	end
+	return BAKED.TRAIT_MULTIPLIERS[name] or 0
+end
+local function mutationColor(name)
+	local d = Data.Mutations[name]
+	return (type(d) == "table" and d.MainColor) or T.Text
+end
+
+local function calcGen(name, mutation, traits)
+	local info = animalByName[name]
+	local base = info and info.gen or 0
+	if base <= 0 then
+		return 0
+	end
+	local mult = 1
+	if mutation and mutation ~= "None" then
+		mult += mutMod(mutation)
+	end
+	local sleepy = false
+	for _, t in ipairs(traits or {}) do
+		if t == "Sleepy" then
+			sleepy = true
+		else
+			mult += traitMod(t)
+		end
+	end
+	local g = base * mult
+	if sleepy then
+		g *= 0.5
+	end
+	return math.floor(g)
+end
+
+local function fmt(n)
+	n = tonumber(n) or 0
+	for _, u in ipairs({ { 1e18, "Qi" }, { 1e15, "Qa" }, { 1e12, "T" }, { 1e9, "B" }, { 1e6, "M" }, { 1e3, "K" } }) do
+		if n >= u[1] then
+			local v = string.format("%.1f", n / u[1]):gsub("%.0$", "")
+			return v .. u[2]
+		end
+	end
+	return tostring(math.floor(n))
+end
+
+local lockedPlot
+local function isOwnedPlot(plot)
+	local sign = plot:FindFirstChild("PlotSign")
+	local yb = sign and sign:FindFirstChild("YourBase", true)
+	if yb and yb:IsA("BillboardGui") and yb.Enabled then
+		return true
+	end
+	for _, a in ipairs({ "OwnerUserId", "UserId", "PlayerUserId", "OwnerId" }) do
+		if tonumber(plot:GetAttribute(a)) == LP.UserId then
+			return true
+		end
+	end
+	for _, a in ipairs({ "Owner", "OwnerName", "PlayerName" }) do
+		local v = plot:GetAttribute(a)
+		if v == LP.Name or v == LP.DisplayName then
+			return true
+		end
+	end
+	local owner = plot:FindFirstChild("Owner", true)
+	if owner then
+		if owner:IsA("ObjectValue") and owner.Value == LP then
+			return true
+		end
+		if owner:IsA("StringValue") and owner.Value == LP.Name then
+			return true
+		end
+		if (owner:IsA("IntValue") or owner:IsA("NumberValue")) and owner.Value == LP.UserId then
+			return true
+		end
+	end
+	return false
+end
+
+local function getPlot()
+	if lockedPlot and lockedPlot.Parent and isOwnedPlot(lockedPlot) then
+		return lockedPlot
+	end
+	lockedPlot = nil
+	local plots = workspace:FindFirstChild("Plots")
+	if not plots then
+		return nil
+	end
+	for _, p in ipairs(plots:GetChildren()) do
+		if isOwnedPlot(p) then
+			lockedPlot = p
+			return p
+		end
+	end
+	return nil
+end
+
+local function getPodiums()
+	local plot = getPlot()
+	local pods = plot and plot:FindFirstChild("AnimalPodiums")
+	local list = {}
+	if not pods then
+		return list
+	end
+	for _, p in ipairs(pods:GetChildren()) do
+		local key = tonumber(p.Name)
+		local base = p:FindFirstChild("Base")
+		local sp = base and base:FindFirstChild("Spawn")
+		if key and sp then
+			table.insert(list, { key = key, spawn = sp, att = sp:FindFirstChild("PromptAttachment"), folder = p })
+		end
+	end
+	table.sort(list, function(a, b)
+		return a.key < b.key
+	end)
+	return list
+end
+
+local function podium(key, list)
+	for _, p in ipairs(list or getPodiums()) do
+		if p.key == key then
+			return p
+		end
+	end
+	return nil
+end
+
+local function rebirths()
+	local n = 0
+	pcall(function()
+		n = LP.leaderstats.Rebirths.Value or 0
+	end)
+	return n
+end
+
+local syncChannel
+task.spawn(function()
+	pcall(function()
+		require(RS.Packages.Synchronizer):WaitAndCall(LP, function(ch)
+			syncChannel = ch
+		end)
+	end)
+end)
+local function serverOccupied(key)
+	local ok, pods = pcall(function()
+		return syncChannel and syncChannel:Get("AnimalPodiums")
+	end)
+	if not ok or type(pods) ~= "table" then
+		return false
+	end
+	local v = pods[key]
+	return v ~= nil and v ~= "Empty"
+end
+
+local function acquireModel(name)
+	local model
+	if BrainrotAssets and type(BrainrotAssets.getModel) == "function" then
+		pcall(function()
+			local m = BrainrotAssets.getModel(name)
+			if m and m:IsA("Model") then
+				model = m:Clone()
+			end
+		end)
+	end
+	if not model then
+		local f = RS:FindFirstChild("Models") and RS.Models:FindFirstChild("Animals")
+		local src = f and f:FindFirstChild(name)
+		if src then
+			model = src:Clone()
+		end
+	end
+	return model
+end
+
+local function applyMutation(model, name, mut)
+	if not mut or mut == "None" then
+		return
+	end
+	if SharedAnimals then
+		local ok = pcall(function()
+			SharedAnimals:ApplyMutation(model, name, mut)
+		end)
+		if ok then
+			return
+		end
+	end
+	local md = Data.Mutations[mut]
+	local palette = type(md) == "table" and md.Palettes and md.Palettes[1]
+	if mut == "Rainbow" then
+		model:AddTag("RainbowModel")
+		return
+	end
+	if not palette then
+		return
+	end
+	for _, p in ipairs(model:GetDescendants()) do
+		if p:IsA("BasePart") and not p:GetAttribute("IgnoreColor") then
+			pcall(function()
+				local idx = tonumber(p:GetAttribute(mut .. "Color") or p:GetAttribute("Color") or 1) or 1
+				local col = palette[math.clamp(idx, 1, #palette)]
+				local sa = p:FindFirstChildOfClass("SurfaceAppearance")
+				if sa then
+					sa.Color = col
+				else
+					p.Color = col
+				end
+			end)
+		end
+	end
+end
+
+local function applyTraits(model, name, traits)
+	if #traits == 0 then
+		return
+	end
+	if SharedAnimals then
+		local ok = pcall(function()
+			SharedAnimals:ApplyTraits(model, name, traits)
+		end)
+		if ok then
+			return
+		end
+	end
+	local models = RS:FindFirstChild("Models")
+	local tap = models and models:FindFirstChild("TraitsPerAnimal")
+	local generic = models and models:FindFirstChild("Traits")
+	for _, t in ipairs(traits) do
+		pcall(function()
+			local src = (tap and tap:FindFirstChild(t) and tap[t]:FindFirstChild(name))
+				or (generic and generic:FindFirstChild(t))
+			if not src then
+				return
+			end
+			local clone = src:Clone()
+			clone.Name = "_Trait." .. t
+			for _, att in ipairs(clone:GetDescendants()) do
+				if att:IsA("Attachment") then
+					local target = model:FindFirstChild(att.Name, true)
+					if target and target:IsA("Attachment") then
+						local rc = Instance.new("RigidConstraint")
+						rc.Attachment0 = att
+						rc.Attachment1 = target
+						rc.Parent = att.Parent
+					end
+				end
+			end
+			clone.Parent = model
+		end)
+	end
+end
+
+local function playIdle(model, name)
+	task.spawn(function()
+		task.wait()
+		pcall(function()
+			local ac = model:FindFirstChildWhichIsA("AnimationController", true)
+				or model:FindFirstChildWhichIsA("Humanoid", true)
+			if not ac then
+				return
+			end
+			local animator = ac:FindFirstChildOfClass("Animator") or Instance.new("Animator", ac)
+			local folder = RS.Animations.Animals:FindFirstChild(name)
+			local idle = folder and folder:FindFirstChild("Idle")
+			if idle then
+				local tr = animator:LoadAnimation(idle)
+				tr.Looped = true
+				tr:Play()
+			end
+		end)
+	end)
+end
+
+local entries = {} 
+local slotMap = {} 
+local slotConns = {} 
+local touched = {} 
+local carrying, carryOrigin, carryConn, carryTrack, carryGhost, carrySpeed
+
+local settings = {
+	autoRestore = true,
+	startHidden = false,
+	toggleKey = "RightControl",
+	windowPos = nil,
+	baseSkin = nil,
+	autoOgSkin = true,
+}
+
+local notify, updateCount 
+local onEntriesChanged, onSpawned 
+local scheduleSave
+
+local function buildOverhead(entry)
+	local foc = RS:FindFirstChild("Controllers") and RS.Controllers:FindFirstChild("FastOverheadController")
+	local template = foc and foc:FindFirstChild("AnimalOverhead")
+	if not template then
+		return
+	end
+	local partT = foc:FindFirstChild("FastOverheadTemplate")
+	local part = partT and partT:Clone() or Instance.new("Part")
+	for _, m in ipairs(part:GetChildren()) do
+		if m:IsA("Motor6D") then
+			m:Destroy()
+		end
+	end
+	part.Size = Vector3.new(15, 5, 0.1)
+	part.Transparency = 1
+	part.Anchored = true
+	part.CanCollide = false
+	part.CanQuery = false
+	part.CanTouch = false
+	part.CastShadow = false
+	part.Name = "InfinOverhead"
+	part.Parent = workspace
+
+	local gui = template:Clone()
+	gui.Adornee = part
+	gui.SizingMode = Enum.SurfaceGuiSizingMode.FixedSize
+	gui.CanvasSize = Vector2.new(340, 113)
+	gui.MaxDistance = 80
+	gui.Parent = part
+
+	local info = animalByName[entry.name]
+	local function lbl(n)
+		local l = gui:FindFirstChild(n)
+		return (l and l:IsA("TextLabel")) and l or nil
+	end
+	local dn = lbl("DisplayName")
+	if dn then
+		dn.Text = entry.name
+	end
+	local rar = lbl("Rarity")
+	if rar then
+		local r = info and info.rarity or "Unknown"
+		rar.Text = r
+		rar.TextColor3 = rarityColor(r)
+		local rd = Data.Rarities[r]
+		if Gradients and type(rd) == "table" and rd.GradientPreset then
+			pcall(function()
+				rar.TextColor3 = Color3.new(1, 1, 1)
+				Gradients.apply(rar, rd.GradientPreset)
+			end)
+		end
+	end
+	local mutL = lbl("Mutation")
+	if mutL then
+		local md = Data.Mutations[entry.mutation]
+		if entry.mutation ~= "None" and type(md) == "table" then
+			if md.UseRichText then
+				mutL.RichText = true
+				mutL.Text = md.DisplayWithRichText or md.DisplayText or entry.mutation
+			else
+				mutL.Text = md.DisplayText or entry.mutation
+			end
+			mutL.TextColor3 = md.MainColor or Color3.new(1, 1, 1)
+			if Gradients and md.GradientPreset then
+				pcall(function()
+					Gradients.apply(mutL, md.GradientPreset)
+				end)
+			end
+			mutL.Visible = true
+		else
+			mutL.Visible = false
+		end
+	end
+	local genL = lbl("Generation")
+	if genL then
+		genL.Visible = entry.gen > 0
+		genL.Text = "$" .. fmt(entry.gen) .. "/s"
+		genL.TextColor3 = Color3.fromRGB(255, 247, 0)
+	end
+	local priceL = lbl("Price")
+	if priceL then
+		local price = info and info.price or 0
+		priceL.Visible = price > 0
+		priceL.Text = "$" .. fmt(price)
+		priceL.TextColor3 = Color3.fromRGB(115, 255, 0)
+	end
+	local stolen = gui:FindFirstChild("Stolen")
+	if stolen then
+		stolen.Visible = false
+	end
+	local tf = gui:FindFirstChild("Traits")
+	local tt = tf and tf:FindFirstChild("Template")
+	if tf and tt then
+		tf.ClipsDescendants = false
+		local n = 0
+		for _, t in ipairs(entry.traits) do
+			local ic = traitIcon(t)
+			if ic then
+				local img = tt:Clone()
+				img.Image = ic
+				img.Visible = true
+				img.Parent = tf
+				n += 1
+			end
+		end
+		tf.Visible = n > 0
+	end
+
+	local yOff = entry.height * 0.75 * (info and info.yMod or 1) + 2.5
+	entry.overhead = part
+	entry.ohGui = gui
+	entry.ohConn = RunService.RenderStepped:Connect(function()
+		if not entry.model.Parent then
+			return
+		end
+		local cam = workspace.CurrentCamera
+		local pos = entry.model:GetPivot().Position + Vector3.new(0, yOff, 0)
+		part.CFrame = CFrame.lookAt(pos, pos - cam.CFrame.LookVector)
+	end)
+end
+
+local function plotMultiplier()
+	local mult = 1
+	pcall(function()
+		local m = getPlot():FindFirstChild("Multiplier")
+		local amt = m and m:FindFirstChild("Amount", true)
+		if amt and amt:IsA("TextLabel") then
+			mult = tonumber(amt.Text:match("([%d%.]+)")) or 1
+		end
+	end)
+	return mult
+end
+
+local function playSfx(path)
+	pcall(function()
+		require(RS.Controllers.SoundController):PlaySound(path)
+	end)
+end
+
+local function destroyCashpad(e)
+	if e.cashConn then
+		e.cashConn:Disconnect()
+		e.cashConn = nil
+	end
+	if e.cashPart then
+		pcall(function()
+			e.cashPart:Destroy()
+		end)
+		e.cashPart = nil
+	end
+end
+
+local function buildCashpad(e, pods)
+	destroyCashpad(e)
+	local pod = podium(e.slot, pods)
+	local claim = pod and pod.folder:FindFirstChild("Claim")
+	local main = claim and claim:FindFirstChild("Main")
+	local hit = claim and claim:FindFirstChild("Hitbox")
+	local foc = RS:FindFirstChild("Controllers") and RS.Controllers:FindFirstChild("FastOverheadController")
+	local tmpl = foc and foc:FindFirstChild("CashPad")
+	if not (main and tmpl) then
+		return
+	end
+	local part = Instance.new("Part")
+	part.Name = "InfinCashPad"
+	part.Size = Vector3.new(5, 3, 0.1)
+	part.Transparency = 1
+	part.Anchored = true
+	part.CanCollide = false
+	part.CanQuery = false
+	part.CanTouch = false
+	part.CastShadow = false
+	part.Parent = workspace
+	local gui = tmpl:Clone()
+	gui.Adornee = part
+	gui.SizingMode = Enum.SurfaceGuiSizingMode.FixedSize
+	gui.MaxDistance = 72
+	gui.Parent = part
+	local amtL = gui:FindFirstChild("CollectAmount", true)
+	local colL = gui:FindFirstChild("Collect", true)
+	local offL = gui:FindFirstChild("Offline", true)
+	if colL then
+		colL.Visible = true
+	end
+	local function showOffline()
+		if not offL then
+			return
+		end
+		if (e.offline or 0) > 0 then
+			offL.RichText = true
+			offL.Text = '(Offline Cash: <font color="#39FF14">$' .. fmt(e.offline) .. "</font>)"
+			offL.Visible = true
+		else
+			offL.Visible = false
+		end
+	end
+	showOffline()
+	if amtL then
+		amtL.Text = "$" .. fmt(e.cash or 0)
+	end
+	e.cashPart = part
+	local lastTick, lastDisplay, wasOn = tick(), tick(), false
+	local mult, multAt = plotMultiplier(), tick()
+	e.cashConn = RunService.Heartbeat:Connect(function()
+		local now = tick()
+		local dt = now - lastTick
+		lastTick = now
+		if now - multAt > 2 then
+			mult, multAt = plotMultiplier(), now
+		end
+		e.cash = (e.cash or 0) + e.gen * mult * dt
+		local hrp = LP.Character and LP.Character:FindFirstChild("HumanoidRootPart")
+		if hrp and hit then
+			local on = (hrp.Position - hit.Position).Magnitude < 5
+			if on and not wasOn then
+				e.cash, e.offline = 0, 0
+				lastDisplay = now
+				if amtL then
+					amtL.Text = "$0"
+				end
+				showOffline()
+				playSfx("Sounds.Sfx.Cashout")
+			end
+			wasOn = on
+		end
+		if now - lastDisplay >= 1 then
+			lastDisplay = now
+			if amtL then
+				amtL.Text = "$" .. fmt(e.cash)
+			end
+		end
+		local cam = workspace.CurrentCamera
+		local pos = main.Position + Vector3.new(0, 2.41, 0)
+		part.CFrame = CFrame.lookAt(pos, pos - cam.CFrame.LookVector)
+		local d = (cam.CFrame.Position - pos).Magnitude
+		gui.CanvasSize = d < 40 and Vector2.new(200, 120) or d < 72 and Vector2.new(100, 60) or Vector2.new(0, 0)
+	end)
+end
+
+local function sellText(e)
+	local info = animalByName[e.name]
+	local price = info and info.price or 0
+	return price > 0 and ("Sell: $" .. fmt(price / 2)) or "Sell"
+end
+
+local function setPrompt(p, action, object, state, enabled)
+	p.ActionText = action
+	p.ObjectText = object
+	p:SetAttribute("State", state)
+	p.Enabled = enabled
+end
+
+local startCarry, placeAt, removeEntry
+
+local function refreshSlot(key, pods)
+	local pod = podium(key, pods)
+	if not pod or not pod.att then
+		return
+	end
+	if slotConns[key] then
+		for _, c in ipairs(slotConns[key]) do
+			c:Disconnect()
+		end
+	end
+	slotConns[key] = {}
+	local e = slotMap[key]
+	local server = serverOccupied(key)
+	if server and not e then
+		return 
+	end
+	if not e and not carrying then
+		if touched[key] then
+			for _, p in ipairs(pod.att:GetChildren()) do
+				if p:IsA("ProximityPrompt") then
+					setPrompt(p, "Interact", "", "None", false)
+				end
+			end
+			touched[key] = nil
+		end
+		return
+	end
+	touched[key] = true
+	for _, p in ipairs(pod.att:GetChildren()) do
+		if p:IsA("ProximityPrompt") then
+			if p.KeyboardKeyCode == Enum.KeyCode.E then
+				if carrying then
+					setPrompt(p, "Place", e and e.name or "", "None", true)
+					table.insert(
+						slotConns[key],
+						p.Triggered:Connect(function()
+							placeAt(key)
+						end)
+					)
+				else
+					setPrompt(p, "Grab", e.name, "Grab", true)
+					table.insert(
+						slotConns[key],
+						p.Triggered:Connect(function()
+							if not carrying and slotMap[key] == e then
+								startCarry(e)
+							end
+						end)
+					)
+				end
+			elseif p.KeyboardKeyCode == Enum.KeyCode.F then
+				if e and not carrying then
+					setPrompt(p, sellText(e), e.name, "Sell", true)
+					table.insert(
+						slotConns[key],
+						p.Triggered:Connect(function()
+							if slotMap[key] == e then
+								removeEntry(e)
+							end
+						end)
+					)
+				else
+					setPrompt(p, "Interact", "", "None", false)
+				end
+			end
+		end
+	end
+end
+
+local function refreshAll()
+	local pods = getPodiums()
+	for _, p in ipairs(pods) do
+		refreshSlot(p.key, pods)
+	end
+end
+
+local function endCarryVisuals()
+	if carryConn then
+		carryConn:Disconnect()
+		carryConn = nil
+	end
+	if carryTrack then
+		pcall(function()
+			carryTrack:Stop()
+		end)
+		carryTrack = nil
+	end
+	if carryGhost then
+		pcall(function()
+			carryGhost:Destroy()
+		end)
+		carryGhost = nil
+	end
+	if carrySpeed then
+		pcall(function()
+			LP.Character:FindFirstChildOfClass("Humanoid").WalkSpeed = carrySpeed
+		end)
+		carrySpeed = nil
+	end
+	if carrying and carrying.ohGui then
+		carrying.ohGui.Enabled = true
+	end
+end
+
+local function makeGhost(e, pod)
+	local ok, g = pcall(function()
+		return e.model:Clone()
+	end)
+	if not ok or not g then
+		return nil
+	end
+	g.Name = "InfinCarryGhost"
+	local root = g.PrimaryPart or g:FindFirstChild("RootPart")
+	for _, d in ipairs(g:GetDescendants()) do
+		if d:IsA("BasePart") then
+			local vfx = d.Name == "VfxInstance" or d.Name == "FakeRootPart" or (d.Parent and d.Parent.Name == "VfxInstance")
+			if d == root or d.Name == "RootPart" or d.Name == "HumanoidRootPart" or vfx then
+				d.Transparency = 1
+			else
+				d.Transparency = math.min(d.Transparency + 0.6, 0.85)
+			end
+			d.CastShadow = false
+			d.Anchored = true
+		elseif d:IsA("Attachment") and d.Name == "OVERHEAD_ATTACHMENT" then
+			d:Destroy()
+		end
+	end
+	g:PivotTo(pod.spawn:GetPivot())
+	g.Parent = workspace.CurrentCamera
+	return g
+end
+
+startCarry = function(e)
+	local hrp = LP.Character and LP.Character:FindFirstChild("HumanoidRootPart")
+	if not hrp then
+		return
+	end
+	carrying, carryOrigin = e, e.slot
+	slotMap[e.slot] = nil
+	if e.ohGui then
+		e.ohGui.Enabled = false 
+	end
+	local originPod = podium(e.slot)
+	if originPod then
+		carryGhost = makeGhost(e, originPod)
+	end
+	pcall(function()
+		local hum = LP.Character:FindFirstChildOfClass("Humanoid")
+		carrySpeed = hum.WalkSpeed
+		hum.WalkSpeed = 20.1
+		hum:UnequipTools()
+		local anim = RS.Animations.Player:FindFirstChild("Carry")
+		local animator = hum:FindFirstChildOfClass("Animator")
+		if anim and animator then
+			carryTrack = animator:LoadAnimation(anim)
+			carryTrack.Looped = true
+			carryTrack:Play()
+			carryTrack:AdjustSpeed(1.5)
+		end
+	end)
+	carryConn = RunService.Heartbeat:Connect(function()
+		if not e.model.Parent or not hrp.Parent then
+			return
+		end
+		e.model:PivotTo(hrp.CFrame * CFrame.new(0, 0.5, -4))
+	end)
+	refreshAll()
+end
+
+local function returnCarried()
+	local e = carrying
+	if not e then
+		return
+	end
+	endCarryVisuals()
+	carrying = nil
+	local pods = getPodiums()
+	local key = carryOrigin
+	if slotMap[key] or serverOccupied(key) then
+		key = nil
+		for _, p in ipairs(pods) do
+			if not slotMap[p.key] and not serverOccupied(p.key) then
+				key = p.key
+				break
+			end
+		end
+	end
+	carryOrigin = nil
+	local pod = key and podium(key, pods)
+	if pod then
+		local moved = e.slot ~= key
+		e.slot = key
+		slotMap[key] = e
+		e.model:PivotTo(pod.spawn:GetPivot())
+		if moved then
+			buildCashpad(e, pods)
+		end
+	else
+		removeEntry(e)
+	end
+	refreshAll()
+end
+
+placeAt = function(key)
+	local e = carrying
+	if not e then
+		return
+	end
+	local pods = getPodiums()
+	local pod = podium(key, pods)
+	if not pod then
+		return
+	end
+	endCarryVisuals()
+	carrying = nil
+	local other = slotMap[key]
+	if other and other ~= e and carryOrigin then
+		local originPod = podium(carryOrigin, pods)
+		other.slot = carryOrigin
+		slotMap[carryOrigin] = other
+		if originPod then
+			other.model:PivotTo(originPod.spawn:GetPivot())
+		end
+		buildCashpad(other, pods)
+	end
+	carryOrigin = nil
+	local moved = e.slot ~= key
+	e.slot = key
+	slotMap[key] = e
+	e.model:PivotTo(pod.spawn:GetPivot())
+	if moved then
+		buildCashpad(e, pods)
+	end
+	playSfx("Sounds.Sfx.Place")
+	refreshAll()
+	scheduleSave()
+end
+
+removeEntry = function(e, skipSave)
+	if carrying == e then
+		endCarryVisuals()
+		carrying, carryOrigin = nil, nil
+	end
+	if e.ohConn then
+		e.ohConn:Disconnect()
+	end
+	destroyCashpad(e)
+	if e.overhead then
+		pcall(function()
+			e.overhead:Destroy()
+		end)
+	end
+	pcall(function()
+		e.model:Destroy()
+	end)
+	if slotMap[e.slot] == e then
+		slotMap[e.slot] = nil
+	end
+	for i, x in ipairs(entries) do
+		if x == e then
+			table.remove(entries, i)
+			break
+		end
+	end
+	refreshAll()
+	if onEntriesChanged then
+		onEntriesChanged()
+	end
+	if not skipSave then
+		scheduleSave()
+	end
+	if updateCount then
+		updateCount()
+	end
+end
+
+local function freeSlot(preferred, pods)
+	local cap = math.min(10 + rebirths(), #pods)
+	local function isFree(key)
+		return not slotMap[key] and not serverOccupied(key) and carryOrigin ~= key
+	end
+	if preferred then
+		for i = 1, cap do
+			if pods[i].key == preferred and isFree(preferred) then
+				return pods[i]
+			end
+		end
+	end
+	for i = 1, cap do
+		if isFree(pods[i].key) then
+			return pods[i]
+		end
+	end
+	return nil
+end
+
+local function spawnVisual(name, mutation, traits, preferredSlot, skipSave, opts)
+	if not getPlot() then
+		return false, "Couldn't find your plot"
+	end
+	local pods = getPodiums()
+	local pod = freeSlot(preferredSlot, pods)
+	if not pod then
+		return false, "All podium slots are full"
+	end
+	local model = acquireModel(name)
+	if not model then
+		return false, "Model not found: " .. name
+	end
+	local root = model.PrimaryPart or model:FindFirstChild("RootPart")
+	for _, p in ipairs(model:GetDescendants()) do
+		if p:IsA("BasePart") then
+			p.CanCollide = false
+			p.CanQuery = false
+			p.CanTouch = false
+			p.Massless = true
+			if not root then
+				p.Anchored = true
+			end
+		end
+	end
+	if root then
+		root.Anchored = true
+	end
+	model:SetAttribute("InfinVisual", true)
+	model.Parent = workspace
+	model:PivotTo(pod.spawn:GetPivot())
+	local height = model:GetExtentsSize().Y
+	applyMutation(model, name, mutation)
+	applyTraits(model, name, traits)
+	playIdle(model, name)
+
+	local e = {
+		name = name,
+		mutation = mutation,
+		traits = traits,
+		slot = pod.key,
+		model = model,
+		height = height,
+		gen = calcGen(name, mutation, traits),
+		cash = opts and tonumber(opts.cash) or 0,
+		offline = opts and tonumber(opts.offline) or 0,
+	}
+	table.insert(entries, e)
+	slotMap[pod.key] = e
+	pcall(buildOverhead, e)
+	pcall(buildCashpad, e, pods)
+	refreshSlot(pod.key, pods)
+	if onSpawned then
+		task.spawn(onSpawned, e)
+	end
+	if not skipSave then
+		scheduleSave()
+	end
+	if updateCount then
+		updateCount()
+	end
+	return true
+end
+
+local function clearAll()
+	for i = #entries, 1, -1 do
+		removeEntry(entries[i], true)
+	end
+	scheduleSave()
+end
+
+track(LP.CharacterAdded:Connect(function()
+	if carrying then
+		task.delay(0.5, returnCarried)
+	end
+end))
+
+task.spawn(function()
+	while alive() do
+		task.wait(0.5)
+		local pods
+		local taken = {}
+		for key, e in pairs(slotMap) do
+			if serverOccupied(key) then
+				table.insert(taken, { key = key, e = e })
+			end
+		end
+		for _, t in ipairs(taken) do
+			local key, e = t.key, t.e
+			if slotMap[key] == e then
+				pods = pods or getPodiums()
+				slotMap[key] = nil
+				local pod = freeSlot(nil, pods)
+				if pod then
+					e.slot = pod.key
+					slotMap[pod.key] = e
+					e.model:PivotTo(pod.spawn:GetPivot())
+					buildCashpad(e, pods)
+					refreshSlot(key, pods)
+					refreshSlot(pod.key, pods)
+					if notify then
+						notify(e.name .. " moved — a real brainrot took its slot", T.Accent2)
+					end
+				else
+					e.slot = -1
+					removeEntry(e)
+					if notify then
+						notify(e.name .. " removed — base is full of real brainrots", T.Warn)
+					end
+				end
+				scheduleSave()
+			end
+		end
+	end
+end)
+
+task.spawn(function()
+	while alive() do
+		task.wait(0.5)
+		if not carrying then
+			local pods = getPodiums()
+			for key, e in pairs(slotMap) do
+				local pod = podium(key, pods)
+				if pod and pod.att then
+					for _, p in ipairs(pod.att:GetChildren()) do
+						if p:IsA("ProximityPrompt") and not p.Enabled then
+							if p.KeyboardKeyCode == Enum.KeyCode.E or p.KeyboardKeyCode == Enum.KeyCode.F then
+								p.Enabled = true
+							end
+						end
+					end
+				end
+			end
+		end
+	end
+end)
+
+local Skin = { clone = nil, name = nil, hidden = {}, conn = nil }
+local NEVER_HIDE = {}
+for _, n in ipairs({
+	"Spawn",
+	"MainRoot",
+	"Hitbox",
+	"AnimalPodiums",
+	"Claim",
+	"Multiplier",
+	"DeliveryBox",
+	"DeliveryHitbox",
+	"CollectZone",
+	"Laser",
+	"LaserHitbox",
+	"StealHitbox",
+	"PlotBlock",
+	"FriendPanel",
+	"CashPad",
+}) do
+	NEVER_HIDE[n] = true
+end
+
+local function protected(obj, plot)
+	local p = obj.Parent
+	while p and p ~= plot do
+		if NEVER_HIDE[p.Name] or p:FindFirstChildOfClass("Humanoid") then
+			return true
+		end
+		p = p.Parent
+	end
+	return false
+end
+
+local function hidePart(obj, plot)
+	if obj:IsA("BasePart") and not NEVER_HIDE[obj.Name] and obj.Transparency < 1 and not protected(obj, plot) then
+		Skin.hidden[obj] = obj.LocalTransparencyModifier
+		obj.LocalTransparencyModifier = 1
+	end
+end
+
+function Skin.selectorButton()
+	local pg = LP:FindFirstChild("PlayerGui")
+	local scroll = pg and pg:FindFirstChild("Settings")
+	for _, n in ipairs({ "Settings", "Content", "ScrollingFrame" }) do
+		scroll = scroll and scroll:FindFirstChild(n)
+	end
+	local row = scroll and scroll:FindFirstChild("Base Skin")
+	return row and row:FindFirstChild("Button")
+end
+
+function Skin.syncSelector()
+	local btn = Skin.selectorButton()
+	if not btn then
+		return
+	end
+	local label = btn:FindFirstChild("Text")
+	label = (label and label:IsA("TextLabel")) and label or btn:FindFirstChildWhichIsA("TextLabel", true)
+	local st = btn:FindFirstChildOfClass("UIStroke")
+	if Skin.selOrig == nil or Skin.selOrig.btn ~= btn then
+		Skin.selOrig = {
+			btn = btn,
+			bg = btn.BackgroundColor3,
+			stroke = st and st.Color,
+			text = label and label.Text,
+		}
+	end
+	local o = Skin.selOrig
+	if Skin.name then
+		local c
+		for key, col in pairs(Skin.COLORS) do
+			if Skin.name:lower():find(key:lower(), 1, true) then
+				c = col
+			end
+		end
+		if c then
+			btn.BackgroundColor3 = c
+			if st then
+				st.Color = c:Lerp(Color3.new(0, 0, 0), 0.15)
+			end
+		end
+		if label and label.Text ~= Skin.name then
+			label.Text = Skin.name
+		end
+	else
+		btn.BackgroundColor3 = o.bg
+		if st and o.stroke then
+			st.Color = o.stroke
+		end
+		if label and o.text then
+			label.Text = o.text
+		end
+		Skin.selOrig = nil
+	end
+end
+
+task.spawn(function()
+	while alive() do
+		if Skin.name then
+			pcall(Skin.syncSelector)
+		end
+		task.wait(0.25)
+	end
+end)
+
+local function clearSkin()
+	if Skin.conn then
+		Skin.conn:Disconnect()
+		Skin.conn = nil
+	end
+	if Skin.clone then
+		pcall(function()
+			Skin.clone:Destroy()
+		end)
+		Skin.clone = nil
+	end
+	for obj, v in pairs(Skin.hidden) do
+		if obj.Parent then
+			pcall(function()
+				obj.LocalTransparencyModifier = v
+			end)
+		end
+	end
+	Skin.hidden = {}
+	Skin.name = nil
+	pcall(Skin.syncSelector)
+end
+
+Skin.PACK_URL = "https://files.catbox.moe/gsqcuv.rbxmx"
+Skin.PACK_FILE = "infin_bases.rbxmx"
+Skin.COLORS = {
+	Skibidi = Color3.fromRGB(255, 255, 255),
+	Headless = Color3.fromRGB(126, 68, 227),
+	Meowl = Color3.fromRGB(255, 255, 20),
+	Strawberry = Color3.fromRGB(207, 59, 63),
+	Christmas = Color3.fromRGB(255, 67, 67),
+	Galaxy = Color3.fromRGB(130, 60, 255),
+	Rainbow = Color3.fromRGB(255, 100, 150),
+	Valentines = Color3.fromRGB(227, 100, 187),
+	["Bunny Basket"] = Color3.fromRGB(168, 224, 108),
+	Divine = Color3.fromRGB(255, 209, 59),
+	Cursed = Color3.fromRGB(245, 56, 56),
+	Cyber = Color3.fromRGB(80, 200, 255),
+	["John Pork"] = Color3.fromRGB(255, 143, 179),
+}
+
+function Skin.sanitize(root)
+	local removed = 0
+	for _, d in ipairs(root:GetDescendants()) do
+		if d:IsA("LuaSourceContainer") then
+			pcall(function()
+				d:Destroy()
+			end)
+			removed += 1
+		end
+	end
+	return removed
+end
+
+function Skin.loadPack()
+	if Skin.pack then
+		return Skin.pack
+	end
+	if Skin.packLoading then
+		while Skin.packLoading do
+			task.wait(0.1)
+		end
+		return Skin.pack
+	end
+	Skin.packLoading = true
+	local ok, err = pcall(function()
+		if typeof(isfile) ~= "function" or typeof(writefile) ~= "function" then
+			error("your executor can't save files")
+		end
+		if not isfile(Skin.PACK_FILE) then
+			local data = game:HttpGet(Skin.PACK_URL)
+			if type(data) ~= "string" or #data < 100 or not data:find("<roblox", 1, true) then
+				error("download failed")
+			end
+			writefile(Skin.PACK_FILE, data)
+		end
+		local objs
+		local getters = {}
+		if typeof(getcustomasset) == "function" then
+			table.insert(getters, getcustomasset)
+		end
+		if typeof(getsynasset) == "function" then
+			table.insert(getters, getsynasset)
+		end
+		for _, getter in ipairs(getters) do
+			if not objs or #objs == 0 then
+				local okA, url = pcall(getter, Skin.PACK_FILE)
+				if okA and type(url) == "string" then
+					pcall(function()
+						objs = game:GetObjects(url)
+					end)
+				end
+			end
+		end
+		if not objs or #objs == 0 then
+			error("your executor can't load model files")
+		end
+		local holder = Instance.new("Folder")
+		holder.Name = "InfinBasePack"
+		for _, o in ipairs(objs) do
+			if typeof(o) == "Instance" then
+				if o:IsA("LuaSourceContainer") then
+					o:Destroy()
+				else
+					Skin.sanitize(o)
+					o.Parent = holder
+				end
+			end
+		end
+		Skin.sanitize(holder)
+		Skin.pack = holder 
+	end)
+	Skin.packLoading = false
+	if not ok then
+		Skin.packError = tostring(err):gsub("^.-:%d+: ", "")
+	end
+	return Skin.pack
+end
+
+local function findSkins()
+	local byName, names = {}, {}
+	local function scan(root)
+		for _, d in ipairs(root:GetDescendants()) do
+			if
+				(d:IsA("Model") or d:IsA("Folder"))
+				and not byName[d.Name]
+				and (d:FindFirstChild("FirstFloor") or d:FindFirstChild("SecondFloor") or d:FindFirstChild("ThirdFloor"))
+			then
+				byName[d.Name] = d
+				table.insert(names, d.Name)
+			end
+		end
+	end
+	if Skin.pack then
+		scan(Skin.pack)
+	end
+	scan(RS)
+	table.sort(names, function(a, b)
+		return a:lower() < b:lower()
+	end)
+	return names, byName
+end
+
+local function applySkin(name)
+	local _, byName = findSkins()
+	local entry = byName[name]
+	if not entry and not Skin.pack then
+		Skin.loadPack()
+		_, byName = findSkins()
+		entry = byName[name]
+	end
+	if not entry then
+		return false, Skin.packError and ("Base pack: " .. Skin.packError) or ("Base not found: " .. name)
+	end
+	local plot = getPlot()
+	if not plot then
+		return false, "Couldn't find your plot"
+	end
+	local plotRoot = plot:FindFirstChild("MainRoot") or plot:FindFirstChild("Spawn")
+	if not plotRoot then
+		return false, "Plot root not found"
+	end
+	local r = rebirths()
+	local floorName = r >= 10 and "ThirdFloor" or r >= 2 and "SecondFloor" or "FirstFloor"
+	local floor = entry:FindFirstChild(floorName)
+		or entry:FindFirstChild("ThirdFloor")
+		or entry:FindFirstChild("SecondFloor")
+		or entry:FindFirstChild("FirstFloor")
+	clearSkin()
+
+	local clone = floor:Clone()
+	clone.Name = "InfinBaseSkin"
+	local hasSkinSign = clone:FindFirstChild("SkinPlotSign", true) ~= nil
+	for _, d in ipairs(clone:GetDescendants()) do
+		local n = d.Name
+		if
+			d:IsA("ProximityPrompt")
+			or d:IsA("PathfindingModifier")
+			or NEVER_HIDE[n]
+			or n == "YourBase"
+			or (n == "PlotSign" and hasSkinSign)
+		then
+			pcall(function()
+				d:Destroy()
+			end)
+		end
+	end
+	for _, d in ipairs(clone:GetDescendants()) do
+		if d:IsA("BasePart") then
+			d.Anchored = true
+			d.CanCollide = false
+			d.CanQuery = false
+			d.CanTouch = false
+		elseif d:IsA("TextLabel") then
+			pcall(function()
+				d.Text = d.Text:gsub("{playerName}", LP.DisplayName)
+			end)
+		end
+	end
+	clone.Parent = workspace
+
+	local skinRoot = clone:FindFirstChild("Root", true)
+	local refCF
+	if skinRoot and skinRoot:IsA("BasePart") then
+		refCF = skinRoot.CFrame
+	else
+		local minX, minZ, maxX, maxZ, groundY = math.huge, math.huge, -math.huge, -math.huge, math.huge
+		for _, p in ipairs(clone:GetDescendants()) do
+			if p:IsA("BasePart") then
+				local pos, half = p.Position, p.Size / 2
+				minX, minZ = math.min(minX, pos.X - half.X), math.min(minZ, pos.Z - half.Z)
+				maxX, maxZ = math.max(maxX, pos.X + half.X), math.max(maxZ, pos.Z + half.Z)
+				if p.Size.X * p.Size.Z > 100 then
+					groundY = math.min(groundY, pos.Y - p.Size.Y * 0.15)
+				end
+			end
+		end
+		if minX ~= math.huge then
+			refCF = CFrame.new((minX + maxX) / 2, groundY == math.huge and 0 or groundY, (minZ + maxZ) / 2)
+		end
+	end
+	if refCF then
+		local offset = plotRoot.CFrame * refCF:Inverse()
+		for _, p in ipairs(clone:GetDescendants()) do
+			if p:IsA("BasePart") then
+				p.CFrame = offset * p.CFrame
+			end
+		end
+		if skinRoot then
+			skinRoot:Destroy()
+		end
+	end
+
+	for _, d in ipairs(plot:GetDescendants()) do
+		hidePart(d, plot)
+	end
+	Skin.conn = plot.DescendantAdded:Connect(function(d)
+		task.defer(hidePart, d, plot)
+	end)
+	Skin.clone, Skin.name = clone, name
+	pcall(Skin.syncSelector)
+	return true
+end
+
+local SKIN_REQUIREMENT = {
+	Skibidi = "Skibidi Toilet",
+	Headless = "Headless Horseman",
+	Meowl = "Meowl",
+	Strawberry = "Strawberry Elephant",
+	["John Pork"] = "John Pork",
+}
+local function skinRequirement(skinName)
+	local low = skinName:lower()
+	for key, brainrot in pairs(SKIN_REQUIREMENT) do
+		if low:find(key:lower(), 1, true) then
+			return brainrot
+		end
+	end
+	return nil
+end
+local function skinForBrainrot(brainrot)
+	Skin.loadPack()
+	local names = findSkins()
+	for _, n in ipairs(names) do
+		if skinRequirement(n) == brainrot then
+			return n
+		end
+	end
+	return nil
+end
+local function ownsBrainrot(name)
+	for _, e in ipairs(entries) do
+		if e.name == name then
+			return true
+		end
+	end
+	local ok, found = pcall(function()
+		local pods = syncChannel and syncChannel:Get("AnimalPodiums") or {}
+		for _, v in pairs(pods) do
+			if (type(v) == "table" and v.Index == name) or v == name then
+				return true
+			end
+		end
+		return false
+	end)
+	return ok and found or false
+end
+
+local autoSkinFor = nil 
+onSpawned = function(e)
+	if not settings.autoOgSkin then
+		return
+	end
+	local req = nil
+	for _, b in pairs(SKIN_REQUIREMENT) do
+		if b == e.name then
+			req = b
+		end
+	end
+	if not req or (Skin.name and not autoSkinFor) then
+		return 
+	end
+	local skin = skinForBrainrot(e.name)
+	if not skin then
+		if notify then
+			notify(e.name .. " base isn't loaded in this server", T.Warn)
+		end
+		return
+	end
+	if Skin.name ~= skin and applySkin(skin) then
+		autoSkinFor = e.name
+		if _G.__InfinSkinLabel then
+			_G.__InfinSkinLabel.Text = "Active: " .. skin
+		end
+		if notify then
+			notify(skin .. " base unlocked", T.Good)
+		end
+		scheduleSave()
+	end
+end
+onEntriesChanged = function()
+	if autoSkinFor and not ownsBrainrot(autoSkinFor) then
+		clearSkin()
+		autoSkinFor = nil
+		if _G.__InfinSkinLabel then
+			_G.__InfinSkinLabel.Text = "Active: none"
+		end
+	end
+end
+
+local hasFiles = typeof(writefile) == "function" and typeof(readfile) == "function" and typeof(isfile) == "function"
+local saved = nil
+if hasFiles then
+	pcall(function()
+		if isfile(SAVE_FILE) then
+			saved = HttpService:JSONDecode(readfile(SAVE_FILE))
+		end
+	end)
+end
+if type(saved) == "table" and type(saved.settings) == "table" then
+	for k, v in pairs(saved.settings) do
+		if settings[k] ~= nil or k == "windowPos" or k == "baseSkin" then
+			settings[k] = v
+		end
+	end
+	pcall(function()
+		local _ = Enum.KeyCode[settings.toggleKey]
+	end)
+	if not pcall(function()
+		return Enum.KeyCode[settings.toggleKey]
+	end) then
+		settings.toggleKey = "RightControl"
+	end
+end
+
+local function saveNow()
+	if not hasFiles then
+		return
+	end
+	local list = {}
+	for _, e in ipairs(entries) do
+		table.insert(list, {
+			name = e.name,
+			mutation = e.mutation,
+			traits = e.traits,
+			slot = e.slot,
+			cash = math.floor(e.cash or 0),
+		})
+	end
+	settings.baseSkin = Skin.name
+	pcall(function()
+		writefile(
+			SAVE_FILE,
+			HttpService:JSONEncode({ version = 2, settings = settings, spawns = list, savedAt = os.time() })
+		)
+	end)
+end
+local savePending = false
+scheduleSave = function()
+	if savePending then
+		return
+	end
+	savePending = true
+	task.delay(0.5, function()
+		savePending = false
+		saveNow()
+	end)
+end
+
+local function new(class, props, children)
+	local o = Instance.new(class)
+	local parent
+	for k, v in pairs(props or {}) do
+		if k == "Parent" then
+			parent = v
+		else
+			o[k] = v
+		end
+	end
+	for _, c in ipairs(children or {}) do
+		c.Parent = o
+	end
+	if parent then
+		o.Parent = parent
+	end
+	return o
+end
+local function corner(p, r)
+	return new("UICorner", { CornerRadius = UDim.new(0, r or 8), Parent = p })
+end
+local function stroke(p, color, th, tr)
+	return new("UIStroke", {
+		Color = color or T.Stroke,
+		Thickness = th or 1,
+		Transparency = tr or 0,
+		ApplyStrokeMode = Enum.ApplyStrokeMode.Border,
+		Parent = p,
+	})
+end
+local function padding(p, l, r, t, b)
+	return new("UIPadding", {
+		PaddingLeft = UDim.new(0, l or 0),
+		PaddingRight = UDim.new(0, r or l or 0),
+		PaddingTop = UDim.new(0, t or 0),
+		PaddingBottom = UDim.new(0, b or t or 0),
+		Parent = p,
+	})
+end
+local function list(p, gap, dir)
+	return new("UIListLayout", {
+		Padding = UDim.new(0, gap or 6),
+		FillDirection = dir or Enum.FillDirection.Vertical,
+		SortOrder = Enum.SortOrder.LayoutOrder,
+		Parent = p,
+	})
+end
+local function tween(o, t, props, style, dir)
+	local tw = TweenService:Create(
+		o,
+		TweenInfo.new(t, style or Enum.EasingStyle.Quint, dir or Enum.EasingDirection.Out),
+		props
+	)
+	tw:Play()
+	return tw
+end
+
+local function animate(btn, getBase, hoverColor)
+	btn.AutoButtonColor = false
+	local sc = new("UIScale", { Parent = btn })
+	local function base()
+		return type(getBase) == "function" and getBase() or getBase
+	end
+	btn.MouseEnter:Connect(function()
+		tween(btn, 0.15, { BackgroundColor3 = hoverColor or base():Lerp(Color3.new(1, 1, 1), 0.1) })
+	end)
+	btn.MouseLeave:Connect(function()
+		tween(btn, 0.2, { BackgroundColor3 = base() })
+		tween(sc, 0.2, { Scale = 1 })
+	end)
+	btn.ClipsDescendants = true
+	btn.MouseButton1Down:Connect(function()
+		tween(sc, 0.08, { Scale = 0.95 })
+		local r = Instance.new("Frame")
+		r.AnchorPoint = Vector2.new(0.5, 0.5)
+		r.Position = UDim2.fromScale(0.5, 0.5)
+		r.SizeConstraint = Enum.SizeConstraint.RelativeXX
+		r.Size = UDim2.fromScale(0, 0)
+		r.BackgroundColor3 = Color3.new(1, 1, 1)
+		r.BackgroundTransparency = 0.75
+		r.BorderSizePixel = 0
+		r.ZIndex = btn.ZIndex + 5
+		local rc = Instance.new("UICorner")
+		rc.CornerRadius = UDim.new(1, 0)
+		rc.Parent = r
+		r.Parent = btn
+		tween(r, 0.5, { Size = UDim2.fromScale(1.6, 1.6), BackgroundTransparency = 1 }, Enum.EasingStyle.Quad)
+		task.delay(0.55, function()
+			r:Destroy()
+		end)
+	end)
+	btn.MouseButton1Up:Connect(function()
+		tween(sc, 0.3, { Scale = 1 }, Enum.EasingStyle.Back)
+	end)
+	return sc
+end
+
+local function accentGradient(p, rot)
+	return new("UIGradient", {
+		Color = ColorSequence.new(T.Accent, T.Accent2),
+		Rotation = rot or 0,
+		Parent = p,
+	})
+end
+
+local function makeDraggable(handle, target, onEnd)
+	local dragging, startInput, startPos
+	handle.InputBegan:Connect(function(i)
+		if i.UserInputType == Enum.UserInputType.MouseButton1 or i.UserInputType == Enum.UserInputType.Touch then
+			dragging, startInput, startPos = true, i.Position, target.Position
+			local c
+			c = i.Changed:Connect(function()
+				if i.UserInputState == Enum.UserInputState.End then
+					dragging = false
+					c:Disconnect()
+					if onEnd then
+						onEnd()
+					end
+				end
+			end)
+		end
+	end)
+	track(UIS.InputChanged:Connect(function(i)
+		if
+			dragging
+			and (i.UserInputType == Enum.UserInputType.MouseMovement or i.UserInputType == Enum.UserInputType.Touch)
+		then
+			local d = i.Position - startInput
+			target.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + d.X, startPos.Y.Scale, startPos.Y.Offset + d.Y)
+		end
+	end))
+end
+
+local function guiParent()
+	if typeof(gethui) == "function" then
+		local ok, h = pcall(gethui)
+		if ok and h then
+			return h
+		end
+	end
+	local ok = pcall(function()
+		return CoreGui.Name
+	end)
+	return ok and CoreGui or LP:WaitForChild("PlayerGui")
+end
+local parentGui = guiParent()
+local old = parentGui:FindFirstChild("InfinVisuals")
+if old then
+	old:Destroy()
+end
+
+local sg = new("ScreenGui", {
+	Name = "InfinVisuals",
+	ResetOnSpawn = false,
+	IgnoreGuiInset = true,
+	ZIndexBehavior = Enum.ZIndexBehavior.Sibling,
+	DisplayOrder = 5000,
+	Parent = parentGui,
+})
+
+local WIN_W, WIN_H, TITLE_H = 340, 450, 50
+
+local MAX_W, MAX_H = 340, 450
+local minimized = false
+
+local holder = new("Frame", {
+	Name = "Holder",
+	Size = UDim2.fromOffset(WIN_W, WIN_H),
+	AnchorPoint = Vector2.new(0.5, 0.5),
+	Position = UDim2.fromScale(0.5, 0.5),
+	BackgroundTransparency = 1,
+	Parent = sg,
+})
+local scaleObj = new("UIScale", { Parent = holder })
+local baseScale, pop = 1, new("NumberValue", { Value = 1 })
+local function applyScale()
+	scaleObj.Scale = baseScale * pop.Value
+end
+pop.Changed:Connect(applyScale)
+local function refreshScale()
+	local cam = workspace.CurrentCamera
+	if not cam then
+		return
+	end
+	local vp = cam.ViewportSize
+	if TOUCH then
+		baseScale = math.clamp(math.min(vp.X, vp.Y) / 520, 0.6, 0.85)
+	else
+		baseScale = math.clamp(math.min(vp.X / (MAX_W + 40), vp.Y / (MAX_H + 60)), 0.6, 0.9)
+	end
+	WIN_W = math.floor(math.min(MAX_W, (vp.X - 24) / baseScale))
+	WIN_H = math.floor(math.min(MAX_H, (vp.Y - 24) / baseScale))
+	holder.Size = UDim2.fromOffset(WIN_W, minimized and TITLE_H or WIN_H)
+	applyScale()
+end
+refreshScale()
+track(workspace.CurrentCamera:GetPropertyChangedSignal("ViewportSize"):Connect(refreshScale))
+
+new("ImageLabel", {
+	Size = UDim2.new(1, 60, 1, 60),
+	Position = UDim2.fromOffset(-30, -30),
+	BackgroundTransparency = 1,
+	Image = "rbxassetid://6014261993",
+	ImageColor3 = Color3.new(0, 0, 0),
+	ImageTransparency = 0.45,
+	ScaleType = Enum.ScaleType.Slice,
+	SliceCenter = Rect.new(49, 49, 450, 450),
+	ZIndex = 0,
+	Parent = holder,
+})
+
+local win = new("Frame", {
+	Name = "Window",
+	Size = UDim2.fromScale(1, 1),
+	BackgroundColor3 = T.BG,
+	BackgroundTransparency = 0.28,
+	ClipsDescendants = true,
+	Parent = holder,
+})
+corner(win, 14)
+new("UIGradient", {
+	Color = ColorSequence.new(T.BG2, T.BG),
+	Rotation = 90,
+	Parent = win,
+})
+local winStroke = stroke(win, Color3.new(1, 1, 1), 1.5, 0)
+local strokeGrad = new("UIGradient", {
+	Color = ColorSequence.new({
+		ColorSequenceKeypoint.new(0, T.Accent),
+		ColorSequenceKeypoint.new(0.5, T.Accent2),
+		ColorSequenceKeypoint.new(1, T.Accent),
+	}),
+	Parent = winStroke,
+})
+
+local stars = new("Frame", { Size = UDim2.fromScale(1, 1), BackgroundTransparency = 1, ZIndex = 0, Parent = win })
+local starList = {}
+for _ = 1, 34 do
+	local s = math.random(1, 2)
+	local star = new("Frame", {
+		Size = UDim2.fromOffset(s, s),
+		Position = UDim2.fromScale(math.random(), math.random()),
+		BackgroundColor3 = Color3.new(1, 1, 1),
+		BackgroundTransparency = math.random(55, 92) / 100,
+		BorderSizePixel = 0,
+		ZIndex = 0,
+		Parent = stars,
+	})
+	corner(star, 2)
+	table.insert(starList, star)
+end
+
+do
+	local gloss = new("Frame", {
+		Size = UDim2.new(1, 0, 0.45, 0),
+		BackgroundColor3 = Color3.new(1, 1, 1),
+		BackgroundTransparency = 0.9,
+		BorderSizePixel = 0,
+		ZIndex = 0,
+		Parent = win,
+	})
+	corner(gloss, 14)
+	new("UIGradient", {
+		Rotation = 90,
+		Transparency = NumberSequence.new({
+			NumberSequenceKeypoint.new(0, 0.2),
+			NumberSequenceKeypoint.new(1, 1),
+		}),
+		Parent = gloss,
+	})
+	local sweep = new("Frame", {
+		Size = UDim2.new(0.35, 0, 1.6, 0),
+		Position = UDim2.new(-0.5, 0, -0.3, 0),
+		Rotation = 18,
+		BackgroundColor3 = Color3.new(1, 1, 1),
+		BackgroundTransparency = 0.88,
+		BorderSizePixel = 0,
+		ZIndex = 0,
+		Parent = win,
+	})
+	new("UIGradient", {
+		Transparency = NumberSequence.new({
+			NumberSequenceKeypoint.new(0, 1),
+			NumberSequenceKeypoint.new(0.5, 0),
+			NumberSequenceKeypoint.new(1, 1),
+		}),
+		Parent = sweep,
+	})
+	task.spawn(function()
+		while alive() and win.Parent do
+			sweep.Position = UDim2.new(-0.5, 0, -0.3, 0)
+			tween(sweep, 2.2, { Position = UDim2.new(1.2, 0, -0.3, 0) }, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut)
+			task.wait(6.5)
+		end
+	end)
+end
+
+local titleBar = new("Frame", {
+	Size = UDim2.new(1, 0, 0, TITLE_H),
+	BackgroundTransparency = 1,
+	Active = true,
+	Parent = win,
+})
+local logo = new("ImageLabel", {
+	Size = UDim2.fromOffset(32, 32),
+	Position = UDim2.fromOffset(14, 9),
+	BackgroundColor3 = T.Card,
+	Image = LOGO,
+	ScaleType = Enum.ScaleType.Crop,
+	Parent = titleBar,
+})
+corner(logo, 16)
+local logoStroke = stroke(logo, Color3.new(1, 1, 1), 1.5)
+accentGradient(logoStroke, 45)
+
+local title = new("TextLabel", {
+	Size = UDim2.fromOffset(120, 22),
+	Position = UDim2.fromOffset(56, 8),
+	BackgroundTransparency = 1,
+	Text = "INFIN",
+	Font = Enum.Font.GothamBlack,
+	TextSize = 20,
+	TextColor3 = Color3.new(1, 1, 1),
+	TextXAlignment = Enum.TextXAlignment.Left,
+	Parent = titleBar,
+})
+local titleShine = new("UIGradient", {
+	Color = ColorSequence.new({
+		ColorSequenceKeypoint.new(0, T.Accent),
+		ColorSequenceKeypoint.new(0.45, Color3.new(1, 1, 1)),
+		ColorSequenceKeypoint.new(0.55, Color3.new(1, 1, 1)),
+		ColorSequenceKeypoint.new(1, T.Accent2),
+	}),
+	Parent = title,
+})
+new("TextLabel", {
+	Size = UDim2.fromOffset(160, 14),
+	Position = UDim2.fromOffset(57, 29),
+	BackgroundTransparency = 1,
+	Text = "VISUALS  •  client-side",
+	Font = Enum.Font.GothamMedium,
+	TextSize = 10,
+	TextColor3 = T.Sub,
+	TextXAlignment = Enum.TextXAlignment.Left,
+	Parent = titleBar,
+})
+
+local TB = px(30)
+local function titleButton(text, x, hover)
+	local b = new("TextButton", {
+		Size = UDim2.fromOffset(TB, TB),
+		Position = UDim2.new(1, x, 0.5, -TB / 2),
+		BackgroundColor3 = T.Card,
+		Text = text,
+		Font = Enum.Font.GothamBold,
+		TextSize = 14,
+		TextColor3 = T.Text,
+		Parent = titleBar,
+	})
+	corner(b, 8)
+	stroke(b, T.Stroke)
+	animate(b, T.Card, hover)
+	return b
+end
+local minBtn = titleButton("–", -(TB * 2 + 18), T.CardHover)
+local closeBtn = titleButton("✕", -(TB + 12), T.Bad)
+
+new("Frame", {
+	Size = UDim2.new(1, -28, 0, 1),
+	Position = UDim2.fromOffset(14, TITLE_H),
+	BackgroundColor3 = Color3.new(1, 1, 1),
+	BackgroundTransparency = 0.6,
+	BorderSizePixel = 0,
+	Parent = win,
+}, { new("UIGradient", {
+	Color = ColorSequence.new(T.Accent, T.Accent2),
+	Transparency = NumberSequence.new({
+		NumberSequenceKeypoint.new(0, 1),
+		NumberSequenceKeypoint.new(0.5, 0),
+		NumberSequenceKeypoint.new(1, 1),
+	}),
+}) })
+
+makeDraggable(titleBar, holder)
+
+local body = new("Frame", {
+	Size = UDim2.new(1, 0, 1, -TITLE_H - 1),
+	Position = UDim2.fromOffset(0, TITLE_H + 1),
+	BackgroundTransparency = 1,
+	Parent = win,
+})
+
+local tabBar = new("Frame", {
+	Size = UDim2.new(1, -28, 0, 36),
+	Position = UDim2.fromOffset(14, 10),
+	BackgroundColor3 = T.Panel,
+	Parent = body,
+})
+corner(tabBar, 10)
+stroke(tabBar, T.Stroke)
+local indicator = new("Frame", {
+	Size = UDim2.new(1 / 3, -6, 1, -6),
+	Position = UDim2.new(0, 3, 0, 3),
+	BackgroundColor3 = Color3.new(1, 1, 1),
+	Parent = tabBar,
+})
+corner(indicator, 8)
+accentGradient(indicator, 0)
+
+local pagesHolder = new("Frame", {
+	Size = UDim2.new(1, -28, 1, -88),
+	Position = UDim2.fromOffset(14, 54),
+	BackgroundTransparency = 1,
+	ClipsDescendants = true,
+	Parent = body,
+})
+
+local footer = new("Frame", {
+	Size = UDim2.new(1, -28, 0, 22),
+	Position = UDim2.new(0, 14, 1, -28),
+	BackgroundTransparency = 1,
+	Parent = body,
+})
+local statusDot = new("Frame", {
+	Size = UDim2.fromOffset(8, 8),
+	Position = UDim2.new(0, 0, 0.5, -4),
+	BackgroundColor3 = T.Good,
+	Parent = footer,
+})
+corner(statusDot, 4)
+local statusLbl = new("TextLabel", {
+	Size = UDim2.new(1, -110, 1, 0),
+	Position = UDim2.fromOffset(14, 0),
+	BackgroundTransparency = 1,
+	Text = "Ready",
+	Font = Enum.Font.GothamMedium,
+	TextSize = 11,
+	TextColor3 = T.Sub,
+	TextXAlignment = Enum.TextXAlignment.Left,
+	TextTruncate = Enum.TextTruncate.AtEnd,
+	Parent = footer,
+})
+local countLbl = new("TextLabel", {
+	Size = UDim2.new(0, 100, 1, 0),
+	Position = UDim2.new(1, -100, 0, 0),
+	BackgroundTransparency = 1,
+	Text = "0 spawned",
+	Font = Enum.Font.GothamBold,
+	TextSize = 11,
+	TextColor3 = T.Sub,
+	TextXAlignment = Enum.TextXAlignment.Right,
+	Parent = footer,
+})
+
+local function makePage()
+	local p = new("ScrollingFrame", {
+		Size = UDim2.fromScale(1, 1),
+		BackgroundTransparency = 1,
+		BorderSizePixel = 0,
+		ScrollBarThickness = 3,
+		ScrollBarImageColor3 = T.Accent,
+		CanvasSize = UDim2.new(),
+		AutomaticCanvasSize = Enum.AutomaticSize.Y,
+		Visible = false,
+		Parent = pagesHolder,
+	})
+	list(p, 8)
+	padding(p, 0, 6, 2, 8)
+	return p
+end
+
+local pages, tabButtons, currentTab = {}, {}, nil
+local TAB_NAMES = { "Spawn", "Base", "Settings" }
+local function setTab(name)
+	if currentTab == name then
+		return
+	end
+	local idx = table.find(TAB_NAMES, name)
+	tween(indicator, 0.35, { Position = UDim2.new((idx - 1) / 3, 3, 0, 3) })
+	for n, b in pairs(tabButtons) do
+		tween(b, 0.25, { TextColor3 = n == name and Color3.new(1, 1, 1) or T.Sub })
+	end
+	local prevIdx = currentTab and table.find(TAB_NAMES, currentTab) or idx
+	local dir = idx >= prevIdx and 1 or -1
+	local prev = currentTab and pages[currentTab]
+	if prev then
+		local pv = prev
+		tween(pv, 0.25, { Position = UDim2.new(-0.35 * dir, 0, 0, 0) }).Completed:Connect(function()
+			if pages[currentTab] ~= pv then
+				pv.Visible = false
+			end
+		end)
+	end
+	local pg = pages[name]
+	pg.Position = UDim2.new(0.35 * dir, 0, 0, 0)
+	pg.Visible = true
+	tween(pg, 0.35, { Position = UDim2.new() })
+	local s = tabButtons[name]:FindFirstChildOfClass("UIScale") or new("UIScale", { Parent = tabButtons[name] })
+	s.Scale = 0.85
+	tween(s, 0.4, { Scale = 1 }, Enum.EasingStyle.Back)
+	currentTab = name
+end
+for i, name in ipairs(TAB_NAMES) do
+	pages[name] = makePage()
+	local b = new("TextButton", {
+		Size = UDim2.new(1 / 3, 0, 1, 0),
+		Position = UDim2.new((i - 1) / 3, 0, 0, 0),
+		BackgroundTransparency = 1,
+		Text = name:upper(),
+		Font = Enum.Font.GothamBold,
+		TextSize = 12,
+		TextColor3 = T.Sub,
+		ZIndex = 2,
+		Parent = tabBar,
+	})
+	b.MouseButton1Click:Connect(function()
+		setTab(name)
+	end)
+	tabButtons[name] = b
+end
+
+local toastHolder = new("Frame", {
+	Size = UDim2.fromOffset(300, 220),
+	AnchorPoint = Vector2.new(0.5, 0),
+	Position = UDim2.new(0.5, 0, 0, TOUCH and 56 or 18),
+	BackgroundTransparency = 1,
+	Parent = sg,
+})
+local toastLayout = list(toastHolder, 6)
+toastLayout.HorizontalAlignment = Enum.HorizontalAlignment.Center
+
+notify = function(text, color)
+	color = color or T.Accent
+	statusLbl.Text = text
+	tween(statusDot, 0.2, { BackgroundColor3 = color })
+	local t = new("Frame", {
+		Size = UDim2.new(1, 0, 0, 40),
+		BackgroundTransparency = 1,
+		Parent = toastHolder,
+	})
+	local card = new("Frame", {
+		Size = UDim2.fromScale(1, 1),
+		Position = UDim2.fromScale(0, -1.6),
+		BackgroundColor3 = T.Panel,
+		Parent = t,
+	})
+	corner(card, 10)
+	stroke(card, T.Stroke)
+	new("Frame", {
+		Size = UDim2.new(0, 4, 1, -14),
+		Position = UDim2.fromOffset(8, 7),
+		BackgroundColor3 = color,
+		BorderSizePixel = 0,
+		Parent = card,
+	}, { new("UICorner", { CornerRadius = UDim.new(0, 2) }) })
+	new("TextLabel", {
+		Size = UDim2.new(1, -30, 1, 0),
+		Position = UDim2.fromOffset(20, 0),
+		BackgroundTransparency = 1,
+		Text = text,
+		Font = Enum.Font.GothamMedium,
+		TextSize = 12,
+		TextColor3 = T.Text,
+		TextXAlignment = Enum.TextXAlignment.Left,
+		TextWrapped = true,
+		Parent = card,
+	})
+	tween(card, 0.45, { Position = UDim2.new() }, Enum.EasingStyle.Back)
+	task.delay(2.6, function()
+		tween(card, 0.3, { Position = UDim2.fromScale(0, -1.6) }, Enum.EasingStyle.Quint, Enum.EasingDirection.In)
+		task.wait(0.32)
+		t:Destroy()
+	end)
+end
+
+updateCount = function()
+	countLbl.Text = #entries .. " spawned"
+end
+
+local function sectionLabel(parent, text, order)
+	return new("TextLabel", {
+		Size = UDim2.new(1, 0, 0, 16),
+		BackgroundTransparency = 1,
+		Text = text:upper(),
+		Font = Enum.Font.GothamBold,
+		TextSize = 10,
+		TextColor3 = T.Sub,
+		TextXAlignment = Enum.TextXAlignment.Left,
+		LayoutOrder = order,
+		Parent = parent,
+	})
+end
+
+local function bigButton(parent, text, color, order, height)
+	local b = new("TextButton", {
+		Size = UDim2.new(1, 0, 0, height or 38),
+		BackgroundColor3 = color,
+		Text = text,
+		Font = Enum.Font.GothamBold,
+		TextSize = 14,
+		TextColor3 = Color3.new(1, 1, 1),
+		LayoutOrder = order,
+		Parent = parent,
+	})
+	corner(b, 10)
+	new("UIGradient", {
+		Color = ColorSequence.new(Color3.new(1, 1, 1), Color3.fromRGB(190, 190, 205)),
+		Rotation = 90,
+		Parent = b,
+	})
+	animate(b, color)
+	return b
+end
+
+local function searchBox(parent, placeholder, order)
+	local h = px(38)
+	local f = new("Frame", {
+		Size = UDim2.new(1, 0, 0, h),
+		BackgroundColor3 = T.Card,
+		LayoutOrder = order,
+		Parent = parent,
+	})
+	corner(f, 10)
+	local st = stroke(f, Color3.new(1, 1, 1), 1, 0)
+	local stGrad = new("UIGradient", { Color = ColorSequence.new(T.Stroke, T.Stroke), Parent = st })
+	local icon = new("ImageLabel", {
+		Size = UDim2.fromOffset(18, 18),
+		Position = UDim2.new(0, 11, 0.5, -9),
+		BackgroundTransparency = 1,
+		Image = "rbxassetid://3926305904",
+		ImageRectOffset = Vector2.new(964, 324),
+		ImageRectSize = Vector2.new(36, 36),
+		ImageColor3 = T.Sub,
+		Parent = f,
+	})
+	local count = new("TextLabel", {
+		Size = UDim2.fromOffset(64, h),
+		Position = UDim2.new(1, -(h + 64), 0, 0),
+		BackgroundTransparency = 1,
+		Text = "",
+		Font = Enum.Font.GothamMedium,
+		TextSize = 11,
+		TextColor3 = T.Sub,
+		TextXAlignment = Enum.TextXAlignment.Right,
+		Parent = f,
+	})
+	local box = new("TextBox", {
+		Size = UDim2.new(1, -(36 + h + 70), 1, 0),
+		Position = UDim2.fromOffset(36, 0),
+		BackgroundTransparency = 1,
+		Text = "",
+		PlaceholderText = placeholder,
+		PlaceholderColor3 = T.Sub,
+		TextColor3 = T.Text,
+		Font = Enum.Font.GothamMedium,
+		TextSize = px(13),
+		TextXAlignment = Enum.TextXAlignment.Left,
+		TextTruncate = Enum.TextTruncate.AtEnd,
+		ClearTextOnFocus = false,
+		Parent = f,
+	})
+	local clear = new("TextButton", {
+		AnchorPoint = Vector2.new(0.5, 0.5),
+		Size = UDim2.fromOffset(0, 0),
+		Position = UDim2.new(1, -h / 2, 0.5, 0),
+		BackgroundColor3 = T.CardHover,
+		Text = "✕",
+		Font = Enum.Font.GothamBold,
+		TextSize = 11,
+		TextColor3 = T.Text,
+		AutoButtonColor = false,
+		Parent = f,
+	})
+	corner(clear, 12)
+	local clearShown = false
+	local function showClear(v)
+		if v == clearShown then
+			return
+		end
+		clearShown = v
+		tween(clear, 0.25, { Size = v and UDim2.fromOffset(px(22), px(22)) or UDim2.fromOffset(0, 0) }, Enum.EasingStyle.Back)
+	end
+	clear.MouseButton1Click:Connect(function()
+		box.Text = ""
+		box:CaptureFocus()
+	end)
+	box:GetPropertyChangedSignal("Text"):Connect(function()
+		showClear(box.Text ~= "")
+	end)
+	box.Focused:Connect(function()
+		stGrad.Color = ColorSequence.new(T.Accent, T.Accent2)
+		tween(st, 0.2, { Thickness = 1.6 })
+		tween(icon, 0.2, { ImageColor3 = T.Accent2 })
+		tween(f, 0.2, { BackgroundColor3 = T.CardHover })
+	end)
+	box.FocusLost:Connect(function()
+		stGrad.Color = ColorSequence.new(T.Stroke, T.Stroke)
+		tween(st, 0.2, { Thickness = 1 })
+		tween(icon, 0.2, { ImageColor3 = T.Sub })
+		tween(f, 0.2, { BackgroundColor3 = T.Card })
+	end)
+	f.InputBegan:Connect(function(i)
+		if i.UserInputType == Enum.UserInputType.Touch or i.UserInputType == Enum.UserInputType.MouseButton1 then
+			box:CaptureFocus()
+		end
+	end)
+	local function setCount(n)
+		count.Text = n .. (n == 1 and " result" or " results")
+	end
+	return box, setCount
+end
+
+local function chipScroller(parent, height, order)
+	local s = new("ScrollingFrame", {
+		Size = UDim2.new(1, 0, 0, px(height)),
+		BackgroundTransparency = 1,
+		BorderSizePixel = 0,
+		ScrollBarThickness = 0,
+		ScrollingDirection = Enum.ScrollingDirection.X,
+		CanvasSize = UDim2.new(),
+		AutomaticCanvasSize = Enum.AutomaticSize.X,
+		LayoutOrder = order,
+		Parent = parent,
+	})
+	list(s, 6, Enum.FillDirection.Horizontal)
+	return s
+end
+
+local function chip(parent, text, color, isOn)
+	local b = new("TextButton", {
+		Size = UDim2.fromOffset(0, px(28)),
+		AutomaticSize = Enum.AutomaticSize.X,
+		BackgroundColor3 = T.Card,
+		Text = text,
+		Font = Enum.Font.GothamBold,
+		TextSize = 12,
+		TextColor3 = color or T.Text,
+		Parent = parent,
+	})
+	padding(b, 12, 12)
+	corner(b, 14)
+	local st = stroke(b, T.Stroke)
+	local function base()
+		return isOn() and T.CardHover or T.Card
+	end
+	animate(b, base)
+	local function refresh()
+		tween(b, 0.2, { BackgroundColor3 = base() })
+		tween(st, 0.2, { Color = isOn() and T.Accent or T.Stroke, Thickness = isOn() and 1.5 or 1 })
+	end
+	return b, refresh
+end
+
+do
+	local page = pages.Spawn
+	local sel = { animal = nil, mutation = "None", traits = {}, qty = 1, rarity = "All" }
+
+	local function selectedTraits()
+		local out = {}
+		for _, t in ipairs(traitList) do
+			if sel.traits[t] then
+				table.insert(out, t)
+			end
+		end
+		return out
+	end
+
+	local C = {}
+	C.VP = px(100)
+	C.card = new("Frame", {
+		Size = UDim2.new(1, 0, 0, C.VP + 16),
+		BackgroundColor3 = T.Card,
+		LayoutOrder = 1,
+		Parent = page,
+	})
+	corner(C.card, 12)
+	stroke(C.card, T.Stroke)
+	C.vpHolder = new("Frame", {
+		Size = UDim2.fromOffset(C.VP, C.VP),
+		Position = UDim2.fromOffset(8, 8),
+		BackgroundColor3 = T.Panel,
+		ClipsDescendants = true,
+		Active = true,
+		Parent = C.card,
+	})
+	corner(C.vpHolder, 12)
+	new("Frame", {
+		Size = UDim2.fromScale(0.9, 0.9),
+		Position = UDim2.fromScale(0.05, 0.05),
+		BackgroundColor3 = T.Accent,
+		BackgroundTransparency = 0.55,
+		ZIndex = 1,
+		Parent = C.vpHolder,
+	}, {
+		new("UICorner", { CornerRadius = UDim.new(1, 0) }),
+		new("UIGradient", {
+			Transparency = NumberSequence.new({
+				NumberSequenceKeypoint.new(0, 0.3),
+				NumberSequenceKeypoint.new(0.7, 0.85),
+				NumberSequenceKeypoint.new(1, 1),
+			}),
+			Offset = Vector2.new(0, 0),
+		}),
+	})
+	new("TextLabel", {
+		Size = UDim2.new(1, 0, 0, 14),
+		Position = UDim2.new(0, 0, 1, -16),
+		BackgroundTransparency = 1,
+		Text = "⟲ drag to spin",
+		Font = Enum.Font.GothamMedium,
+		TextSize = 9,
+		TextColor3 = T.Sub,
+		TextTransparency = 0.3,
+		ZIndex = 5,
+		Parent = C.vpHolder,
+	})
+	C.vpPlaceholder = new("ImageLabel", {
+		Size = UDim2.fromOffset(40, 40),
+		Position = UDim2.new(0.5, -20, 0.5, -20),
+		ZIndex = 2,
+		BackgroundTransparency = 1,
+		Image = LOGO,
+		ImageTransparency = 0.6,
+		Parent = C.vpHolder,
+	})
+	C.nameLbl = new("TextLabel", {
+		Size = UDim2.new(1, -(C.VP + 22), 0, 22),
+		Position = UDim2.fromOffset(C.VP + 16, 10),
+		BackgroundTransparency = 1,
+		Text = "Pick a brainrot",
+		Font = Enum.Font.GothamBlack,
+		TextSize = 16,
+		TextColor3 = T.Text,
+		TextXAlignment = Enum.TextXAlignment.Left,
+		TextTruncate = Enum.TextTruncate.AtEnd,
+		Parent = C.card,
+	})
+	C.rarLbl = new("TextLabel", {
+		Size = UDim2.new(1, -(C.VP + 22), 0, 16),
+		Position = UDim2.fromOffset(C.VP + 16, 32),
+		BackgroundTransparency = 1,
+		Text = "—",
+		Font = Enum.Font.GothamBold,
+		TextSize = 12,
+		TextColor3 = T.Sub,
+		TextXAlignment = Enum.TextXAlignment.Left,
+		Parent = C.card,
+	})
+	C.genLbl = new("TextLabel", {
+		Size = UDim2.new(1, -(C.VP + 22), 0, 18),
+		Position = UDim2.fromOffset(C.VP + 16, 50),
+		BackgroundTransparency = 1,
+		Text = "",
+		Font = Enum.Font.GothamBold,
+		TextSize = 13,
+		TextColor3 = Color3.fromRGB(255, 230, 80),
+		TextXAlignment = Enum.TextXAlignment.Left,
+		Parent = C.card,
+	})
+	C.priceLblCard = new("TextLabel", {
+		Size = UDim2.new(1, -(C.VP + 22), 0, 16),
+		Position = UDim2.fromOffset(C.VP + 16, 68),
+		BackgroundTransparency = 1,
+		Text = "",
+		Font = Enum.Font.GothamBold,
+		TextSize = 12,
+		TextColor3 = Color3.fromRGB(115, 255, 0),
+		TextXAlignment = Enum.TextXAlignment.Left,
+		Parent = C.card,
+	})
+	C.traitIconsRow = new("Frame", {
+		Size = UDim2.new(1, -(C.VP + 22), 0, 20),
+		Position = UDim2.fromOffset(C.VP + 16, 88),
+		BackgroundTransparency = 1,
+		Parent = C.card,
+	})
+	list(C.traitIconsRow, 3, Enum.FillDirection.Horizontal)
+
+	local previewVp, previewSpin
+	local prev = { yaw = 0, pitch = 0.3, dragging = false, last = nil, idleAt = 0, token = 0 }
+
+	C.vpHolder.InputBegan:Connect(function(i)
+		if i.UserInputType == Enum.UserInputType.MouseButton1 or i.UserInputType == Enum.UserInputType.Touch then
+			prev.dragging, prev.last = true, i.Position
+			local c
+			c = i.Changed:Connect(function()
+				if i.UserInputState == Enum.UserInputState.End then
+					prev.dragging = false
+					prev.idleAt = tick()
+					c:Disconnect()
+				end
+			end)
+		end
+	end)
+	C.vpHolder.InputChanged:Connect(function(i)
+		if
+			prev.dragging
+			and (i.UserInputType == Enum.UserInputType.MouseMovement or i.UserInputType == Enum.UserInputType.Touch)
+		then
+			local d = i.Position - prev.last
+			prev.last = i.Position
+			prev.yaw -= d.X * 0.012
+			prev.pitch = math.clamp(prev.pitch + d.Y * 0.008, -0.2, 0.9)
+		end
+	end)
+
+	local function refreshPreview()
+		prev.token += 1
+		local my = prev.token
+		if previewSpin then
+			previewSpin:Disconnect()
+			previewSpin = nil
+		end
+		if previewVp then
+			local old = previewVp
+			previewVp = nil
+			tween(old, 0.15, { ImageTransparency = 1 }).Completed:Connect(function()
+				old:Destroy()
+			end)
+		end
+		if not sel.animal then
+			C.vpPlaceholder.Visible = true
+			return
+		end
+		C.vpPlaceholder.Visible = false
+		local vp = new("ViewportFrame", {
+			Size = UDim2.fromScale(1, 1),
+			BackgroundTransparency = 1,
+			Ambient = Color3.fromRGB(170, 170, 190),
+			LightColor = Color3.new(1, 1, 1),
+			LightDirection = Vector3.new(-1, -1.2, -0.8),
+			ImageTransparency = 1,
+			ZIndex = 3,
+			Parent = C.vpHolder,
+		})
+		previewVp = vp
+		local wm = new("WorldModel", { Parent = vp })
+		local cam = new("Camera", { FieldOfView = 34, Parent = vp })
+		vp.CurrentCamera = cam
+
+		local m = acquireModel(sel.animal)
+		if not m then
+			pcall(function()
+				SharedAnimals:AttachOnViewportWithOptimizations(
+					sel.animal,
+					vp,
+					nil,
+					sel.mutation ~= "None" and sel.mutation or nil
+				)
+			end)
+			tween(vp, 0.3, { ImageTransparency = 0 })
+			return
+		end
+		for _, d in ipairs(m:GetDescendants()) do
+			if d:IsA("BasePart") then
+				d.Anchored = d == m.PrimaryPart or d.Name == "RootPart"
+				d.CanCollide = false
+			end
+		end
+		local root = m.PrimaryPart or m:FindFirstChild("RootPart")
+		if not root then
+			for _, d in ipairs(m:GetDescendants()) do
+				if d:IsA("BasePart") then
+					d.Anchored = true
+				end
+			end
+		end
+		m:PivotTo(CFrame.new())
+		m.Parent = wm
+		pcall(applyMutation, m, sel.animal, sel.mutation)
+		local traits = selectedTraits()
+		pcall(applyTraits, m, sel.animal, traits)
+		playIdle(m, sel.animal)
+
+		task.defer(function()
+			if my ~= prev.token or not m.Parent then
+				return
+			end
+			local cf, size = m:GetBoundingBox()
+			local center = cf.Position
+			local radius = math.max(size.X, size.Y, size.Z) * 0.5
+			local dist = radius / math.tan(math.rad(cam.FieldOfView / 2)) * 1.25
+			local t0 = tick()
+			local popScale = new("UIScale", { Scale = 0.8, Parent = C.vpHolder })
+			tween(popScale, 0.45, { Scale = 1 }, Enum.EasingStyle.Back).Completed:Connect(function()
+				popScale:Destroy()
+			end)
+			tween(vp, 0.35, { ImageTransparency = 0 })
+			previewSpin = RunService.RenderStepped:Connect(function(dt)
+				if not prev.dragging and tick() - prev.idleAt > 1.5 then
+					prev.yaw += dt * 0.7
+				end
+				local bob = math.sin((tick() - t0) * 2) * radius * 0.03
+				local dir = Vector3.new(math.sin(prev.yaw), math.sin(prev.pitch), math.cos(prev.yaw)).Unit
+				local target = center + Vector3.new(0, bob, 0)
+				cam.CFrame = CFrame.lookAt(target + dir * dist, target)
+			end)
+		end)
+	end
+
+	local function queuePreview()
+		prev.token += 1
+		local my = prev.token
+		task.delay(0.15, function()
+			if my == prev.token then
+				refreshPreview()
+			end
+		end)
+	end
+
+	local function refreshCard()
+		if not sel.animal then
+			return
+		end
+		local info = animalByName[sel.animal]
+		C.nameLbl.Text = sel.animal
+		C.rarLbl.Text = (info and info.rarity or "Unknown")
+			.. (sel.mutation ~= "None" and ("  •  " .. sel.mutation) or "")
+		C.rarLbl.TextColor3 = rarityColor(info and info.rarity)
+		local g = calcGen(sel.animal, sel.mutation, selectedTraits())
+		C.genLbl.Text = g > 0 and ("$" .. fmt(g) .. "/s") or ""
+		C.priceLblCard.Text = (info and info.price > 0) and ("$" .. fmt(info.price)) or ""
+		for _, c in ipairs(C.traitIconsRow:GetChildren()) do
+			if c:IsA("ImageLabel") then
+				c:Destroy()
+			end
+		end
+		for i, t in ipairs(selectedTraits()) do
+			local ic = traitIcon(t)
+			if ic and i <= 9 then
+				local img = new("ImageLabel", {
+					Size = UDim2.fromOffset(18, 18),
+					BackgroundTransparency = 1,
+					Image = ic,
+					LayoutOrder = i,
+					Parent = C.traitIconsRow,
+				})
+				local sc = new("UIScale", { Scale = 0, Parent = img })
+				tween(sc, 0.3, { Scale = 1 }, Enum.EasingStyle.Back)
+			end
+		end
+	end
+
+	sectionLabel(page, "Brainrots", 2)
+	local rarScroll = chipScroller(page, 30, 3)
+	local rarities = { "All" }
+	do
+		local seen = {}
+		for _, a in ipairs(animalList) do
+			if not seen[a.rarity] then
+				seen[a.rarity] = true
+				table.insert(rarities, a.rarity)
+			end
+		end
+	end
+	local search, setAnimalCount = searchBox(page, "Search brainrots...", 4)
+
+	local listFrame = new("ScrollingFrame", {
+		Size = UDim2.new(1, 0, 0, px(150)),
+		BackgroundColor3 = T.Panel,
+		BorderSizePixel = 0,
+		ScrollBarThickness = 3,
+		ScrollBarImageColor3 = T.Accent,
+		CanvasSize = UDim2.new(),
+		AutomaticCanvasSize = Enum.AutomaticSize.Y,
+		LayoutOrder = 5,
+		Parent = page,
+	})
+	corner(listFrame, 10)
+	stroke(listFrame, T.Stroke)
+	list(listFrame, 3)
+	padding(listFrame, 5, 5, 5, 5)
+
+	local rows = {}
+	local function rowBase(name)
+		return sel.animal == name and T.CardHover or T.Card
+	end
+	for i, a in ipairs(animalList) do
+		local r = new("TextButton", {
+			Size = UDim2.new(1, 0, 0, px(36)),
+			BackgroundColor3 = T.Card,
+			Text = "",
+			LayoutOrder = i,
+			Parent = listFrame,
+		})
+		corner(r, 8)
+		local rs = stroke(r, T.Accent, 1.5, 1)
+		new("Frame", {
+			Size = UDim2.new(0, 3, 0, 18),
+			Position = UDim2.new(0, 8, 0.5, -9),
+			BackgroundColor3 = rarityColor(a.rarity),
+			BorderSizePixel = 0,
+			Parent = r,
+		}, { new("UICorner", { CornerRadius = UDim.new(0, 2) }) })
+		new("TextLabel", {
+			Size = UDim2.new(1, -110, 1, 0),
+			Position = UDim2.fromOffset(18, 0),
+			BackgroundTransparency = 1,
+			Text = a.name,
+			Font = Enum.Font.GothamBold,
+			TextSize = 12,
+			TextColor3 = T.Text,
+			TextXAlignment = Enum.TextXAlignment.Left,
+			TextTruncate = Enum.TextTruncate.AtEnd,
+			Parent = r,
+		})
+		new("TextLabel", {
+			Size = UDim2.new(0, 84, 1, 0),
+			Position = UDim2.new(1, -92, 0, 0),
+			BackgroundTransparency = 1,
+			Text = a.gen > 0 and ("$" .. fmt(a.gen) .. "/s") or a.rarity,
+			Font = Enum.Font.GothamMedium,
+			TextSize = 11,
+			TextColor3 = a.gen > 0 and T.Good or T.Sub,
+			TextXAlignment = Enum.TextXAlignment.Right,
+			Parent = r,
+		})
+		animate(r, function()
+			return rowBase(a.name)
+		end)
+		rows[a.name] = { btn = r, stroke = rs, data = a }
+		r.MouseButton1Click:Connect(function()
+			local prev = sel.animal
+			sel.animal = a.name
+			if prev and rows[prev] then
+				tween(rows[prev].btn, 0.2, { BackgroundColor3 = T.Card })
+				tween(rows[prev].stroke, 0.2, { Transparency = 1 })
+			end
+			tween(r, 0.2, { BackgroundColor3 = T.CardHover })
+			tween(rs, 0.2, { Transparency = 0 })
+			refreshCard()
+			queuePreview()
+		end)
+	end
+
+	local emptyLbl = new("TextLabel", {
+		Size = UDim2.new(1, 0, 0, 60),
+		BackgroundTransparency = 1,
+		Text = "No brainrots match",
+		Font = Enum.Font.GothamMedium,
+		TextSize = 12,
+		TextColor3 = T.Sub,
+		Visible = false,
+		LayoutOrder = 0,
+		Parent = listFrame,
+	})
+
+	local function matches(name, q)
+		local lname = name:lower()
+		for word in q:gmatch("%S+") do
+			if not lname:find(word, 1, true) then
+				return false
+			end
+		end
+		return true
+	end
+	local function applyFilter()
+		local q = search.Text:lower()
+		local n = 0
+		for _, row in pairs(rows) do
+			local okR = sel.rarity == "All" or row.data.rarity == sel.rarity
+			local show = okR and matches(row.data.name, q)
+			row.btn.Visible = show
+			if show then
+				n += 1
+			end
+		end
+		emptyLbl.Visible = n == 0
+		setAnimalCount(n)
+		listFrame.CanvasPosition = Vector2.zero
+	end
+	local filterToken = 0
+	search:GetPropertyChangedSignal("Text"):Connect(function()
+		filterToken += 1
+		local my = filterToken
+		task.delay(0.08, function()
+			if my == filterToken then
+				applyFilter()
+			end
+		end)
+	end)
+
+	local rarRefreshers = {}
+	for _, r in ipairs(rarities) do
+		local b, refresh = chip(rarScroll, r, r == "All" and T.Text or rarityColor(r), function()
+			return sel.rarity == r
+		end)
+		table.insert(rarRefreshers, refresh)
+		b.MouseButton1Click:Connect(function()
+			sel.rarity = r
+			for _, f in ipairs(rarRefreshers) do
+				f()
+			end
+			applyFilter()
+		end)
+		refresh()
+	end
+
+	sectionLabel(page, "Mutation", 6)
+	local mutScroll = chipScroller(page, 30, 7)
+	local mutRefreshers = {}
+	for _, m in ipairs(mutationList) do
+		local b, refresh = chip(mutScroll, m == "None" and "Normal" or m, m == "None" and T.Text or mutationColor(m), function()
+			return sel.mutation == m
+		end)
+		table.insert(mutRefreshers, refresh)
+		b.MouseButton1Click:Connect(function()
+			sel.mutation = m
+			for _, f in ipairs(mutRefreshers) do
+				f()
+			end
+			refreshCard()
+			queuePreview()
+		end)
+		refresh()
+	end
+
+	local traitHeader = new("Frame", {
+		Size = UDim2.new(1, 0, 0, 16),
+		BackgroundTransparency = 1,
+		LayoutOrder = 8,
+		Parent = page,
+	})
+	local traitTitle = sectionLabel(traitHeader, "Traits", 0)
+	local clearTraits = new("TextButton", {
+		Size = UDim2.fromOffset(60, 16),
+		Position = UDim2.new(1, -60, 0, 0),
+		BackgroundTransparency = 1,
+		Text = "CLEAR",
+		Font = Enum.Font.GothamBold,
+		TextSize = 10,
+		TextColor3 = T.Accent2,
+		TextXAlignment = Enum.TextXAlignment.Right,
+		Parent = traitHeader,
+	})
+	local traitSearch, setTraitCount = searchBox(page, "Search traits...", 9)
+	local traitGrid = new("ScrollingFrame", {
+		Size = UDim2.new(1, 0, 0, px(110)),
+		BackgroundColor3 = T.Panel,
+		BorderSizePixel = 0,
+		ScrollBarThickness = 3,
+		ScrollBarImageColor3 = T.Accent,
+		CanvasSize = UDim2.new(),
+		AutomaticCanvasSize = Enum.AutomaticSize.Y,
+		LayoutOrder = 10,
+		Parent = page,
+	})
+	corner(traitGrid, 10)
+	stroke(traitGrid, T.Stroke)
+	padding(traitGrid, 6, 6, 6, 6)
+	new("UIGridLayout", {
+		CellSize = UDim2.new(0.5, -4, 0, px(32)),
+		CellPadding = UDim2.fromOffset(6, 6),
+		SortOrder = Enum.SortOrder.LayoutOrder,
+		Parent = traitGrid,
+	})
+	local traitRefreshers = {}
+	local traitButtons = {}
+	local function updateTraitTitle()
+		local n = #selectedTraits()
+		traitTitle.Text = n > 0 and ("TRAITS  •  " .. n .. " SELECTED") or "TRAITS"
+	end
+	for i, t in ipairs(traitList) do
+		local b = new("TextButton", {
+			BackgroundColor3 = T.Card,
+			Text = "",
+			LayoutOrder = i,
+			Parent = traitGrid,
+		})
+		corner(b, 8)
+		local st = stroke(b, T.Stroke)
+		local ic = traitIcon(t)
+		if ic then
+			new("ImageLabel", {
+				Size = UDim2.fromOffset(20, 20),
+				Position = UDim2.new(0, 6, 0.5, -10),
+				BackgroundTransparency = 1,
+				Image = ic,
+				Parent = b,
+			})
+		end
+		new("TextLabel", {
+			Size = UDim2.new(1, -34, 1, 0),
+			Position = UDim2.fromOffset(30, 0),
+			BackgroundTransparency = 1,
+			Text = t,
+			Font = Enum.Font.GothamBold,
+			TextSize = 11,
+			TextColor3 = T.Text,
+			TextXAlignment = Enum.TextXAlignment.Left,
+			TextTruncate = Enum.TextTruncate.AtEnd,
+			Parent = b,
+		})
+		local function base()
+			return sel.traits[t] and T.CardHover or T.Card
+		end
+		animate(b, base)
+		local function refresh()
+			tween(b, 0.2, { BackgroundColor3 = base() })
+			tween(st, 0.2, { Color = sel.traits[t] and T.Accent or T.Stroke })
+		end
+		table.insert(traitRefreshers, refresh)
+		traitButtons[t] = b
+		b.MouseButton1Click:Connect(function()
+			sel.traits[t] = not sel.traits[t] or nil
+			refresh()
+			updateTraitTitle()
+			refreshCard()
+			queuePreview()
+		end)
+	end
+	clearTraits.MouseButton1Click:Connect(function()
+		sel.traits = {}
+		for _, f in ipairs(traitRefreshers) do
+			f()
+		end
+		updateTraitTitle()
+		refreshCard()
+		queuePreview()
+	end)
+
+	local function filterTraits()
+		local q = traitSearch.Text:lower()
+		local n = 0
+		for name, b in pairs(traitButtons) do
+			local show = q == "" or name:lower():find(q, 1, true) ~= nil
+			b.Visible = show
+			if show then
+				n += 1
+			end
+		end
+		setTraitCount(n)
+		traitGrid.CanvasPosition = Vector2.zero
+	end
+	traitSearch:GetPropertyChangedSignal("Text"):Connect(filterTraits)
+	filterTraits()
+
+	local row = new("Frame", {
+		Size = UDim2.new(1, 0, 0, px(44)),
+		BackgroundTransparency = 1,
+		LayoutOrder = 12,
+		Parent = page,
+	})
+	local stepper = new("Frame", {
+		Size = UDim2.new(0, px(116), 1, 0),
+		BackgroundColor3 = T.Card,
+		Parent = row,
+	})
+	corner(stepper, 10)
+	stroke(stepper, T.Stroke)
+	local qtyLbl = new("TextLabel", {
+		Size = UDim2.new(1, -72, 1, 0),
+		Position = UDim2.fromOffset(36, 0),
+		BackgroundTransparency = 1,
+		Text = "x1",
+		Font = Enum.Font.GothamBlack,
+		TextSize = 15,
+		TextColor3 = T.Text,
+		Parent = stepper,
+	})
+	local function stepBtn(text, x, delta)
+		local b = new("TextButton", {
+			Size = UDim2.fromOffset(px(30), px(30)),
+			Position = UDim2.new(x, x == 0 and 6 or -(px(30) + 6), 0.5, -px(30) / 2),
+			BackgroundColor3 = T.Panel,
+			Text = text,
+			Font = Enum.Font.GothamBold,
+			TextSize = 18,
+			TextColor3 = T.Text,
+			Parent = stepper,
+		})
+		corner(b, 8)
+		animate(b, T.Panel, T.Accent)
+		b.MouseButton1Click:Connect(function()
+			sel.qty = math.clamp(sel.qty + delta, 1, 10)
+			qtyLbl.Text = "x" .. sel.qty
+			local s = qtyLbl:FindFirstChildOfClass("UIScale") or new("UIScale", { Parent = qtyLbl })
+			s.Scale = 1.25
+			tween(s, 0.25, { Scale = 1 }, Enum.EasingStyle.Back)
+		end)
+	end
+	stepBtn("–", 0, -1)
+	stepBtn("+", 1, 1)
+
+	local spawnBtn = new("TextButton", {
+		Size = UDim2.new(1, -(px(116) + 8), 1, 0),
+		Position = UDim2.fromOffset(px(116) + 8, 0),
+		BackgroundColor3 = Color3.new(1, 1, 1),
+		Text = "SPAWN",
+		Font = Enum.Font.GothamBlack,
+		TextSize = 15,
+		TextColor3 = Color3.new(1, 1, 1),
+		Parent = row,
+	})
+	corner(spawnBtn, 10)
+	local spawnGrad = accentGradient(spawnBtn, 0)
+	animate(spawnBtn, Color3.new(1, 1, 1), Color3.fromRGB(220, 220, 255))
+	task.spawn(function()
+		local t = 0
+		while alive() and spawnGrad.Parent do
+			t += task.wait()
+			spawnGrad.Offset = Vector2.new(math.sin(t * 1.5) * 0.3, 0)
+		end
+	end)
+
+	spawnBtn.MouseButton1Click:Connect(function()
+		if not sel.animal then
+			notify("Pick a brainrot first", T.Warn)
+			return
+		end
+		local made, lastErr = 0, nil
+		for _ = 1, sel.qty do
+			local ok, err = spawnVisual(sel.animal, sel.mutation, selectedTraits())
+			if ok then
+				made += 1
+			else
+				lastErr = err
+				break
+			end
+		end
+		if made > 0 then
+			notify(("Spawned %dx %s"):format(made, sel.animal), T.Good)
+		else
+			notify(lastErr or "Spawn failed", T.Bad)
+		end
+	end)
+
+	local clearBtn = bigButton(page, "CLEAR ALL SPAWNED", Color3.fromRGB(70, 28, 40), 13, px(36))
+	clearBtn.TextSize = 12
+	clearBtn.MouseButton1Click:Connect(function()
+		local n = #entries
+		clearAll()
+		notify(("Cleared %d visual%s"):format(n, n == 1 and "" or "s"), T.Warn)
+	end)
+
+	updateTraitTitle()
+	applyFilter()
+end
+
+do
+	local page = pages.Base
+	local selected = nil
+	sectionLabel(page, "Base skins found in this server", 1)
+	local skinList = new("ScrollingFrame", {
+		Size = UDim2.new(1, 0, 0, 200),
+		BackgroundColor3 = T.Panel,
+		BorderSizePixel = 0,
+		ScrollBarThickness = 3,
+		ScrollBarImageColor3 = T.Accent,
+		CanvasSize = UDim2.new(),
+		AutomaticCanvasSize = Enum.AutomaticSize.Y,
+		LayoutOrder = 2,
+		Parent = page,
+	})
+	corner(skinList, 10)
+	stroke(skinList, T.Stroke)
+	list(skinList, 3)
+	padding(skinList, 5, 5, 5, 5)
+
+	local currentLbl = new("TextLabel", {
+		Size = UDim2.new(1, 0, 0, 18),
+		BackgroundTransparency = 1,
+		Text = "Active: none",
+		Font = Enum.Font.GothamMedium,
+		TextSize = 12,
+		TextColor3 = T.Sub,
+		TextXAlignment = Enum.TextXAlignment.Left,
+		LayoutOrder = 3,
+		Parent = page,
+	})
+
+	local rowsB = {}
+	local function rebuild()
+		for _, r in ipairs(rowsB) do
+			r:Destroy()
+		end
+		rowsB = {}
+		local names = findSkins()
+		if #names == 0 then
+			local l = new("TextLabel", {
+				Size = UDim2.new(1, 0, 0, 40),
+				BackgroundTransparency = 1,
+				Text = Skin.packLoading and "Loading base pack..."
+					or (Skin.packError and ("Couldn't load base pack: " .. Skin.packError) or "No base skins found."),
+				Font = Enum.Font.GothamMedium,
+				TextSize = 12,
+				TextColor3 = T.Sub,
+				TextWrapped = true,
+				Parent = skinList,
+			})
+			table.insert(rowsB, l)
+			return
+		end
+		for i, n in ipairs(names) do
+			local swatchColor = T.Sub
+			for key, c in pairs(Skin.COLORS) do
+				if n:lower():find(key:lower(), 1, true) then
+					swatchColor = c
+				end
+			end
+			local r = new("TextButton", {
+				Size = UDim2.new(1, 0, 0, px(38)),
+				BackgroundColor3 = T.Card,
+				Text = "",
+				LayoutOrder = i,
+				Parent = skinList,
+			})
+			local sw = new("Frame", {
+				Size = UDim2.fromOffset(px(22), px(22)),
+				Position = UDim2.new(0, 10, 0.5, -px(22) / 2),
+				BackgroundColor3 = swatchColor,
+				Parent = r,
+			})
+			corner(sw, 6)
+			stroke(sw, Color3.new(1, 1, 1), 1, 0.7)
+			new("TextLabel", {
+				Size = UDim2.new(1, -110, 1, 0),
+				Position = UDim2.fromOffset(px(22) + 20, 0),
+				BackgroundTransparency = 1,
+				Text = n,
+				Font = Enum.Font.GothamBold,
+				TextSize = 13,
+				TextColor3 = T.Text,
+				TextXAlignment = Enum.TextXAlignment.Left,
+				TextTruncate = Enum.TextTruncate.AtEnd,
+				Parent = r,
+			})
+			if Skin.name == n then
+				new("TextLabel", {
+					Size = UDim2.fromOffset(70, 20),
+					Position = UDim2.new(1, -80, 0.5, -10),
+					BackgroundColor3 = T.Good,
+					Text = "ACTIVE",
+					Font = Enum.Font.GothamBlack,
+					TextSize = 10,
+					TextColor3 = Color3.new(1, 1, 1),
+					Parent = r,
+				}, { new("UICorner", { CornerRadius = UDim.new(0, 10) }) })
+			end
+			corner(r, 8)
+			local st = stroke(r, T.Accent, 1.5, selected == n and 0 or 1)
+			animate(r, function()
+				return selected == n and T.CardHover or T.Card
+			end)
+			r.MouseButton1Click:Connect(function()
+				selected = n
+				for _, other in ipairs(rowsB) do
+					local s = other:FindFirstChildOfClass("UIStroke")
+					if s then
+						tween(s, 0.2, { Transparency = other == r and 0 or 1 })
+					end
+					if other:IsA("TextButton") then
+						tween(other, 0.2, { BackgroundColor3 = other == r and T.CardHover or T.Card })
+					end
+				end
+				tween(st, 0.2, { Transparency = 0 })
+			end)
+			table.insert(rowsB, r)
+		end
+	end
+
+	local applyBtn = bigButton(page, "APPLY SKIN", T.Accent, 4)
+	accentGradient(applyBtn, 0)
+	local removeBtn = bigButton(page, "REMOVE SKIN", Color3.fromRGB(70, 28, 40), 5, 34)
+	removeBtn.TextSize = 12
+	local refreshBtn = bigButton(page, "REFRESH LIST", T.Card, 6, 30)
+	refreshBtn.TextSize = 11
+
+	applyBtn.MouseButton1Click:Connect(function()
+		if not selected then
+			notify("Select a skin first", T.Warn)
+			return
+		end
+		local ok, err = applySkin(selected)
+		autoSkinFor = nil
+		if ok then
+			currentLbl.Text = "Active: " .. selected
+			notify("Base skin: " .. selected, T.Good)
+			rebuild()
+			scheduleSave()
+		else
+			notify(err, T.Bad)
+		end
+	end)
+	removeBtn.MouseButton1Click:Connect(function()
+		clearSkin()
+		autoSkinFor = nil
+		currentLbl.Text = "Active: none"
+		notify("Base skin removed", T.Warn)
+		rebuild()
+		scheduleSave()
+	end)
+	refreshBtn.MouseButton1Click:Connect(function()
+		rebuild()
+		notify("Skin list refreshed", T.Accent2)
+	end)
+
+	tabButtons.Base.MouseButton1Click:Connect(function()
+		rebuild()
+		if not Skin.pack and not Skin.packLoading then
+			task.spawn(function()
+				Skin.loadPack()
+				rebuild()
+				if Skin.pack then
+					notify("Base pack loaded", T.Good)
+				end
+			end)
+			task.defer(rebuild)
+		end
+	end)
+	_G.__InfinSkinLabel = currentLbl
+end
+
+do
+	local page = pages.Settings
+
+	local function switchRow(order, label, desc, key)
+		local r = new("Frame", {
+			Size = UDim2.new(1, 0, 0, 56),
+			BackgroundColor3 = T.Card,
+			LayoutOrder = order,
+			Parent = page,
+		})
+		corner(r, 10)
+		stroke(r, T.Stroke)
+		new("TextLabel", {
+			Size = UDim2.new(1, -80, 0, 18),
+			Position = UDim2.fromOffset(14, 10),
+			BackgroundTransparency = 1,
+			Text = label,
+			Font = Enum.Font.GothamBold,
+			TextSize = 13,
+			TextColor3 = T.Text,
+			TextXAlignment = Enum.TextXAlignment.Left,
+			Parent = r,
+		})
+		new("TextLabel", {
+			Size = UDim2.new(1, -80, 0, 14),
+			Position = UDim2.fromOffset(14, 30),
+			BackgroundTransparency = 1,
+			Text = desc,
+			Font = Enum.Font.GothamMedium,
+			TextSize = 10,
+			TextColor3 = T.Sub,
+			TextXAlignment = Enum.TextXAlignment.Left,
+			TextTruncate = Enum.TextTruncate.AtEnd,
+			Parent = r,
+		})
+		local trackF = new("TextButton", {
+			Size = UDim2.fromOffset(46, 24),
+			Position = UDim2.new(1, -60, 0.5, -12),
+			BackgroundColor3 = T.Panel,
+			Text = "",
+			AutoButtonColor = false,
+			Parent = r,
+		})
+		corner(trackF, 12)
+		local tst = stroke(trackF, T.Stroke)
+		local fill = new("Frame", {
+			Size = UDim2.fromScale(1, 1),
+			BackgroundColor3 = Color3.new(1, 1, 1),
+			BackgroundTransparency = 1,
+			Parent = trackF,
+		})
+		corner(fill, 12)
+		accentGradient(fill, 0)
+		local knob = new("Frame", {
+			Size = UDim2.fromOffset(18, 18),
+			Position = UDim2.new(0, 3, 0.5, -9),
+			BackgroundColor3 = Color3.new(1, 1, 1),
+			ZIndex = 2,
+			Parent = trackF,
+		})
+		corner(knob, 9)
+		local function render(instant)
+			local on = settings[key]
+			local t = instant and 0 or 0.25
+			tween(knob, t, { Position = on and UDim2.new(1, -21, 0.5, -9) or UDim2.new(0, 3, 0.5, -9) })
+			tween(fill, t, { BackgroundTransparency = on and 0 or 1 })
+			tween(tst, t, { Transparency = on and 1 or 0 })
+		end
+		render(true)
+		trackF.MouseButton1Click:Connect(function()
+			settings[key] = not settings[key]
+			render()
+			scheduleSave()
+		end)
+	end
+
+	sectionLabel(page, "General", 1)
+	switchRow(2, "Auto-restore spawns", "Brings your visuals back when you rejoin", "autoRestore")
+	switchRow(3, "Start hidden", "Window stays closed until you press the key", "startHidden")
+	switchRow(4, "Auto OG base", "Spawning Skibidi, Meowl, etc. puts on its base", "autoOgSkin")
+
+	sectionLabel(page, "Keybind", 5)
+	local kr = new("Frame", {
+		Size = UDim2.new(1, 0, 0, 56),
+		BackgroundColor3 = T.Card,
+		LayoutOrder = 6,
+		Parent = page,
+	})
+	corner(kr, 10)
+	stroke(kr, T.Stroke)
+	new("TextLabel", {
+		Size = UDim2.new(1, -140, 0, 18),
+		Position = UDim2.fromOffset(14, 10),
+		BackgroundTransparency = 1,
+		Text = "Show / hide window",
+		Font = Enum.Font.GothamBold,
+		TextSize = 13,
+		TextColor3 = T.Text,
+		TextXAlignment = Enum.TextXAlignment.Left,
+		Parent = kr,
+	})
+	new("TextLabel", {
+		Size = UDim2.new(1, -140, 0, 14),
+		Position = UDim2.fromOffset(14, 30),
+		BackgroundTransparency = 1,
+		Text = "Click, then press a key (Esc cancels)",
+		Font = Enum.Font.GothamMedium,
+		TextSize = 10,
+		TextColor3 = T.Sub,
+		TextXAlignment = Enum.TextXAlignment.Left,
+		Parent = kr,
+	})
+	local keyBtn = new("TextButton", {
+		Size = UDim2.fromOffset(116, 30),
+		Position = UDim2.new(1, -128, 0.5, -15),
+		BackgroundColor3 = T.Panel,
+		Text = settings.toggleKey,
+		Font = Enum.Font.GothamBold,
+		TextSize = 12,
+		TextColor3 = T.Text,
+		Parent = kr,
+	})
+	corner(keyBtn, 8)
+	local kst = stroke(keyBtn, T.Stroke)
+	animate(keyBtn, T.Panel)
+	local listening = false
+	keyBtn.MouseButton1Click:Connect(function()
+		if listening then
+			return
+		end
+		listening = true
+		keyBtn.Text = "Press a key..."
+		tween(kst, 0.2, { Color = T.Accent })
+		local c
+		c = UIS.InputBegan:Connect(function(i)
+			if i.UserInputType ~= Enum.UserInputType.Keyboard then
+				return
+			end
+			c:Disconnect()
+			if i.KeyCode ~= Enum.KeyCode.Escape then
+				settings.toggleKey = i.KeyCode.Name
+				scheduleSave()
+			end
+			keyBtn.Text = settings.toggleKey
+			tween(kst, 0.2, { Color = T.Stroke })
+			task.delay(0.1, function()
+				listening = false
+			end)
+		end)
+		_G.__InfinKeyListening = function()
+			return listening
+		end
+	end)
+
+	sectionLabel(page, "About", 7)
+	local about = new("Frame", {
+		Size = UDim2.new(1, 0, 0, 0),
+		AutomaticSize = Enum.AutomaticSize.Y,
+		BackgroundColor3 = T.Card,
+		LayoutOrder = 8,
+		Parent = page,
+	})
+	corner(about, 10)
+	stroke(about, T.Stroke)
+	padding(about, 14, 14, 12, 12)
+	new("TextLabel", {
+		Size = UDim2.new(1, 0, 0, 0),
+		AutomaticSize = Enum.AutomaticSize.Y,
+		BackgroundTransparency = 1,
+		Text = "INFIN Visuals spawns brainrots and base skins only on your screen. Nothing is sent to the server. The only download is the base pack (scripts stripped). E grabs and places, F sells (removes the visual). Collect pads tick at the real $/s but never touch your actual cash.",
+		Font = Enum.Font.GothamMedium,
+		TextSize = 11,
+		TextColor3 = T.Sub,
+		TextWrapped = true,
+		TextXAlignment = Enum.TextXAlignment.Left,
+		Parent = about,
+	})
+end
+
+do
+	local GLASS = {
+		[T.Panel:ToHex()] = 0.55,
+		[T.Card:ToHex()] = 0.45,
+		[T.CardHover:ToHex()] = 0.35,
+	}
+	local function glass(d)
+		if d:IsA("GuiObject") and d.BackgroundTransparency < 0.3 then
+			local tr = GLASS[d.BackgroundColor3:ToHex()]
+			if tr then
+				d.BackgroundTransparency = tr
+			end
+		elseif d:IsA("UIStroke") and d.Color:ToHex() == T.Stroke:ToHex() and d.Transparency < 0.5 then
+			d.Transparency = 0.72
+		elseif d:IsA("ScrollingFrame") then
+			d.ScrollBarImageTransparency = 0.3
+		end
+	end
+	for _, root in ipairs({ win, toastHolder }) do
+		for _, d in ipairs(root:GetDescendants()) do
+			glass(d)
+		end
+		track(root.DescendantAdded:Connect(function(d)
+			task.defer(glass, d)
+		end))
+	end
+	local function shade(d)
+		if (d:IsA("TextLabel") or d:IsA("TextButton") or d:IsA("TextBox")) and d.TextStrokeTransparency >= 1 then
+			d.TextStrokeColor3 = Color3.new(0, 0, 0)
+			d.TextStrokeTransparency = 0.82
+		end
+	end
+	for _, d in ipairs(win:GetDescendants()) do
+		shade(d)
+	end
+	track(win.DescendantAdded:Connect(function(d)
+		task.defer(shade, d)
+	end))
+	titleBar.MouseEnter:Connect(function()
+		logo.Rotation = 0
+		tween(logo, 0.6, { Rotation = 360 }, Enum.EasingStyle.Back)
+	end)
+end
+
+local isOpen = true
+local reopenBtn 
+
+local function setMinimized(v)
+	if v == minimized then
+		return
+	end
+	minimized = v
+	minBtn.Text = v and "+" or "–"
+	local shift = (WIN_H - TITLE_H) / 2 * scaleObj.Scale
+	local p = holder.Position
+	tween(holder, 0.4, {
+		Size = UDim2.fromOffset(WIN_W, v and TITLE_H or WIN_H),
+		Position = UDim2.new(p.X.Scale, p.X.Offset, p.Y.Scale, p.Y.Offset + (v and -shift or shift)),
+	})
+	local s = minBtn:FindFirstChildOfClass("UIScale")
+	if s then
+		s.Scale = 0.8
+		tween(s, 0.35, { Scale = 1 }, Enum.EasingStyle.Back)
+	end
+end
+
+local function setOpen(v)
+	if v == isOpen then
+		return
+	end
+	isOpen = v
+	if v then
+		holder.Visible = true
+		pop.Value = 0.85
+		tween(pop, 0.4, { Value = 1 }, Enum.EasingStyle.Back)
+		if reopenBtn then
+			tween(reopenBtn, 0.2, { Size = UDim2.fromOffset(0, 0) })
+		end
+	else
+		local tw = tween(pop, 0.22, { Value = 0.85 }, Enum.EasingStyle.Quint, Enum.EasingDirection.In)
+		tw.Completed:Connect(function()
+			if not isOpen then
+				holder.Visible = false
+			end
+		end)
+		if reopenBtn then
+			tween(reopenBtn, 0.35, { Size = UDim2.fromOffset(52, 52) }, Enum.EasingStyle.Back)
+		end
+		notify(TOUCH and "Hidden — tap the INFIN button to reopen" or ("Hidden — press %s to reopen"):format(settings.toggleKey), T.Accent2)
+	end
+end
+
+minBtn.MouseButton1Click:Connect(function()
+	setMinimized(not minimized)
+end)
+closeBtn.MouseButton1Click:Connect(function()
+	setOpen(false)
+end)
+
+if UIS.TouchEnabled then
+	reopenBtn = new("ImageButton", {
+		Size = UDim2.fromOffset(0, 0),
+		Position = UDim2.new(0, 46, 0.5, 0),
+		AnchorPoint = Vector2.new(0.5, 0.5),
+		BackgroundColor3 = T.Panel,
+		Image = LOGO,
+		ScaleType = Enum.ScaleType.Crop,
+		Parent = sg,
+	})
+	corner(reopenBtn, 26)
+	accentGradient(stroke(reopenBtn, Color3.new(1, 1, 1), 2), 45)
+	local moved = false
+	reopenBtn.InputBegan:Connect(function()
+		moved = false
+	end)
+	reopenBtn:GetPropertyChangedSignal("Position"):Connect(function()
+		moved = true
+	end)
+	makeDraggable(reopenBtn, reopenBtn)
+	reopenBtn.MouseButton1Click:Connect(function()
+		if not moved then
+			setOpen(true)
+		end
+	end)
+end
+
+track(UIS.InputBegan:Connect(function(input, processed)
+	if processed or input.UserInputType ~= Enum.UserInputType.Keyboard then
+		return
+	end
+	if _G.__InfinKeyListening and _G.__InfinKeyListening() then
+		return
+	end
+	if input.KeyCode.Name == settings.toggleKey then
+		setOpen(not isOpen)
+	end
+end))
+
+task.spawn(function()
+	local t = 0
+	while alive() and sg.Parent do
+		local dt = task.wait()
+		t += dt
+		if holder.Visible then
+			strokeGrad.Rotation = (t * 60) % 360
+			titleShine.Offset = Vector2.new(((t * 0.4) % 2) - 1, 0)
+		end
+	end
+end)
+task.spawn(function()
+	while alive() and sg.Parent do
+		local star = starList[math.random(1, #starList)]
+		tween(star, 1.2, { BackgroundTransparency = math.random(10, 90) / 100 }, Enum.EasingStyle.Sine)
+		task.wait(0.12)
+	end
+end)
+
+setTab("Spawn")
+updateCount()
+
+pop.Value = 0.8
+holder.Position = UDim2.new(0.5, 0, 0.5, 40)
+tween(pop, 0.55, { Value = 1 }, Enum.EasingStyle.Back)
+tween(holder, 0.55, { Position = UDim2.fromScale(0.5, 0.5) })
+
+if settings.startHidden then
+	isOpen = true
+	setOpen(false)
+end
+
+if settings.autoRestore and type(saved) == "table" and type(saved.spawns) == "table" and #saved.spawns > 0 then
+	task.spawn(function()
+		local deadline = tick() + 30
+		local function ready()
+			for _, p in ipairs(getPodiums()) do
+				if p.att and #p.att:GetChildren() > 0 then
+					return true
+				end
+			end
+			return false
+		end
+		while alive() and not ready() and tick() < deadline do
+			task.wait(0.25)
+		end
+		local n = 0
+		for _, s in ipairs(saved.spawns) do
+			if type(s) == "table" and type(s.name) == "string" then
+				local traits = type(s.traits) == "table" and s.traits or {}
+				local gen = calcGen(s.name, s.mutation or "None", traits)
+				local away = math.clamp(os.time() - (tonumber(saved.savedAt) or os.time()), 0, 86400)
+				local offline = gen * away
+				local opts = { cash = (tonumber(s.cash) or 0) + offline, offline = offline }
+				if spawnVisual(s.name, s.mutation or "None", traits, tonumber(s.slot), true, opts) then
+					n += 1
+				end
+			end
+		end
+		if n > 0 then
+			notify(("Restored %d visual%s"):format(n, n == 1 and "" or "s"), T.Good)
+		end
+		if type(settings.baseSkin) == "string" then
+			local ok = applySkin(settings.baseSkin)
+			if ok and _G.__InfinSkinLabel then
+				_G.__InfinSkinLabel.Text = "Active: " .. settings.baseSkin
+			end
+		end
+	end)
+end
+
+notify(TOUCH and "INFIN loaded — ✕ hides, the logo button brings it back" or ("INFIN loaded — %s toggles the window"):format(settings.toggleKey), T.Accent)
+
+task.spawn(function()
+	while alive() do
+		task.wait(30)
+		if #entries > 0 then
+			saveNow()
+		end
+	end
+end)
+
+_G.InfinVisualsCleanup = function()
+	_G.InfinVisualsRun = nil
+	for _, c in ipairs(connections) do
+		pcall(function()
+			c:Disconnect()
+		end)
+	end
+	endCarryVisuals()
+	for i = #entries, 1, -1 do
+		pcall(removeEntry, entries[i], true)
+	end
+	clearSkin()
+	pcall(function()
+		sg:Destroy()
+	end)
+end

