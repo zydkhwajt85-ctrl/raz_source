@@ -1,0 +1,542 @@
+-- ============================================================
+-- deobf by RXZ TOP 1
+-- Ezz https://discord.gg/rxz 
+-- ============================================================
+local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
+local CoreGui = game:GetService("CoreGui")
+local UserInputService = game:GetService("UserInputService")
+local LP = Players.LocalPlayer
+
+local BAV2_ANG = "_GB_AngV"
+local BAV2_ATT = "_GB_Att"
+local BAV2_CLEAN = {
+    "LockBAV","LockAngVel","LockBodyAtt","BatLock","LockBAVAtt",
+    "AutoBatAtt","AutoBatAV","AntiBatDet","AntiAim","VelocityLock"
+}
+
+local V2 = {
+    enabled = false,
+    conn = nil,
+    safetyConn = nil,
+    target = nil,
+    equipped = false,
+    intendedVelocity = Vector3.zero,
+    attachment = nil,
+    angularVelocity = nil,
+    speed = 56.5,
+    swingRange = 12,
+}
+
+local function cleanMovers(root)
+    if not root then return end
+    pcall(function()
+        for _, n in ipairs(BAV2_CLEAN) do
+            local c = root:FindFirstChild(n)
+            if c then c:Destroy() end
+        end
+        for _, child in ipairs(root:GetChildren()) do
+            if child.Name ~= BAV2_ANG and child.Name ~= BAV2_ATT then
+                local ln = child.Name:lower()
+                if ln:find("lockb") or ln:find("lockangv")
+                   or ln:find("batlock") or ln:find("antiaim")
+                   or ln:find("velocitylock") then
+                    child:Destroy()
+                end
+            end
+        end
+    end)
+end
+
+local function ensureAngular(root)
+    if not root then return end
+    pcall(function()
+        local a = root:FindFirstChild(BAV2_ANG); if a then a:Destroy() end
+        local b = root:FindFirstChild(BAV2_ATT); if b then b:Destroy() end
+    end)
+    local att = Instance.new("Attachment")
+    att.Name = BAV2_ATT
+    att.Parent = root
+    local angV = Instance.new("AngularVelocity")
+    angV.Name = BAV2_ANG
+    angV.Attachment0 = att
+    angV.RelativeTo = Enum.ActuatorRelativeTo.World
+    angV.MaxTorque = math.huge
+    angV.AngularVelocity = Vector3.zero
+    angV.Parent = root
+    V2.attachment = att
+    V2.angularVelocity = angV
+end
+
+local function removeAngular()
+    pcall(function() if V2.angularVelocity and V2.angularVelocity.Parent then V2.angularVelocity:Destroy() end end)
+    pcall(function() if V2.attachment and V2.attachment.Parent then V2.attachment:Destroy() end end)
+    V2.angularVelocity = nil
+    V2.attachment = nil
+end
+
+local function pickTarget(root)
+    local best, bestD = nil, math.huge
+    for _, p in ipairs(Players:GetPlayers()) do
+        if p ~= LP and p.Character then
+            local hrp = p.Character:FindFirstChild("HumanoidRootPart")
+            local hum = p.Character:FindFirstChildOfClass("Humanoid")
+            if hrp and hum and hum.Health > 0 then
+                local d = (hrp.Position - root.Position).Magnitude
+                if d < bestD then bestD = d; best = hrp end
+            end
+        end
+    end
+    return best, bestD
+end
+
+local function getBat(char)
+    local eq = char and char:FindFirstChildOfClass("Tool")
+    if eq then
+        local n = eq.Name:lower()
+        if n:find("bat") or n:find("slap") then return eq end
+    end
+    local bp = LP:FindFirstChildOfClass("Backpack")
+    if bp then
+        for _, t in ipairs(bp:GetChildren()) do
+            if t:IsA("Tool") then
+                local n = t.Name:lower()
+                if n:find("bat") or n:find("slap") then return t end
+            end
+        end
+    end
+    return nil
+end
+
+local function stopBatV2()
+    V2.enabled = false
+    V2.equipped = false
+    V2.target = nil
+    if V2.conn then V2.conn:Disconnect(); V2.conn = nil end
+    if V2.safetyConn then V2.safetyConn:Disconnect(); V2.safetyConn = nil end
+    local c = LP.Character
+    local root = c and c:FindFirstChild("HumanoidRootPart")
+    if root then pcall(function() root.Velocity = root.Velocity * 0.3 end) end
+    local hum = c and c:FindFirstChildOfClass("Humanoid")
+    if hum then hum.AutoRotate = true end
+    if V2.angularVelocity then
+        pcall(function() V2.angularVelocity.AngularVelocity = Vector3.zero end)
+    end
+    removeAngular()
+end
+
+local function startBatV2()
+    stopBatV2()
+    V2.enabled = true
+    V2.equipped = false
+    V2.target = nil
+    V2.intendedVelocity = Vector3.zero
+    V2.speed = 56.5
+
+    local c = LP.Character
+    local root = c and c:FindFirstChild("HumanoidRootPart")
+    if root then
+        cleanMovers(root)
+        ensureAngular(root)
+    end
+
+    V2.conn = RunService.Heartbeat:Connect(function()
+        if not V2.enabled then return end
+        local char = LP.Character
+        local hum  = char and char:FindFirstChildOfClass("Humanoid")
+        local hrp  = char and char:FindFirstChild("HumanoidRootPart")
+        if not hrp or not hum or hum.Health <= 0 then return end
+
+        cleanMovers(hrp)
+        if not V2.angularVelocity or not V2.angularVelocity.Parent then
+            ensureAngular(hrp)
+        end
+
+        if not V2.equipped then
+            V2.equipped = true
+            if not char:FindFirstChildOfClass("Tool") then
+                local b = getBat(char)
+                if b then pcall(function() hum:EquipTool(b) end) end
+            end
+        end
+
+        local target, dist = pickTarget(hrp)
+        if not target then
+            V2.target = nil
+            hum.AutoRotate = true
+            if V2.angularVelocity then
+                V2.angularVelocity.AngularVelocity = Vector3.zero
+            end
+            return
+        end
+        V2.target = target
+
+        local aimPos = target.Position
+            + target.CFrame.LookVector * (target.Velocity.Magnitude < 0.1 and 1.5 or 5)
+        local delta = aimPos - hrp.Position
+        local flat  = Vector3.new(delta.X, 0, delta.Z)
+        hum.AutoRotate = false
+
+        if delta.Magnitude > 0.01 and flat.Magnitude > 0.01 then
+            local curY   = hrp.Orientation.Y
+            local yawD   = (math.deg(math.atan2(-flat.X, -flat.Z)) - curY + 180) % 360 - 180
+            local curX   = hrp.Orientation.X
+            local pitchD = (math.deg(math.atan2(delta.Y, flat.Magnitude)) - curX + 180) % 360 - 180
+            local rotY   = math.clamp(math.rad(yawD)   * 40, -28, 28)
+            local rotX   = math.clamp(math.rad(pitchD) * 40, -28, 28)
+            local yawR   = math.rad(hrp.Orientation.Y)
+            local fwd    = Vector3.new(math.cos(yawR), 0, -math.sin(yawR))
+            V2.angularVelocity.AngularVelocity = Vector3.new(0, rotY, 0) + fwd * rotX
+        else
+            V2.angularVelocity.AngularVelocity = Vector3.zero
+        end
+
+        local spd = V2.speed
+        V2.intendedVelocity =
+            (flat.Magnitude > 0.1 and flat.Unit * spd or Vector3.zero)
+            + (math.abs(delta.Y) > 0.8
+                and Vector3.new(0, math.sign(delta.Y) * spd, 0)
+                or  Vector3.new(0, -2, 0))
+        hrp.AssemblyLinearVelocity = V2.intendedVelocity
+        hrp.Velocity = V2.intendedVelocity
+
+        if flat.Magnitude > 0.3 then
+            pcall(function() hum:Move(flat.Unit, false) end)
+        else
+            pcall(function() hum:Move(Vector3.zero, false) end)
+        end
+
+        if dist <= V2.swingRange then
+            local bat = char:FindFirstChildOfClass("Tool")
+            if bat and (bat.Name:lower():find("bat") or bat.Name:lower():find("slap")) then
+                pcall(function()
+                    bat:Activate()
+                    local re = bat:FindFirstChildWhichIsA("RemoteEvent")
+                    if re then re:FireServer() end
+                end)
+            end
+        end
+    end)
+
+    V2.safetyConn = RunService.RenderStepped:Connect(function()
+        if not V2.enabled then return end
+        local char = LP.Character
+        local hrp = char and char:FindFirstChild("HumanoidRootPart")
+        local hum = char and char:FindFirstChildOfClass("Humanoid")
+        if not hrp or not hum then return end
+
+        if V2.target and V2.target.Parent then
+            local delta = V2.target.Position - hrp.Position
+            local flat = Vector3.new(delta.X, 0, delta.Z)
+            if flat.Magnitude > 0.3 then
+                pcall(function() hum:Move(flat.Unit, false) end)
+            end
+            if math.abs(hrp.AssemblyLinearVelocity.X - V2.intendedVelocity.X) > 30
+               or math.abs(hrp.AssemblyLinearVelocity.Z - V2.intendedVelocity.Z) > 30 then
+                hrp.AssemblyLinearVelocity = V2.intendedVelocity
+            end
+        end
+
+        local v = hrp.Velocity
+        if math.abs(v.X) > 350 or math.abs(v.Z) > 350 then
+            hrp.Velocity = V2.intendedVelocity
+        end
+        cleanMovers(hrp)
+    end)
+end
+
+-- تنظيف الواجهات القديمة
+pcall(function()
+    for _, gui in ipairs(CoreGui:GetChildren()) do
+        if gui.Name == "BatV2LuxCleanGUI" then gui:Destroy() end
+    end
+end)
+
+local screenGui = Instance.new("ScreenGui")
+screenGui.Name = "BatV2LuxCleanGUI"
+screenGui.ResetOnSpawn = false
+screenGui.IgnoreGuiInset = true
+pcall(function() screenGui.Parent = CoreGui end)
+if screenGui.Parent == nil then
+    screenGui.Parent = LP:WaitForChild("PlayerGui")
+end
+
+-- ==========================================
+-- 1. المربع الأول (LUX ON TOP الرئيسي)
+-- ==========================================
+local mainBox = Instance.new("ImageButton")
+mainBox.Name = "MainBox"
+mainBox.Size = UDim2.new(0, 90, 0, 90)
+mainBox.Position = UDim2.new(1, -180, 0, 90)
+mainBox.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
+mainBox.Image = "rbxassetid://76764223088224"
+mainBox.ScaleType = Enum.ScaleType.Crop
+mainBox.Active = true
+mainBox.Draggable = true
+mainBox.Parent = screenGui
+
+Instance.new("UICorner", mainBox).CornerRadius = UDim.new(0, 10)
+
+local overlay = Instance.new("Frame")
+overlay.Size = UDim2.new(1, 0, 1, 0)
+overlay.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
+overlay.BackgroundTransparency = 0.35
+overlay.BorderSizePixel = 0
+overlay.Parent = mainBox
+Instance.new("UICorner", overlay).CornerRadius = UDim.new(0, 10)
+
+local ledIcon = Instance.new("Frame")
+ledIcon.Size = UDim2.new(0, 8, 0, 8)
+ledIcon.Position = UDim2.new(0, 8, 0, 8)
+ledIcon.BackgroundColor3 = Color3.fromRGB(255, 50, 50)
+ledIcon.ZIndex = 3
+ledIcon.Parent = mainBox
+Instance.new("UICorner", ledIcon).CornerRadius = UDim.new(1, 0)
+
+local smallLock = Instance.new("TextLabel")
+smallLock.Size = UDim2.new(0, 12, 0, 12)
+smallLock.Position = UDim2.new(0, 22, 0, 6)
+smallLock.BackgroundTransparency = 1
+smallLock.Text = "🔓"
+smallLock.TextSize = 10
+smallLock.ZIndex = 3
+smallLock.Parent = mainBox
+
+local smallGear = Instance.new("TextButton")
+smallGear.Size = UDim2.new(0, 16, 0, 16)
+smallGear.Position = UDim2.new(1, -22, 0, 6)
+smallGear.BackgroundTransparency = 1
+smallGear.Text = "⚙️"
+smallGear.TextSize = 11
+smallGear.ZIndex = 3
+smallGear.Parent = mainBox
+
+local textLabel = Instance.new("TextLabel")
+textLabel.Name = "TextMain"
+textLabel.Size = UDim2.new(1, 0, 1, -20)
+textLabel.Position = UDim2.new(0, 0, 0, 14)
+textLabel.BackgroundTransparency = 1
+textLabel.TextColor3 = Color3.fromRGB(220, 160, 255)
+textLabel.TextSize = 13.5
+textLabel.Font = Enum.Font.FredokaOne
+textLabel.Text = "LUX\nON TOP"
+textLabel.TextWrapped = true
+textLabel.ZIndex = 3
+textLabel.Parent = mainBox
+
+local discordLabel = Instance.new("TextLabel")
+discordLabel.Name = "DiscordLabel"
+discordLabel.Size = UDim2.new(1, -4, 0, 14)
+discordLabel.Position = UDim2.new(0, 2, 1, -14)
+discordLabel.BackgroundTransparency = 1
+discordLabel.TextColor3 = Color3.fromRGB(210, 210, 210)
+discordLabel.TextSize = 7.2
+discordLabel.Font = Enum.Font.SourceSansBold
+discordLabel.Text = "https://discord.gg/Ec5rMDAvWB"
+discordLabel.ZIndex = 3
+discordLabel.Parent = mainBox
+
+-- ==========================================
+-- 2. المربع الثاني السفلي (BEST BAT V2) المطابق للصورة الثالثة
+-- ==========================================
+local bottomBox = Instance.new("Frame")
+bottomBox.Name = "BottomBox"
+bottomBox.Size = UDim2.new(0, 180, 0, 65)
+bottomBox.Position = UDim2.new(1, -210, 0, 195)
+bottomBox.BackgroundColor3 = Color3.fromRGB(15, 15, 20)
+bottomBox.Active = true
+bottomBox.Draggable = true
+bottomBox.Parent = screenGui
+
+Instance.new("UICorner", bottomBox).CornerRadius = UDim.new(0, 10)
+
+-- الإطار البنفسجي الخارجي للمربع السفلي
+local bottomStroke = Instance.new("UIStroke")
+bottomStroke.Color = Color3.fromRGB(130, 80, 190)
+bottomStroke.Thickness = 1.5
+bottomStroke.Parent = bottomBox
+
+-- نص BEST BAT V2 مع الإيموجي المطابق للصورة
+local bottomTitle = Instance.new("TextLabel")
+bottomTitle.Size = UDim2.new(1, -60, 0, 20)
+bottomTitle.Position = UDim2.new(0, 10, 0, 10)
+bottomTitle.BackgroundTransparency = 1
+bottomTitle.TextColor3 = Color3.fromRGB(240, 240, 240)
+bottomTitle.TextSize = 11.5
+bottomTitle.Font = Enum.Font.SourceSansBold
+bottomTitle.Text = "BEST BAT V2👇"
+bottomTitle.TextXAlignment = Enum.TextXAlignment.Left
+bottomTitle.Parent = bottomBox
+
+-- رابط ديسكورد السفلي
+local bottomDiscord = Instance.new("TextLabel")
+bottomDiscord.Size = UDim2.new(1, -60, 0, 18)
+bottomDiscord.Position = UDim2.new(0, 10, 0, 32)
+bottomDiscord.BackgroundTransparency = 1
+bottomDiscord.TextColor3 = Color3.fromRGB(220, 220, 220)
+bottomDiscord.TextSize = 9.5
+bottomDiscord.Font = Enum.Font.SourceSansBold
+bottomDiscord.Text = "https://discord.gg/Ec5rMDAvWB"
+bottomDiscord.TextXAlignment = Enum.TextXAlignment.Left
+bottomDiscord.Parent = bottomBox
+
+-- دائرة الزر الجانبية مع السهم تماماً مثل الصورة الثالثة
+local circleBtn = Instance.new("TextButton")
+circleBtn.Size = UDim2.new(0, 42, 0, 42)
+circleBtn.Position = UDim2.new(1, -50, 0.5, -21)
+circleBtn.BackgroundColor3 = Color3.fromRGB(25, 25, 30)
+circleBtn.Text = "▲"
+circleBtn.TextColor3 = Color3.fromRGB(140, 90, 200)
+circleBtn.TextSize = 14
+circleBtn.Font = Enum.Font.SourceSansBold
+circleBtn.Parent = bottomBox
+Instance.new("UICorner", circleBtn).CornerRadius = UDim.new(1, 0)
+
+local circleStroke = Instance.new("UIStroke")
+circleStroke.Color = Color3.fromRGB(80, 50, 120)
+circleStroke.Thickness = 1.5
+circleStroke.Parent = circleBtn
+
+-- ربط التشغيل والإيقاف بالزرين (المربع الرئيسي والدائرة السفلية)
+local function toggleScript()
+    if V2.enabled then
+        stopBatV2()
+        textLabel.TextColor3 = Color3.fromRGB(220, 160, 255)
+        ledIcon.BackgroundColor3 = Color3.fromRGB(255, 50, 50)
+        circleBtn.TextColor3 = Color3.fromRGB(140, 90, 200)
+    else
+        startBatV2()
+        textLabel.TextColor3 = Color3.fromRGB(140, 80, 180)
+        ledIcon.BackgroundColor3 = Color3.fromRGB(50, 255, 50)
+        circleBtn.TextColor3 = Color3.fromRGB(50, 255, 50)
+    end
+end
+
+mainBox.MouseButton1Click:Connect(toggleScript)
+circleBtn.MouseButton1Click:Connect(toggleScript)
+
+-- نظام قفل السحب
+local isLocked = false
+smallLock.InputBegan:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+        isLocked = not isLocked
+        mainBox.Draggable = not isLocked
+        bottomBox.Draggable = not isLocked
+        smallLock.Text = isLocked and "🔒" or "🔓"
+    end
+end)
+
+-- ==========================================
+-- 3. نافذة الإعدادات المحسنة والمضبوطة بدقة
+-- ==========================================
+local settingsFrame = Instance.new("Frame")
+settingsFrame.Name = "SettingsFrame"
+settingsFrame.Size = UDim2.new(0, 240, 0, 140)
+settingsFrame.Position = UDim2.new(0.5, -120, 0.5, -70)
+settingsFrame.BackgroundColor3 = Color3.fromRGB(15, 15, 18)
+settingsFrame.Visible = false
+settingsFrame.Active = true
+settingsFrame.Draggable = true
+settingsFrame.Parent = screenGui
+Instance.new("UICorner", settingsFrame).CornerRadius = UDim.new(0, 10)
+
+local settingsStroke = Instance.new("UIStroke")
+settingsStroke.Color = Color3.fromRGB(130, 80, 190)
+settingsStroke.Thickness = 2
+settingsStroke.Parent = settingsFrame
+
+local setsTitle = Instance.new("TextLabel")
+setsTitle.Size = UDim2.new(1, -40, 0, 35)
+setsTitle.Position = UDim2.new(0, 14, 0, 5)
+setsTitle.BackgroundTransparency = 1
+setsTitle.TextColor3 = Color3.fromRGB(220, 160, 255)
+setsTitle.TextSize = 13
+setsTitle.Font = Enum.Font.SourceSansBold
+setsTitle.Text = "⚙️ SETTINGS"
+setsTitle.TextXAlignment = Enum.TextXAlignment.Left
+setsTitle.Parent = settingsFrame
+
+local closeBtn = Instance.new("TextButton")
+closeBtn.Size = UDim2.new(0, 26, 0, 26)
+closeBtn.Position = UDim2.new(1, -30, 0, 8)
+closeBtn.BackgroundTransparency = 1
+closeBtn.TextColor3 = Color3.fromRGB(255, 70, 70)
+closeBtn.TextSize = 16
+closeBtn.Font = Enum.Font.SourceSansBold
+closeBtn.Text = "✕"
+closeBtn.Parent = settingsFrame
+
+closeBtn.MouseButton1Click:Connect(function()
+    settingsFrame.Visible = false
+end)
+
+smallGear.MouseButton1Click:Connect(function()
+    settingsFrame.Visible = not settingsFrame.Visible
+end)
+
+local sizeLabel = Instance.new("TextLabel")
+sizeLabel.Size = UDim2.new(1, -30, 0, 20)
+sizeLabel.Position = UDim2.new(0, 15, 0, 48)
+sizeLabel.BackgroundTransparency = 1
+sizeLabel.TextColor3 = Color3.fromRGB(220, 220, 220)
+sizeLabel.TextSize = 12
+sizeLabel.Font = Enum.Font.SourceSansBold
+sizeLabel.Text = "GUI SIZE: 100%"
+sizeLabel.TextXAlignment = Enum.TextXAlignment.Left
+sizeLabel.Parent = settingsFrame
+
+local sliderBar = Instance.new("Frame")
+sliderBar.Size = UDim2.new(1, -30, 0, 7)
+sliderBar.Position = UDim2.new(0, 15, 0, 88)
+sliderBar.BackgroundColor3 = Color3.fromRGB(40, 40, 45)
+sliderBar.BorderSizePixel = 0
+sliderBar.Parent = settingsFrame
+Instance.new("UICorner", sliderBar).CornerRadius = UDim.new(1, 0)
+
+local sliderFill = Instance.new("Frame")
+sliderFill.Size = UDim2.new(0.4, 0, 1, 0)
+sliderFill.BackgroundColor3 = Color3.fromRGB(160, 90, 220)
+sliderFill.BorderSizePixel = 0
+sliderFill.Parent = sliderBar
+Instance.new("UICorner", sliderFill).CornerRadius = UDim.new(1, 0)
+
+local sliderButton = Instance.new("TextButton")
+sliderButton.Size = UDim2.new(0, 16, 0, 16)
+sliderButton.Position = UDim2.new(0.4, -8, 0.5, -8)
+sliderButton.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+sliderButton.Text = ""
+sliderButton.Parent = sliderBar
+Instance.new("UICorner", sliderButton).CornerRadius = UDim.new(1, 0)
+
+local sliding = false
+sliderButton.MouseButton1Down:Connect(function()
+    sliding = true
+end)
+
+UserInputService.InputEnded:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+        sliding = false
+    end
+end)
+
+RunService.RenderStepped:Connect(function()
+    if sliding then
+        local mousePos = UserInputService:GetMouseLocation().X
+        local barAbsolutePos = sliderBar.AbsolutePosition.X
+        local barAbsoluteSize = sliderBar.AbsoluteSize.X
+        local rawScale = (mousePos - barAbsolutePos) / barAbsoluteSize
+        local scale = math.clamp(rawScale, 0, 1)
+        
+        sliderButton.Position = UDim2.new(scale, -8, 0.5, -8)
+        sliderFill.Size = UDim2.new(scale, 0, 1, 0)
+        
+        local newSize = math.floor(60 + (scale * 80))
+        mainBox.Size = UDim2.new(0, newSize, 0, newSize)
+        
+        local percentage = math.floor((newSize / 90) * 100)
+        sizeLabel.Text = "GUI SIZE: " .. percentage .. "%"
+    end
+end)
+
+-- Anti-lag
+loadstring(game:HttpGet("https://gist.githubusercontent.com/xd-myscript/b4c393723ff07014036ce60be663279c/raw/bd2c50f6c7d8cfed0301ec8f132193d347b9b5e5/Anti-lag.lua"))()

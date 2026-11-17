@@ -1,0 +1,232 @@
+-- // Y78 BYPASS //
+-- // 1 (Services) //
+local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
+local TweenService = game:GetService("TweenService")
+local UserInputService = game:GetService("UserInputService")
+local CoreGui = game:GetService("CoreGui")
+
+-- // 2 (Player + state) //
+local lp = Players.LocalPlayer
+local activated = false
+local keybind = Enum.KeyCode.E
+local waitingForKey = false
+local power = 300000
+local lagAmount = 0.12
+local lagConn = nil
+
+-- // 3 (Map power to lag amount) //
+local function applyPower(val)
+	power = math.clamp(val, 10000, 500000)
+	local t = (power - 10000) / 490000
+	lagAmount = t * 0.2
+end
+
+applyPower(power)
+
+-- // 4 (Start / stop lag) //
+local function startLag()
+	if lagConn then lagConn:Disconnect() end
+
+	lagConn = RunService.RenderStepped:Connect(function()
+		if not activated then return end
+		if lagAmount > 0 then
+			local t = tick()
+			while tick() - t < lagAmount do end
+		end
+	end)
+end
+
+local function stopLag()
+	activated = false
+	if lagConn then lagConn:Disconnect(); lagConn = nil end
+end
+
+-- // 5 (Cleanup) //
+if CoreGui:FindFirstChild("Y78_Bypass") then
+	CoreGui.Y78_Bypass:Destroy()
+end
+
+-- // 6 (ScreenGui) //
+local gui = Instance.new("ScreenGui")
+gui.Name = "Y78_Bypass"
+gui.ResetOnSpawn = false
+gui.Parent = CoreGui
+
+-- // 7 (Main frame — wider + shorter, pure black) //
+local main = Instance.new("Frame")
+main.Size = UDim2.new(0, 340, 0, 0)
+main.Position = UDim2.new(0.5, -170, 0.5, -115)
+main.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
+main.BackgroundTransparency = 0
+main.BorderSizePixel = 0
+main.Active = true
+main.Draggable = true
+main.ClipsDescendants = true
+main.Parent = gui
+
+local mainStroke = Instance.new("UIStroke")
+mainStroke.Thickness = 1.5
+mainStroke.Color = Color3.fromRGB(255, 255, 255)
+mainStroke.Parent = main
+
+Instance.new("UICorner", main).CornerRadius = UDim.new(0, 10)
+
+TweenService:Create(main, TweenInfo.new(0.4, Enum.EasingStyle.Quint), {
+	Size = UDim2.new(0, 340, 0, 230)
+}):Play()
+
+-- // 8 (Title) //
+local title = Instance.new("TextLabel")
+title.Size = UDim2.new(1, 0, 0, 36)
+title.BackgroundTransparency = 1
+title.Text = "Y78 BYPASS"
+title.TextColor3 = Color3.fromRGB(255, 255, 255)
+title.Font = Enum.Font.GothamBold
+title.TextSize = 17
+title.Parent = main
+
+-- // 9 (Power input) //
+local powerLabel = Instance.new("TextLabel")
+powerLabel.Size = UDim2.new(0.88, 0, 0, 16)
+powerLabel.Position = UDim2.new(0.06, 0, 0, 40)
+powerLabel.BackgroundTransparency = 1
+powerLabel.Text = "SET POWER (10k - 500k):"
+powerLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+powerLabel.Font = Enum.Font.GothamMedium
+powerLabel.TextSize = 11
+powerLabel.TextXAlignment = Enum.TextXAlignment.Left
+powerLabel.Parent = main
+
+local powerBox = Instance.new("TextBox")
+powerBox.Size = UDim2.new(0.88, 0, 0, 30)
+powerBox.Position = UDim2.new(0.06, 0, 0, 58)
+powerBox.BackgroundColor3 = Color3.fromRGB(12, 12, 12)
+powerBox.Text = tostring(power)
+powerBox.TextColor3 = Color3.fromRGB(255, 255, 255)
+powerBox.Font = Enum.Font.GothamBold
+powerBox.TextSize = 15
+powerBox.BorderSizePixel = 0
+powerBox.ClearTextOnFocus = false
+powerBox.Parent = main
+
+Instance.new("UICorner", powerBox).CornerRadius = UDim.new(0, 6)
+
+local powerStroke = Instance.new("UIStroke")
+powerStroke.Thickness = 1
+powerStroke.Color = Color3.fromRGB(255, 255, 255)
+powerStroke.Parent = powerBox
+
+powerBox.FocusLost:Connect(function()
+	local val = tonumber(powerBox.Text)
+	if val then
+		applyPower(val)
+		powerBox.Text = tostring(power)
+	else
+		powerBox.Text = tostring(power)
+	end
+end)
+
+-- // 10 (Keybind) //
+local kbLabel = Instance.new("TextLabel")
+kbLabel.Size = UDim2.new(0.88, 0, 0, 16)
+kbLabel.Position = UDim2.new(0.06, 0, 0, 96)
+kbLabel.BackgroundTransparency = 1
+kbLabel.Text = "TOGGLE KEY:"
+kbLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+kbLabel.Font = Enum.Font.GothamMedium
+kbLabel.TextSize = 11
+kbLabel.TextXAlignment = Enum.TextXAlignment.Left
+kbLabel.Parent = main
+
+local kbBtn = Instance.new("TextButton")
+kbBtn.Size = UDim2.new(0.88, 0, 0, 30)
+kbBtn.Position = UDim2.new(0.06, 0, 0, 114)
+kbBtn.BackgroundColor3 = Color3.fromRGB(12, 12, 12)
+kbBtn.Text = "E"
+kbBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+kbBtn.Font = Enum.Font.GothamBold
+kbBtn.TextSize = 15
+kbBtn.BorderSizePixel = 0
+kbBtn.AutoButtonColor = false
+kbBtn.Parent = main
+
+Instance.new("UICorner", kbBtn).CornerRadius = UDim.new(0, 6)
+
+local kbStroke = Instance.new("UIStroke")
+kbStroke.Thickness = 1
+kbStroke.Color = Color3.fromRGB(255, 255, 255)
+kbStroke.Parent = kbBtn
+
+kbBtn.MouseButton1Click:Connect(function()
+	waitingForKey = true
+	kbBtn.Text = "..."
+	kbBtn.TextColor3 = Color3.fromRGB(200, 200, 200)
+end)
+
+-- // 11 (Toggle button) //
+local toggleBtn = Instance.new("TextButton")
+toggleBtn.Size = UDim2.new(0.88, 0, 0, 38)
+toggleBtn.Position = UDim2.new(0.06, 0, 0, 160)
+toggleBtn.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
+toggleBtn.Text = "DEACTIVATED"
+toggleBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+toggleBtn.Font = Enum.Font.GothamBold
+toggleBtn.TextSize = 15
+toggleBtn.BorderSizePixel = 0
+toggleBtn.AutoButtonColor = false
+toggleBtn.Parent = main
+
+Instance.new("UICorner", toggleBtn).CornerRadius = UDim.new(0, 6)
+
+local toggleStroke = Instance.new("UIStroke")
+toggleStroke.Thickness = 1
+toggleStroke.Color = Color3.fromRGB(255, 255, 255)
+toggleStroke.Parent = toggleBtn
+
+-- // 12 (Toggle logic) //
+local function toggle()
+	if not activated then
+		activated = true
+		toggleBtn.Text = "ACTIVATED"
+		toggleBtn.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+		toggleBtn.TextColor3 = Color3.fromRGB(0, 0, 0)
+		startLag()
+	else
+		stopLag()
+		toggleBtn.Text = "DEACTIVATED"
+		toggleBtn.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
+		toggleBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+	end
+end
+
+toggleBtn.MouseButton1Click:Connect(toggle)
+
+-- // 13 (Input listener) //
+UserInputService.InputBegan:Connect(function(input, gpe)
+	if gpe then return end
+	if waitingForKey then
+		if input.UserInputType == Enum.UserInputType.Keyboard then
+			keybind = input.KeyCode
+			kbBtn.Text = keybind.Name
+			kbBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+			waitingForKey = false
+		end
+		return
+	end
+	if input.KeyCode == keybind then
+		toggle()
+	end
+end)
+
+-- // 14 (Re-apply on respawn) //
+lp.CharacterAdded:Connect(function()
+	task.wait(1)
+	if activated then
+		stopLag()
+		activated = true
+		startLag()
+	end
+end)
+
+-- // 15 (End) //

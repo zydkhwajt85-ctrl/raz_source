@@ -1,0 +1,799 @@
+-- Dumped by Lua Dumper
+-- Protection: Loader
+-- Recovered from: pastefy.app_raw.lua
+
+local cloneref = cloneref or function(o)
+    return o
+end
+local Players = cloneref(game:GetService("Players"))
+local UserInputService = cloneref(game:GetService("UserInputService"))
+local TweenService = cloneref(game:GetService("TweenService"))
+local RunService = cloneref(game:GetService("RunService"))
+local SoundService = cloneref(game:GetService("SoundService"))
+local LocalPlayer = Players.LocalPlayer
+local PlayerGui = LocalPlayer:WaitForChild("PlayerGui")
+local DISCORD_LINK = "https://discord.gg/zzAqF3mT3"
+if PlayerGui:FindFirstChild("AstraAntiBat") then
+    PlayerGui:FindFirstChild("AstraAntiBat"):Destroy()
+end
+local screenGui = Instance.new("ScreenGui")
+screenGui.Name = "AstraAntiBat"
+screenGui.ResetOnSpawn = false
+screenGui.DisplayOrder = 10
+screenGui.IgnoreGuiInset = true
+screenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+screenGui.ScreenInsets = Enum.ScreenInsets.DeviceSafeInsets
+screenGui.Parent = PlayerGui
+local function getPlayerAvatar()
+    local success, content = pcall(function()
+        return Players:GetUserThumbnailAsync(LocalPlayer.UserId, Enum.ThumbnailType.HeadShot, Enum.ThumbnailSize.Size150x150)
+    end)
+    return success and content or ""
+end
+local introFrame = Instance.new("TextButton")
+introFrame.Name = "IntroFrame"
+introFrame.Size = UDim2.new(1, 0, 1, 0)
+introFrame.BackgroundColor3 = Color3.fromRGB(5, 12, 26)
+introFrame.BackgroundTransparency = 0.25
+introFrame.BorderSizePixel = 0
+introFrame.Text = ""
+introFrame.AutoButtonColor = false
+introFrame.ZIndex = 100
+introFrame.Parent = screenGui
+local introMusic = Instance.new("Sound")
+introMusic.SoundId = "rbxassetid://1848354536"
+introMusic.Volume = 0.8
+introMusic.Looped = false
+introMusic.Parent = SoundService
+introMusic:Play()
+local introContainer = Instance.new("Frame")
+introContainer.Size = UDim2.new(0, 340, 0, 210)
+introContainer.Position = UDim2.new(0.5, -170, 0.5, -105)
+introContainer.BackgroundTransparency = 1
+introContainer.ZIndex = 101
+introContainer.Parent = introFrame
+local introBadge = Instance.new("TextLabel")
+introBadge.Size = UDim2.new(1, 0, 0, 45)
+introBadge.Position = UDim2.new(0, 0, 0, 0)
+introBadge.BackgroundTransparency = 1
+introBadge.Text = "ASTRA7XX"
+introBadge.TextColor3 = Color3.fromRGB(40, 160, 255)
+introBadge.FontFace = Font.new("rbxasset://fonts/families/GothamSSm.json", Enum.FontWeight.Heavy, Enum.FontStyle.Normal)
+introBadge.TextSize = 38
+introBadge.TextTransparency = 1
+introBadge.ZIndex = 102
+introBadge.Parent = introContainer
+local introBadgeGrad = Instance.new("UIGradient")
+introBadgeGrad.Color = ColorSequence.new({
+    ColorSequenceKeypoint.new(0, Color3.fromRGB(120, 220, 255)),
+    ColorSequenceKeypoint.new(1, Color3.fromRGB(20, 110, 255))
+})
+introBadgeGrad.Parent = introBadge
+local introSubTitle = Instance.new("TextLabel")
+introSubTitle.Size = UDim2.new(1, 0, 0, 25)
+introSubTitle.Position = UDim2.new(0, 0, 0, 45)
+introSubTitle.BackgroundTransparency = 1
+introSubTitle.Text = "ASTRA7XX // ANTI BAT"
+introSubTitle.TextColor3 = Color3.fromRGB(180, 225, 255)
+introSubTitle.FontFace = Font.new("rbxasset://fonts/families/GothamSSm.json", Enum.FontWeight.Bold, Enum.FontStyle.Normal)
+introSubTitle.TextSize = 13
+introSubTitle.TextTransparency = 1
+introSubTitle.ZIndex = 102
+introSubTitle.Parent = introContainer
+local introDiscordBox = Instance.new("Frame")
+introDiscordBox.Size = UDim2.new(0, 250, 0, 30)
+introDiscordBox.Position = UDim2.new(0.5, -125, 0, 76)
+introDiscordBox.BackgroundColor3 = Color3.fromRGB(15, 35, 70)
+introDiscordBox.BackgroundTransparency = 1
+introDiscordBox.BorderSizePixel = 0
+introDiscordBox.ZIndex = 102
+introDiscordBox.Parent = introContainer
+Instance.new("UICorner", introDiscordBox).CornerRadius = UDim.new(0, 8)
+local introDiscordStroke = Instance.new("UIStroke", introDiscordBox)
+introDiscordStroke.Color = Color3.fromRGB(50, 170, 255)
+introDiscordStroke.Transparency = 1
+introDiscordStroke.Thickness = 1.2
+local introDiscordText = Instance.new("TextLabel")
+introDiscordText.Size = UDim2.new(1, 0, 1, 0)
+introDiscordText.BackgroundTransparency = 1
+introDiscordText.Text = "Discord: " .. DISCORD_LINK
+introDiscordText.TextColor3 = Color3.fromRGB(110, 205, 255)
+introDiscordText.FontFace = Font.new("rbxasset://fonts/families/GothamSSm.json", Enum.FontWeight.Bold, Enum.FontStyle.Normal)
+introDiscordText.TextSize = 11
+introDiscordText.TextTransparency = 1
+introDiscordText.ZIndex = 103
+introDiscordText.Parent = introDiscordBox
+local introBarBack = Instance.new("Frame")
+introBarBack.Size = UDim2.new(0, 220, 0, 4)
+introBarBack.Position = UDim2.new(0.5, -110, 0, 120)
+introBarBack.BackgroundColor3 = Color3.fromRGB(15, 35, 65)
+introBarBack.BorderSizePixel = 0
+introBarBack.ZIndex = 102
+introBarBack.Parent = introContainer
+Instance.new("UICorner", introBarBack).CornerRadius = UDim.new(1, 0)
+local introBarFill = Instance.new("Frame")
+introBarFill.Size = UDim2.new(0, 0, 1, 0)
+introBarFill.BackgroundColor3 = Color3.fromRGB(40, 160, 255)
+introBarFill.BorderSizePixel = 0
+introBarFill.ZIndex = 103
+introBarFill.Parent = introBarBack
+Instance.new("UICorner", introBarFill).CornerRadius = UDim.new(1, 0)
+local introTapHint = Instance.new("TextLabel")
+introTapHint.Size = UDim2.new(1, 0, 0, 20)
+introTapHint.Position = UDim2.new(0, 0, 0, 138)
+introTapHint.BackgroundTransparency = 1
+introTapHint.Text = "Click anywhere to continue"
+introTapHint.TextColor3 = Color3.fromRGB(130, 170, 210)
+introTapHint.FontFace = Font.new("rbxasset://fonts/families/GothamSSm.json", Enum.FontWeight.Medium, Enum.FontStyle.Normal)
+introTapHint.TextSize = 11
+introTapHint.TextTransparency = 0.6
+introTapHint.ZIndex = 102
+introTapHint.Parent = introContainer
+local introDone = false
+local function closeIntro()
+    if introDone then
+        return
+    end
+    introDone = true
+    if introMusic then
+        introMusic:Stop()
+        introMusic:Destroy()
+    end
+    TweenService:Create(introFrame, TweenInfo.new(0.4), {BackgroundTransparency = 1}):Play()
+    TweenService:Create(introBadge, TweenInfo.new(0.4), {TextTransparency = 1}):Play()
+    TweenService:Create(introSubTitle, TweenInfo.new(0.4), {TextTransparency = 1}):Play()
+    TweenService:Create(introDiscordBox, TweenInfo.new(0.4), {BackgroundTransparency = 1}):Play()
+    TweenService:Create(introDiscordStroke, TweenInfo.new(0.4), {Transparency = 1}):Play()
+    TweenService:Create(introDiscordText, TweenInfo.new(0.4), {TextTransparency = 1}):Play()
+    TweenService:Create(introBarBack, TweenInfo.new(0.4), {BackgroundTransparency = 1}):Play()
+    TweenService:Create(introBarFill, TweenInfo.new(0.4), {BackgroundTransparency = 1}):Play()
+    TweenService:Create(introTapHint, TweenInfo.new(0.4), {TextTransparency = 1}):Play()
+    task.wait(0.4)
+    introFrame:Destroy()
+end
+introFrame.MouseButton1Click:Connect(closeIntro)
+task.spawn(function()
+    if introDone then
+        return
+    end
+    TweenService:Create(introBadge, TweenInfo.new(0.4, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {TextTransparency = 0, Position = UDim2.new(0, 0, 0, -5)}):Play()
+    task.wait(0.2)
+    if introDone then
+        return
+    end
+    TweenService:Create(introSubTitle, TweenInfo.new(0.3), {TextTransparency = 0, Position = UDim2.new(0, 0, 0, 40)}):Play()
+    TweenService:Create(introDiscordBox, TweenInfo.new(0.35), {BackgroundTransparency = 0.35}):Play()
+    TweenService:Create(introDiscordStroke, TweenInfo.new(0.35), {Transparency = 0.3}):Play()
+    TweenService:Create(introDiscordText, TweenInfo.new(0.35), {TextTransparency = 0}):Play()
+    TweenService:Create(introBarFill, TweenInfo.new(3.5, Enum.EasingStyle.Linear), {Size = UDim2.new(1, 0, 1, 0)}):Play()
+    task.wait(3.5)
+    closeIntro()
+end)
+local G = {}
+local EXPANDED_HEIGHT = 345
+G.Main = Instance.new("Frame")
+G.Main.Name = "Main"
+G.Main.Active = true
+G.Main.BackgroundColor3 = Color3.fromRGB(10, 16, 30)
+G.Main.BorderSizePixel = 0
+G.Main.ClipsDescendants = true
+G.Main.Position = UDim2.new(0.5, -150, 0.5, -172)
+G.Main.Size = UDim2.new(0, 300, 0, EXPANDED_HEIGHT)
+G.Main.Parent = screenGui
+local mainGradient = Instance.new("UIGradient")
+mainGradient.Color = ColorSequence.new({
+    ColorSequenceKeypoint.new(0, Color3.fromRGB(14, 24, 46)),
+    ColorSequenceKeypoint.new(1, Color3.fromRGB(8, 12, 24))
+})
+mainGradient.Rotation = 90
+mainGradient.Parent = G.Main
+G.UICorner = Instance.new("UICorner")
+G.UICorner.CornerRadius = UDim.new(0, 14)
+G.UICorner.Parent = G.Main
+G.UIStroke = Instance.new("UIStroke")
+G.UIStroke.Color = Color3.fromRGB(40, 150, 255)
+G.UIStroke.Thickness = 1.5
+G.UIStroke.Transparency = 0.25
+G.UIStroke.Parent = G.Main
+G.Header = Instance.new("Frame")
+G.Header.Active = true
+G.Header.BackgroundTransparency = 1
+G.Header.Size = UDim2.new(1, 0, 0, 56)
+G.Header.ZIndex = 5
+G.Header.Parent = G.Main
+G.AvatarFrame = Instance.new("Frame")
+G.AvatarFrame.Size = UDim2.new(0, 36, 0, 36)
+G.AvatarFrame.Position = UDim2.new(0, 14, 0.5, -18)
+G.AvatarFrame.BackgroundColor3 = Color3.fromRGB(18, 35, 65)
+G.AvatarFrame.BorderSizePixel = 0
+G.AvatarFrame.ZIndex = 6
+G.AvatarFrame.Parent = G.Header
+Instance.new("UICorner", G.AvatarFrame).CornerRadius = UDim.new(1, 0)
+local avatarStroke = Instance.new("UIStroke", G.AvatarFrame)
+avatarStroke.Color = Color3.fromRGB(60, 180, 255)
+avatarStroke.Thickness = 1.5
+G.AvatarImg = Instance.new("ImageLabel")
+G.AvatarImg.Size = UDim2.new(1, 0, 1, 0)
+G.AvatarImg.BackgroundTransparency = 1
+G.AvatarImg.Image = getPlayerAvatar()
+G.AvatarImg.ZIndex = 7
+G.AvatarImg.Parent = G.AvatarFrame
+Instance.new("UICorner", G.AvatarImg).CornerRadius = UDim.new(1, 0)
+G.Title = Instance.new("TextLabel")
+G.Title.BackgroundTransparency = 1
+G.Title.Position = UDim2.new(0, 58, 0, 10)
+G.Title.Size = UDim2.new(1, -105, 0, 18)
+G.Title.ZIndex = 5
+G.Title.FontFace = Font.new("rbxasset://fonts/families/GothamSSm.json", Enum.FontWeight.Heavy, Enum.FontStyle.Normal)
+G.Title.Text = LocalPlayer.DisplayName .. " (@" .. LocalPlayer.Name .. ")"
+G.Title.TextColor3 = Color3.fromRGB(240, 248, 255)
+G.Title.TextSize = 13
+G.Title.TextTruncate = Enum.TextTruncate.AtEnd
+G.Title.TextXAlignment = Enum.TextXAlignment.Left
+G.Title.Parent = G.Header
+local titleGradient = Instance.new("UIGradient")
+titleGradient.Color = ColorSequence.new({
+    ColorSequenceKeypoint.new(0, Color3.fromRGB(255, 255, 255)),
+    ColorSequenceKeypoint.new(1, Color3.fromRGB(90, 190, 255))
+})
+titleGradient.Parent = G.Title
+G.Subtitle = Instance.new("TextLabel")
+G.Subtitle.BackgroundTransparency = 1
+G.Subtitle.Position = UDim2.new(0, 58, 0, 29)
+G.Subtitle.Size = UDim2.new(1, -105, 0, 14)
+G.Subtitle.ZIndex = 5
+G.Subtitle.FontFace = Font.new("rbxasset://fonts/families/GothamSSm.json", Enum.FontWeight.Bold, Enum.FontStyle.Normal)
+G.Subtitle.Text = "astra7xx // anti bat"
+G.Subtitle.TextColor3 = Color3.fromRGB(90, 175, 255)
+G.Subtitle.TextSize = 11
+G.Subtitle.TextXAlignment = Enum.TextXAlignment.Left
+G.Subtitle.Parent = G.Header
+G.MinimizeBtn = Instance.new("TextButton")
+G.MinimizeBtn.AnchorPoint = Vector2.new(1, 0.5)
+G.MinimizeBtn.BackgroundColor3 = Color3.fromRGB(18, 36, 70)
+G.MinimizeBtn.BackgroundTransparency = 0.25
+G.MinimizeBtn.Position = UDim2.new(1, -14, 0.5, 0)
+G.MinimizeBtn.Size = UDim2.new(0, 26, 0, 26)
+G.MinimizeBtn.ZIndex = 5
+G.MinimizeBtn.FontFace = Font.new("rbxasset://fonts/families/GothamSSm.json", Enum.FontWeight.Heavy, Enum.FontStyle.Normal)
+G.MinimizeBtn.Text = "-"
+G.MinimizeBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+G.MinimizeBtn.TextSize = 14
+G.MinimizeBtn.Parent = G.Header
+Instance.new("UICorner", G.MinimizeBtn).CornerRadius = UDim.new(0, 6)
+local minStroke = Instance.new("UIStroke", G.MinimizeBtn)
+minStroke.Color = Color3.fromRGB(50, 160, 255)
+minStroke.Transparency = 0.35
+G.Content = Instance.new("Frame")
+G.Content.BackgroundTransparency = 1
+G.Content.ClipsDescendants = true
+G.Content.Position = UDim2.new(0, 0, 0, 56)
+G.Content.Size = UDim2.new(1, 0, 1, -56)
+G.Content.ZIndex = 2
+G.Content.Parent = G.Main
+G.StatusRow = Instance.new("Frame")
+G.StatusRow.BackgroundColor3 = Color3.fromRGB(15, 28, 52)
+G.StatusRow.BackgroundTransparency = 0.35
+G.StatusRow.Position = UDim2.new(0, 12, 0, 4)
+G.StatusRow.Size = UDim2.new(1, -24, 0, 32)
+G.StatusRow.ZIndex = 4
+G.StatusRow.Parent = G.Content
+Instance.new("UICorner", G.StatusRow).CornerRadius = UDim.new(0, 10)
+local sStroke = Instance.new("UIStroke", G.StatusRow)
+sStroke.Color = Color3.fromRGB(60, 200, 255)
+sStroke.Transparency = 0.3
+G.StatusDot = Instance.new("Frame")
+G.StatusDot.BackgroundColor3 = Color3.fromRGB(60, 210, 255)
+G.StatusDot.BorderSizePixel = 0
+G.StatusDot.Position = UDim2.new(0, 12, 0.5, -4)
+G.StatusDot.Size = UDim2.new(0, 8, 0, 8)
+G.StatusDot.ZIndex = 6
+G.StatusDot.Parent = G.StatusRow
+Instance.new("UICorner", G.StatusDot).CornerRadius = UDim.new(1, 0)
+G.StatusText = Instance.new("TextLabel")
+G.StatusText.BackgroundTransparency = 1
+G.StatusText.Position = UDim2.new(0, 28, 0, 0)
+G.StatusText.Size = UDim2.new(1, -30, 1, 0)
+G.StatusText.ZIndex = 6
+G.StatusText.FontFace = Font.new("rbxasset://fonts/families/GothamSSm.json", Enum.FontWeight.Heavy, Enum.FontStyle.Normal)
+G.StatusText.Text = "ACTIVE"
+G.StatusText.TextColor3 = Color3.fromRGB(90, 215, 255)
+G.StatusText.TextSize = 11
+G.StatusText.TextXAlignment = Enum.TextXAlignment.Left
+G.StatusText.Parent = G.StatusRow
+G.AntiBatRow = Instance.new("Frame")
+G.AntiBatRow.BackgroundColor3 = Color3.fromRGB(15, 28, 52)
+G.AntiBatRow.BackgroundTransparency = 0.35
+G.AntiBatRow.Position = UDim2.new(0, 12, 0, 44)
+G.AntiBatRow.Size = UDim2.new(1, -24, 0, 40)
+G.AntiBatRow.ZIndex = 4
+G.AntiBatRow.Parent = G.Content
+Instance.new("UICorner", G.AntiBatRow).CornerRadius = UDim.new(0, 10)
+local bar1 = Instance.new("Frame", G.AntiBatRow)
+bar1.BackgroundColor3 = Color3.fromRGB(40, 160, 255)
+bar1.BorderSizePixel = 0
+bar1.Position = UDim2.new(0, 10, 0.5, -9)
+bar1.Size = UDim2.new(0, 3, 0, 18)
+bar1.ZIndex = 5
+Instance.new("UICorner", bar1).CornerRadius = UDim.new(1, 0)
+G.AntiBatLabel = Instance.new("TextLabel")
+G.AntiBatLabel.BackgroundTransparency = 1
+G.AntiBatLabel.Position = UDim2.new(0, 22, 0, 0)
+G.AntiBatLabel.Size = UDim2.new(0, 150, 1, 0)
+G.AntiBatLabel.ZIndex = 6
+G.AntiBatLabel.FontFace = Font.new("rbxasset://fonts/families/GothamSSm.json", Enum.FontWeight.Heavy, Enum.FontStyle.Normal)
+G.AntiBatLabel.Text = "Anti Bat"
+G.AntiBatLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+G.AntiBatLabel.TextSize = 13
+G.AntiBatLabel.TextXAlignment = Enum.TextXAlignment.Left
+G.AntiBatLabel.Parent = G.AntiBatRow
+G.AntiBatToggleBg = Instance.new("Frame")
+G.AntiBatToggleBg.BackgroundColor3 = Color3.fromRGB(40, 160, 255)
+G.AntiBatToggleBg.BorderSizePixel = 0
+G.AntiBatToggleBg.Position = UDim2.new(1, -54, 0.5, -10)
+G.AntiBatToggleBg.Size = UDim2.new(0, 42, 0, 20)
+G.AntiBatToggleBg.ZIndex = 6
+G.AntiBatToggleBg.Parent = G.AntiBatRow
+Instance.new("UICorner", G.AntiBatToggleBg).CornerRadius = UDim.new(1, 0)
+G.AntiBatToggleKnob = Instance.new("Frame")
+G.AntiBatToggleKnob.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+G.AntiBatToggleKnob.BorderSizePixel = 0
+G.AntiBatToggleKnob.Position = UDim2.new(1, -18, 0.5, -7)
+G.AntiBatToggleKnob.Size = UDim2.new(0, 14, 0, 14)
+G.AntiBatToggleKnob.ZIndex = 7
+G.AntiBatToggleKnob.Parent = G.AntiBatToggleBg
+Instance.new("UICorner", G.AntiBatToggleKnob).CornerRadius = UDim.new(1, 0)
+G.AntiBatBtn = Instance.new("TextButton")
+G.AntiBatBtn.BackgroundTransparency = 1
+G.AntiBatBtn.Size = UDim2.new(1, 0, 1, 0)
+G.AntiBatBtn.ZIndex = 10
+G.AntiBatBtn.Text = ""
+G.AntiBatBtn.Parent = G.AntiBatRow
+G.InfJumpRow = Instance.new("Frame")
+G.InfJumpRow.BackgroundColor3 = Color3.fromRGB(15, 28, 52)
+G.InfJumpRow.BackgroundTransparency = 0.35
+G.InfJumpRow.Position = UDim2.new(0, 12, 0, 90)
+G.InfJumpRow.Size = UDim2.new(1, -24, 0, 40)
+G.InfJumpRow.ZIndex = 4
+G.InfJumpRow.Parent = G.Content
+Instance.new("UICorner", G.InfJumpRow).CornerRadius = UDim.new(0, 10)
+local bar2 = Instance.new("Frame", G.InfJumpRow)
+bar2.BackgroundColor3 = Color3.fromRGB(40, 160, 255)
+bar2.BorderSizePixel = 0
+bar2.Position = UDim2.new(0, 10, 0.5, -9)
+bar2.Size = UDim2.new(0, 3, 0, 18)
+bar2.ZIndex = 5
+Instance.new("UICorner", bar2).CornerRadius = UDim.new(1, 0)
+G.InfJumpLabel = Instance.new("TextLabel")
+G.InfJumpLabel.BackgroundTransparency = 1
+G.InfJumpLabel.Position = UDim2.new(0, 22, 0, 0)
+G.InfJumpLabel.Size = UDim2.new(0, 150, 1, 0)
+G.InfJumpLabel.ZIndex = 6
+G.InfJumpLabel.FontFace = Font.new("rbxasset://fonts/families/GothamSSm.json", Enum.FontWeight.Heavy, Enum.FontStyle.Normal)
+G.InfJumpLabel.Text = "Inf Jump"
+G.InfJumpLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+G.InfJumpLabel.TextSize = 13
+G.InfJumpLabel.TextXAlignment = Enum.TextXAlignment.Left
+G.InfJumpLabel.Parent = G.InfJumpRow
+G.InfJumpToggleBg = Instance.new("Frame")
+G.InfJumpToggleBg.BackgroundColor3 = Color3.fromRGB(40, 160, 255)
+G.InfJumpToggleBg.BorderSizePixel = 0
+G.InfJumpToggleBg.Position = UDim2.new(1, -54, 0.5, -10)
+G.InfJumpToggleBg.Size = UDim2.new(0, 42, 0, 20)
+G.InfJumpToggleBg.ZIndex = 6
+G.InfJumpToggleBg.Parent = G.InfJumpRow
+Instance.new("UICorner", G.InfJumpToggleBg).CornerRadius = UDim.new(1, 0)
+G.InfJumpToggleKnob = Instance.new("Frame")
+G.InfJumpToggleKnob.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+G.InfJumpToggleKnob.BorderSizePixel = 0
+G.InfJumpToggleKnob.Position = UDim2.new(1, -18, 0.5, -7)
+G.InfJumpToggleKnob.Size = UDim2.new(0, 14, 0, 14)
+G.InfJumpToggleKnob.ZIndex = 7
+G.InfJumpToggleKnob.Parent = G.InfJumpToggleBg
+Instance.new("UICorner", G.InfJumpToggleKnob).CornerRadius = UDim.new(1, 0)
+G.InfJumpBtn = Instance.new("TextButton")
+G.InfJumpBtn.BackgroundTransparency = 1
+G.InfJumpBtn.Size = UDim2.new(1, 0, 1, 0)
+G.InfJumpBtn.ZIndex = 10
+G.InfJumpBtn.Text = ""
+G.InfJumpBtn.Parent = G.InfJumpRow
+G.PowerRow = Instance.new("Frame")
+G.PowerRow.BackgroundColor3 = Color3.fromRGB(15, 28, 52)
+G.PowerRow.BackgroundTransparency = 0.35
+G.PowerRow.Position = UDim2.new(0, 12, 0, 136)
+G.PowerRow.Size = UDim2.new(1, -24, 0, 40)
+G.PowerRow.ZIndex = 4
+G.PowerRow.Parent = G.Content
+Instance.new("UICorner", G.PowerRow).CornerRadius = UDim.new(0, 10)
+local bar3 = Instance.new("Frame", G.PowerRow)
+bar3.BackgroundColor3 = Color3.fromRGB(40, 160, 255)
+bar3.BorderSizePixel = 0
+bar3.Position = UDim2.new(0, 10, 0.5, -9)
+bar3.Size = UDim2.new(0, 3, 0, 18)
+bar3.ZIndex = 5
+Instance.new("UICorner", bar3).CornerRadius = UDim.new(1, 0)
+G.PowerLabel = Instance.new("TextLabel")
+G.PowerLabel.BackgroundTransparency = 1
+G.PowerLabel.Position = UDim2.new(0, 22, 0, 0)
+G.PowerLabel.Size = UDim2.new(0, 50, 1, 0)
+G.PowerLabel.ZIndex = 6
+G.PowerLabel.FontFace = Font.new("rbxasset://fonts/families/GothamSSm.json", Enum.FontWeight.Heavy, Enum.FontStyle.Normal)
+G.PowerLabel.Text = "Power"
+G.PowerLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+G.PowerLabel.TextSize = 13
+G.PowerLabel.TextXAlignment = Enum.TextXAlignment.Left
+G.PowerLabel.Parent = G.PowerRow
+G.SliderTrack = Instance.new("Frame")
+G.SliderTrack.BackgroundColor3 = Color3.fromRGB(20, 42, 80)
+G.SliderTrack.BorderSizePixel = 0
+G.SliderTrack.Position = UDim2.new(0, 75, 0.5, -3)
+G.SliderTrack.Size = UDim2.new(1, -135, 0, 6)
+G.SliderTrack.ZIndex = 6
+G.SliderTrack.Parent = G.PowerRow
+Instance.new("UICorner", G.SliderTrack).CornerRadius = UDim.new(1, 0)
+G.SliderFill = Instance.new("Frame")
+G.SliderFill.BackgroundColor3 = Color3.fromRGB(40, 160, 255)
+G.SliderFill.BorderSizePixel = 0
+G.SliderFill.Size = UDim2.new(1, 0, 1, 0)
+G.SliderFill.ZIndex = 7
+G.SliderFill.Parent = G.SliderTrack
+Instance.new("UICorner", G.SliderFill).CornerRadius = UDim.new(1, 0)
+local sliderGrad = Instance.new("UIGradient")
+sliderGrad.Color = ColorSequence.new({
+    ColorSequenceKeypoint.new(0, Color3.fromRGB(30, 110, 255)),
+    ColorSequenceKeypoint.new(1, Color3.fromRGB(100, 210, 255))
+})
+sliderGrad.Parent = G.SliderFill
+G.SliderKnob = Instance.new("Frame")
+G.SliderKnob.AnchorPoint = Vector2.new(0.5, 0.5)
+G.SliderKnob.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+G.SliderKnob.BorderSizePixel = 0
+G.SliderKnob.Position = UDim2.new(1, 0, 0.5, 0)
+G.SliderKnob.Size = UDim2.new(0, 12, 0, 12)
+G.SliderKnob.ZIndex = 8
+G.SliderKnob.Parent = G.SliderTrack
+Instance.new("UICorner", G.SliderKnob).CornerRadius = UDim.new(1, 0)
+G.PowerValText = Instance.new("TextLabel")
+G.PowerValText.AnchorPoint = Vector2.new(1, 0.5)
+G.PowerValText.BackgroundTransparency = 1
+G.PowerValText.Position = UDim2.new(1, -8, 0.5, 0)
+G.PowerValText.Size = UDim2.new(0, 40, 0, 20)
+G.PowerValText.ZIndex = 6
+G.PowerValText.FontFace = Font.new("rbxasset://fonts/families/GothamSSm.json", Enum.FontWeight.Heavy, Enum.FontStyle.Normal)
+G.PowerValText.Text = "100%"
+G.PowerValText.TextColor3 = Color3.fromRGB(255, 255, 255)
+G.PowerValText.TextSize = 11
+G.PowerValText.TextXAlignment = Enum.TextXAlignment.Right
+G.PowerValText.Parent = G.PowerRow
+G.SliderBtn = Instance.new("TextButton")
+G.SliderBtn.BackgroundTransparency = 1
+G.SliderBtn.Position = UDim2.new(0, 70, 0, 0)
+G.SliderBtn.Size = UDim2.new(1, -70, 1, 0)
+G.SliderBtn.ZIndex = 10
+G.SliderBtn.Text = ""
+G.SliderBtn.Parent = G.PowerRow
+G.KeybindRow = Instance.new("Frame")
+G.KeybindRow.BackgroundColor3 = Color3.fromRGB(15, 28, 52)
+G.KeybindRow.BackgroundTransparency = 0.35
+G.KeybindRow.Position = UDim2.new(0, 12, 0, 182)
+G.KeybindRow.Size = UDim2.new(1, -24, 0, 40)
+G.KeybindRow.ZIndex = 4
+G.KeybindRow.Parent = G.Content
+Instance.new("UICorner", G.KeybindRow).CornerRadius = UDim.new(0, 10)
+local bar4 = Instance.new("Frame", G.KeybindRow)
+bar4.BackgroundColor3 = Color3.fromRGB(40, 160, 255)
+bar4.BorderSizePixel = 0
+bar4.Position = UDim2.new(0, 10, 0.5, -9)
+bar4.Size = UDim2.new(0, 3, 0, 18)
+bar4.ZIndex = 5
+Instance.new("UICorner", bar4).CornerRadius = UDim.new(1, 0)
+G.KeybindLabel = Instance.new("TextLabel")
+G.KeybindLabel.BackgroundTransparency = 1
+G.KeybindLabel.Position = UDim2.new(0, 22, 0, 0)
+G.KeybindLabel.Size = UDim2.new(0, 150, 1, 0)
+G.KeybindLabel.ZIndex = 6
+G.KeybindLabel.FontFace = Font.new("rbxasset://fonts/families/GothamSSm.json", Enum.FontWeight.Heavy, Enum.FontStyle.Normal)
+G.KeybindLabel.Text = "Keybind"
+G.KeybindLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+G.KeybindLabel.TextSize = 13
+G.KeybindLabel.TextXAlignment = Enum.TextXAlignment.Left
+G.KeybindLabel.Parent = G.KeybindRow
+G.Keybind = Instance.new("TextButton")
+G.Keybind.Name = "Keybind"
+G.Keybind.AnchorPoint = Vector2.new(1, 0.5)
+G.Keybind.BackgroundColor3 = Color3.fromRGB(20, 45, 85)
+G.Keybind.BackgroundTransparency = 0.25
+G.Keybind.Position = UDim2.new(1, -12, 0.5, 0)
+G.Keybind.Size = UDim2.new(0, 54, 0, 24)
+G.Keybind.ZIndex = 6
+G.Keybind.FontFace = Font.new("rbxasset://fonts/families/GothamSSm.json", Enum.FontWeight.Heavy, Enum.FontStyle.Normal)
+G.Keybind.Text = "V"
+G.Keybind.TextColor3 = Color3.fromRGB(255, 255, 255)
+G.Keybind.TextSize = 12
+G.Keybind.Parent = G.KeybindRow
+Instance.new("UICorner", G.Keybind).CornerRadius = UDim.new(0, 6)
+local kStroke = Instance.new("UIStroke", G.Keybind)
+kStroke.Color = Color3.fromRGB(50, 160, 255)
+kStroke.Transparency = 0.35
+G.DiscordRow = Instance.new("Frame")
+G.DiscordRow.BackgroundColor3 = Color3.fromRGB(16, 36, 72)
+G.DiscordRow.BackgroundTransparency = 0.2
+G.DiscordRow.Position = UDim2.new(0, 12, 0, 228)
+G.DiscordRow.Size = UDim2.new(1, -24, 0, 42)
+G.DiscordRow.ZIndex = 4
+G.DiscordRow.Parent = G.Content
+Instance.new("UICorner", G.DiscordRow).CornerRadius = UDim.new(0, 10)
+local dStroke = Instance.new("UIStroke", G.DiscordRow)
+dStroke.Color = Color3.fromRGB(60, 175, 255)
+dStroke.Transparency = 0.3
+local bar5 = Instance.new("Frame", G.DiscordRow)
+bar5.BackgroundColor3 = Color3.fromRGB(80, 200, 255)
+bar5.BorderSizePixel = 0
+bar5.Position = UDim2.new(0, 10, 0.5, -9)
+bar5.Size = UDim2.new(0, 3, 0, 18)
+bar5.ZIndex = 5
+Instance.new("UICorner", bar5).CornerRadius = UDim.new(1, 0)
+G.DiscordLabel = Instance.new("TextLabel")
+G.DiscordLabel.BackgroundTransparency = 1
+G.DiscordLabel.Position = UDim2.new(0, 22, 0, 0)
+G.DiscordLabel.Size = UDim2.new(1, -34, 1, 0)
+G.DiscordLabel.ZIndex = 6
+G.DiscordLabel.FontFace = Font.new("rbxasset://fonts/families/GothamSSm.json", Enum.FontWeight.Heavy, Enum.FontStyle.Normal)
+G.DiscordLabel.Text = "Discord (Click to Copy)"
+G.DiscordLabel.TextColor3 = Color3.fromRGB(130, 215, 255)
+G.DiscordLabel.TextSize = 12
+G.DiscordLabel.TextXAlignment = Enum.TextXAlignment.Left
+G.DiscordLabel.Parent = G.DiscordRow
+G.DiscordBtn = Instance.new("TextButton")
+G.DiscordBtn.BackgroundTransparency = 1
+G.DiscordBtn.Size = UDim2.new(1, 0, 1, 0)
+G.DiscordBtn.ZIndex = 10
+G.DiscordBtn.Text = ""
+G.DiscordBtn.Parent = G.DiscordRow
+G.DiscordBtn.MouseButton1Click:Connect(function()
+    if setclipboard then
+        setclipboard(DISCORD_LINK)
+    elseif toclipboard then
+        toclipboard(DISCORD_LINK)
+    end
+    G.DiscordLabel.Text = "Copied: " .. DISCORD_LINK
+    G.DiscordLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+    TweenService:Create(G.DiscordRow, TweenInfo.new(0.2), {BackgroundColor3 = Color3.fromRGB(30, 95, 180)}):Play()
+    task.wait(1.8)
+    G.DiscordLabel.Text = "Discord (Click to Copy)"
+    G.DiscordLabel.TextColor3 = Color3.fromRGB(130, 215, 255)
+    TweenService:Create(G.DiscordRow, TweenInfo.new(0.2), {BackgroundColor3 = Color3.fromRGB(16, 36, 72)}):Play()
+end)
+screenGui.Parent = PlayerGui
+local dragging = false
+local dragInput = nil
+local dragStart = nil
+local startPos = nil
+G.Header.InputBegan:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+        dragging = true
+        dragStart = input.Position
+        startPos = G.Main.Position
+        input.Changed:Connect(function()
+            if input.UserInputState == Enum.UserInputState.End then
+                dragging = false
+            end
+        end)
+    end
+end)
+G.Header.InputChanged:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch then
+        dragInput = input
+    end
+end)
+UserInputService.InputChanged:Connect(function(input)
+    if input == dragInput and dragging then
+        local delta = input.Position - dragStart
+        G.Main.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
+    end
+end)
+local isMinimized = false
+G.MinimizeBtn.MouseButton1Click:Connect(function()
+    isMinimized = not isMinimized
+    if isMinimized then
+        G.Content.Visible = false
+        G.Main.Size = UDim2.new(0, 300, 0, 56)
+        G.MinimizeBtn.Text = "+"
+    else
+        G.Content.Visible = true
+        G.Main.Size = UDim2.new(0, 300, 0, EXPANDED_HEIGHT)
+        G.MinimizeBtn.Text = "-"
+    end
+end)
+local antiBatEnabled = true
+local antiBatConn = nil
+local currentPower = 300000
+local function updateAntiBatVisual(state)
+    if state then
+        TweenService:Create(G.AntiBatToggleBg, TweenInfo.new(0.18), {BackgroundColor3 = Color3.fromRGB(40, 160, 255)}):Play()
+        TweenService:Create(G.AntiBatToggleKnob, TweenInfo.new(0.18), {Position = UDim2.new(1, -18, 0.5, -7)}):Play()
+        G.StatusText.Text = "ACTIVE"
+        G.StatusText.TextColor3 = Color3.fromRGB(90, 215, 255)
+        G.StatusDot.BackgroundColor3 = Color3.fromRGB(90, 215, 255)
+    else
+        TweenService:Create(G.AntiBatToggleBg, TweenInfo.new(0.18), {BackgroundColor3 = Color3.fromRGB(20, 40, 75)}):Play()
+        TweenService:Create(G.AntiBatToggleKnob, TweenInfo.new(0.18), {Position = UDim2.new(0, 4, 0.5, -7)}):Play()
+        G.StatusText.Text = "INACTIVE"
+        G.StatusText.TextColor3 = Color3.fromRGB(255, 85, 105)
+        G.StatusDot.BackgroundColor3 = Color3.fromRGB(255, 85, 105)
+    end
+end
+local function setAntiBat(state)
+    antiBatEnabled = state
+    updateAntiBatVisual(antiBatEnabled)
+    if antiBatConn then
+        antiBatConn:Disconnect()
+        antiBatConn = nil
+    end
+    if antiBatEnabled then
+        antiBatConn = RunService.Heartbeat:Connect(function()
+            if not antiBatEnabled then
+                return
+            end
+            local char = LocalPlayer.Character
+            local root = char and char:FindFirstChild("HumanoidRootPart")
+            if not root or not root.Parent then
+                return
+            end
+            local vel = root.AssemblyLinearVelocity
+            local flat = Vector3.new(vel.X, 0, vel.Z)
+            root.AssemblyLinearVelocity = Vector3.new(currentPower, vel.Y, currentPower)
+            RunService.RenderStepped:Wait()
+            if root and root.Parent then
+                local y2 = root.AssemblyLinearVelocity.Y
+                root.AssemblyLinearVelocity = Vector3.new(flat.X, y2, flat.Z)
+            end
+        end)
+    end
+end
+G.AntiBatBtn.MouseButton1Click:Connect(function()
+    setAntiBat(not antiBatEnabled)
+end)
+local InfiniteJump = {
+    enabled = true,
+    jumpPower = 55,
+    minVelocity = 35,
+    fallClamp = -120,
+    jumpConn = nil,
+    heartbeatConn = nil
+}
+local function applyJump(root)
+    if not root then
+        return
+    end
+    pcall(function()
+        root.AssemblyLinearVelocity = Vector3.new(root.AssemblyLinearVelocity.X, InfiniteJump.jumpPower, root.AssemblyLinearVelocity.Z)
+    end)
+end
+local function onJumpRequest()
+    if not InfiniteJump.enabled then
+        return
+    end
+    local char = LocalPlayer.Character
+    if not char then
+        return
+    end
+    local root = char:FindFirstChild("HumanoidRootPart")
+    if root then
+        applyJump(root)
+    end
+end
+local function onHeartbeat()
+    if not InfiniteJump.enabled then
+        return
+    end
+    local char = LocalPlayer.Character
+    if not char then
+        return
+    end
+    local root = char:FindFirstChild("HumanoidRootPart")
+    if not root then
+        return
+    end
+    local hum = char:FindFirstChildOfClass("Humanoid")
+    if not hum then
+        return
+    end
+    local jumpHeld = UserInputService:IsKeyDown(Enum.KeyCode.Space) or hum.Jump == true
+    if jumpHeld and root.AssemblyLinearVelocity.Y < InfiniteJump.minVelocity then
+        applyJump(root)
+    end
+    if root.AssemblyLinearVelocity.Y < InfiniteJump.fallClamp then
+        root.AssemblyLinearVelocity = Vector3.new(root.AssemblyLinearVelocity.X, InfiniteJump.fallClamp, root.AssemblyLinearVelocity.Z)
+    end
+end
+local function connectJumpEvents()
+    if InfiniteJump.jumpConn then
+        InfiniteJump.jumpConn:Disconnect()
+    end
+    if InfiniteJump.heartbeatConn then
+        InfiniteJump.heartbeatConn:Disconnect()
+    end
+    InfiniteJump.jumpConn = UserInputService.JumpRequest:Connect(onJumpRequest)
+    InfiniteJump.heartbeatConn = RunService.Heartbeat:Connect(onHeartbeat)
+end
+local function setInfJump(state)
+    InfiniteJump.enabled = state
+    if InfiniteJump.enabled then
+        TweenService:Create(G.InfJumpToggleBg, TweenInfo.new(0.18), {BackgroundColor3 = Color3.fromRGB(40, 160, 255)}):Play()
+        TweenService:Create(G.InfJumpToggleKnob, TweenInfo.new(0.18), {Position = UDim2.new(1, -18, 0.5, -7)}):Play()
+        connectJumpEvents()
+    else
+        TweenService:Create(G.InfJumpToggleBg, TweenInfo.new(0.18), {BackgroundColor3 = Color3.fromRGB(20, 40, 75)}):Play()
+        TweenService:Create(G.InfJumpToggleKnob, TweenInfo.new(0.18), {Position = UDim2.new(0, 4, 0.5, -7)}):Play()
+        if InfiniteJump.jumpConn then
+            InfiniteJump.jumpConn:Disconnect()
+            InfiniteJump.jumpConn = nil
+        end
+        if InfiniteJump.heartbeatConn then
+            InfiniteJump.heartbeatConn:Disconnect()
+            InfiniteJump.heartbeatConn = nil
+        end
+    end
+end
+G.InfJumpBtn.MouseButton1Click:Connect(function()
+    setInfJump(not InfiniteJump.enabled)
+end)
+local sliderActive = false
+local function updatePowerFromInput(input)
+    local trackAbsPos = G.SliderTrack.AbsolutePosition
+    local trackAbsSize = G.SliderTrack.AbsoluteSize
+    local pct = math.clamp((input.Position.X - trackAbsPos.X) / trackAbsSize.X, 0, 1)
+    currentPower = math.floor(pct * 300000)
+    G.SliderFill.Size = UDim2.new(pct, 0, 1, 0)
+    G.SliderKnob.Position = UDim2.new(pct, 0, 0.5, 0)
+    G.PowerValText.Text = tostring(math.floor(pct * 100)) .. "%"
+end
+G.SliderBtn.InputBegan:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+        sliderActive = true
+        updatePowerFromInput(input)
+    end
+end)
+UserInputService.InputEnded:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+        sliderActive = false
+    end
+end)
+UserInputService.InputChanged:Connect(function(input)
+    if sliderActive and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then
+        updatePowerFromInput(input)
+    end
+end)
+local currentKey = Enum.KeyCode.V
+local listeningForKey = false
+G.Keybind.MouseButton1Click:Connect(function()
+    if listeningForKey then
+        return
+    end
+    listeningForKey = true
+    G.Keybind.Text = "..."
+end)
+UserInputService.InputBegan:Connect(function(input, gpe)
+    if listeningForKey and input.UserInputType == Enum.UserInputType.Keyboard then
+        currentKey = input.KeyCode
+        G.Keybind.Text = input.KeyCode.Name
+        listeningForKey = false
+        return
+    end
+    if not gpe and input.UserInputType == Enum.UserInputType.Keyboard and input.KeyCode == currentKey then
+        setAntiBat(not antiBatEnabled)
+    end
+end)
+LocalPlayer.CharacterAdded:Connect(function()
+    task.wait(0.3)
+    if antiBatEnabled then
+        setAntiBat(true)
+    end
+    if InfiniteJump.enabled then
+        connectJumpEvents()
+    end
+end)
+setAntiBat(true)
+setInfJump(true)
+return screenGui
